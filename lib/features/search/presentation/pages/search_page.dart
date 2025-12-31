@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:mediavore/features/search/presentation/pages/saved_movies_page.dart';
+import 'package:mediavore/features/search/presentation/providers/saved_movies_provider.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/movie.dart';
 
 class SearchPage extends StatefulWidget {
@@ -76,31 +79,57 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('MediaVore Search'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bookmark),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SavedMoviesPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _movies.isEmpty
               ? const Center(child: Text('Search for movies!'))
-              : ListView.builder(
-                  itemCount: _movies.length,
-                  itemBuilder: (context, index) {
-                    final movie = _movies[index];
-                    return ListTile(
-                      leading: movie.posterPath != null
-                          ? Image.network(
-                              'https://image.tmdb.org/t/p/w92${movie.posterPath}',
-                              width: 50,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.movie),
-                            )
-                          : const Icon(Icons.movie),
-                      title: Text(movie.title),
-                      subtitle: Text(
-                        movie.releaseDate,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              : Consumer<SavedMoviesProvider>(
+                  builder: (context, savedMoviesProvider, child) {
+                    return ListView.builder(
+                      itemCount: _movies.length,
+                      itemBuilder: (context, index) {
+                        final movie = _movies[index];
+                        final isSaved = savedMoviesProvider.isMovieSaved(movie);
+                        return ListTile(
+                          leading: movie.posterPath != null
+                              ? Image.network(
+                                  'https://image.tmdb.org/t/p/w92${movie.posterPath}',
+                                  width: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.movie),
+                                )
+                              : const Icon(Icons.movie),
+                          title: Text(movie.title),
+                          subtitle: Text(
+                            movie.releaseDate,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              isSaved ? Icons.bookmark : Icons.bookmark_border,
+                            ),
+                            onPressed: () {
+                              savedMoviesProvider.toggleMovieSaved(movie);
+                            },
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
