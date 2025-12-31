@@ -5,15 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:mediavore/features/movie_details/presentation/pages/movie_detail_page.dart';
 import '../../data/models/movie.dart';
 
-class SearchPage extends StatefulWidget {
+class SearchScreen extends StatefulWidget {
   final http.Client? httpClient;
-  const SearchPage({super.key, this.httpClient});
+  const SearchScreen({super.key, this.httpClient});
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  State<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Movie> _movies = [];
   bool _isLoading = false;

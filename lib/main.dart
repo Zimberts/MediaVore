@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'features/search/presentation/pages/search_page.dart';
+import 'features/search/presentation/screens/search_screen.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
@@ -18,7 +18,7 @@ class MediaVoreApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const SearchPage(),
+      home: const SearchScreen(),
     );
   }
 }
