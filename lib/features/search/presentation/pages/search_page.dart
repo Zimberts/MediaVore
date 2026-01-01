@@ -1,15 +1,13 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:mediavore/core/di/injection.dart';
+import 'package:mediavore/core/domain/entities/movie.dart';
+import 'package:mediavore/features/movie_details/presentation/pages/movie_detail_page.dart';
+import 'package:mediavore/features/search/domain/repositories/movie_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_movies_page.dart';
-import 'package:mediavore/features/search/presentation/providers/saved_movies_provider.dart';
-import 'package:provider/provider.dart';
-import '../../data/models/movie.dart';
 
+/// The main page for searching for movies.
 class SearchPage extends StatefulWidget {
-  final http.Client? httpClient;
-  const SearchPage({super.key, this.httpClient});
+  const SearchPage({super.key});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -17,9 +15,28 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  late final MovieRepository _movieRepository;
   List<Movie> _movies = [];
   bool _isLoading = false;
+  Set<int> _watchlistIds = {};
 
+  @override
+  void initState() {
+    super.initState();
+    _movieRepository = locator<MovieRepository>();
+    _loadWatchlist();
+  }
+
+  Future<void> _loadWatchlist() async {
+    final ids = await _movieRepository.getWatchlistMovieIds();
+    if (mounted) {
+      setState(() {
+        _watchlistIds = ids.toSet();
+      });
+    }
+  }
+
+  /// Searches for movies using the movie repository.
   Future<void> _searchMovies(String query) async {
     if (query.isEmpty) return;
 
@@ -27,36 +44,17 @@ class _SearchPageState extends State<SearchPage> {
       _isLoading = true;
     });
 
-    final token = dotenv.env['TMDB_API_TOKEN'];
-    final url = Uri.parse('https://api.themoviedb.org/3/search/movie?query=${Uri.encodeComponent(query)}');
-
     try {
-      final client = widget.httpClient ?? http.Client();
-      final response = await client.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final List results = data['results'];
+      final movies = await _movieRepository.searchMovies(query);
+      if (mounted) {
         setState(() {
-          _movies = results.map((m) => Movie.fromJson(m)).toList();
+          _movies = movies;
         });
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to load movies')),
-          );
-        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Failed to load movies: $e')),
         );
       }
     } finally {
@@ -64,6 +62,29 @@ class _SearchPageState extends State<SearchPage> {
         setState(() {
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _toggleWatchlist(Movie movie) async {
+    final isInWatchlist = _watchlistIds.contains(movie.id);
+    try {
+      if (isInWatchlist) {
+        await _movieRepository.removeMovieFromWatchlist(movie.id);
+        setState(() {
+          _watchlistIds.remove(movie.id);
+        });
+      } else {
+        await _movieRepository.addMovieToWatchlist(movie.id);
+        setState(() {
+          _watchlistIds.add(movie.id);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update watchlist: $e')),
+        );
       }
     }
   }
@@ -82,13 +103,14 @@ class _SearchPageState extends State<SearchPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.bookmark),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const SavedMoviesPage(),
                 ),
               );
+              _loadWatchlist();
             },
           ),
         ],
@@ -97,39 +119,44 @@ class _SearchPageState extends State<SearchPage> {
           ? const Center(child: CircularProgressIndicator())
           : _movies.isEmpty
               ? const Center(child: Text('Search for movies!'))
-              : Consumer<SavedMoviesProvider>(
-                  builder: (context, savedMoviesProvider, child) {
-                    return ListView.builder(
-                      itemCount: _movies.length,
-                      itemBuilder: (context, index) {
-                        final movie = _movies[index];
-                        final isSaved = savedMoviesProvider.isMovieSaved(movie);
-                        return ListTile(
-                          leading: movie.posterPath != null
-                              ? Image.network(
-                                  'https://image.tmdb.org/t/p/w92${movie.posterPath}',
-                                  width: 50,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.movie),
-                                )
-                              : const Icon(Icons.movie),
-                          title: Text(movie.title),
-                          subtitle: Text(
-                            movie.releaseDate,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: IconButton(
-                            icon: Icon(
-                              isSaved ? Icons.bookmark : Icons.bookmark_border,
-                            ),
-                            onPressed: () {
-                              savedMoviesProvider.toggleMovieSaved(movie);
-                            },
+              : ListView.builder(
+                  itemCount: _movies.length,
+                  itemBuilder: (context, index) {
+                    final movie = _movies[index];
+                    final isSaved = _watchlistIds.contains(movie.id);
+                    return InkWell(
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MovieDetailPage(movie: movie),
                           ),
                         );
+                        _loadWatchlist();
                       },
+                      child: ListTile(
+                        leading: movie.posterPath != null
+                            ? Image.network(
+                                'https://image.tmdb.org/t/p/w92${movie.posterPath}',
+                                width: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.movie),
+                              )
+                            : const Icon(Icons.movie),
+                        title: Text(movie.title),
+                        subtitle: Text(
+                          movie.releaseDate,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(
+                            isSaved ? Icons.bookmark : Icons.bookmark_border,
+                          ),
+                          onPressed: () => _toggleWatchlist(movie),
+                        ),
+                      ),
                     );
                   },
                 ),

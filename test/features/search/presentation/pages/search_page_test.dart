@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/features/search/data/models/movie.dart';
+import 'package:mediavore/core/domain/entities/movie.dart';
+import 'package:mediavore/core/di/injection.dart';
+import 'package:mediavore/features/search/domain/repositories/movie_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mediavore/features/search/presentation/providers/saved_movies_provider.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
-import '../../../../helpers/fixture_reader.dart';
-
-class MockSavedMoviesProvider extends Mock implements SavedMoviesProvider {}
 
 class FakeMovie extends Fake implements Movie {}
 
 void main() {
-  late MockHttpClient mockHttpClient;
-  late MockSavedMoviesProvider mockSavedMoviesProvider;
+  late MockMovieRepository mockMovieRepository;
 
   setUpAll(() {
     registerFallbackValue(Uri());
@@ -24,25 +19,35 @@ void main() {
   });
 
   setUp(() {
-    mockHttpClient = MockHttpClient();
-    mockSavedMoviesProvider = MockSavedMoviesProvider();
+    mockMovieRepository = MockMovieRepository();
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
+    // Register mock repository
+    locator.registerLazySingleton<MovieRepository>(() => mockMovieRepository);
+    when(() => mockMovieRepository.getWatchlistMovieIds()).thenAnswer((_) async => []);
+  });
+
+  tearDown(() {
+    locator.reset();
   });
 
   Widget createWidgetUnderTest() {
-    return ChangeNotifierProvider<SavedMoviesProvider>.value(
-      value: mockSavedMoviesProvider,
-      child: MaterialApp(
-        home: SearchPage(httpClient: mockHttpClient),
-      ),
+    return MaterialApp(
+      home: const SearchPage(),
     );
   }
 
   group('SearchPage', () {
     testWidgets('displays results from TMDB when search is successful', (WidgetTester tester) async {
-      final jsonResponse = fixture('movie_search_results.json');
-      when(() => mockHttpClient.get(any(), headers: any(named: 'headers'))).thenAnswer((_) async => http.Response(jsonResponse, 200));
-      when(() => mockSavedMoviesProvider.isMovieSaved(any())).thenReturn(false);
+      final movies = [
+        Movie(
+          id: 1,
+          title: 'Inception',
+          posterPath: '/poster.jpg',
+          releaseDate: '2010-07-16',
+          overview: 'A mind-bending thriller',
+        ),
+      ];
+      when(() => mockMovieRepository.searchMovies('Inception')).thenAnswer((_) async => movies);
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -56,9 +61,7 @@ void main() {
     });
 
     testWidgets('shows error snackbar when server is unavailable', (WidgetTester tester) async {
-      when(() => mockHttpClient.get(any(), headers: any(named: 'headers'))).thenThrow(Exception('Server unreachable'));
-      when(() => mockSavedMoviesProvider.isMovieSaved(any())).thenReturn(false);
-
+      when(() => mockMovieRepository.searchMovies('Inception')).thenThrow(Exception('Server unreachable'));
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -68,14 +71,21 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.textContaining('Error: Exception: Server unreachable'), findsOneWidget);
+      expect(find.text('Failed to load movies: Exception: Server unreachable'), findsOneWidget);
     });
 
     testWidgets('calls toggleMovieSaved when save button is tapped', (WidgetTester tester) async {
-      final jsonResponse = fixture('movie_search_results.json');
-      when(() => mockHttpClient.get(any(), headers: any(named: 'headers'))).thenAnswer((_) async => http.Response(jsonResponse, 200));
-      when(() => mockSavedMoviesProvider.isMovieSaved(any())).thenReturn(false);
-      when(() => mockSavedMoviesProvider.toggleMovieSaved(any())).thenReturn(null);
+      final movies = [
+        Movie(
+          id: 1,
+          title: 'Inception',
+          posterPath: '/poster.jpg',
+          releaseDate: '2010-07-16',
+          overview: 'A mind-bending thriller',
+        ),
+      ];
+      when(() => mockMovieRepository.searchMovies('Inception')).thenAnswer((_) async => movies);
+      when(() => mockMovieRepository.addMovieToWatchlist(1)).thenAnswer((_) async {});
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -87,7 +97,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.bookmark_border).first);
 
-      verify(() => mockSavedMoviesProvider.toggleMovieSaved(any())).called(1);
+      verify(() => mockMovieRepository.addMovieToWatchlist(1)).called(1);
     });
   });
 }
