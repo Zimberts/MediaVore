@@ -1,39 +1,27 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mediavore/features/search/data/datasources/movie_remote_data_source.dart';
-import 'package:mediavore/features/search/data/repositories/movie_repository_impl.dart';
-import 'package:mediavore/features/search/domain/repositories/movie_repository.dart';
-import 'package:mediavore/features/movie_details/data/datasources/watchlist_local_data_source.dart';
 
 final GetIt locator = GetIt.instance;
+
+@InjectableInit(
+  initializerName: 'init',
+  preferRelativeImports: true,
+  asExtension: false,
+)
+void configureDependencies() {}
 
 @module
 abstract class RegisterModule {
   @singleton
-  http.Client get httpClient => http.Client();
+  Dio get dio => Dio();
+
+  @singleton
+  String get apiToken => dotenv.env['TMDB_API_TOKEN'] ?? '';
 
   @preResolve
-  Future<SharedPreferences> get sharedPreferences => SharedPreferences.getInstance();
-}
-
-@LazySingleton(as: MovieRepository)
-class MovieRepositoryImplInjectable extends MovieRepositoryImpl {
-  MovieRepositoryImplInjectable(
-    @Named('remote') MovieRemoteDataSource remoteDataSource,
-    @Named('local') WatchlistLocalDataSource localDataSource,
-  ) : super(remoteDataSource: remoteDataSource, localDataSource: localDataSource);
-}
-
-@LazySingleton(as: MovieRemoteDataSource, env: [Environment.prod])
-@Named('remote')
-class MovieRemoteDataSourceInjectable extends MovieRemoteDataSource {
-  MovieRemoteDataSourceInjectable(http.Client client) : super(client: client);
-}
-
-@LazySingleton(as: WatchlistLocalDataSource, env: [Environment.prod])
-@Named('local')
-class WatchlistLocalDataSourceInjectable extends WatchlistLocalDataSource {
-  WatchlistLocalDataSourceInjectable(super.prefs);
+  Future<SharedPreferences> get sharedPreferences =>
+      SharedPreferences.getInstance();
 }

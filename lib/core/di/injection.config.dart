@@ -9,53 +9,51 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:dio/dio.dart' as _i361;
 import 'package:get_it/get_it.dart' as _i174;
-import 'package:http/http.dart' as _i519;
 import 'package:injectable/injectable.dart' as _i526;
-import 'package:mediavore/core/di/injection.dart' as _i1062;
-import 'package:mediavore/features/movie_details/data/datasources/watchlist_local_data_source.dart'
-    as _i567;
-import 'package:mediavore/features/search/data/datasources/movie_remote_data_source.dart'
-    as _i144;
-import 'package:mediavore/features/search/domain/repositories/movie_repository.dart'
-    as _i435;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
-const String _prod = 'prod';
+import '../../features/movie_details/data/datasources/watchlist_local_data_source.dart'
+    as _i656;
+import '../../features/search/data/datasources/movie_remote_data_source.dart'
+    as _i797;
+import '../../features/search/data/repositories/movie_repository_impl.dart'
+    as _i219;
+import '../../features/search/domain/repositories/movie_repository.dart'
+    as _i85;
+import 'injection.dart' as _i464;
 
-extension GetItInjectableX on _i174.GetIt {
-  // initializes the registration of main-scope dependencies inside of GetIt
-  Future<_i174.GetIt> init({
-    String? environment,
-    _i526.EnvironmentFilter? environmentFilter,
-  }) async {
-    final gh = _i526.GetItHelper(this, environment, environmentFilter);
-    final registerModule = _$RegisterModule();
-    await gh.factoryAsync<_i460.SharedPreferences>(
-      () => registerModule.sharedPreferences,
-      preResolve: true,
-    );
-    gh.singleton<_i519.Client>(() => registerModule.httpClient);
-    gh.lazySingleton<_i144.MovieRemoteDataSource>(
-      () => _i1062.MovieRemoteDataSourceInjectable(gh<_i519.Client>()),
-      instanceName: 'remote',
-      registerFor: {_prod},
-    );
-    gh.lazySingleton<_i567.WatchlistLocalDataSource>(
-      () => _i1062.WatchlistLocalDataSourceInjectable(
-        gh<_i460.SharedPreferences>(),
-      ),
-      instanceName: 'local',
-      registerFor: {_prod},
-    );
-    gh.lazySingleton<_i435.MovieRepository>(
-      () => _i1062.MovieRepositoryImplInjectable(
-        gh<_i144.MovieRemoteDataSource>(instanceName: 'remote'),
-        gh<_i567.WatchlistLocalDataSource>(instanceName: 'local'),
-      ),
-    );
-    return this;
-  }
+// initializes the registration of main-scope dependencies inside of GetIt
+Future<_i174.GetIt> init(
+  _i174.GetIt getIt, {
+  String? environment,
+  _i526.EnvironmentFilter? environmentFilter,
+}) async {
+  final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
+  final registerModule = _$RegisterModule();
+  await gh.factoryAsync<_i460.SharedPreferences>(
+    () => registerModule.sharedPreferences,
+    preResolve: true,
+  );
+  gh.singleton<_i361.Dio>(() => registerModule.dio);
+  gh.singleton<String>(() => registerModule.apiToken);
+  gh.lazySingleton<_i656.WatchlistLocalDataSource>(
+    () => _i656.WatchlistLocalDataSource(gh<_i460.SharedPreferences>()),
+  );
+  gh.lazySingleton<_i797.MovieRemoteDataSource>(
+    () => _i797.MovieRemoteDataSource(
+      dio: gh<_i361.Dio>(),
+      apiToken: gh<String>(),
+    ),
+  );
+  gh.lazySingleton<_i85.MovieRepository>(
+    () => _i219.MovieRepositoryImpl(
+      remoteDataSource: gh<_i797.MovieRemoteDataSource>(),
+      localDataSource: gh<_i656.WatchlistLocalDataSource>(),
+    ),
+  );
+  return getIt;
 }
 
-class _$RegisterModule extends _i1062.RegisterModule {}
+class _$RegisterModule extends _i464.RegisterModule {}

@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/movie.dart';
@@ -7,6 +8,7 @@ import 'package:mediavore/features/search/data/datasources/movie_remote_data_sou
 import 'package:mediavore/features/search/domain/repositories/movie_repository.dart';
 
 /// Implementation of the [MovieRepository] that uses a remote and a local data source.
+@LazySingleton(as: MovieRepository)
 class MovieRepositoryImpl implements MovieRepository {
   final MovieRemoteDataSource remoteDataSource;
   final WatchlistLocalDataSource localDataSource;

@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/movie.dart';
-import 'package:mediavore/core/domain/entities/movie_details.dart';
 import 'package:mediavore/features/search/data/repositories/movie_repository_impl.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -56,11 +55,6 @@ void main() {
 
   group('getMovieDetails', () {
     const tMovieId = 1;
-    final tMovieDetails = MovieDetails(
-      movie: tMovie,
-      cast: tCast,
-      director: tDirector,
-    );
 
     test('should return movie details with cast and director', () async {
       // arrange

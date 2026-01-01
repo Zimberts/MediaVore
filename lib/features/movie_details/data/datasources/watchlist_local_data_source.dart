@@ -1,6 +1,8 @@
+import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages the user's watchlist using local storage.
+@lazySingleton
 class WatchlistLocalDataSource {
   final SharedPreferences _prefs;
   static const _watchlistKey = 'watchlist';
