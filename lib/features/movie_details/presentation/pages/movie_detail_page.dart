@@ -59,6 +59,16 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   @override
   Widget build(BuildContext context) {
     final movieToDisplay = _movieDetails?.movie ?? widget.movie;
+    
+    // Check for Android and attempt to detect button navigation mode.
+    // Gesture navigation usually has a non-zero systemGestureInsets.bottom.
+    // Button navigation often has a larger padding.bottom (around 48) if edge-to-edge, 
+    // or 0 if not edge-to-edge.
+    final mediaQuery = MediaQuery.of(context);
+    final bool isAndroid = Theme.of(context).platform == TargetPlatform.android;
+    final bool isAndroidButtons = isAndroid && 
+        (mediaQuery.systemGestureInsets.bottom < 8 || mediaQuery.padding.bottom > 30);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(movieToDisplay.title),
@@ -168,6 +178,9 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                       ],
                     ),
                   ),
+                  // Extra padding at the bottom of the scrollable area for Android button navigation.
+                  // This is placed outside the main padding to ensure it's at the very end.
+                  if (isAndroidButtons) const SizedBox(height: 80) else const SizedBox(height: 24),
                 ],
               ),
             ),
