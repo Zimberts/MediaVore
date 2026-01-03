@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mediavore/core/domain/entities/movie.dart';
-import 'package:mediavore/features/search/domain/repositories/movie_repository.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 class SearchProvider extends ChangeNotifier {
-  final MovieRepository _movieRepository;
+  final MediaRepository _mediaRepository;
 
-  SearchProvider(this._movieRepository);
+  SearchProvider(this._mediaRepository);
 
-  List<Movie> _movies = [];
+  List<MediaItem> _items = [];
   bool _isLoading = false;
   String _searchQuery = '';
-  Set<int> _watchlistIds = {};
+  Set<String> _watchlistEntries = {};
   bool _watchlistLoaded = false;
 
-  List<Movie> get movies => _movies;
+  List<MediaItem> get items => _items;
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
-  Set<int> get watchlistIds => _watchlistIds;
+  Set<int> get watchlistIds => _watchlistEntries.map((e) => int.parse(e.split(':').first)).toSet();
 
-  Future<void> searchMovies(String query) async {
+  Future<void> searchMedia(String query) async {
     if (query.isEmpty) return;
 
     _searchQuery = query;
@@ -27,10 +27,9 @@ class SearchProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _movies = await _movieRepository.searchMovies(query);
+      _items = await _mediaRepository.searchMedia(query);
     } catch (e) {
-      // Handle error appropriately
-      debugPrint('Failed to load movies: $e');
+      debugPrint('Failed to load results: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -38,25 +37,24 @@ class SearchProvider extends ChangeNotifier {
   }
 
   Future<void> loadWatchlist() async {
-    if (_watchlistLoaded) return;
+    _watchlistEntries = (await _mediaRepository.getWatchlistEntries()).toSet();
     _watchlistLoaded = true;
-    _watchlistIds = (await _movieRepository.getWatchlistMovieIds()).toSet();
     notifyListeners();
   }
 
-  Future<void> toggleWatchlist(Movie movie) async {
-    final isInWatchlist = _watchlistIds.contains(movie.id);
+  Future<void> toggleWatchlist(MediaItem item) async {
+    final entry = '${item.id}:${item.mediaType.name}';
+    final isInWatchlist = _watchlistEntries.contains(entry);
     try {
       if (isInWatchlist) {
-        await _movieRepository.removeMovieFromWatchlist(movie.id);
-        _watchlistIds.remove(movie.id);
+        await _mediaRepository.removeFromWatchlist(item.id, item.mediaType);
+        _watchlistEntries.remove(entry);
       } else {
-        await _movieRepository.addMovieToWatchlist(movie.id);
-        _watchlistIds.add(movie.id);
+        await _mediaRepository.addToWatchlist(item.id, item.mediaType);
+        _watchlistEntries.add(entry);
       }
       notifyListeners();
     } catch (e) {
-      // Handle error appropriately
       debugPrint('Failed to update watchlist: $e');
     }
   }

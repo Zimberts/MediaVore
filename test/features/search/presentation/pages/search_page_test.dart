@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/domain/entities/movie.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -8,45 +8,55 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 
-class FakeMovie extends Fake implements Movie {}
+class FakeMediaItem extends Fake implements MediaItem {}
 
 void main() {
-  late MockMovieRepository mockMovieRepository;
+  late MockMediaRepository mockMediaRepository;
   late SearchProvider searchProvider;
 
   setUpAll(() {
     registerFallbackValue(Uri());
-    registerFallbackValue(FakeMovie());
+    registerFallbackValue(FakeMediaItem());
+    registerFallbackValue(MediaType.movie);
   });
 
   setUp(() {
-    mockMovieRepository = MockMovieRepository();
-    searchProvider = SearchProvider(mockMovieRepository);
+    mockMediaRepository = MockMediaRepository();
+    searchProvider = SearchProvider(mockMediaRepository);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-    when(() => mockMovieRepository.getWatchlistMovieIds()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
   });
 
   Widget createWidgetUnderTest() {
     return ChangeNotifierProvider<SearchProvider>.value(
       value: searchProvider,
-      child: MaterialApp(
-        home: const SearchPage(),
+      child: const MaterialApp(
+        home: SearchPage(),
       ),
     );
   }
 
   group('SearchPage', () {
     testWidgets('displays results from TMDB when search is successful', (WidgetTester tester) async {
-      final movies = [
-        Movie(
+      final results = [
+        const MediaItem(
           id: 1,
           title: 'Inception',
           posterPath: null,
           releaseDate: '2010-07-16',
           overview: 'A mind-bending thriller',
+          mediaType: MediaType.movie,
+        ),
+        const MediaItem(
+          id: 2,
+          title: 'Breaking Bad',
+          posterPath: null,
+          releaseDate: '2008-01-20',
+          overview: 'A high school chemistry teacher...',
+          mediaType: MediaType.tv,
         ),
       ];
-      when(() => mockMovieRepository.searchMovies('Inception')).thenAnswer((_) async => movies);
+      when(() => mockMediaRepository.searchMedia('Inception')).thenAnswer((_) async => results);
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -56,10 +66,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
+      expect(find.widgetWithText(ListTile, 'Breaking Bad'), findsOneWidget);
+      expect(find.text('TV'), findsOneWidget); 
     });
 
-    testWidgets('shows error message when search fails', (WidgetTester tester) async {
-      when(() => mockMovieRepository.searchMovies(any())).thenThrow(Exception('Failed to load movies'));
+    testWidgets('shows initial message when search results are empty', (WidgetTester tester) async {
+      when(() => mockMediaRepository.searchMedia(any())).thenThrow(Exception('Failed to load results'));
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -68,25 +80,24 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // In the new implementation, errors are printed to the console, not shown in a snackbar.
-      // This test can be modified to check for the absence of movie results.
-      expect(find.widgetWithText(ListTile, 'Inception'), findsNothing);
-      expect(find.text('Search for movies!'), findsOneWidget);
+      expect(find.byType(ListTile), findsNothing);
+      expect(find.text('Search for movies or series!'), findsOneWidget);
     });
 
 
-    testWidgets('calls toggleMovieSaved when save button is tapped', (WidgetTester tester) async {
-      final movies = [
-        Movie(
+    testWidgets('calls addToWatchlist when save button is tapped', (WidgetTester tester) async {
+      final items = [
+        const MediaItem(
           id: 1,
           title: 'Inception',
           posterPath: null,
           releaseDate: '2010-07-16',
           overview: 'A mind-bending thriller',
+          mediaType: MediaType.movie,
         ),
       ];
-      when(() => mockMovieRepository.searchMovies('Inception')).thenAnswer((_) async => movies);
-      when(() => mockMovieRepository.addMovieToWatchlist(1)).thenAnswer((_) async {});
+      when(() => mockMediaRepository.searchMedia('Inception')).thenAnswer((_) async => items);
+      when(() => mockMediaRepository.addToWatchlist(1, MediaType.movie)).thenAnswer((_) async {});
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -99,7 +110,7 @@ void main() {
       
       await tester.pumpAndSettle();
 
-      verify(() => mockMovieRepository.addMovieToWatchlist(1)).called(1);
+      verify(() => mockMediaRepository.addToWatchlist(1, MediaType.movie)).called(1);
     });
   });
 }

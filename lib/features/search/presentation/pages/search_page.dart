@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:mediavore/features/movie_details/presentation/pages/movie_detail_page.dart';
-import 'package:mediavore/features/search/presentation/pages/saved_movies_page.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 
-/// The main page for searching for movies.
+/// The main page for searching for movies and series.
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
@@ -24,8 +26,6 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final searchProvider = Provider.of<SearchProvider>(context, listen: false);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('MediaVore Search'),
@@ -36,10 +36,12 @@ class _SearchPageState extends State<SearchPage> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SavedMoviesPage(),
+                  builder: (context) => const SavedMediaPage(),
                 ),
               );
-              searchProvider.loadWatchlist();
+              if (mounted) {
+                Provider.of<SearchProvider>(context, listen: false).loadWatchlist();
+              }
             },
           ),
         ],
@@ -49,40 +51,67 @@ class _SearchPageState extends State<SearchPage> {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (provider.movies.isEmpty) {
-            return const Center(child: Text('Search for movies!'));
+          if (provider.items.isEmpty) {
+            return const Center(child: Text('Search for movies or series!'));
           }
           return ListView.builder(
-            itemCount: provider.movies.length,
+            itemCount: provider.items.length,
             itemBuilder: (context, index) {
-              final movie = provider.movies[index];
-              final isSaved = provider.watchlistIds.contains(movie.id);
+              final item = provider.items[index];
+              final isSaved = provider.watchlistIds.contains(item.id);
+              final isTv = item.mediaType == MediaType.tv;
+
               return InkWell(
                 onTap: () async {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => MovieDetailPage(movie: movie),
+                      builder: (context) => MediaDetailPage(item: item),
                     ),
                   );
-                  provider.loadWatchlist();
+                  if (mounted) {
+                    provider.loadWatchlist();
+                  }
                 },
                 child: ListTile(
-                  leading: movie.posterPath != null
+                  leading: item.posterPath != null
                       ? CachedNetworkImage(
                           imageUrl:
-                              'https://image.tmdb.org/t/p/w92${movie.posterPath}',
+                              'https://image.tmdb.org/t/p/w92${item.posterPath}',
                           width: 50,
                           fit: BoxFit.cover,
                           placeholder: (context, url) =>
                               const Center(child: CircularProgressIndicator()),
                           errorWidget: (context, url, error) =>
-                              const Icon(Icons.movie),
+                              Icon(isTv ? Icons.tv : Icons.movie),
                         )
-                      : const Icon(Icons.movie),
-                  title: Text(movie.title),
+                      : Icon(isTv ? Icons.tv : Icons.movie),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(item.title)),
+                      if (isTv)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Badge(
+                            label: Text(
+                              item.numberOfSeasons != null
+                                  ? 'TV • ${item.numberOfSeasons} S'
+                                  : 'TV',
+                            ),
+                          ),
+                        ),
+                      if (!isTv && item.runtime != null && item.runtime! > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Badge(
+                            label: Text(Formatters.formatRuntime(item.runtime)),
+                            backgroundColor: Colors.blueGrey,
+                          ),
+                        ),
+                    ],
+                  ),
                   subtitle: Text(
-                    movie.releaseDate,
+                    item.releaseDate,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -90,7 +119,7 @@ class _SearchPageState extends State<SearchPage> {
                     icon: Icon(
                       isSaved ? Icons.bookmark : Icons.bookmark_border,
                     ),
-                    onPressed: () => provider.toggleWatchlist(movie),
+                    onPressed: () => provider.toggleWatchlist(item),
                   ),
                 ),
               );
@@ -121,7 +150,6 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
 
   @override
   Widget build(BuildContext context) {
-    final searchProvider = Provider.of<SearchProvider>(context, listen: false);
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -135,15 +163,19 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
                 child: TextField(
                   controller: _searchController,
                   decoration: const InputDecoration(
-                    hintText: 'Search movie names...',
+                    hintText: 'Search names...',
                     border: OutlineInputBorder(),
                   ),
-                  onSubmitted: (value) => searchProvider.searchMovies(value),
+                  onSubmitted: (value) {
+                     Provider.of<SearchProvider>(context, listen: false).searchMedia(value);
+                  },
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.search),
-                onPressed: () => searchProvider.searchMovies(_searchController.text),
+                onPressed: () {
+                   Provider.of<SearchProvider>(context, listen: false).searchMedia(_searchController.text);
+                },
               ),
             ],
           ),
@@ -152,4 +184,3 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
     );
   }
 }
-
