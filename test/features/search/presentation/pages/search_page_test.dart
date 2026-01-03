@@ -64,7 +64,9 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Inception');
       await tester.tap(find.byIcon(Icons.search));
       
-      await tester.pumpAndSettle();
+      // Use pump instead of pumpAndSettle because of the infinite CircularProgressIndicator
+      await tester.pump(); // Trigger search
+      await tester.pump(const Duration(milliseconds: 100)); // Wait for mock and rebuild
 
       expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
       expect(find.widgetWithText(ListTile, 'Breaking Bad'), findsOneWidget);
@@ -80,7 +82,8 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Inception');
       await tester.tap(find.byIcon(Icons.search));
 
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(ListTile), findsNothing);
       expect(find.text('Search for movies or series!'), findsOneWidget);
@@ -107,11 +110,13 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Inception');
       await tester.tap(find.byIcon(Icons.search));
       
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       await tester.tap(find.byIcon(Icons.bookmark_border).first);
       
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       verify(() => mockMediaRepository.addToWatchlist(1, MediaType.movie)).called(1);
     });
@@ -143,7 +148,8 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'test');
       await tester.tap(find.byIcon(Icons.search));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Movie 0'), findsOneWidget);
       expect(find.text('Fetched Movie'), findsNothing);
@@ -151,7 +157,7 @@ void main() {
       // Scroll to the bottom
       await tester.drag(find.byType(ListView), const Offset(0, -2000));
       await tester.pump(); // Trigger scroll listener
-      await tester.pumpAndSettle(); // Wait for fetch
+      await tester.pump(const Duration(milliseconds: 100)); // Wait for fetch
 
       expect(find.text('Fetched Movie'), findsOneWidget);
       verify(() => mockMediaRepository.searchMedia('test', page: 2)).called(1);
