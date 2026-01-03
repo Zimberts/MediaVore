@@ -26,6 +26,9 @@ void main() {
     mockMediaRepository = MockMediaRepository();
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
     // Register mock repository
+    // if (locator.isRegistered<MediaRepository>()) {
+    //   locator.unregister<MediaRepository>();
+    // }
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.isInWatchlist(any(), any())).thenAnswer((_) async => false);
@@ -45,7 +48,7 @@ void main() {
   );
 
   final tCast = [
-    const CastMember(name: 'Leonardo DiCaprio', character: 'Cobb', profilePath: '/leo.jpg'),
+    const CastMember(id: 1, name: 'Leonardo DiCaprio', character: 'Cobb', profilePath: '/leo.jpg'),
   ];
 
   const tDirector = CrewMember(name: 'Christopher Nolan', job: 'Director');

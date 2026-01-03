@@ -1,3 +1,4 @@
+import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 
@@ -8,6 +9,9 @@ abstract class MediaRepository {
 
   /// Gets the details for a specific media item.
   Future<MediaDetails> getMediaDetails(int id, {MediaType type = MediaType.movie});
+
+  /// Gets the details for a specific actor.
+  Future<ActorDetails> getActorDetails(int actorId);
 
   /// Adds a media item to the user's watchlist.
   Future<void> addToWatchlist(int id, MediaType type);

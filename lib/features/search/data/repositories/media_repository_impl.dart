@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -55,6 +56,26 @@ class MediaRepositoryImpl implements MediaRepository {
       director: director,
     );
   }
+
+  @override
+  Future<ActorDetails> getActorDetails(int actorId) async {
+    final actorDetailsFuture = remoteDataSource.getActorDetails(actorId);
+    final actorMediasFuture = remoteDataSource.getActorMediaCredits(actorId);
+
+    final actorDetails = await actorDetailsFuture;
+    final items = await actorMediasFuture;
+
+    return ActorDetails(
+      id: actorDetails.id,
+      name: actorDetails.name,
+      biography: actorDetails.biography,
+      birthday: actorDetails.birthday,
+      placeOfBirth: actorDetails.placeOfBirth,
+      profilePath: actorDetails.profilePath,
+      items: items,
+    );
+  }
+
 
   @override
   Future<void> addToWatchlist(int id, MediaType type) {

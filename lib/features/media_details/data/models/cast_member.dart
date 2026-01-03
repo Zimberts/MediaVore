@@ -1,12 +1,10 @@
-import 'package:equatable/equatable.dart';
-
-class CastMember extends Equatable {
+class CastMember {
   final int id;
   final String name;
   final String character;
   final String? profilePath;
 
-  const CastMember({
+  CastMember({
     required this.id,
     required this.name,
     required this.character,
@@ -21,7 +19,4 @@ class CastMember extends Equatable {
       profilePath: json['profile_path'],
     );
   }
-
-  @override
-  List<Object?> get props => [id, name, character, profilePath];
 }

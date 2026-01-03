@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -34,7 +35,7 @@ void main() {
   );
 
   final tCast = [
-    const CastMember(name: 'Leonardo DiCaprio', character: 'Cobb', profilePath: '/leo.jpg'),
+    const CastMember(id: 1, name: 'Leonardo DiCaprio', character: 'Cobb', profilePath: '/leo.jpg'),
   ];
 
   const tDirector = CrewMember(name: 'Christopher Nolan', job: 'Director');
@@ -68,7 +69,7 @@ void main() {
       when(() => mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')))
           .thenAnswer((_) async => {
             'cast': [
-              {'name': 'Leonardo DiCaprio', 'character': 'Cobb', 'profile_path': '/leo.jpg'}
+              {'id':1,'name': 'Leonardo DiCaprio', 'character': 'Cobb', 'profile_path': '/leo.jpg'}
             ],
             'crew': [
               {'name': 'Christopher Nolan', 'job': 'Director'}
@@ -82,6 +83,59 @@ void main() {
       expect(result.item, equals(tMediaItem));
       expect(result.cast, equals(tCast));
       expect(result.director, equals(tDirector));
+    });
+
+    test('should return movie details with N/A director when no director found', () async {
+      // arrange
+      when(() => mockRemoteDataSource.getMediaItem(tId))
+          .thenAnswer((_) async => tMediaItem);
+      when(() => mockRemoteDataSource.getMediaCredits(tId))
+          .thenAnswer((_) async => {
+        'cast': [
+          {'id': 1, 'name': 'Leonardo DiCaprio', 'character': 'Cobb', 'profile_path': '/leo.jpg'}
+        ],
+        'crew': [
+          {'name': 'Someone', 'job': 'Writer'}
+        ]
+      });
+
+      // act
+      final result = await repository.getMediaDetails(tId);
+
+      // assert
+      expect(result.item, equals(tMediaItem));
+      expect(result.cast, equals(tCast));
+      expect(result.director, CrewMember(name: 'N/A', job: 'Director'));
+    });
+  });
+
+  group('getActorDetails', () {
+    const tActorId = 1;
+    const tActorDetails = ActorDetails(
+      id: 1,
+      name: 'Leonardo DiCaprio',
+      biography: 'Bio...',
+      birthday: '1974-11-11',
+      placeOfBirth: 'Los Angeles, California, USA',
+      profilePath: '/leo.jpg',
+    );
+    final tMedias = [tMediaItem];
+
+    test('should return actor details with their movies', () async {
+      // arrange
+      when(() => mockRemoteDataSource.getActorDetails(tActorId))
+          .thenAnswer((_) async => tActorDetails);
+      when(() => mockRemoteDataSource.getActorMediaCredits(tActorId))
+          .thenAnswer((_) async => tMedias);
+
+      // act
+      final result = await repository.getActorDetails(tActorId);
+
+      // assert
+      expect(result.id, equals(tActorId));
+      expect(result.items, equals(tMedias));
+      verify(() => mockRemoteDataSource.getActorDetails(tActorId)).called(1);
+      verify(() => mockRemoteDataSource.getActorMediaCredits(tActorId)).called(1);
     });
   });
 

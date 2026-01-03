@@ -109,4 +109,73 @@ void main() {
       expect(result.title, 'Inception');
     });
   });
+
+  group('getActorDetails', () {
+    const tActorId = 1;
+    final tActorDetails = {
+      'id': 1,
+      'name': 'Leonardo DiCaprio',
+      'biography': 'Bio...',
+      'birthday': '1974-11-11',
+      'place_of_birth': 'Los Angeles, California, USA',
+      'profile_path': '/leo.jpg',
+    };
+
+    test('should return ActorDetails when the response is successful', () async {
+      // arrange
+      when(() => mockDio.get(
+        any(),
+        options: any(named: 'options'),
+      )).thenAnswer(
+            (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: tActorDetails,
+          statusCode: 200,
+        ),
+      );
+
+      // act
+      final result = await dataSource.getActorDetails(tActorId);
+
+      // assert
+      expect(result.id, equals(tActorId));
+      expect(result.name, equals('Leonardo DiCaprio'));
+    });
+  });
+
+  group('getActorMovieCredits', () {
+    const tActorId = 1;
+    final tMovieCredits = {
+      'cast': [
+        {
+          'id': 27205,
+          'title': 'Inception',
+          'poster_path': '/path.jpg',
+          'overview': 'Overview...',
+          'release_date': '2010-07-15',
+        }
+      ]
+    };
+
+    test('should return List<Movie> when the response is successful', () async {
+      // arrange
+      when(() => mockDio.get(
+        any(),
+        options: any(named: 'options'),
+      )).thenAnswer(
+            (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: tMovieCredits,
+          statusCode: 200,
+        ),
+      );
+
+      // act
+      final result = await dataSource.getActorMediaCredits(tActorId);
+
+      // assert
+      expect(result.length, 1);
+      expect(result.first.title, equals('Inception'));
+    });
+  });
 }

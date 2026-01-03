@@ -4,6 +4,7 @@ import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_button.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
@@ -202,31 +203,44 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                               itemCount: _mediaDetails!.cast.length,
                               itemBuilder: (context, index) {
                                 final member = _mediaDetails!.cast[index];
-                                return Container(
-                                  width: 100,
-                                  margin:
-                                      const EdgeInsets.only(right: 12.0),
-                                  child: Column(
-                                    children: [
-                                      member.profilePath != null && !Platform.environment.containsKey('FLUTTER_TEST')
-                                          ? CircleAvatar(
-                                              radius: 40,
-                                              backgroundImage: NetworkImage(
-                                                  'https://image.tmdb.org/t/p/w185${member.profilePath}'),
-                                            )
-                                          : const CircleAvatar(
-                                              radius: 40,
-                                              child: Icon(Icons.person),
-                                            ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        member.name,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ActorDetailPage(
+                                            actorId: member.id,
+                                            actorName: member.name,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 100,
+                                      margin:
+                                          const EdgeInsets.only(right: 12.0),
+                                      child: Column(
+                                        children: [
+                                          member.profilePath != null && !Platform.environment.containsKey('FLUTTER_TEST')
+                                              ? CircleAvatar(
+                                                  radius: 40,
+                                                  backgroundImage: NetworkImage(
+                                                      'https://image.tmdb.org/t/p/w185${member.profilePath}'),
+                                                )
+                                              : const CircleAvatar(
+                                                  radius: 40,
+                                                  child: Icon(Icons.person),
+                                                ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            member.name,
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    )
                                 );
                               },
                             ),

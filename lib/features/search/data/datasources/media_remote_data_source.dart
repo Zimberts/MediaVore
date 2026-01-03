@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 
@@ -130,6 +131,65 @@ class MediaRemoteDataSource {
       }
     } catch (e) {
       throw ParsingException('Failed to parse credits response', e);
+    }
+  }
+
+  /// Fetches the details for an actor from the TMDB API.
+  Future<ActorDetails> getActorDetails(int actorId) async {
+    try {
+      final response = await dio.get(
+        'https://api.themoviedb.org/3/person/$actorId',
+        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+      );
+      return ActorDetails.fromJson(response.data);
+    } on DioException catch (e) {
+      switch (e.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.connectionError:
+          throw NetworkException('Network error while fetching actor details', e);
+        case DioExceptionType.badResponse:
+          throw ServerException(
+            'Server error while fetching actor details',
+            e.response?.statusCode,
+            e,
+          );
+        default:
+          throw ServerException('Failed to load actor details', null, e);
+      }
+    } catch (e) {
+      throw ParsingException('Failed to parse actor details response', e);
+    }
+  }
+
+  /// Fetches the movies an actor has been in.
+  Future<List<MediaItem>> getActorMediaCredits(int actorId) async {
+    try {
+      final response = await dio.get(
+        'https://api.themoviedb.org/3/person/$actorId/combined_credits',
+        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+      );
+      final List results = response.data['cast'];
+      return results.map((m) => MediaItem.fromJson(m)).toList();
+    } on DioException catch (e) {
+      switch (e.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.connectionError:
+          throw NetworkException('Network error while fetching actor movie credits', e);
+        case DioExceptionType.badResponse:
+          throw ServerException(
+            'Server error while fetching actor movie credits',
+            e.response?.statusCode,
+            e,
+          );
+        default:
+          throw ServerException('Failed to load actor movie credits', null, e);
+      }
+    } catch (e) {
+      throw ParsingException('Failed to parse actor movie credits response', e);
     }
   }
 }
