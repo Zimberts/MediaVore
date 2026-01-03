@@ -25,11 +25,14 @@ class MediaRemoteDataSource {
   MediaRemoteDataSource._internal({required this.dio, required this.apiToken});
 
   /// Searches for movies and series on the TMDB API.
-  Future<List<MediaItem>> searchMedia(String query) async {
+  Future<List<MediaItem>> searchMedia(String query, {int page = 1}) async {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/search/multi',
-        queryParameters: {'query': query},
+        queryParameters: {
+          'query': query,
+          'page': page,
+        },
         options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
       );
       final List results = response.data['results'];

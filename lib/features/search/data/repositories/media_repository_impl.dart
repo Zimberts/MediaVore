@@ -23,8 +23,8 @@ class MediaRepositoryImpl implements MediaRepository {
   });
 
   @override
-  Future<List<MediaItem>> searchMedia(String query) async {
-    return remoteDataSource.searchMedia(query);
+  Future<List<MediaItem>> searchMedia(String query, {int page = 1}) async {
+    return remoteDataSource.searchMedia(query, page: page);
   }
 
   @override

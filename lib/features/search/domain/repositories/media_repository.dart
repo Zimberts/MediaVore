@@ -4,7 +4,7 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 /// Abstract class for a repository that handles media (movies and series) data.
 abstract class MediaRepository {
   /// Searches for media based on a query.
-  Future<List<MediaItem>> searchMedia(String query);
+  Future<List<MediaItem>> searchMedia(String query, {int page = 1});
 
   /// Gets the details for a specific media item.
   Future<MediaDetails> getMediaDetails(int id, {MediaType type = MediaType.movie});

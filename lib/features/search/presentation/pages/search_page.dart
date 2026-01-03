@@ -16,12 +16,28 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<SearchProvider>(context, listen: false).loadWatchlist();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<SearchProvider>().fetchNextPage();
+    }
   }
 
   @override
@@ -55,8 +71,17 @@ class _SearchPageState extends State<SearchPage> {
             return const Center(child: Text('Search for movies or series!'));
           }
           return ListView.builder(
-            itemCount: provider.items.length,
+            itemCount: provider.items.length + (provider.hasMore ? 1 : 0),
+            controller: _scrollController,
             itemBuilder: (context, index) {
+              if (index >= provider.items.length) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              } 
               final item = provider.items[index];
               final isSaved = provider.watchlistIds.contains(item.id);
               final isTv = item.mediaType == MediaType.tv;
