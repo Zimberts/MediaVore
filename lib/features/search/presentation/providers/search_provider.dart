@@ -25,10 +25,17 @@ class SearchProvider extends ChangeNotifier {
   bool get hasMore => _hasMore;
 
   Future<void> searchMedia(String query) async {
-    if (query.isEmpty) return;
     if (query == _searchQuery && _items.isNotEmpty) return;
 
     _searchQuery = query;
+    if (query.isEmpty) {
+      _items = [];
+      _isLoading = false;
+      _hasMore = false;
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     _currentPage = 1;
     _hasMore = true;
@@ -37,10 +44,13 @@ class SearchProvider extends ChangeNotifier {
 
     try {
       _items = await _mediaRepository.searchMedia(query, page: _currentPage);
-      if (_items.isEmpty)
+      if (_items.isEmpty) {
         _hasMore = false;
+      }
     } catch (e) {
       debugPrint('Failed to load movies: $e');
+      _items = [];
+      _hasMore = false;
     } finally {
       _isLoading = false;
       notifyListeners();

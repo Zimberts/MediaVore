@@ -37,6 +37,54 @@ void main() {
   }
 
   group('SearchPage', () {
+    testWidgets('clears text when clear button is tapped', (WidgetTester tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.enterText(find.byType(TextField), 'Inception');
+      await tester.pump(); // Rebuild to show clear button
+
+      expect(find.byIcon(Icons.clear), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pump();
+
+      expect(find.text('Inception'), findsNothing);
+      expect(find.byIcon(Icons.clear), findsNothing);
+    });
+
+    testWidgets('triggers search automatically after typing with debounce', (WidgetTester tester) async {
+      final movies = [
+        const MediaItem(
+          id: 1,
+          title: 'Inception',
+          posterPath: null,
+          releaseDate: '2010-07-16',
+          overview: 'A mind-bending thriller',
+          mediaType: MediaType.movie
+        ),
+      ];
+      when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
+          .thenAnswer((_) async => movies);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.enterText(find.byType(TextField), 'Inception');
+      
+      // Should not have triggered search immediately due to debounce
+      verifyNever(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')));
+
+      // Wait for debounce (500ms)
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(() => mockMediaRepository.searchMedia('Inception', page: 1)).called(1);
+      
+      // Use pump() instead of pumpAndSettle() to avoid timeout from infinite CircularProgressIndicator
+      await tester.pumpo();
+      await tester.pump(const Duration(milliseconds: 100));
+      
+      expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
+    });
+
     testWidgets('displays results from TMDB when search is successful', (WidgetTester tester) async {
       final results = [
         const MediaItem(
@@ -62,11 +110,10 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       await tester.enterText(find.byType(TextField), 'Inception');
-      await tester.tap(find.byIcon(Icons.search));
-      
-      // Use pump instead of pumpAndSettle because of the infinite CircularProgressIndicator
-      await tester.pump(); // Trigger search
-      await tester.pump(const Duration(milliseconds: 100)); // Wait for mock and rebuild
+      // Wait for debounce
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
       expect(find.widgetWithText(ListTile, 'Breaking Bad'), findsOneWidget);
@@ -80,8 +127,9 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       await tester.enterText(find.byType(TextField), 'Inception');
-      await tester.tap(find.byIcon(Icons.search));
 
+      // Wait for debounce
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -108,8 +156,8 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       await tester.enterText(find.byType(TextField), 'Inception');
-      await tester.tap(find.byIcon(Icons.search));
-      
+      // Wait for debounce
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -131,7 +179,7 @@ void main() {
         mediaType: MediaType.movie,
       ));
       final page2 = [
-        MediaItem(
+        const MediaItem(
           id: 100,
           title: 'Fetched Movie',
           posterPath: null,
@@ -147,7 +195,8 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       await tester.enterText(find.byType(TextField), 'test');
-      await tester.tap(find.byIcon(Icons.search));
+      // Wait for debounce instead of tapping non-existent button
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -155,9 +204,10 @@ void main() {
       expect(find.text('Fetched Movie'), findsNothing);
 
       // Scroll to the bottom
-      await tester.drag(find.byType(ListView), const Offset(0, -2000));
+      await tester.drag(find.byType(ListView), const Offset(0, -5000));
       await tester.pump(); // Trigger scroll listener
       await tester.pump(const Duration(milliseconds: 100)); // Wait for fetch
+      await tester.pump(); // Rebuild with new items
 
       expect(find.text('Fetched Movie'), findsOneWidget);
       verify(() => mockMediaRepository.searchMedia('test', page: 2)).called(1);

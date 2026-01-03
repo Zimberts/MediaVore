@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -68,7 +70,12 @@ class _SearchPageState extends State<SearchPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (provider.items.isEmpty) {
-            return const Center(child: Text('Search for movies or series!'));
+            return const Center(
+              child: Text(
+                'Search for movies or series!',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            );
           }
           return ListView.builder(
             itemCount: provider.items.length + (provider.hasMore ? 1 : 0),
@@ -166,11 +173,28 @@ class SearchBottomBar extends StatefulWidget {
 
 class _SearchBottomBarState extends State<SearchBottomBar> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query, SearchProvider provider) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      provider.searchMedia(query);
+    });
   }
 
   @override
@@ -187,20 +211,26 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
               Expanded(
                 child: TextField(
                   controller: _searchController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Search names...',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              Provider.of<SearchProvider>(context, listen: false).searchMedia('');
+                            },
+                          )
+                        : null,
                   ),
+                  onChanged: (value) => _onSearchChanged(value, Provider.of<SearchProvider>(context, listen: false)),
                   onSubmitted: (value) {
-                     Provider.of<SearchProvider>(context, listen: false).searchMedia(value);
+                    _debounce?.cancel();
+                    Provider.of<SearchProvider>(context, listen: false).searchMedia(value);
                   },
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                   Provider.of<SearchProvider>(context, listen: false).searchMedia(_searchController.text);
-                },
               ),
             ],
           ),
