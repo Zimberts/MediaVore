@@ -1,6 +1,7 @@
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 
 /// Abstract class for a repository that handles media (movies and series) data.
 abstract class MediaRepository {
@@ -48,6 +49,21 @@ abstract class MediaRepository {
   
   /// Gets a few items from a list for preview purposes.
   Future<List<MediaItemPreview>> getListPreviews(String listName, {int limit = 4});
+
+  /// Marks a media item (movie or episode) as seen.
+  Future<void> markAsSeen(SeenItem item);
+
+  /// Removes a seen entry.
+  Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber});
+
+  /// Gets all seen items.
+  Future<List<SeenItem>> getSeenItems();
+
+  /// Gets seen status for a specific media item (all episodes seen for a series if applicable).
+  Future<List<SeenItem>> getSeenStatus(int tmdbId, MediaType type);
+
+  /// Fetches details for a specific season of a TV show.
+  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber);
 }
 
 class MediaItemPreview {

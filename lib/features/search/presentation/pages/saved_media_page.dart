@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -17,6 +18,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   late final MediaRepository _mediaRepository;
   String _selectedList = 'watchlist';
   Future<List<MediaItem>>? _savedMediaFuture;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -28,8 +30,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     });
   }
 
-  Future<void> loadSavedMedia() async {
+  Future<void> loadSavedMedia({bool forceRefresh = false}) async {
     if (!mounted) return;
+    
+    if (forceRefresh) {
+      // Temporarily clear the offline status to allow network attempts
+      context.read<SearchProvider>().setOffline(false);
+    }
+
     setState(() {
       _savedMediaFuture = _fetchSavedMedia();
     });
@@ -45,23 +53,71 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   }
 
   Future<List<MediaItem>> _fetchSavedMedia() async {
+    final provider = context.read<SearchProvider>();
     final entries = await _mediaRepository.getListEntries(_selectedList);
-    final items = <MediaItem>[];
-    for (final entry in entries) {
+    final localItems = await _mediaRepository.getListPreviews(_selectedList, limit: 1000);
+
+    // If we are already offline, skip network requests entirely for speed,
+    // UNLESS we are explicitly trying to refresh (which clears the offline flag first).
+    if (provider.isOffline) {
+      return entries.map((entry) {
+        final parts = entry.split(':');
+        final id = int.parse(parts[0]);
+        final typeStr = parts.length > 1 ? parts[1] : 'movie';
+        final type = typeStr == 'tv' ? MediaType.tv : MediaType.movie;
+        
+        final local = localItems.firstWhere(
+          (l) => l.id == id && l.type == type.name,
+          orElse: () => MediaItemPreview(id: id, title: 'Unknown', type: typeStr),
+        );
+        
+        return MediaItem(
+          id: local.id,
+          title: local.title,
+          overview: '', 
+          releaseDate: '', 
+          mediaType: type,
+          posterPath: local.posterPath,
+        );
+      }).toList();
+    }
+
+    final itemFutures = entries.map((entry) async {
       try {
         final parts = entry.split(':');
         final id = int.parse(parts[0]);
-        final type = parts.length > 1 
-            ? MediaType.values.firstWhere((e) => e.name == parts[1], orElse: () => MediaType.movie)
-            : MediaType.movie;
+        final typeStr = parts.length > 1 ? parts[1] : 'movie';
+        final type = typeStr == 'tv' ? MediaType.tv : MediaType.movie;
             
-        final details = await _mediaRepository.getMediaDetails(id, type: type);
-        items.add(details.item);
+        try {
+          final details = await provider.getMediaDetails(id, type);
+          return details.item;
+        } catch (e) {
+          final local = localItems.firstWhere(
+            (l) => l.id == id && l.type == typeStr,
+            orElse: () => MediaItemPreview(id: id, title: 'Unknown', type: typeStr),
+          );
+          return MediaItem(
+            id: local.id,
+            title: local.title,
+            overview: '', 
+            releaseDate: '', 
+            mediaType: type,
+            posterPath: local.posterPath,
+          );
+        }
       } catch (e) {
-        // Skip if failed to load
+        return const MediaItem(id: 0, title: 'Error', overview: '', releaseDate: '');
       }
+    });
+    
+    final items = await Future.wait(itemFutures);
+    
+    if (mounted) {
+      provider.loadAllSeenStatus();
     }
-    return items;
+    
+    return items.where((item) => item.id != 0).toList();
   }
 
   Future<void> _removeItem(MediaItem item) async {
@@ -87,6 +143,17 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: _isRefreshing 
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+              : const Icon(Icons.refresh),
+            onPressed: _isRefreshing ? null : () async {
+              setState(() => _isRefreshing = true);
+              await loadSavedMedia(forceRefresh: true);
+              if (mounted) setState(() => _isRefreshing = false);
+            },
+            tooltip: 'Refresh List',
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             onPressed: () => _showCreateListDialog(context, provider),
@@ -130,6 +197,18 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               itemBuilder: (context, index) {
                 final item = savedItems[index];
                 final isTv = item.mediaType == MediaType.tv;
+                final seenCount = provider.getSeenCount(item);
+                final isSeen = seenCount > 0;
+                
+                bool isFinished = false;
+                if (isSeen) {
+                  if (isTv && item.numberOfEpisodes != null && item.numberOfEpisodes! > 0) {
+                    isFinished = seenCount >= item.numberOfEpisodes!;
+                  } else if (!isTv) {
+                    isFinished = true;
+                  }
+                }
+
                 return InkWell(
                   onTap: () async {
                     await Navigator.push(
@@ -143,13 +222,45 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     }
                   },
                   child: ListTile(
-                    leading: item.posterPath != null
-                        ? Image.network(
-                            'https://image.tmdb.org/t/p/w92${item.posterPath}',
-                            width: 50,
-                            fit: BoxFit.cover,
-                          )
-                        : Icon(isTv ? Icons.tv : Icons.movie),
+                    leading: Stack(
+                      children: [
+                        item.posterPath != null
+                            ? CachedNetworkImage(
+                                imageUrl: 'https://image.tmdb.org/t/p/w92${item.posterPath}',
+                                width: 50,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const SizedBox(
+                                  width: 50,
+                                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                ),
+                                errorWidget: (context, url, error) {
+                                  provider.notifyNetworkError();
+                                  return SizedBox(
+                                    width: 50,
+                                    child: Icon(isTv ? Icons.tv : Icons.movie),
+                                  );
+                                },
+                              )
+                            : Icon(isTv ? Icons.tv : Icons.movie, size: 50),
+                        if (isSeen)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isFinished ? Colors.blue : Colors.green,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(2),
+                              child: Icon(
+                                isFinished ? Icons.done_all : Icons.check, 
+                                size: 12, 
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                     title: Row(
                       children: [
                         Expanded(child: Text(item.title)),
@@ -160,10 +271,32 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                           ),
                       ],
                     ),
-                    subtitle: Text(
-                      item.releaseDate,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (item.releaseDate.isNotEmpty)
+                          Text(
+                            item.releaseDate,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (isTv && isSeen)
+                          Text(
+                            isFinished 
+                                ? 'Finished ($seenCount episodes)' 
+                                : '$seenCount / ${item.numberOfEpisodes ?? "?"} episodes seen',
+                            style: TextStyle(
+                              color: isFinished ? Colors.blue : Colors.green, 
+                              fontSize: 12, 
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        else if (!isTv && isSeen)
+                          const Text(
+                            'Seen',
+                            style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                      ],
                     ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
@@ -187,10 +320,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Switch List', style: Theme.of(context).textTheme.titleLarge),
-              ),
+              Padding(padding: const EdgeInsets.all(16.0), child: Text('Switch List', style: Theme.of(context).textTheme.titleLarge)),
               const Divider(height: 1),
               Flexible(
                 child: ListView.builder(
@@ -201,7 +331,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     final previews = provider.getPreviewsForList(name);
                     
                     return ListTile(
-                      leading: _buildListPreviewIcon(previews),
+                      leading: _buildListPreviewIcon(previews, provider),
                       title: Text(name == 'watchlist' ? 'Watchlist' : name),
                       subtitle: Text('${provider.getPreviewsForList(name).length} items'),
                       selected: name == _selectedList,
@@ -233,52 +363,43 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     );
   }
 
-  Widget _buildListPreviewIcon(List<MediaItemPreview> previews) {
+  Widget _buildListPreviewIcon(List<MediaItemPreview> previews, SearchProvider provider) {
     if (previews.isEmpty) {
       return Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: Colors.grey[300],
-          borderRadius: BorderRadius.circular(4),
-        ),
+        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
         child: const Icon(Icons.movie_outlined, size: 20),
       );
     }
-
     if (previews.length == 1) {
        return ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: Image.network(
-          'https://image.tmdb.org/t/p/w92${previews[0].posterPath}',
-          width: 40,
-          height: 40,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.movie),
+        child: CachedNetworkImage(
+          imageUrl: 'https://image.tmdb.org/t/p/w92${previews[0].posterPath}',
+          width: 40, height: 40, fit: BoxFit.cover,
+          errorWidget: (context, url, error) {
+            provider.notifyNetworkError();
+            return const Icon(Icons.movie);
+          },
         ),
       );
     }
-
-    // Grid of 4 posters (2x2)
     return SizedBox(
-      width: 40,
-      height: 40,
+      width: 40, height: 40,
       child: GridView.builder(
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 1,
-          mainAxisSpacing: 1,
-        ),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 1, mainAxisSpacing: 1),
         itemCount: 4,
         itemBuilder: (context, index) {
-          if (index >= previews.length || previews[index].posterPath == null) {
-            return Container(color: Colors.grey[200]);
-          }
-          return Image.network(
-            'https://image.tmdb.org/t/p/w92${previews[index].posterPath}',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey),
+          if (index >= previews.length || previews[index].posterPath == null) return Container(color: Colors.grey[200]);
+          return CachedNetworkImage(
+            imageUrl: 'https://image.tmdb.org/t/p/w92${previews[index].posterPath}',
+            fit: BoxFit.cover, 
+            errorWidget: (context, url, error) {
+              provider.notifyNetworkError();
+              return Container(color: Colors.grey);
+            },
           );
         },
       ),
@@ -291,11 +412,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('New List'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'List name'),
-          autofocus: true,
-        ),
+        content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'List name'), autofocus: true),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
@@ -303,9 +420,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               if (controller.text.isNotEmpty) {
                 final newName = controller.text;
                 await provider.createList(newName);
-                setState(() {
-                  _selectedList = newName;
-                });
+                setState(() { _selectedList = newName; });
                 loadSavedMedia();
                 if (context.mounted) Navigator.pop(context);
               }
@@ -328,9 +443,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           TextButton(
             onPressed: () async {
               final toDelete = _selectedList;
-              setState(() {
-                _selectedList = 'watchlist';
-              });
+              setState(() { _selectedList = 'watchlist'; });
               await provider.deleteList(toDelete);
               if (context.mounted) Navigator.pop(context);
               loadSavedMedia();

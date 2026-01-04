@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mediavore/features/media_details/data/models/watchlist_item.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 
 @module
 abstract class DatabaseModule {
@@ -16,6 +17,7 @@ abstract class DatabaseModule {
         WatchlistItemSchema,
         UserListSchema,
         MediaListItemSchema,
+        SeenItemModelSchema,
       ],
       directory: dir.path,
     );

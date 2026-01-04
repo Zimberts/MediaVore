@@ -4,7 +4,9 @@ import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
@@ -143,5 +145,61 @@ class MediaRepositoryImpl implements MediaRepository {
       posterPath: item.posterPath,
       type: item.type,
     )).toList();
+  }
+
+  @override
+  Future<void> markAsSeen(SeenItem item) {
+    return localDataSource.markAsSeen(SeenItemModel(
+      tmdbId: item.tmdbId,
+      type: item.type.name,
+      title: item.title,
+      posterPath: item.posterPath,
+      seenDate: item.seenDate,
+      seasonNumber: item.seasonNumber,
+      episodeNumber: item.episodeNumber,
+    ));
+  }
+
+  @override
+  Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) {
+    return localDataSource.removeFromSeen(
+      tmdbId,
+      type.name,
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
+    );
+  }
+
+  @override
+  Future<List<SeenItem>> getSeenItems() async {
+    final items = await localDataSource.getAllSeenItems();
+    return items.map((m) => SeenItem(
+      tmdbId: m.tmdbId,
+      type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
+      title: m.title,
+      posterPath: m.posterPath,
+      seenDate: m.seenDate,
+      seasonNumber: m.seasonNumber,
+      episodeNumber: m.episodeNumber,
+    )).toList();
+  }
+
+  @override
+  Future<List<SeenItem>> getSeenStatus(int tmdbId, MediaType type) async {
+    final items = await localDataSource.getSeenStatus(tmdbId, type.name);
+    return items.map((m) => SeenItem(
+      tmdbId: m.tmdbId,
+      type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
+      title: m.title,
+      posterPath: m.posterPath,
+      seenDate: m.seenDate,
+      seasonNumber: m.seasonNumber,
+      episodeNumber: m.episodeNumber,
+    )).toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) {
+    return remoteDataSource.getSeasonDetails(tvId, seasonNumber);
   }
 }

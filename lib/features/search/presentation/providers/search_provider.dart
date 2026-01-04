@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 class SearchProvider extends ChangeNotifier {
@@ -12,6 +14,7 @@ class SearchProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isFetchingMore = false;
   String _searchQuery = '';
+  bool _isOffline = false;
   
   // Map of list name to set of "id:type" entries
   Map<String, Set<String>> _listsData = {};
@@ -19,6 +22,9 @@ class SearchProvider extends ChangeNotifier {
   
   // Previews for each list
   Map<String, List<MediaItemPreview>> _listPreviews = {};
+
+  // Seen status: Map of "id:type" to count of seen items
+  Map<String, int> _seenStatus = {};
 
   int _currentPage = 1;
   bool _hasMore = true;
@@ -28,6 +34,7 @@ class SearchProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isFetchingMore => _isFetchingMore;
   String get searchQuery => _searchQuery;
+  bool get isOffline => _isOffline;
   
   Set<int> get watchlistIds => (_listsData['watchlist'] ?? {})
       .map((e) => int.parse(e.split(':').first))
@@ -38,6 +45,57 @@ class SearchProvider extends ChangeNotifier {
   int get resetCount => _resetCount;
 
   List<MediaItemPreview> getPreviewsForList(String listName) => _listPreviews[listName] ?? [];
+
+  /// Helper to wrap calls and catch network errors to update global offline status
+  Future<T> _wrapNetworkCall<T>(Future<T> Function() call) async {
+    try {
+      final result = await call();
+      setOffline(false);
+      return result;
+    } catch (e) {
+      final errStr = e.toString();
+      if (errStr.contains('SocketException') || 
+          errStr.contains('Network error') ||
+          errStr.contains('connectionError') ||
+          errStr.contains('HttpException')) {
+        setOffline(true);
+      }
+      rethrow;
+    }
+  }
+
+  void setOffline(bool offline) {
+    if (_isOffline != offline) {
+      _isOffline = offline;
+      notifyListeners();
+    }
+  }
+
+  /// Public method to manually trigger offline status (e.g. from image load errors)
+  void notifyNetworkError() => setOffline(true);
+
+  /// Loads the entire seen history into memory for instant access across the app.
+  Future<void> loadAllSeenStatus() async {
+    try {
+      final allSeen = await _mediaRepository.getSeenItems();
+      final Map<String, int> newStatus = {};
+      
+      for (final item in allSeen) {
+        final key = '${item.tmdbId}:${item.type.name}';
+        newStatus[key] = (newStatus[key] ?? 0) + 1;
+      }
+      
+      _seenStatus = newStatus;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to load seen status: $e');
+    }
+  }
+
+  /// Helper for detail pages to get full seen status for a specific show (episodes list)
+  Future<List<SeenItem>> loadSeenStatusForItem(int id, MediaType type) {
+    return _mediaRepository.getSeenStatus(id, type);
+  }
 
   Future<void> searchMedia(String query) async {
     if (query == _searchQuery && _items.isNotEmpty) return;
@@ -58,10 +116,11 @@ class SearchProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _items = await _mediaRepository.searchMedia(query, page: _currentPage);
+      _items = await _wrapNetworkCall(() => _mediaRepository.searchMedia(query, page: _currentPage));
       if (_items.isEmpty) {
         _hasMore = false;
       }
+      await loadAllSeenStatus();
     } catch (e) {
       debugPrint('Failed to load movies: $e');
       _items = [];
@@ -70,6 +129,10 @@ class SearchProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  int getSeenCount(MediaItem item) {
+    return _seenStatus['${item.id}:${item.mediaType.name}'] ?? 0;
   }
 
   void clearSearch() {
@@ -93,7 +156,7 @@ class SearchProvider extends ChangeNotifier {
 
     try {
       _currentPage++;
-      final nextMovies = await _mediaRepository.searchMedia(_searchQuery, page: _currentPage);
+      final nextMovies = await _wrapNetworkCall(() => _mediaRepository.searchMedia(_searchQuery, page: _currentPage));
       if (nextMovies.isEmpty) {
         _hasMore = false;
       } else {
@@ -123,6 +186,9 @@ class SearchProvider extends ChangeNotifier {
       }
       _listsData = newData;
       _listPreviews = newPreviews;
+      
+      await loadAllSeenStatus();
+      
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to load lists: $e');
@@ -162,7 +228,6 @@ class SearchProvider extends ChangeNotifier {
         _listsData[listName]?.add(entry);
       }
       
-      // Update previews after change
       final previews = await _mediaRepository.getListPreviews(listName);
       _listPreviews[listName] = previews;
       
@@ -180,4 +245,24 @@ class SearchProvider extends ChangeNotifier {
   Future<void> toggleWatchlist(MediaItem item) => toggleInList(item, 'watchlist');
   
   Future<void> loadWatchlist() => loadLists();
+
+  Future<void> markAsSeen(SeenItem item) async {
+    await _mediaRepository.markAsSeen(item);
+    await loadAllSeenStatus();
+  }
+
+  Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
+    await _mediaRepository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
+    await loadAllSeenStatus();
+  }
+
+  /// Public method to get full details while updating the global offline state.
+  Future<MediaDetails> getMediaDetails(int id, MediaType type) {
+    return _wrapNetworkCall(() => _mediaRepository.getMediaDetails(id, type: type));
+  }
+
+  /// Public method to get season details while updating the global offline state.
+  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) {
+    return _wrapNetworkCall(() => _mediaRepository.getSeasonDetails(tvId, seasonNumber));
+  }
 }

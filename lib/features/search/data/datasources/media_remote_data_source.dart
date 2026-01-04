@@ -107,6 +107,21 @@ class MediaRemoteDataSource {
     }
   }
 
+  /// Fetches the details for a TV season from the TMDB API.
+  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) async {
+    try {
+      final response = await dio.get(
+        'https://api.themoviedb.org/3/tv/$tvId/season/$seasonNumber',
+        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+      );
+      return response.data;
+    } on DioException catch (e) {
+       throw ServerException('Failed to load season details', e.response?.statusCode, e);
+    } catch (e) {
+      throw ParsingException('Failed to parse season details', e);
+    }
+  }
+
   /// Fetches the credits for a single media item from the TMDB API.
   Future<Map<String, dynamic>> getMediaCredits(int id, {MediaType type = MediaType.movie}) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';

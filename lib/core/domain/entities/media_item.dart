@@ -2,6 +2,41 @@ import 'package:equatable/equatable.dart';
 
 enum MediaType { movie, tv, person, unknown }
 
+class TVSeason extends Equatable {
+  final int id;
+  final int seasonNumber;
+  final int episodeCount;
+  final String? name;
+
+  const TVSeason({
+    required this.id,
+    required this.seasonNumber,
+    required this.episodeCount,
+    this.name,
+  });
+
+  factory TVSeason.fromJson(Map<String, dynamic> json) {
+    return TVSeason(
+      id: json['id'],
+      seasonNumber: json['season_number'],
+      episodeCount: json['episode_count'],
+      name: json['name'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'season_number': seasonNumber,
+      'episode_count': episodeCount,
+      'name': name,
+    };
+  }
+
+  @override
+  List<Object?> get props => [id, seasonNumber, episodeCount, name];
+}
+
 class MediaItem extends Equatable {
   final int id;
   final String title;
@@ -15,6 +50,7 @@ class MediaItem extends Equatable {
   final List<String>? genres;
   final double? voteAverage;
   final int? runtime;
+  final List<TVSeason>? seasons;
 
   const MediaItem({
     required this.id,
@@ -29,6 +65,7 @@ class MediaItem extends Equatable {
     this.genres,
     this.voteAverage,
     this.runtime,
+    this.seasons,
   });
 
   factory MediaItem.fromJson(Map<String, dynamic> json) {
@@ -39,6 +76,13 @@ class MediaItem extends Equatable {
     if (json['genres'] != null) {
       genresList = (json['genres'] as List)
           .map((g) => g['name'] as String)
+          .toList();
+    }
+
+    List<TVSeason>? seasonsList;
+    if (json['seasons'] != null) {
+      seasonsList = (json['seasons'] as List)
+          .map((s) => TVSeason.fromJson(s))
           .toList();
     }
 
@@ -55,6 +99,7 @@ class MediaItem extends Equatable {
       genres: genresList,
       voteAverage: (json['vote_average'] as num?)?.toDouble(),
       runtime: json['runtime'],
+      seasons: seasonsList,
     );
   }
 
@@ -85,6 +130,7 @@ class MediaItem extends Equatable {
       'genres': genres,
       'vote_average': voteAverage,
       'runtime': runtime,
+      'seasons': seasons?.map((s) => s.toJson()).toList(),
     };
   }
 
@@ -102,5 +148,6 @@ class MediaItem extends Equatable {
         genres,
         voteAverage,
         runtime,
+        seasons,
       ];
 }

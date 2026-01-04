@@ -4,6 +4,7 @@ import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
+import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -33,6 +34,7 @@ void main() {
     when(() => mockMediaRepository.isInWatchlist(any(), any())).thenAnswer((_) async => false);
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -54,6 +56,7 @@ void main() {
       expect(find.byType(SearchPage), findsOneWidget);
       
       expect(find.byType(SavedMediaPage, skipOffstage: false), findsOneWidget);
+      expect(find.byType(SeenHistoryPage, skipOffstage: false), findsOneWidget);
       
       final indexedStack = tester.widget<IndexedStack>(find.byType(IndexedStack));
       expect(indexedStack.index, 0);
@@ -73,6 +76,22 @@ void main() {
       final indexedStack = tester.widget<IndexedStack>(find.byType(IndexedStack));
       expect(indexedStack.index, 1);
       expect(find.byType(SavedMediaPage), findsOneWidget);
+    });
+
+    testWidgets('switches to Seen tab', (WidgetTester tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      
+      final seenTab = find.descendant(
+        of: find.byType(BottomNavigationBar),
+        matching: find.byIcon(Icons.visibility),
+      );
+      
+      await tester.tap(seenTab);
+      await tester.pumpAndSettle();
+      
+      final indexedStack = tester.widget<IndexedStack>(find.byType(IndexedStack));
+      expect(indexedStack.index, 2);
+      expect(find.byType(SeenHistoryPage), findsOneWidget);
     });
 
     testWidgets('tapping Search tab requests reset and selects text', (WidgetTester tester) async {
@@ -153,11 +172,6 @@ void main() {
       await tester.tap(bookmarkTab);
       await tester.pumpAndSettle();
 
-      // Open picker. Use find.text('Watchlist') and pick the one that is NOT in the BottomNavigationBar.
-      // Usually the one in the AppBar is found first or we can use descendant logic.
-      // The previous issue was that find.descendant itself found 2. 
-      // This is because find.byType(AppBar) found 2 AppBars.
-      
       final listPicker = find.descendant(
         of: find.byType(SavedMediaPage),
         matching: find.text('Watchlist'),
@@ -175,8 +189,6 @@ void main() {
       // 4. Tap bookmarkTab again to reset
       await tester.tap(bookmarkTab);
       await tester.pumpAndSettle();
-      
-      expect(find.text('Watchlist'), findsWidgets); // Might find 2 again, so use findsWidgets
       
       // Verify the list title in SavedMediaPage is 'Watchlist'
       final currentListTitle = find.descendant(

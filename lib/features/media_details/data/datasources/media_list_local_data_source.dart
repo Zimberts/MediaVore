@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:isar/isar.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 
 @lazySingleton
 class MediaListLocalDataSource {
@@ -84,5 +85,55 @@ class MediaListLocalDataSource {
       await _isar.userLists.filter().nameEqualTo(name).deleteAll();
       await _isar.mediaListItems.filter().listNameEqualTo(name).deleteAll();
     });
+  }
+
+  // Seen Items methods
+
+  Future<void> markAsSeen(SeenItemModel item) async {
+    await _isar.writeTxn(() async {
+      // Check for existing same entry (especially for episodes)
+      final query = _isar.seenItemModels
+          .filter()
+          .tmdbIdEqualTo(item.tmdbId)
+          .typeEqualTo(item.type)
+          .seasonNumberEqualTo(item.seasonNumber)
+          .episodeNumberEqualTo(item.episodeNumber);
+      
+      final existing = await query.findFirst();
+
+      if (existing != null) {
+        item.isarId = existing.isarId;
+      }
+      await _isar.seenItemModels.put(item);
+    });
+  }
+
+  Future<void> removeFromSeen(int tmdbId, String type, {int? seasonNumber, int? episodeNumber}) async {
+    await _isar.writeTxn(() async {
+      await _isar.seenItemModels
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type)
+          .seasonNumberEqualTo(seasonNumber)
+          .episodeNumberEqualTo(episodeNumber)
+          .deleteAll();
+    });
+  }
+
+  Future<List<SeenItemModel>> getAllSeenItems() async {
+    return await _isar.seenItemModels
+        .where()
+        .sortBySeenDateDesc()
+        .thenBySeasonNumberDesc()
+        .thenByEpisodeNumberDesc()
+        .findAll();
+  }
+
+  Future<List<SeenItemModel>> getSeenStatus(int tmdbId, String type) async {
+    return await _isar.seenItemModels
+        .filter()
+        .tmdbIdEqualTo(tmdbId)
+        .typeEqualTo(type)
+        .findAll();
   }
 }

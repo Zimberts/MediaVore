@@ -46,6 +46,21 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('MediaVore Search'),
+        bottom: context.watch<SearchProvider>().isOffline 
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(30),
+              child: Container(
+                color: Colors.orange,
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: const Text(
+                  'Offline Mode - Some features unavailable',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+            )
+          : null,
       ),
       body: Consumer<SearchProvider>(
         builder: (context, provider, child) {
@@ -53,10 +68,19 @@ class _SearchPageState extends State<SearchPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (provider.items.isEmpty) {
-            return const Center(
-              child: Text(
-                'Search for movies or series!',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    provider.isOffline ? 'You are offline.' : 'Search for movies or series!',
+                    style: const TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  if (provider.isOffline) ...[
+                    const SizedBox(height: 16),
+                    const Text('Go to your watchlist to see saved items.', style: TextStyle(color: Colors.grey)),
+                  ],
+                ],
               ),
             );
           }
@@ -75,6 +99,17 @@ class _SearchPageState extends State<SearchPage> {
               final item = provider.items[index];
               final isSaved = provider.watchlistIds.contains(item.id);
               final isTv = item.mediaType == MediaType.tv;
+              final seenCount = provider.getSeenCount(item);
+              final isSeen = seenCount > 0;
+              
+              bool isFinished = false;
+              if (isSeen) {
+                if (isTv && item.numberOfEpisodes != null && item.numberOfEpisodes! > 0) {
+                  isFinished = seenCount >= item.numberOfEpisodes!;
+                } else if (!isTv) {
+                  isFinished = true; // Movies are finished if seen at least once
+                }
+              }
 
               return InkWell(
                 onTap: () async {
@@ -89,18 +124,39 @@ class _SearchPageState extends State<SearchPage> {
                   }
                 },
                 child: ListTile(
-                  leading: item.posterPath != null
-                      ? CachedNetworkImage(
-                          imageUrl:
-                              'https://image.tmdb.org/t/p/w92${item.posterPath}',
-                          width: 50,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) =>
-                              Icon(isTv ? Icons.tv : Icons.movie),
-                        )
-                      : Icon(isTv ? Icons.tv : Icons.movie),
+                  leading: Stack(
+                    children: [
+                      item.posterPath != null
+                          ? CachedNetworkImage(
+                              imageUrl:
+                                  'https://image.tmdb.org/t/p/w92${item.posterPath}',
+                              width: 50,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) =>
+                                  Icon(isTv ? Icons.tv : Icons.movie),
+                            )
+                          : Icon(isTv ? Icons.tv : Icons.movie, size: 50),
+                      if (isSeen)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isFinished ? Colors.blue : Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(2),
+                            child: Icon(
+                              isFinished ? Icons.done_all : Icons.check, 
+                              size: 12, 
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   title: Row(
                     children: [
                       Expanded(child: Text(item.title)),
@@ -125,10 +181,31 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                     ],
                   ),
-                  subtitle: Text(
-                    item.releaseDate,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.releaseDate,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (isTv && isSeen)
+                        Text(
+                          isFinished 
+                              ? 'Finished ($seenCount episodes)' 
+                              : '$seenCount / ${item.numberOfEpisodes ?? "?"} episodes seen',
+                          style: TextStyle(
+                            color: isFinished ? Colors.blue : Colors.green, 
+                            fontSize: 12, 
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      else if (!isTv && isSeen)
+                        const Text(
+                          'Seen',
+                          style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                    ],
                   ),
                   trailing: IconButton(
                     icon: Icon(
