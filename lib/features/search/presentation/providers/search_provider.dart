@@ -12,7 +12,14 @@ class SearchProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isFetchingMore = false;
   String _searchQuery = '';
-  Set<String> _watchlistEntries = {};
+  
+  // Map of list name to set of "id:type" entries
+  Map<String, Set<String>> _listsData = {};
+  List<String> _listNames = ['watchlist'];
+  
+  // Previews for each list
+  Map<String, List<MediaItemPreview>> _listPreviews = {};
+
   int _currentPage = 1;
   bool _hasMore = true;
   int _resetCount = 0;
@@ -21,9 +28,16 @@ class SearchProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isFetchingMore => _isFetchingMore;
   String get searchQuery => _searchQuery;
-  Set<int> get watchlistIds => _watchlistEntries.map((e) => int.parse(e.split(':').first)).toSet();
+  
+  Set<int> get watchlistIds => (_listsData['watchlist'] ?? {})
+      .map((e) => int.parse(e.split(':').first))
+      .toSet();
+
+  List<String> get listNames => _listNames;
   bool get hasMore => _hasMore;
   int get resetCount => _resetCount;
+
+  List<MediaItemPreview> getPreviewsForList(String listName) => _listPreviews[listName] ?? [];
 
   Future<void> searchMedia(String query) async {
     if (query == _searchQuery && _items.isNotEmpty) return;
@@ -67,8 +81,6 @@ class SearchProvider extends ChangeNotifier {
   }
 
   void requestReset() {
-    // Only increment resetCount to signal UI selection.
-    // Do NOT clear _items or _searchQuery so results stay visible.
     _resetCount++;
     notifyListeners();
   }
@@ -96,25 +108,76 @@ class SearchProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadWatchlist() async {
-    _watchlistEntries = (await _mediaRepository.getWatchlistEntries()).toSet();
-    notifyListeners();
-  }
-
-  Future<void> toggleWatchlist(MediaItem item) async {
-    final entry = '${item.id}:${item.mediaType.name}';
-    final isInWatchlist = _watchlistEntries.contains(entry);
+  Future<void> loadLists() async {
     try {
-      if (isInWatchlist) {
-        await _mediaRepository.removeFromWatchlist(item.id, item.mediaType);
-        _watchlistEntries.remove(entry);
-      } else {
-        await _mediaRepository.addToWatchlist(item.id, item.mediaType);
-        _watchlistEntries.add(entry);
+      _listNames = await _mediaRepository.getAllListNames();
+      final Map<String, Set<String>> newData = {};
+      final Map<String, List<MediaItemPreview>> newPreviews = {};
+      
+      for (final name in _listNames) {
+        final entries = await _mediaRepository.getListEntries(name);
+        newData[name] = entries.toSet();
+        
+        final previews = await _mediaRepository.getListPreviews(name);
+        newPreviews[name] = previews;
       }
+      _listsData = newData;
+      _listPreviews = newPreviews;
       notifyListeners();
     } catch (e) {
-      debugPrint('Failed to update watchlist: $e');
+      debugPrint('Failed to load lists: $e');
     }
   }
+
+  Future<void> createList(String name) async {
+    try {
+      await _mediaRepository.createList(name);
+      await loadLists();
+    } catch (e) {
+      debugPrint('Failed to create list: $e');
+    }
+  }
+
+  Future<void> deleteList(String name) async {
+    try {
+      await _mediaRepository.deleteList(name);
+      await loadLists();
+    } catch (e) {
+      debugPrint('Failed to delete list: $e');
+    }
+  }
+
+  Future<void> toggleInList(MediaItem item, String listName) async {
+    final entry = '${item.id}:${item.mediaType.name}';
+    final entries = _listsData[listName] ?? {};
+    final isInList = entries.contains(entry);
+    
+    try {
+      if (isInList) {
+        await _mediaRepository.removeFromList(item.id, item.mediaType, listName);
+        _listsData[listName]?.remove(entry);
+      } else {
+        await _mediaRepository.addToList(item, listName);
+        _listsData[listName] ??= {};
+        _listsData[listName]?.add(entry);
+      }
+      
+      // Update previews after change
+      final previews = await _mediaRepository.getListPreviews(listName);
+      _listPreviews[listName] = previews;
+      
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to update list $listName: $e');
+    }
+  }
+
+  bool isItemInList(MediaItem item, String listName) {
+    final entry = '${item.id}:${item.mediaType.name}';
+    return _listsData[listName]?.contains(entry) ?? false;
+  }
+
+  Future<void> toggleWatchlist(MediaItem item) => toggleInList(item, 'watchlist');
+  
+  Future<void> loadWatchlist() => loadLists();
 }

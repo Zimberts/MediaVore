@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:mediavore/features/media_details/data/datasources/watchlist_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/watchlist_item.dart';
-import 'package:path/path.dart' as path;
 import 'dart:io';
 
 void main() {
@@ -12,7 +11,7 @@ void main() {
 
   setUpAll(() async {
     await Isar.initializeIsarCore(download: true);
-    tempPath = path.join(Directory.current.path, 'test', 'tmp');
+    tempPath = '${Directory.current.path}/test/tmp';
     if (!Directory(tempPath).existsSync()) {
       Directory(tempPath).createSync(recursive: true);
     }

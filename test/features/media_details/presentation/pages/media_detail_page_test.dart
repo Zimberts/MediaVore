@@ -7,14 +7,17 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 
 class FakeMediaItem extends Fake implements MediaItem {}
 
 void main() {
   late MockMediaRepository mockMediaRepository;
+  late SearchProvider searchProvider;
 
   setUpAll(() {
     registerFallbackValue(Uri());
@@ -24,14 +27,15 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
+    searchProvider = SearchProvider(mockMediaRepository);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-    // Register mock repository
-    // if (locator.isRegistered<MediaRepository>()) {
-    //   locator.unregister<MediaRepository>();
-    // }
+    
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.isInWatchlist(any(), any())).thenAnswer((_) async => false);
+    
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.isInList(any(), any(), any())).thenAnswer((_) async => false);
+    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -60,8 +64,11 @@ void main() {
   );
 
   Widget createWidgetUnderTest() {
-    return const MaterialApp(
-      home: MediaDetailPage(item: tItem),
+    return ChangeNotifierProvider<SearchProvider>.value(
+      value: searchProvider,
+      child: const MaterialApp(
+        home: MediaDetailPage(item: tItem),
+      ),
     );
   }
 

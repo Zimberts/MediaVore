@@ -5,7 +5,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
-import 'package:mediavore/features/media_details/presentation/widgets/watchlist_button.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/media_list_manager.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 /// A page that displays the details of a specific media item.
@@ -247,12 +247,10 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           ),
                         ],
                         const SizedBox(height: 24),
-                        Center(
-                          child: WatchlistButton(
-                            mediaRepository: _mediaRepository,
-                            itemId: itemToDisplay.id,
-                            mediaType: itemToDisplay.mediaType,
-                          ),
+                        MediaListManager(
+                          itemId: itemToDisplay.id,
+                          mediaType: itemToDisplay.mediaType,
+                          title: itemToDisplay.title,
                         ),
                       ],
                     ),

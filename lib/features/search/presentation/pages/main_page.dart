@@ -28,13 +28,17 @@ class _MainPageState extends State<MainPage> {
     if (_currentIndex == index) {
       final navigator = _navigatorKeys[index].currentState;
       if (navigator != null) {
-        if (navigator.canPop()) {
-          navigator.popUntil((route) => route.isFirst);
-        }
         if (index == 0) {
+          if (navigator.canPop()) {
+            navigator.popUntil((route) => route.isFirst);
+          }
           context.read<SearchProvider>().requestReset();
         } else if (index == 1) {
-          _savedMediaPageKeys[1].currentState?.loadSavedMedia();
+          if (navigator.canPop()) {
+            navigator.popUntil((route) => route.isFirst);
+          } else {
+            _savedMediaPageKeys[1].currentState?.resetToDefault();
+          }
         }
       }
     } else {

@@ -10,7 +10,7 @@ import '../../../../helpers/mocks.dart';
 void main() {
   late MediaRepositoryImpl repository;
   late MockMediaRemoteDataSource mockRemoteDataSource;
-  late MockWatchlistLocalDataSource mockLocalDataSource;
+  late MockMediaListLocalDataSource mockLocalDataSource;
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
@@ -18,7 +18,7 @@ void main() {
 
   setUp(() {
     mockRemoteDataSource = MockMediaRemoteDataSource();
-    mockLocalDataSource = MockWatchlistLocalDataSource();
+    mockLocalDataSource = MockMediaListLocalDataSource();
     repository = MediaRepositoryImpl(
       remoteDataSource: mockRemoteDataSource,
       localDataSource: mockLocalDataSource,
@@ -140,19 +140,28 @@ void main() {
   });
 
   group('addToWatchlist', () {
-    const tId = 1;
-    const tType = MediaType.movie;
-
     test('should call local data source to add item', () async {
       // arrange
-      when(() => mockLocalDataSource.addToWatchlist(tId, tType.name))
+      when(() => mockLocalDataSource.addToList(
+            id: any(named: 'id'),
+            type: any(named: 'type'),
+            listName: any(named: 'listName'),
+            title: any(named: 'title'),
+            posterPath: any(named: 'posterPath'),
+          ))
           .thenAnswer((_) async => Future.value());
 
       // act
-      await repository.addToWatchlist(tId, tType);
+      await repository.addToWatchlist(tMediaItem);
 
       // assert
-      verify(() => mockLocalDataSource.addToWatchlist(tId, tType.name)).called(1);
+      verify(() => mockLocalDataSource.addToList(
+            id: tMediaItem.id,
+            type: tMediaItem.mediaType.name,
+            listName: 'watchlist',
+            title: tMediaItem.title,
+            posterPath: tMediaItem.posterPath,
+          )).called(1);
     });
   });
 
@@ -162,14 +171,14 @@ void main() {
 
     test('should call local data source to remove item', () async {
       // arrange
-      when(() => mockLocalDataSource.removeFromWatchlist(tId, tType.name))
+      when(() => mockLocalDataSource.removeFromList(tId, tType.name, 'watchlist'))
           .thenAnswer((_) async => Future.value());
 
       // act
       await repository.removeFromWatchlist(tId, tType);
 
       // assert
-      verify(() => mockLocalDataSource.removeFromWatchlist(tId, tType.name)).called(1);
+      verify(() => mockLocalDataSource.removeFromList(tId, tType.name, 'watchlist')).called(1);
     });
   });
 
@@ -178,7 +187,7 @@ void main() {
 
     test('should return list of entries from local data source', () async {
       // arrange
-      when(() => mockLocalDataSource.getWatchlistEntries())
+      when(() => mockLocalDataSource.getListEntries('watchlist'))
           .thenAnswer((_) async => tEntries);
 
       // act
@@ -186,7 +195,7 @@ void main() {
 
       // assert
       expect(result, equals(tEntries));
-      verify(() => mockLocalDataSource.getWatchlistEntries()).called(1);
+      verify(() => mockLocalDataSource.getListEntries('watchlist')).called(1);
     });
   });
 
@@ -196,7 +205,7 @@ void main() {
 
     test('should return true when item is in watchlist', () async {
       // arrange
-      when(() => mockLocalDataSource.getWatchlistEntries())
+      when(() => mockLocalDataSource.getListEntries('watchlist'))
           .thenAnswer((_) async => ['1:movie', '2:tv']);
 
       // act
@@ -208,7 +217,7 @@ void main() {
 
     test('should return false when item is not in watchlist', () async {
       // arrange
-      when(() => mockLocalDataSource.getWatchlistEntries())
+      when(() => mockLocalDataSource.getListEntries('watchlist'))
           .thenAnswer((_) async => ['2:tv']);
 
       // act

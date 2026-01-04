@@ -3,6 +3,7 @@ import 'package:isar/isar.dart';
 import 'package:mediavore/features/media_details/data/models/watchlist_item.dart';
 
 /// Manages the user's watchlist using Isar database.
+/// @deprecated Use [MediaListLocalDataSource] instead.
 @lazySingleton
 class WatchlistLocalDataSource {
   final Isar _isar;

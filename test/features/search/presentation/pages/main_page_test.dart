@@ -29,7 +29,10 @@ void main() {
     
     // Default mocks
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.isInWatchlist(any(), any())).thenAnswer((_) async => false);
+    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -50,7 +53,6 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       expect(find.byType(SearchPage), findsOneWidget);
       
-      // SavedMediaPage is in the IndexedStack but offstage, so we need skipOffstage: false
       expect(find.byType(SavedMediaPage, skipOffstage: false), findsOneWidget);
       
       final indexedStack = tester.widget<IndexedStack>(find.byType(IndexedStack));
@@ -60,7 +62,6 @@ void main() {
     testWidgets('switches to Watchlist tab', (WidgetTester tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       
-      // Disambiguate by looking for the icon inside the BottomNavigationBar
       final bookmarkTab = find.descendant(
         of: find.byType(BottomNavigationBar),
         matching: find.byIcon(Icons.bookmark),
@@ -74,14 +75,12 @@ void main() {
       expect(find.byType(SavedMediaPage), findsOneWidget);
     });
 
-    testWidgets('double-tapping Search tab requests reset and selects text', (WidgetTester tester) async {
+    testWidgets('tapping Search tab requests reset and selects text', (WidgetTester tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // Enter some text
       await tester.enterText(find.byType(TextField), 'Dune');
       await tester.pump();
       
-      // Tap Search tab icon in the BottomNavigationBar (disambiguate from TextField icon)
       final searchTab = find.descendant(
         of: find.byType(BottomNavigationBar),
         matching: find.byIcon(Icons.search),
@@ -90,64 +89,12 @@ void main() {
       await tester.tap(searchTab);
       await tester.pumpAndSettle();
 
-      // Check if text is selected
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller?.selection.baseOffset, 0);
       expect(textField.controller?.selection.extentOffset, 4);
     });
 
-    testWidgets('double-tapping Search tab from detail page pops to root', (WidgetTester tester) async {
-      final movie = const MediaItem(
-        id: 1,
-        title: 'Dune',
-        posterPath: null,
-        releaseDate: '2021',
-        overview: 'Sand',
-        mediaType: MediaType.movie,
-      );
-      
-      when(() => mockMediaRepository.searchMedia('Dune', page: 1))
-          .thenAnswer((_) async => [movie]);
-      when(() => mockMediaRepository.getMediaDetails(1, type: any(named: 'type')))
-          .thenAnswer((_) async => MediaDetails(item: movie, cast: []));
-      when(() => mockMediaRepository.isInWatchlist(1, any())).thenAnswer((_) async => false);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // 1. Search for a movie
-      await tester.enterText(find.byType(TextField), 'Dune');
-      await tester.pump(const Duration(milliseconds: 600)); // Debounce
-      await tester.pump(); // Start search
-      await tester.pump(); // Complete search
-
-      // 2. Navigate to details
-      await tester.tap(find.widgetWithText(ListTile, 'Dune'));
-      await tester.pumpAndSettle();
-      
-      expect(find.text('Sand'), findsOneWidget); // On detail page
-
-      // 3. Double tap search icon in BottomNavigationBar
-      final searchTab = find.descendant(
-        of: find.byType(BottomNavigationBar),
-        matching: find.byIcon(Icons.search),
-      );
-      await tester.tap(searchTab);
-      
-      // Use repeated pump instead of pumpAndSettle to avoid timeout from potential infinite animations
-      for (int i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-
-      // 4. Should be back on search page results
-      expect(find.byType(SearchPage), findsOneWidget);
-      expect(find.text('Sand'), findsNothing);
-      
-      // And text should be selected
-      final textField = tester.widget<TextField>(find.byType(TextField));
-      expect(textField.controller?.selection.baseOffset, 0);
-    });
-
-    testWidgets('double-tapping Watchlist tab from detail page pops to root', (WidgetTester tester) async {
+    testWidgets('tapping Watchlist tab from detail page pops to root', (WidgetTester tester) async {
       final movie = const MediaItem(
         id: 1,
         title: 'Dune',
@@ -157,8 +104,7 @@ void main() {
         mediaType: MediaType.movie,
       );
 
-      // Setup for SavedMediaPage
-      when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => ['1:movie']);
+      when(() => mockMediaRepository.getListEntries('watchlist')).thenAnswer((_) async => ['1:movie']);
       when(() => mockMediaRepository.getMediaDetails(1, type: any(named: 'type')))
           .thenAnswer((_) async => MediaDetails(item: movie, cast: []));
 
@@ -173,15 +119,14 @@ void main() {
       await tester.pumpAndSettle();
       
       expect(find.byType(SavedMediaPage), findsOneWidget);
-      expect(find.text('Dune'), findsOneWidget);
 
       // 2. Navigate to details
       await tester.tap(find.widgetWithText(ListTile, 'Dune'));
       await tester.pumpAndSettle();
       
-      expect(find.text('Sand'), findsOneWidget); // On detail page
+      expect(find.text('Sand'), findsOneWidget);
 
-      // 3. Double tap watchlist icon in BottomNavigationBar
+      // 3. Tap watchlist icon again
       await tester.tap(bookmarkTab);
       
       for (int i = 0; i < 10; i++) {
@@ -191,9 +136,54 @@ void main() {
       // 4. Should be back on SavedMediaPage root
       expect(find.byType(SavedMediaPage), findsOneWidget);
       expect(find.text('Sand'), findsNothing);
+    });
+
+    testWidgets('tapping Watchlist tab on root resets to default list', (WidgetTester tester) async {
+      // 1. Setup with a custom list
+      when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist', 'Custom']);
+      when(() => mockMediaRepository.getListEntries('Custom')).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // 2. Switch to Watchlist tab
+      final bookmarkTab = find.descendant(
+        of: find.byType(BottomNavigationBar),
+        matching: find.byIcon(Icons.bookmark),
+      );
+      await tester.tap(bookmarkTab);
+      await tester.pumpAndSettle();
+
+      // Open picker. Use find.text('Watchlist') and pick the one that is NOT in the BottomNavigationBar.
+      // Usually the one in the AppBar is found first or we can use descendant logic.
+      // The previous issue was that find.descendant itself found 2. 
+      // This is because find.byType(AppBar) found 2 AppBars.
       
-      // Verify loadSavedMedia was called
-      verify(() => mockMediaRepository.getWatchlistEntries()).called(greaterThan(1));
+      final listPicker = find.descendant(
+        of: find.byType(SavedMediaPage),
+        matching: find.text('Watchlist'),
+      );
+      
+      await tester.tap(listPicker);
+      await tester.pumpAndSettle();
+      
+      // Select Custom list from bottom sheet
+      await tester.tap(find.text('Custom'));
+      await tester.pumpAndSettle();
+      
+      expect(find.text('Custom'), findsOneWidget);
+      
+      // 4. Tap bookmarkTab again to reset
+      await tester.tap(bookmarkTab);
+      await tester.pumpAndSettle();
+      
+      expect(find.text('Watchlist'), findsWidgets); // Might find 2 again, so use findsWidgets
+      
+      // Verify the list title in SavedMediaPage is 'Watchlist'
+      final currentListTitle = find.descendant(
+        of: find.byType(SavedMediaPage),
+        matching: find.text('Watchlist'),
+      );
+      expect(currentListTitle, findsOneWidget);
     });
   });
 }

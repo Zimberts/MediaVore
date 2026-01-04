@@ -18,13 +18,27 @@ void main() {
     registerFallbackValue(Uri());
     registerFallbackValue(FakeMediaItem());
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(const MediaItem(
+      id: 0,
+      title: '',
+      overview: '',
+      posterPath: null,
+      releaseDate: '',
+      mediaType: MediaType.movie,
+    ));
   });
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
     searchProvider = SearchProvider(mockMediaRepository);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    
+    // Default mocks for initialization
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
+        .thenAnswer((_) async => []);
+    when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
   });
 
   Widget createWidgetUnderTest() {
@@ -139,19 +153,21 @@ void main() {
 
 
     testWidgets('calls addToWatchlist when save button is tapped', (WidgetTester tester) async {
-      final items = [
-        const MediaItem(
+      final item = const MediaItem(
           id: 1,
           title: 'Inception',
           posterPath: null,
           releaseDate: '2010-07-16',
           overview: 'A mind-bending thriller',
           mediaType: MediaType.movie,
-        ),
-      ];
+        );
+      final items = [item];
+      
       when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
           .thenAnswer((_) async => items);
-      when(() => mockMediaRepository.addToWatchlist(1, MediaType.movie)).thenAnswer((_) async {});
+      when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
+      when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
+          .thenAnswer((_) async => []);
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -166,7 +182,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      verify(() => mockMediaRepository.addToWatchlist(1, MediaType.movie)).called(1);
+      verify(() => mockMediaRepository.addToList(any(), 'watchlist')).called(1);
     });
 
     testWidgets('loads more movies when scrolled to bottom', (WidgetTester tester) async {

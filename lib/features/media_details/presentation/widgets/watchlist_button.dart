@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
+/// A button that allows users to add/remove an item from their watchlist.
+/// 
+/// @deprecated Use [MediaListManager] instead for full list support.
 class WatchlistButton extends StatefulWidget {
   final MediaRepository mediaRepository;
   final int itemId;
   final MediaType mediaType;
+  final String title;
+  final String? posterPath;
 
   const WatchlistButton({
     super.key,
     required this.mediaRepository,
     required this.itemId,
+    required this.title,
+    this.posterPath,
     this.mediaType = MediaType.movie,
   });
 
@@ -45,7 +52,15 @@ class _WatchlistButtonState extends State<WatchlistButton> {
     if (_isAdded) {
       await widget.mediaRepository.removeFromWatchlist(widget.itemId, widget.mediaType);
     } else {
-      await widget.mediaRepository.addToWatchlist(widget.itemId, widget.mediaType);
+      final item = MediaItem(
+        id: widget.itemId,
+        title: widget.title,
+        overview: '',
+        posterPath: widget.posterPath,
+        releaseDate: '',
+        mediaType: widget.mediaType,
+      );
+      await widget.mediaRepository.addToWatchlist(item);
     }
     _checkIfAdded();
   }
