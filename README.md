@@ -51,3 +51,32 @@ Additional features:
 
 - [ ] (might add possibility to enter the time it took to read the book)
 - [ ] Add a book by scanning its barcode
+
+## Project Setup on a New Machine
+
+If you have cloned this project on a new machine, you may encounter errors when trying to run it for the first time. This is often due to missing dependencies or stale auto-generated files that are specific to the previous development environment (like Windows).
+
+Follow these steps in your terminal to set up the project correctly on your new machine (macOS):
+
+1. **Check your Flutter environment:**
+    Run this command to check that your Flutter installation is correct and that you have the necessary tools (like Xcode and Android Studio) to build the app.
+
+    ```sh
+    flutter doctor
+    ```
+
+2. **Get dependencies:**
+    This command downloads all the project's dependencies and links them for your current platform.
+
+    ```sh
+    flutter pub get
+    ```
+
+3. **Regenerate auto-generated files:**
+    Your project uses code generation. This command will delete old files and create new ones that are compatible with your current setup. This is a crucial step.
+
+    ```sh
+    flutter pub run build_runner build --delete-conflicting-outputs
+    ```
+
+After completing these three steps, the project should build and run correctly.
