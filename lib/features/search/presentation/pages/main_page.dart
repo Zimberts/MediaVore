@@ -26,13 +26,15 @@ class _MainPageState extends State<MainPage> {
 
   void _onTap(int index) {
     if (_currentIndex == index) {
-      if (index == 0) {
-        final navigator = _navigatorKeys[0].currentState;
-        if (navigator != null) {
-          if (navigator.canPop()) {
-            navigator.popUntil((route) => route.isFirst);
-          }
+      final navigator = _navigatorKeys[index].currentState;
+      if (navigator != null) {
+        if (navigator.canPop()) {
+          navigator.popUntil((route) => route.isFirst);
+        }
+        if (index == 0) {
           context.read<SearchProvider>().requestReset();
+        } else if (index == 1) {
+          _savedMediaPageKeys[1].currentState?.loadSavedMedia();
         }
       }
     } else {
