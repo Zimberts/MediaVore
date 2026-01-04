@@ -146,5 +146,54 @@ void main() {
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller?.selection.baseOffset, 0);
     });
+
+    testWidgets('double-tapping Watchlist tab from detail page pops to root', (WidgetTester tester) async {
+      final movie = const MediaItem(
+        id: 1,
+        title: 'Dune',
+        posterPath: null,
+        releaseDate: '2021',
+        overview: 'Sand',
+        mediaType: MediaType.movie,
+      );
+
+      // Setup for SavedMediaPage
+      when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => ['1:movie']);
+      when(() => mockMediaRepository.getMediaDetails(1, type: any(named: 'type')))
+          .thenAnswer((_) async => MediaDetails(item: movie, cast: []));
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // 1. Switch to Watchlist tab
+      final bookmarkTab = find.descendant(
+        of: find.byType(BottomNavigationBar),
+        matching: find.byIcon(Icons.bookmark),
+      );
+      await tester.tap(bookmarkTab);
+      await tester.pumpAndSettle();
+      
+      expect(find.byType(SavedMediaPage), findsOneWidget);
+      expect(find.text('Dune'), findsOneWidget);
+
+      // 2. Navigate to details
+      await tester.tap(find.widgetWithText(ListTile, 'Dune'));
+      await tester.pumpAndSettle();
+      
+      expect(find.text('Sand'), findsOneWidget); // On detail page
+
+      // 3. Double tap watchlist icon in BottomNavigationBar
+      await tester.tap(bookmarkTab);
+      
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      // 4. Should be back on SavedMediaPage root
+      expect(find.byType(SavedMediaPage), findsOneWidget);
+      expect(find.text('Sand'), findsNothing);
+      
+      // Verify loadSavedMedia was called
+      verify(() => mockMediaRepository.getWatchlistEntries()).called(greaterThan(1));
+    });
   });
 }
