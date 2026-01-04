@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'media_item.dart';
 
 class ActorDetails extends Equatable {
   final int id;

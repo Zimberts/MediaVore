@@ -79,7 +79,7 @@ void main() {
       verify(() => mockMediaRepository.searchMedia('Inception', page: 1)).called(1);
       
       // Use pump() instead of pumpAndSettle() to avoid timeout from infinite CircularProgressIndicator
-      await tester.pumpo();
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       
       expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);

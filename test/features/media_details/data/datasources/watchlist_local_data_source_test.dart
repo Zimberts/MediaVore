@@ -1,83 +1,85 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar/isar.dart';
 import 'package:mediavore/features/media_details/data/datasources/watchlist_local_data_source.dart';
-import 'package:mocktail/mocktail.dart';
-import '../../../../helpers/mocks.dart';
+import 'package:mediavore/features/media_details/data/models/watchlist_item.dart';
+import 'package:path/path.dart' as path;
+import 'dart:io';
 
 void main() {
   late WatchlistLocalDataSource dataSource;
-  late MockSharedPreferences mockSharedPreferences;
+  late Isar isar;
+  late String tempPath;
 
-  setUp(() {
-    mockSharedPreferences = MockSharedPreferences();
-    dataSource = WatchlistLocalDataSource(mockSharedPreferences);
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+    tempPath = path.join(Directory.current.path, 'test', 'tmp');
+    if (!Directory(tempPath).existsSync()) {
+      Directory(tempPath).createSync(recursive: true);
+    }
   });
 
-  group('addToWatchlist', () {
-    const tId = 1;
-    const tType = 'movie';
-    const tEntry = '1:movie';
-
-    test('should add item to watchlist when not already present', () async {
-      // arrange
-      when(() => mockSharedPreferences.getStringList('watchlist'))
-          .thenReturn(['2:movie', '3:tv']);
-      when(() => mockSharedPreferences.setStringList('watchlist', ['2:movie', '3:tv', tEntry]))
-          .thenAnswer((_) async => true);
-
-      // act
-      await dataSource.addToWatchlist(tId, tType);
-
-      // assert
-      verify(() => mockSharedPreferences.getStringList('watchlist')).called(1);
-      verify(() => mockSharedPreferences.setStringList('watchlist', ['2:movie', '3:tv', tEntry])).called(1);
-    });
-
-    test('should not add item to watchlist when already present', () async {
-      // arrange
-      when(() => mockSharedPreferences.getStringList('watchlist'))
-          .thenReturn([tEntry, '2:movie']);
-
-      // act
-      await dataSource.addToWatchlist(tId, tType);
-
-      // assert
-      verify(() => mockSharedPreferences.getStringList('watchlist')).called(1);
-      verifyNever(() => mockSharedPreferences.setStringList(any(), any()));
-    });
+  setUp(() async {
+    isar = await Isar.open(
+      [WatchlistItemSchema],
+      directory: tempPath,
+      name: 'test_db',
+    );
+    dataSource = WatchlistLocalDataSource(isar);
   });
 
-  group('removeFromWatchlist', () {
+  tearDown(() async {
+    await isar.close(deleteFromDisk: true);
+  });
+
+  group('WatchlistLocalDataSource (Integration)', () {
     const tId = 1;
     const tType = 'movie';
+
+    test('should add and retrieve item from watchlist', () async {
+      // act
+      await dataSource.addToWatchlist(tId, tType);
+      final entries = await dataSource.getWatchlistEntries();
+
+      // assert
+      expect(entries, contains('$tId:$tType'));
+    });
 
     test('should remove item from watchlist', () async {
       // arrange
-      when(() => mockSharedPreferences.getStringList('watchlist'))
-          .thenReturn(['1:movie', '2:movie', '3:tv']);
-      when(() => mockSharedPreferences.setStringList('watchlist', ['2:movie', '3:tv']))
-          .thenAnswer((_) async => true);
+      await dataSource.addToWatchlist(tId, tType);
+      await dataSource.addToWatchlist(2, 'tv');
 
       // act
       await dataSource.removeFromWatchlist(tId, tType);
+      final entries = await dataSource.getWatchlistEntries();
 
       // assert
-      verify(() => mockSharedPreferences.getStringList('watchlist')).called(1);
-      verify(() => mockSharedPreferences.setStringList('watchlist', ['2:movie', '3:tv'])).called(1);
+      expect(entries, isNot(contains('$tId:$tType')));
+      expect(entries, contains('2:tv'));
     });
-  });
 
-  group('getWatchlistEntries', () {
-    test('should return list of strings from watchlist', () async {
+    test('should return all entries correctly', () async {
       // arrange
-      final tEntries = ['1:movie', '2:tv'];
-      when(() => mockSharedPreferences.getStringList('watchlist'))
-          .thenReturn(tEntries);
+      await dataSource.addToWatchlist(1, 'movie');
+      await dataSource.addToWatchlist(2, 'tv');
 
       // act
-      final result = await dataSource.getWatchlistEntries();
+      final entries = await dataSource.getWatchlistEntries();
 
       // assert
-      expect(result, tEntries);
+      expect(entries.length, 2);
+      expect(entries, containsAll(['1:movie', '2:tv']));
+    });
+
+    test('should handle adding duplicate entries (replace/idempotent)', () async {
+      // act
+      await dataSource.addToWatchlist(tId, tType);
+      await dataSource.addToWatchlist(tId, tType);
+      final entries = await dataSource.getWatchlistEntries();
+
+      // assert
+      expect(entries.length, 1);
+      expect(entries, ['$tId:$tType']);
     });
   });
 }
