@@ -3,26 +3,30 @@ import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:provider/provider.dart';
 
 class SavedMediaPage extends StatefulWidget {
   const SavedMediaPage({super.key});
 
   @override
-  State<SavedMediaPage> createState() => _SavedMediaPageState();
+  State<SavedMediaPage> createState() => SavedMediaPageState();
 }
 
-class _SavedMediaPageState extends State<SavedMediaPage> {
+class SavedMediaPageState extends State<SavedMediaPage> {
   late final MediaRepository _mediaRepository;
   Future<List<MediaItem>>? _savedMediaFuture;
+  Set<int>? _lastWatchlistIds;
 
   @override
   void initState() {
     super.initState();
     _mediaRepository = locator<MediaRepository>();
-    _loadSavedMedia();
+    loadSavedMedia();
   }
 
-  Future<void> _loadSavedMedia() async {
+  Future<void> loadSavedMedia() async {
+    if (!mounted) return;
     setState(() {
       _savedMediaFuture = _fetchSavedMedia();
     });
@@ -48,21 +52,24 @@ class _SavedMediaPageState extends State<SavedMediaPage> {
     return items;
   }
 
-  Future<void> _toggleWatchlist(MediaItem item) async {
-    try {
-      await _mediaRepository.removeFromWatchlist(item.id, item.mediaType);
-      _loadSavedMedia(); // Reload the list
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove from watchlist: $e')),
-        );
-      }
-    }
+  Future<void> _removeItems(MediaItem item) async {
+    final provider = Provider.of<SearchProvider>(context, listen: false);
+    await provider.toggleWatchlist(item);
+    loadSavedMedia();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen to SearchProvider to know when the watchlist has changed globally
+    final provider = Provider.of<SearchProvider>(context);
+    final currentIds = provider.watchlistIds;
+
+    // If the IDs in the provider have changed since we last loaded, reload.
+    if (_lastWatchlistIds != null && !_setEquals(_lastWatchlistIds!, currentIds)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => loadSavedMedia());
+    }
+    _lastWatchlistIds = Set.from(currentIds);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Watchlist'),
@@ -70,7 +77,7 @@ class _SavedMediaPageState extends State<SavedMediaPage> {
       body: FutureBuilder<List<MediaItem>>(
         future: _savedMediaFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting && _savedMediaFuture != null) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -84,13 +91,16 @@ class _SavedMediaPageState extends State<SavedMediaPage> {
                 final item = savedItems[index];
                 final isTv = item.mediaType == MediaType.tv;
                 return InkWell(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => MediaDetailPage(item: item),
                       ),
                     );
+                    if (mounted) {
+                      loadSavedMedia();
+                    }
                   },
                   child: ListTile(
                     leading: item.posterPath != null
@@ -119,7 +129,7 @@ class _SavedMediaPageState extends State<SavedMediaPage> {
                     ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () => _toggleWatchlist(item),
+                      onPressed: () => _removeItems(item),
                     ),
                   ),
                 );
@@ -129,5 +139,10 @@ class _SavedMediaPageState extends State<SavedMediaPage> {
         },
       ),
     );
+  }
+
+  bool _setEquals(Set<int> a, Set<int> b) {
+    if (a.length != b.length) return false;
+    return a.containsAll(b);
   }
 }

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -47,22 +46,6 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('MediaVore Search'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bookmark),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SavedMediaPage(),
-                ),
-              );
-              if (mounted) {
-                Provider.of<SearchProvider>(context, listen: false).loadWatchlist();
-              }
-            },
-          ),
-        ],
       ),
       body: Consumer<SearchProvider>(
         builder: (context, provider, child) {
@@ -173,11 +156,14 @@ class SearchBottomBar extends StatefulWidget {
 
 class _SearchBottomBarState extends State<SearchBottomBar> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   Timer? _debounce;
+  late int _lastResetCount;
 
   @override
   void initState() {
     super.initState();
+    _lastResetCount = Provider.of<SearchProvider>(context, listen: false).resetCount;
     _searchController.addListener(() {
       setState(() {});
     });
@@ -186,6 +172,7 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
   @override
   void dispose() {
     _searchController.dispose();
+    _focusNode.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -199,6 +186,22 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<SearchProvider>(context);
+    
+    // Check if a reset was requested from MainPage
+    if (provider.resetCount > _lastResetCount) {
+      _lastResetCount = provider.resetCount;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _focusNode.requestFocus();
+          _searchController.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: _searchController.text.length,
+          );
+        }
+      });
+    }
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -211,6 +214,7 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
               Expanded(
                 child: TextField(
                   controller: _searchController,
+                  focusNode: _focusNode,
                   decoration: InputDecoration(
                     hintText: 'Search names...',
                     border: const OutlineInputBorder(),
@@ -220,15 +224,15 @@ class _SearchBottomBarState extends State<SearchBottomBar> {
                             icon: const Icon(Icons.clear),
                             onPressed: () {
                               _searchController.clear();
-                              Provider.of<SearchProvider>(context, listen: false).searchMedia('');
+                              provider.clearSearch();
                             },
                           )
                         : null,
                   ),
-                  onChanged: (value) => _onSearchChanged(value, Provider.of<SearchProvider>(context, listen: false)),
+                  onChanged: (value) => _onSearchChanged(value, provider),
                   onSubmitted: (value) {
                     _debounce?.cancel();
-                    Provider.of<SearchProvider>(context, listen: false).searchMedia(value);
+                    provider.searchMedia(value);
                   },
                 ),
               ),

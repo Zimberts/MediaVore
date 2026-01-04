@@ -15,7 +15,7 @@ class SearchProvider extends ChangeNotifier {
   Set<String> _watchlistEntries = {};
   int _currentPage = 1;
   bool _hasMore = true;
-  bool _watchlistLoaded = false;
+  int _resetCount = 0;
 
   List<MediaItem> get items => _items;
   bool get isLoading => _isLoading;
@@ -23,6 +23,7 @@ class SearchProvider extends ChangeNotifier {
   String get searchQuery => _searchQuery;
   Set<int> get watchlistIds => _watchlistEntries.map((e) => int.parse(e.split(':').first)).toSet();
   bool get hasMore => _hasMore;
+  int get resetCount => _resetCount;
 
   Future<void> searchMedia(String query) async {
     if (query == _searchQuery && _items.isNotEmpty) return;
@@ -57,6 +58,21 @@ class SearchProvider extends ChangeNotifier {
     }
   }
 
+  void clearSearch() {
+    _searchQuery = '';
+    _items = [];
+    _isLoading = false;
+    _hasMore = false;
+    notifyListeners();
+  }
+
+  void requestReset() {
+    // Only increment resetCount to signal UI selection.
+    // Do NOT clear _items or _searchQuery so results stay visible.
+    _resetCount++;
+    notifyListeners();
+  }
+
   Future<void> fetchNextPage() async {
     if (_isFetchingMore || !_hasMore || _searchQuery.isEmpty) return;
 
@@ -82,7 +98,6 @@ class SearchProvider extends ChangeNotifier {
 
   Future<void> loadWatchlist() async {
     _watchlistEntries = (await _mediaRepository.getWatchlistEntries()).toSet();
-    _watchlistLoaded = true;
     notifyListeners();
   }
 

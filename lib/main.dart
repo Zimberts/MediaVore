@@ -5,7 +5,7 @@ import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
-import 'features/search/presentation/pages/search_page.dart';
+import 'features/search/presentation/pages/main_page.dart';
 
 Future<void> main() async {
   debugPrint('--- App Starting ---');
@@ -68,7 +68,7 @@ class MediaVoreApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const SearchPage(),
+        home: const MainPage(),
       ),
     );
   }

@@ -4,25 +4,36 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 import 'package:mediavore/core/di/injection.dart';
 
 void main() {
   late MockMediaRepository mockMediaRepository;
+  late SearchProvider searchProvider;
 
   setUpAll(() {
     mockMediaRepository = MockMediaRepository();
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
+    registerFallbackValue(MediaType.movie);
   });
 
   setUp(() {
     reset(mockMediaRepository);
+    searchProvider = SearchProvider(mockMediaRepository);
+    
+    // Ensure getWatchlistEntries returns something for the provider to initialize
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
   });
 
   Widget createWidgetUnderTest() {
-    return const MaterialApp(
-      home: SavedMediaPage(),
+    return ChangeNotifierProvider<SearchProvider>.value(
+      value: searchProvider,
+      child: const MaterialApp(
+        home: SavedMediaPage(),
+      ),
     );
   }
 
@@ -42,7 +53,6 @@ void main() {
     when(() => mockMediaRepository.getMediaDetails(1, type: MediaType.movie)).thenAnswer((_) async => MediaDetails(
       item: items[0],
       cast: [],
-      director: null,
     ));
 
     await tester.pumpWidget(createWidgetUnderTest());
@@ -61,15 +71,17 @@ void main() {
       mediaType: MediaType.movie,
     );
 
+    // Initial load for provider and page
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => ['1:movie']);
     when(() => mockMediaRepository.getMediaDetails(1, type: MediaType.movie)).thenAnswer((_) async => MediaDetails(
       item: item,
       cast: [],
-      director: null,
     ));
     when(() => mockMediaRepository.removeFromWatchlist(1, MediaType.movie)).thenAnswer((_) async {});
 
     await tester.pumpWidget(createWidgetUnderTest());
+    // Load watchlist into provider
+    await searchProvider.loadWatchlist();
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.delete));
