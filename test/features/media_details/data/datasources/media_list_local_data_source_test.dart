@@ -109,4 +109,27 @@ void main() {
       expect(items, isEmpty);
     });
   });
+
+  group('MediaListLocalDataSource - Lists', () {
+    test('should add an item to a list and retrieve it', () async {
+      await dataSource.addToList(
+        id: 1,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'Inception',
+      );
+
+      final items = await dataSource.getListItems('watchlist');
+      expect(items.length, 1);
+      expect(items.first.title, 'Inception');
+    });
+
+    test('should remove an item from a list', () async {
+      await dataSource.addToList(id: 1, type: 'movie', listName: 'watchlist', title: 'Inception');
+      await dataSource.removeFromList(1, 'movie', 'watchlist');
+
+      final items = await dataSource.getListItems('watchlist');
+      expect(items, isEmpty);
+    });
+  });
 }

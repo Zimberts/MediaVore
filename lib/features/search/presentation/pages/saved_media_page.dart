@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
 class SavedMediaPage extends StatefulWidget {
@@ -165,6 +166,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               onPressed: () => _showDeleteListConfirm(context, provider),
               tooltip: 'Delete Current List',
             ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
         ],
       ),
       body: FutureBuilder<List<MediaItem>>(

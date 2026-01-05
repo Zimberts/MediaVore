@@ -12,8 +12,6 @@ class MediaListItem {
   final String type;
 
   final String listName;
-
-  final String? posterPath;
   
   final String title;
 
@@ -21,7 +19,6 @@ class MediaListItem {
     required this.id,
     required this.type,
     required this.title,
-    this.posterPath,
     this.listName = 'watchlist',
   });
 }

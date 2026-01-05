@@ -19,11 +19,18 @@ void main() {
 
   setUp(() {
     mockRepository = MockMediaRepository();
+    
+    // Default mocks for SearchProvider init
+    when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
+    when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+
     searchProvider = SearchProvider(mockRepository);
     
-    // Default mocks
+    // Default mocks for UI components
     when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
-    when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
   });
 
   Widget createWidgetUnderTest({

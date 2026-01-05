@@ -17,10 +17,10 @@ class TVSeason extends Equatable {
 
   factory TVSeason.fromJson(Map<String, dynamic> json) {
     return TVSeason(
-      id: json['id'],
-      seasonNumber: json['season_number'],
-      episodeCount: json['episode_count'],
-      name: json['name'],
+      id: json['id'] ?? 0,
+      seasonNumber: json['season_number'] ?? 0,
+      episodeCount: json['episode_count'] ?? 0,
+      name: json['name'] as String?,
     );
   }
 
@@ -73,32 +73,41 @@ class MediaItem extends Equatable {
     final mediaType = _parseMediaType(mediaTypeStr);
 
     List<String>? genresList;
-    if (json['genres'] != null) {
-      genresList = (json['genres'] as List)
-          .map((g) => g['name'] as String)
-          .toList();
+    if (json['genres'] != null && json['genres'] is List) {
+      genresList = [];
+      for (final g in (json['genres'] as List)) {
+        if (g is String) {
+          genresList.add(g);
+        } else if (g is Map) {
+          final name = g['name'];
+          if (name is String) genresList.add(name);
+        }
+      }
     }
 
     List<TVSeason>? seasonsList;
-    if (json['seasons'] != null) {
-      seasonsList = (json['seasons'] as List)
-          .map((s) => TVSeason.fromJson(s))
-          .toList();
+    if (json['seasons'] != null && json['seasons'] is List) {
+      seasonsList = [];
+      for (final s in (json['seasons'] as List)) {
+        if (s is Map) {
+          seasonsList.add(TVSeason.fromJson(Map<String, dynamic>.from(s)));
+        }
+      }
     }
 
     return MediaItem(
-      id: json['id'],
+      id: json['id'] ?? 0,
       title: json['title'] ?? json['name'] ?? '',
-      posterPath: json['poster_path'],
+      posterPath: json['poster_path'] as String?,
       overview: json['overview'] ?? '',
       releaseDate: json['release_date'] ?? json['first_air_date'] ?? '',
       mediaType: mediaType,
-      numberOfSeasons: json['number_of_seasons'],
-      numberOfEpisodes: json['number_of_episodes'],
-      status: json['status'],
+      numberOfSeasons: json['number_of_seasons'] as int?,
+      numberOfEpisodes: json['number_of_episodes'] as int?,
+      status: json['status'] as String?,
       genres: genresList,
       voteAverage: (json['vote_average'] as num?)?.toDouble(),
-      runtime: json['runtime'],
+      runtime: json['runtime'] as int?,
       seasons: seasonsList,
     );
   }

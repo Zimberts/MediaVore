@@ -3,6 +3,7 @@ import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
@@ -13,6 +14,7 @@ void main() {
   late MediaRepositoryImpl repository;
   late MockMediaRemoteDataSource mockRemoteDataSource;
   late MockMediaListLocalDataSource mockLocalDataSource;
+  late MockMediaCache mockCache;
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
@@ -22,14 +24,46 @@ void main() {
       title: 'T', 
       seenDate: DateTime(2000)
     ));
+    registerFallbackValue(const MediaItem(
+      id: 0, 
+      title: '', 
+      overview: '', 
+      releaseDate: ''
+    ));
+    registerFallbackValue(MediaDetails(
+      item: const MediaItem(id: 0, title: '', overview: '', releaseDate: ''),
+      cast: const [],
+    ));
+    registerFallbackValue(Duration.zero);
   });
 
   setUp(() {
     mockRemoteDataSource = MockMediaRemoteDataSource();
     mockLocalDataSource = MockMediaListLocalDataSource();
+    mockCache = MockMediaCache();
+    
+    // Mock cache and data source setup
+    when(() => mockCache.init()).thenAnswer((_) async {});
+    when(() => mockCache.cleanup(keepKeys: any(named: 'keepKeys'), olderThan: any(named: 'olderThan')))
+        .thenAnswer((_) async {});
+    when(() => mockCache.cacheItem(any())).thenAnswer((_) async {});
+    when(() => mockCache.cacheDetails(any())).thenAnswer((_) async {});
+    when(() => mockCache.cacheActorProfile(any(), any())).thenAnswer((_) async {});
+    when(() => mockCache.clearAll()).thenAnswer((_) async {});
+    when(() => mockCache.getCacheSize()).thenAnswer((_) async => 1024);
+    when(() => mockCache.isItemCached(any(), any())).thenReturn(false);
+    when(() => mockCache.areDetailsCached(any(), any())).thenReturn(false);
+    when(() => mockCache.isSeasonCached(any(), any())).thenReturn(false);
+    when(() => mockCache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
+
+    when(() => mockLocalDataSource.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockLocalDataSource.getListItems(any())).thenAnswer((_) async => []);
+    when(() => mockLocalDataSource.getAllSeenItems()).thenAnswer((_) async => []);
+
     repository = MediaRepositoryImpl(
       remoteDataSource: mockRemoteDataSource,
       localDataSource: mockLocalDataSource,
+      cache: mockCache,
     );
   });
 
@@ -52,7 +86,7 @@ void main() {
     const tQuery = 'Inception';
     final tMediaItems = [tMediaItem];
 
-    test('should return list of media items from remote data source', () async {
+    test('should return list of media items from remote data source and cache them', () async {
       when(() => mockRemoteDataSource.searchMedia(tQuery))
           .thenAnswer((_) async => tMediaItems);
 
@@ -60,11 +94,26 @@ void main() {
 
       expect(result, equals(tMediaItems));
       verify(() => mockRemoteDataSource.searchMedia(tQuery)).called(1);
+      verify(() => mockCache.cacheItem(tMediaItem)).called(1);
     });
-   group('getMediaDetails', () {
+  });
+
+  group('getMediaDetails', () {
     const tId = 1;
 
-    test('should return media details with cast and director', () async {
+    test('should return media details from cache if available', () async {
+      final tDetails = MediaDetails(item: tMediaItem, cast: [], director: tDirector);
+      when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(true);
+      when(() => mockCache.getDetails(tId, MediaType.movie)).thenReturn(tDetails);
+
+      final result = await repository.getMediaDetails(tId);
+
+      expect(result, equals(tDetails));
+      verifyNever(() => mockRemoteDataSource.getMediaItem(any(), type: any(named: 'type')));
+    });
+
+    test('should fetch and cache media details if not in cache', () async {
+      when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(false);
       when(() => mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaItem);
       when(() => mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')))
@@ -82,9 +131,11 @@ void main() {
       expect(result.item, equals(tMediaItem));
       expect(result.cast, equals(tCast));
       expect(result.director, equals(tDirector));
+      verify(() => mockCache.cacheDetails(any())).called(1);
     });
 
     test('should return movie details with N/A director when no director found', () async {
+      when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(false);
       when(() => mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaItem);
       when(() => mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')))
@@ -95,7 +146,7 @@ void main() {
 
       final result = await repository.getMediaDetails(tId);
 
-      expect(result.director, CrewMember(name: 'N/A', job: 'Director'));
+      expect(result.director, const CrewMember(name: 'N/A', job: 'Director'));
     });
   });
 
@@ -104,6 +155,8 @@ void main() {
       final tData = {'episodes': []};
       when(() => mockRemoteDataSource.getSeasonDetails(any(), any()))
           .thenAnswer((_) async => tData);
+      when(() => mockCache.isSeasonCached(any(), any())).thenReturn(false);
+      when(() => mockCache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
 
       final result = await repository.getSeasonDetails(1, 1);
 
@@ -123,7 +176,7 @@ void main() {
       profilePath: '/leo.jpg',
     );
 
-    test('should return actor details with their movies', () async {
+    test('should return actor details with their movies and cache profile path', () async {
       when(() => mockRemoteDataSource.getActorDetails(tActorId)).thenAnswer((_) async => tActorDetails);
       when(() => mockRemoteDataSource.getActorMediaCredits(tActorId)).thenAnswer((_) async => [tMediaItem]);
 
@@ -131,6 +184,7 @@ void main() {
 
       expect(result.id, equals(tActorId));
       expect(result.items, contains(tMediaItem));
+      verify(() => mockCache.cacheActorProfile(tActorId, '/leo.jpg')).called(1);
     });
   });
 
@@ -160,14 +214,18 @@ void main() {
   });
 
   group('Watchlist & Lists', () {
-    test('addToWatchlist should call local data source', () async {
+    test('addToWatchlist should call local data source and cache full details', () async {
       when(() => mockLocalDataSource.addToList(
         id: any(named: 'id'),
         type: any(named: 'type'),
         listName: any(named: 'listName'),
         title: any(named: 'title'),
-        posterPath: any(named: 'posterPath'),
       )).thenAnswer((_) async {});
+      
+      when(() => mockCache.areDetailsCached(any(), any())).thenReturn(true);
+      when(() => mockCache.getDetails(any(), any())).thenReturn(
+        MediaDetails(item: tMediaItem, cast: [], director: tDirector)
+      );
 
       await repository.addToWatchlist(tMediaItem);
 
@@ -176,8 +234,8 @@ void main() {
         type: 'movie',
         listName: 'watchlist',
         title: 'Inception',
-        posterPath: '/path.jpg',
       )).called(1);
+      verify(() => mockCache.cacheItem(tMediaItem)).called(1);
     });
 
     test('isInWatchlist should check local entries', () async {
@@ -188,5 +246,30 @@ void main() {
       expect(result, isTrue);
     });
   });
-});
+
+  group('Cache Management', () {
+    test('getCacheSize should return size from cache', () async {
+      when(() => mockCache.getCacheSize()).thenAnswer((_) async => 2048);
+      final size = await repository.getCacheSize();
+      expect(size, 2048);
+    });
+
+    test('clearCache with complete true should call cache.clearAll', () async {
+      await repository.clearCache(complete: true);
+      verify(() => mockCache.clearAll()).called(1);
+    });
+
+    test('clearCache with complete false should trigger maintenance', () async {
+      await repository.clearCache(complete: false);
+      // Maintenance involves getting list names, items, etc.
+      // Called once in _init during repository creation and once in clearCache
+      verify(() => mockLocalDataSource.getAllListNames()).called(2);
+    });
+
+    test('fillCache should trigger maintenance', () async {
+      await repository.fillCache();
+      // Called once in _init during repository creation and once in fillCache
+      verify(() => mockLocalDataSource.getAllListNames()).called(2);
+    });
+  });
 }

@@ -1,287 +1,253 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
-class SearchProvider extends ChangeNotifier {
-  final MediaRepository _mediaRepository;
+class SearchProvider with ChangeNotifier {
+  final MediaRepository repository;
 
-  SearchProvider(this._mediaRepository);
+  SearchProvider(this.repository) {
+    _init();
+  }
 
-  List<MediaItem> _items = [];
+  List<MediaItem> _searchResults = [];
   bool _isLoading = false;
-  bool _isFetchingMore = false;
-  String _searchQuery = '';
+  bool _isCacheLoading = false;
+  String? _error;
   bool _isOffline = false;
-  
-  // Map of list name to set of "id:type" entries
-  Map<String, Set<String>> _listsData = {};
   List<String> _listNames = ['watchlist'];
-  
-  // Previews for each list
-  Map<String, List<MediaItemPreview>> _listPreviews = {};
-
-  // Seen status: Map of "id:type" to count of UNIQUE seen items (episodes for TV, 1 for movie if seen)
-  Map<String, int> _seenStatus = {};
-
-  int _currentPage = 1;
-  bool _hasMore = true;
+  final Map<String, List<String>> _listEntries = {}; // listName -> ["id:type"]
+  int _cacheSize = 0;
   int _resetCount = 0;
-
-  List<MediaItem> get items => _items;
-  bool get isLoading => _isLoading;
-  bool get isFetchingMore => _isFetchingMore;
-  String get searchQuery => _searchQuery;
-  bool get isOffline => _isOffline;
+  int _currentPage = 1;
+  String _currentQuery = '';
+  bool _hasMore = true;
   
-  Set<int> get watchlistIds => (_listsData['watchlist'] ?? {})
-      .map((e) => int.parse(e.split(':').first))
-      .toSet();
+  Map<String, int> _seenCounts = {}; // "id:type" -> count
+  List<String> _watchlistIds = []; // Simplified IDs for quick checks
 
+  List<MediaItem> get items => _searchResults; // For SearchPage
+  bool get isLoading => _isLoading;
+  bool get isCacheLoading => _isCacheLoading;
+  String? get error => _error;
+  bool get isOffline => _isOffline;
   List<String> get listNames => _listNames;
-  bool get hasMore => _hasMore;
+  int get cacheSize => _cacheSize;
   int get resetCount => _resetCount;
+  bool get hasMore => _hasMore;
+  List<String> get watchlistIds => _watchlistIds;
 
-  List<MediaItemPreview> getPreviewsForList(String listName) => _listPreviews[listName] ?? [];
-
-  /// Helper to wrap calls and catch network errors to update global offline status
-  Future<T> _wrapNetworkCall<T>(Future<T> Function() call) async {
-    try {
-      final result = await call();
-      setOffline(false);
-      return result;
-    } catch (e) {
-      final errStr = e.toString();
-      if (errStr.contains('SocketException') || 
-          errStr.contains('Network error') ||
-          errStr.contains('connectionError') ||
-          errStr.contains('HttpException')) {
-        setOffline(true);
-      }
-      rethrow;
-    }
+  Future<void> _init() async {
+    await loadListNames();
+    await _loadAllListEntries();
+    await updateCacheSize();
+    await loadAllSeenStatus();
+    await loadWatchlist();
   }
 
-  void setOffline(bool offline) {
-    if (_isOffline != offline) {
-      _isOffline = offline;
-      // Delaying notification ensures we are out of the build phase
-      Future.microtask(() => notifyListeners());
-    }
-  }
-
-  /// Public method to manually trigger offline status (e.g. from image load errors)
-  void notifyNetworkError() => setOffline(true);
-
-  /// Loads the entire seen history into memory for instant access across the app.
-  Future<void> loadAllSeenStatus() async {
-    try {
-      final allSeen = await _mediaRepository.getSeenItems();
-      final Map<String, int> newStatus = {};
-      
-      // We group by media id to count UNIQUE episodes/viewings for progress bars
-      final Map<String, Set<String>> uniqueEpisodes = {};
-      
-      for (final item in allSeen) {
-        final key = '${item.tmdbId}:${item.type.name}';
-        if (item.type == MediaType.tv) {
-          uniqueEpisodes[key] ??= {};
-          uniqueEpisodes[key]!.add('${item.seasonNumber}:${item.episodeNumber}');
-        } else {
-          // For movies, we just need to know it's been seen at least once
-          newStatus[key] = 1;
-        }
-      }
-      
-      uniqueEpisodes.forEach((key, episodes) {
-        newStatus[key] = episodes.length;
-      });
-      
-      _seenStatus = newStatus;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Failed to load seen status: $e');
-    }
-  }
-
-  /// Helper for detail pages to get full seen status for a specific show (episodes list)
-  Future<List<SeenItem>> loadSeenStatusForItem(int id, MediaType type) {
-    return _mediaRepository.getSeenStatus(id, type);
-  }
-
-  Future<void> searchMedia(String query) async {
-    if (query == _searchQuery && _items.isNotEmpty) return;
-
-    _searchQuery = query;
-    if (query.isEmpty) {
-      _items = [];
-      _isLoading = false;
-      _hasMore = false;
-      notifyListeners();
-      return;
-    }
-
-    _isLoading = true;
-    _currentPage = 1;
-    _hasMore = true;
-    _items = [];
+  Future<void> updateCacheSize() async {
+    _isCacheLoading = true;
     notifyListeners();
+    _cacheSize = await repository.getCacheSize();
+    _isCacheLoading = false;
+    notifyListeners();
+  }
 
-    try {
-      _items = await _wrapNetworkCall(() => _mediaRepository.searchMedia(query, page: _currentPage));
-      if (_items.isEmpty) {
-        _hasMore = false;
-      }
-      await loadAllSeenStatus();
-    } catch (e) {
-      debugPrint('Failed to load movies: $e');
-      _items = [];
-      _hasMore = false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+  Future<void> clearCache({required bool complete}) async {
+    _isCacheLoading = true;
+    notifyListeners();
+    await repository.clearCache(complete: complete);
+    await updateCacheSize();
+    _isCacheLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> fillCache() async {
+    _isCacheLoading = true;
+    notifyListeners();
+    await repository.fillCache();
+    await updateCacheSize();
+    _isCacheLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> _loadAllListEntries() async {
+    for (final name in _listNames) {
+      _listEntries[name] = await repository.getListEntries(name);
     }
+    notifyListeners();
+  }
+
+  Future<void> loadListNames() async {
+    _listNames = await repository.getAllListNames();
+    notifyListeners();
+  }
+
+  Future<void> loadWatchlist() async {
+    final entries = await repository.getWatchlistEntries();
+    _watchlistIds = entries.map((e) => e.split(':')[0]).toList();
+    _listEntries['watchlist'] = entries;
+    notifyListeners();
+  }
+
+  Future<void> loadAllSeenStatus() async {
+    final seen = await repository.getSeenItems();
+    final Map<String, int> counts = {};
+    for (final item in seen) {
+      final key = '${item.tmdbId}:${item.type.name}';
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    _seenCounts = counts;
+    notifyListeners();
   }
 
   int getSeenCount(MediaItem item) {
-    return _seenStatus['${item.id}:${item.mediaType.name}'] ?? 0;
-  }
-
-  void clearSearch() {
-    _searchQuery = '';
-    _items = [];
-    _isLoading = false;
-    _hasMore = false;
-    notifyListeners();
-  }
-
-  void requestReset() {
-    _resetCount++;
-    notifyListeners();
-  }
-
-  Future<void> fetchNextPage() async {
-    if (_isFetchingMore || !_hasMore || _searchQuery.isEmpty) return;
-
-    _isFetchingMore = true;
-    notifyListeners();
-
-    try {
-      _currentPage++;
-      final nextMovies = await _wrapNetworkCall(() => _mediaRepository.searchMedia(_searchQuery, page: _currentPage));
-      if (nextMovies.isEmpty) {
-        _hasMore = false;
-      } else {
-        _items.addAll(nextMovies);
-      }
-    } catch (e) {
-      debugPrint('Failed to fetch next page: $e');
-      _currentPage--;
-    } finally {
-      _isFetchingMore = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> loadLists() async {
-    try {
-      _listNames = await _mediaRepository.getAllListNames();
-      final Map<String, Set<String>> newData = {};
-      final Map<String, List<MediaItemPreview>> newPreviews = {};
-      
-      for (final name in _listNames) {
-        final entries = await _mediaRepository.getListEntries(name);
-        newData[name] = entries.toSet();
-        
-        final previews = await _mediaRepository.getListPreviews(name);
-        newPreviews[name] = previews;
-      }
-      _listsData = newData;
-      _listPreviews = newPreviews;
-      
-      await loadAllSeenStatus();
-      
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Failed to load lists: $e');
-    }
-  }
-
-  Future<void> createList(String name) async {
-    try {
-      await _mediaRepository.createList(name);
-      await loadLists();
-    } catch (e) {
-      debugPrint('Failed to create list: $e');
-    }
-  }
-
-  Future<void> deleteList(String name) async {
-    try {
-      await _mediaRepository.deleteList(name);
-      await loadLists();
-    } catch (e) {
-      debugPrint('Failed to delete list: $e');
-    }
-  }
-
-  Future<void> toggleInList(MediaItem item, String listName) async {
-    final entry = '${item.id}:${item.mediaType.name}';
-    final entries = _listsData[listName] ?? {};
-    final isInList = entries.contains(entry);
-    
-    try {
-      if (isInList) {
-        await _mediaRepository.removeFromList(item.id, item.mediaType, listName);
-        _listsData[listName]?.remove(entry);
-      } else {
-        await _mediaRepository.addToList(item, listName);
-        _listsData[listName] ??= {};
-        _listsData[listName]?.add(entry);
-      }
-      
-      final previews = await _mediaRepository.getListPreviews(listName);
-      _listPreviews[listName] = previews;
-      
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Failed to update list $listName: $e');
-    }
+    return _seenCounts['${item.id}:${item.mediaType.name}'] ?? 0;
   }
 
   bool isItemInList(MediaItem item, String listName) {
     final entry = '${item.id}:${item.mediaType.name}';
-    return _listsData[listName]?.contains(entry) ?? false;
+    return _listEntries[listName]?.contains(entry) ?? false;
   }
 
-  Future<void> toggleWatchlist(MediaItem item) => toggleInList(item, 'watchlist');
-  
-  Future<void> loadWatchlist() => loadLists();
+  Future<void> toggleInList(MediaItem item, String listName) async {
+    final entry = '${item.id}:${item.mediaType.name}';
+    final currentEntries = _listEntries[listName] ?? [];
+    
+    if (currentEntries.contains(entry)) {
+      await repository.removeFromList(item.id, item.mediaType, listName);
+      _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
+      if (listName == 'watchlist') {
+        _watchlistIds.remove(item.id.toString());
+      }
+    } else {
+      await repository.addToList(item, listName);
+      _listEntries[listName] = [...currentEntries, entry];
+      if (listName == 'watchlist') {
+        _watchlistIds.add(item.id.toString());
+      }
+    }
+    await updateCacheSize();
+    notifyListeners();
+  }
 
+  Future<void> toggleWatchlist(MediaItem item) async {
+    await toggleInList(item, 'watchlist');
+  }
+
+  Future<void> createList(String name) async {
+    await repository.createList(name);
+    await loadListNames();
+    _listEntries[name] = [];
+    notifyListeners();
+  }
+
+  Future<void> deleteList(String name) async {
+    await repository.deleteList(name);
+    await loadListNames();
+    _listEntries.remove(name);
+    notifyListeners();
+  }
+
+  Future<void> searchMedia(String query) async {
+    if (query.isEmpty) {
+      clearSearch();
+      return;
+    }
+
+    _isLoading = true;
+    _error = null;
+    _currentQuery = query;
+    _currentPage = 1;
+    _hasMore = true;
+    notifyListeners();
+
+    try {
+      _searchResults = await repository.searchMedia(query, page: _currentPage);
+      _isOffline = false;
+    } catch (e) {
+      _error = e.toString();
+      _isOffline = true;
+    } finally {
+      _isLoading = false;
+      await updateCacheSize();
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchNextPage() async {
+    if (_isLoading || !_hasMore || _currentQuery.isEmpty) return;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _currentPage++;
+      final results = await repository.searchMedia(_currentQuery, page: _currentPage);
+      if (results.isEmpty) {
+        _hasMore = false;
+      } else {
+        _searchResults.addAll(results);
+      }
+      _isOffline = false;
+    } catch (e) {
+      _error = e.toString();
+      _isOffline = true;
+      _currentPage--; // Revert page increment on error
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void clearSearch() {
+    _searchResults = [];
+    _currentQuery = '';
+    _currentPage = 1;
+    _hasMore = true;
+    _error = null;
+    notifyListeners();
+  }
+
+  void requestReset() {
+    clearSearch();
+    _resetCount++;
+    notifyListeners();
+  }
+
+  // Wrappers for repository methods used in UI
+  Future<MediaDetails> getMediaDetails(int id, MediaType type) => repository.getMediaDetails(id, type: type);
+  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) => repository.getSeasonDetails(tvId, seasonNumber);
+  Future<List<SeenItem>> loadSeenStatusForItem(int tmdbId, MediaType type) => repository.getSeenStatus(tmdbId, type);
   Future<void> markAsSeen(SeenItem item) async {
-    await _mediaRepository.markAsSeen(item);
+    await repository.markAsSeen(item);
     await loadAllSeenStatus();
   }
-
-  Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
-    await _mediaRepository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
-    await loadAllSeenStatus();
-  }
-
   Future<void> deleteSeenEntry(int id) async {
-    await _mediaRepository.deleteSeenEntry(id);
+    await repository.deleteSeenEntry(id);
+    await loadAllSeenStatus();
+  }
+  Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
+    await repository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
     await loadAllSeenStatus();
   }
 
-  /// Public method to get full details while updating the global offline state.
-  Future<MediaDetails> getMediaDetails(int id, MediaType type) {
-    return _wrapNetworkCall(() => _mediaRepository.getMediaDetails(id, type: type));
+  List<MediaItemPreview> getPreviewsForList(String name) {
+    return [];
   }
 
-  /// Public method to get season details while updating the global offline state.
-  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) {
-    return _wrapNetworkCall(() => _mediaRepository.getSeasonDetails(tvId, seasonNumber));
+  void setOffline(bool offline) {
+    _isOffline = offline;
+    notifyListeners();
   }
+
+  void notifyNetworkError() {
+    if (!_isOffline) {
+      _isOffline = true;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadLists() => loadListNames();
 }

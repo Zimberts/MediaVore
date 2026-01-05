@@ -12,4 +12,20 @@ class MediaDetails {
     required this.cast,
     this.director,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'item': item.toJson(),
+      'cast': cast.map((c) => c.toJson()).toList(),
+      'director': director?.toJson(),
+    };
+  }
+
+  factory MediaDetails.fromJson(Map<String, dynamic> json) {
+    return MediaDetails(
+      item: MediaItem.fromJson(json['item']),
+      cast: (json['cast'] as List).map((c) => CastMember.fromJson(c)).toList(),
+      director: json['director'] != null ? CrewMember.fromJson(json['director']) : null,
+    );
+  }
 }

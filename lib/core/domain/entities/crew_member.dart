@@ -16,6 +16,13 @@ class CrewMember extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'job': job,
+    };
+  }
+
   @override
   List<Object?> get props => [name, job];
 }

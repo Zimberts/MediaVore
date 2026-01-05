@@ -23,19 +23,26 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
+    
+    // Default mocks for SearchProvider init
+    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+
     searchProvider = SearchProvider(mockMediaRepository);
     
     // Register the mock in GetIt locator because SavedMediaPage uses it directly
+    if (locator.isRegistered<MediaRepository>()) {
+      locator.unregister<MediaRepository>();
+    }
     locator.registerSingleton<MediaRepository>(mockMediaRepository);
     
     // Default mocks to prevent Null pointer errors during component initialization
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.isInWatchlist(any(), any())).thenAnswer((_) async => false);
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
   });
 

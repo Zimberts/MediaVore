@@ -12,8 +12,6 @@ class SeenItemModel {
 
   final String title;
 
-  final String? posterPath;
-
   final DateTime seenDate;
 
   final int? seasonNumber;
@@ -24,7 +22,6 @@ class SeenItemModel {
     required this.tmdbId,
     required this.type,
     required this.title,
-    this.posterPath,
     required this.seenDate,
     this.seasonNumber,
     this.episodeNumber,

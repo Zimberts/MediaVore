@@ -8,6 +8,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
 class SeenHistoryPage extends StatefulWidget {
@@ -75,15 +76,10 @@ class _SeenHistoryPageState extends State<SeenHistoryPage> {
   }
 
   void _deleteEntry(SeenItem seenItem) {
-    // Immediately remove from the local list to satisfy Dismissible requirement
     setState(() {
-      // Use indexWhere with id for more reliability than indexOf
       final index = _groupedItems.indexWhere((item) => item is SeenItem && item.id == seenItem.id);
       if (index != -1) {
         _groupedItems.removeAt(index);
-        
-        // Clean up date header if it's now empty
-        // Check if previous was a date and next is also a date or end of list
         if (index > 0 && _groupedItems[index - 1] is DateTime) {
           bool isLastInDay = index >= _groupedItems.length || _groupedItems[index] is DateTime;
           if (isLastInDay) {
@@ -93,10 +89,9 @@ class _SeenHistoryPageState extends State<SeenHistoryPage> {
       }
     });
 
-    // Perform actual deletion in background
     context.read<SearchProvider>().deleteSeenEntry(seenItem.id!).then((_) {
       if (mounted) {
-        _loadSeenItems(); // Refresh full state to ensure grouping is correct
+        _loadSeenItems();
       }
     });
   }
@@ -112,6 +107,16 @@ class _SeenHistoryPageState extends State<SeenHistoryPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadSeenItems,
+            tooltip: 'Refresh',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+            tooltip: 'Settings',
           ),
         ],
       ),

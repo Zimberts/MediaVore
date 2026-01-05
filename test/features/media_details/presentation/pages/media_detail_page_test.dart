@@ -24,6 +24,14 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
+    
+    // Default mocks for SearchProvider init
+    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+
     searchProvider = SearchProvider(mockMediaRepository);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
     
@@ -32,10 +40,8 @@ void main() {
     }
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
     
-    // Default mocks to prevent errors during initState
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    // Default mocks for UI components
     when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
   });

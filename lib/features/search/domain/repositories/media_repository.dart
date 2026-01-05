@@ -67,6 +67,16 @@ abstract class MediaRepository {
 
   /// Fetches details for a specific season of a TV show.
   Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber);
+
+  /// Gets the approximate size of the cache in bytes.
+  Future<int> getCacheSize();
+
+  /// Clears the cache. If [complete] is true, everything is deleted.
+  /// If false, only non-essential items are deleted.
+  Future<void> clearCache({required bool complete});
+
+  /// Manually triggers a full cache fill (pre-caching lists and recent seen).
+  Future<void> fillCache();
 }
 
 class MediaItemPreview {

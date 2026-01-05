@@ -41,7 +41,7 @@ class _MainPageState extends State<MainPage> {
   ];
 
   final List<GlobalKey<SavedMediaPageState>> _savedMediaPageKeys = [
-    GlobalKey<SavedMediaPageState>(), // Index 0 not used for SavedMediaPage
+    GlobalKey<SavedMediaPageState>(), // Index 0 not used
     GlobalKey<SavedMediaPageState>(), // Index 1
     GlobalKey<SavedMediaPageState>(), // Index 2 not used
   ];
@@ -106,7 +106,7 @@ class _MainPageState extends State<MainPage> {
                 child: const SafeArea(
                   bottom: false,
                   child: Text(
-                    'Offline Mode - Using locally saved data',
+                    'Offline Mode - Using local data',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white, 

@@ -22,21 +22,25 @@ void main() {
   setUp(() {
     mockMediaRepository = MockMediaRepository();
     
+    // 1. Setup mocks BEFORE creating the provider
+    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async {});
+    when(() => mockMediaRepository.removeFromList(any(), any(), any())).thenAnswer((_) async {});
+
+    // 2. Register mock in locator
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
     
+    // 3. Create provider
     searchProvider = SearchProvider(mockMediaRepository);
-    
-    // Ensure default mocks for initialization
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
-    when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -85,15 +89,18 @@ void main() {
       mediaType: MediaType.movie,
     );
 
+    // Mock both methods since SearchProvider uses both
     when(() => mockMediaRepository.getListEntries('watchlist')).thenAnswer((_) async => ['1:movie']);
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => ['1:movie']);
+    
     when(() => mockMediaRepository.getMediaDetails(1, type: MediaType.movie)).thenAnswer((_) async => MediaDetails(
       item: item,
       cast: [],
     ));
-    when(() => mockMediaRepository.removeFromList(any(), any(), any())).thenAnswer((_) async {});
 
     await tester.pumpWidget(createWidgetUnderTest());
-    await searchProvider.loadLists();
+    // Crucial: Update provider's internal list state
+    await searchProvider.loadWatchlist();
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.delete), findsOneWidget);

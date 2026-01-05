@@ -8,8 +8,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 
-class FakeMediaItem extends Fake implements MediaItem {}
-
 void main() {
   late MockMediaRepository mockMediaRepository;
   late SearchProvider searchProvider;
@@ -30,15 +28,20 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
-    searchProvider = SearchProvider(mockMediaRepository);
-    dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
     
     // Default mocks for initialization
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
         .thenAnswer((_) async => []);
     when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
+
+    searchProvider = SearchProvider(mockMediaRepository);
+    dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
   });
 
   Widget createWidgetUnderTest() {
@@ -92,7 +95,6 @@ void main() {
 
       verify(() => mockMediaRepository.searchMedia('Inception', page: 1)).called(1);
       
-      // Use pump() instead of pumpAndSettle() to avoid timeout from infinite CircularProgressIndicator
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       
@@ -135,8 +137,9 @@ void main() {
     });
 
     testWidgets('shows initial message when search results are empty', (WidgetTester tester) async {
+      // Return empty list instead of throwing to test "Search for movies or series!"
       when(() => mockMediaRepository.searchMedia(any(), page: any(named: 'page')))
-          .thenThrow(Exception('Failed to load results'));
+          .thenAnswer((_) async => []);
 
       await tester.pumpWidget(createWidgetUnderTest());
 

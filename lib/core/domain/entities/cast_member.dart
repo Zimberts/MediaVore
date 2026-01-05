@@ -22,6 +22,15 @@ class CastMember extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'character': character,
+      'profile_path': profilePath,
+    };
+  }
+
   @override
   List<Object?> get props => [id, name, character, profilePath];
 }

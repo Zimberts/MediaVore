@@ -20,10 +20,17 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
+    
+    // Default mocks for SearchProvider init
+    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+
     searchProvider = SearchProvider(mockMediaRepository);
     locator.registerSingleton<MediaRepository>(mockMediaRepository);
     
-    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
   });
 

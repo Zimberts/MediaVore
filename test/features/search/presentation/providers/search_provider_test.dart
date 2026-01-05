@@ -21,6 +21,15 @@ void main() {
 
   setUp(() {
     mockRepository = MockMediaRepository();
+    
+    // Default mocks for SearchProvider init
+    when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
+    when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
+
     provider = SearchProvider(mockRepository);
   });
 
