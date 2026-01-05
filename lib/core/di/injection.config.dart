@@ -16,16 +16,14 @@ import 'package:shared_preferences/shared_preferences.dart' as _i10;
 
 import '../../features/media_details/data/datasources/media_list_local_data_source.dart'
     as _i6;
-import '../../features/media_details/data/datasources/watchlist_local_data_source.dart'
-    as _i11;
 import '../../features/search/data/datasources/media_remote_data_source.dart'
     as _i7;
 import '../../features/search/data/repositories/media_repository_impl.dart'
     as _i9;
 import '../../features/search/domain/repositories/media_repository.dart' as _i8;
 import '../cache/media_cache.dart' as _i5;
-import '../database/app_database.dart' as _i13;
-import 'injection.dart' as _i12;
+import '../database/app_database.dart' as _i12;
+import 'injection.dart' as _i11;
 
 // initializes the registration of main-scope dependencies inside of GetIt
 Future<_i1.GetIt> init(
@@ -62,11 +60,9 @@ Future<_i1.GetIt> init(
     preResolve: true,
   );
   gh.singleton<String>(() => registerModule.apiToken);
-  gh.lazySingleton<_i11.WatchlistLocalDataSource>(
-      () => _i11.WatchlistLocalDataSource(gh<_i4.Isar>()));
   return getIt;
 }
 
-class _$RegisterModule extends _i12.RegisterModule {}
+class _$RegisterModule extends _i11.RegisterModule {}
 
-class _$DatabaseModule extends _i13.DatabaseModule {}
+class _$DatabaseModule extends _i12.DatabaseModule {}
