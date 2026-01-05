@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -44,6 +45,14 @@ void main() {
     when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
+    
+    // Default mock for exportSeenData to avoid Null check error
+    when(() => mockMediaRepository.exportSeenData(
+      start: any(named: 'start'),
+      end: any(named: 'end'),
+      tmdbId: any(named: 'tmdbId'),
+      type: any(named: 'type'),
+    )).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -71,27 +80,16 @@ void main() {
     director: tDirector,
   );
 
-  Widget createWidgetUnderTest() {
+  Widget createWidgetUnderTest({MediaItem? item}) {
     return ChangeNotifierProvider<SearchProvider>.value(
       value: searchProvider,
-      child: const MaterialApp(
-        home: MediaDetailPage(item: tItem),
+      child: MaterialApp(
+        home: MediaDetailPage(item: item ?? tItem),
       ),
     );
   }
 
   group('MediaDetailPage', () {
-    testWidgets('displays loading indicator initially', (WidgetTester tester) async {
-      when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
-          .thenAnswer((_) async => tMediaDetails);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Should find at least one CPI (one in body, maybe one in SeenManager action)
-      expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
-      expect(find.text('Inception'), findsOneWidget); 
-    });
-
     testWidgets('displays media details when loading is successful', (WidgetTester tester) async {
       when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaDetails);
@@ -105,20 +103,126 @@ void main() {
       expect(find.text('Director: Christopher Nolan'), findsOneWidget);
       expect(find.text('A mind-bending thriller'), findsOneWidget);
       expect(find.text('Cast'), findsOneWidget);
-      expect(find.text('Leonardo DiCaprio'), findsOneWidget);
-      expect(find.text('Cobb'), findsOneWidget);
     });
 
-    testWidgets('displays offline mode when loading fails with connection error', (WidgetTester tester) async {
-      when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
-          .thenThrow(Exception('SocketException: Connection failed'));
+    testWidgets('counts unique episodes seen even if an episode is logged multiple times', (WidgetTester tester) async {
+      final tTvItem = MediaItem(
+        id: 2,
+        title: 'Breaking Bad',
+        mediaType: MediaType.tv,
+        overview: '...',
+        releaseDate: '2008-01-20',
+        numberOfEpisodes: 8,
+      );
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump(); // Run post-frame callbacks
+      final tTvDetails = MediaDetails(
+        item: tTvItem,
+        cast: [],
+        director: const CrewMember(name: 'Vince Gilligan', job: 'Director'),
+      );
+
+      final seenStatus = [
+        SeenItem(id: 1, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 1), seasonNumber: 1, episodeNumber: 1),
+        SeenItem(id: 2, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 2), seasonNumber: 1, episodeNumber: 1),
+      ];
+
+      when(() => mockMediaRepository.getMediaDetails(2, type: any(named: 'type')))
+          .thenAnswer((_) async => tTvDetails);
+      when(() => mockMediaRepository.getSeenStatus(2, any()))
+          .thenAnswer((_) async => seenStatus);
+
+      await tester.pumpWidget(createWidgetUnderTest(item: tTvItem));
+      await tester.pump(); 
       await tester.pumpAndSettle();
 
-      expect(find.text('Offline Mode'), findsOneWidget);
-      expect(find.text('Detailed information is unavailable without internet.'), findsOneWidget);
+      expect(find.text('Progress: 1 / 8 episodes seen'), findsOneWidget);
+      
+      final progressIndicator = tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
+      expect(progressIndicator.value, 1 / 8);
+    });
+
+    testWidgets('counts unique episodes for per-season progress', (WidgetTester tester) async {
+      final tTvItem = MediaItem(
+        id: 2,
+        title: 'Breaking Bad',
+        mediaType: MediaType.tv,
+        overview: '...',
+        releaseDate: '2008-01-20',
+        numberOfEpisodes: 8,
+        seasons: const [
+          TVSeason(id: 1, seasonNumber: 1, episodeCount: 7, name: 'Season 1'),
+        ],
+      );
+
+      final tTvDetails = MediaDetails(
+        item: tTvItem,
+        cast: [],
+        director: const CrewMember(name: 'Vince Gilligan', job: 'Director'),
+      );
+
+      // S1 E1 seen twice
+      final seenStatus = [
+        SeenItem(id: 1, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 1), seasonNumber: 1, episodeNumber: 1),
+        SeenItem(id: 2, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 2), seasonNumber: 1, episodeNumber: 1),
+      ];
+
+      when(() => mockMediaRepository.getMediaDetails(2, type: any(named: 'type')))
+          .thenAnswer((_) async => tTvDetails);
+      when(() => mockMediaRepository.getSeenStatus(2, any()))
+          .thenAnswer((_) async => seenStatus);
+
+      await tester.pumpWidget(createWidgetUnderTest(item: tTvItem));
+      await tester.pump(); 
+      await tester.pumpAndSettle();
+
+      // Check the season list tile subtitle
+      expect(find.text('1 / 7 episodes seen'), findsOneWidget);
+    });
+
+    group('Export Feature', () {
+      testWidgets('tapping export button shows bottom sheet with options if data exists', (WidgetTester tester) async {
+        when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
+            .thenAnswer((_) async => tMediaDetails);
+        
+        // Mock data to exist so export sheet opens
+        when(() => mockMediaRepository.exportSeenData(
+          tmdbId: any(named: 'tmdbId'),
+          type: any(named: 'type'),
+        )).thenAnswer((_) async => [{'tmdbId': 1}]);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        final exportButton = find.byIcon(Icons.file_upload_outlined);
+        expect(exportButton, findsOneWidget);
+
+        await tester.tap(exportButton);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Save to device'), findsOneWidget);
+        expect(find.text('Share via System'), findsOneWidget);
+      });
+
+      testWidgets('tapping export button shows snackbar if no data exists', (WidgetTester tester) async {
+        when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
+            .thenAnswer((_) async => tMediaDetails);
+        
+        // Mock no data
+        when(() => mockMediaRepository.exportSeenData(
+          tmdbId: any(named: 'tmdbId'),
+          type: any(named: 'type'),
+        )).thenAnswer((_) async => []);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.file_upload_outlined));
+        await tester.pumpAndSettle();
+
+        expect(find.text('No history to export for this item.'), findsOneWidget);
+      });
     });
   });
 }

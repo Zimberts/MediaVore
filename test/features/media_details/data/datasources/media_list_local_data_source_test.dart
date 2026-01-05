@@ -4,6 +4,7 @@ import 'package:mediavore/features/media_details/data/datasources/media_list_loc
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'dart:io';
 
 void main() {
@@ -107,6 +108,61 @@ void main() {
       
       items = await dataSource.getAllSeenItems();
       expect(items, isEmpty);
+    });
+  });
+
+  group('MediaListLocalDataSource - Import & Export', () {
+    test('getExportData should return filtered results by date range', () async {
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'Old', seenDate: DateTime(2022)));
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 2, type: 'movie', title: 'Target', seenDate: DateTime(2023, 6)));
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 3, type: 'movie', title: 'New', seenDate: DateTime(2024)));
+
+      final results = await dataSource.getExportData(
+        start: DateTime(2023, 1),
+        end: DateTime(2023, 12, 31),
+      );
+
+      expect(results.length, 1);
+      expect(results.first.title, 'Target');
+    });
+
+    test('getExportData should return filtered results by tmdbId', () async {
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: DateTime(2023)));
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 2, type: 'movie', title: 'B', seenDate: DateTime(2023)));
+
+      final results = await dataSource.getExportData(tmdbId: 1);
+
+      expect(results.length, 1);
+      expect(results.first.title, 'A');
+    });
+
+    test('importSeenItems - Mode REPLACE should clear existing and add new', () async {
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'Existing', seenDate: DateTime(2023)));
+      
+      final newItems = [
+        SeenItemModel(tmdbId: 2, type: 'movie', title: 'Imported', seenDate: DateTime(2024)),
+      ];
+
+      await dataSource.importSeenItems(newItems, mode: ImportMode.replace);
+
+      final items = await dataSource.getAllSeenItems();
+      expect(items.length, 1);
+      expect(items.first.title, 'Imported');
+    });
+
+    test('importSeenItems - Mode MERGE should not add duplicates', () async {
+      final date = DateTime(2023, 10, 1);
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: date));
+      
+      final itemsToImport = [
+        SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: date), // Exact duplicate
+        SeenItemModel(tmdbId: 2, type: 'movie', title: 'B', seenDate: date), // New item
+      ];
+
+      await dataSource.importSeenItems(itemsToImport, mode: ImportMode.merge);
+
+      final items = await dataSource.getAllSeenItems();
+      expect(items.length, 2); // 'A' was merged, 'B' was added
     });
   });
 

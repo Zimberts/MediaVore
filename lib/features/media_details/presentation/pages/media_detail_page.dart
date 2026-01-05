@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -8,7 +10,9 @@ import 'package:mediavore/features/media_details/presentation/pages/actor_detail
 import 'package:mediavore/features/media_details/presentation/widgets/media_list_manager.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/seen_manager.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// A page that displays the details of a specific media item.
 class MediaDetailPage extends StatefulWidget {
@@ -140,6 +144,85 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
     }
   }
 
+  Future<void> _exportHistory() async {
+    final provider = context.read<SearchProvider>();
+    final data = await provider.exportSeenData(
+      tmdbId: widget.item.id,
+      type: widget.item.mediaType,
+    );
+    
+    if (data.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No history to export for this item.')),
+        );
+      }
+      return;
+    }
+
+    final jsonString = jsonEncode(data);
+    final fileName = 'mediavore_${widget.item.title.replaceAll(' ', '_')}_history.json';
+
+    if (mounted) {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.save_alt),
+                title: const Text('Save to device'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _saveFileToDevice(context, jsonString, fileName);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.share),
+                title: const Text('Share via System'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final tempDir = await getTemporaryDirectory();
+                  final tempFile = File('${tempDir.path}/$fileName');
+                  await tempFile.writeAsString(jsonString);
+                  await Share.shareXFiles(
+                    [XFile(tempFile.path, mimeType: 'application/json')],
+                    text: 'Seen history for ${widget.item.title}',
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveFileToDevice(BuildContext context, String jsonString, String fileName) async {
+    try {
+      final bytes = utf8.encode(jsonString);
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save History',
+        fileName: fileName,
+        initialDirectory: '/storage/emulated/0/Download/MediaVore',
+        bytes: bytes,
+      );
+
+      if (result != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('File saved successfully')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Save failed: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final itemToDisplay = _mediaDetails?.item ?? widget.item;
@@ -151,10 +234,21 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
 
     final String directorLabel = itemToDisplay.mediaType == MediaType.tv ? 'Creator' : 'Director';
 
+    final int uniqueEpisodesSeenTotal = _seenStatus
+        .where((s) => s.seasonNumber != null && s.episodeNumber != null)
+        .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
+        .toSet()
+        .length;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(itemToDisplay.title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.file_upload_outlined),
+            onPressed: _exportHistory,
+            tooltip: 'Export history for this item',
+          ),
           if (itemToDisplay.mediaType == MediaType.movie)
             SeenManager(
               tmdbId: itemToDisplay.id,
@@ -220,14 +314,14 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         if (itemToDisplay.mediaType == MediaType.tv && itemToDisplay.numberOfEpisodes != null) ...[
                           LinearProgressIndicator(
                             value: itemToDisplay.numberOfEpisodes! > 0 
-                                ? _seenStatus.length / itemToDisplay.numberOfEpisodes! 
+                                ? uniqueEpisodesSeenTotal / itemToDisplay.numberOfEpisodes! 
                                 : 0,
                             backgroundColor: Colors.grey[300],
                             color: Colors.green,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Progress: ${_seenStatus.length} / ${itemToDisplay.numberOfEpisodes} episodes seen',
+                            'Progress: $uniqueEpisodesSeenTotal / ${itemToDisplay.numberOfEpisodes} episodes seen',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
@@ -320,7 +414,11 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                               final isExpanded = _expandedSeason == seasonNumber;
                               final isLoading = _loadingSeasons[seasonNumber] ?? false;
 
-                              final episodesSeenInSeason = _seenStatus.where((s) => s.seasonNumber == seasonNumber).length;
+                              final episodesSeenInSeason = _seenStatus
+                                  .where((s) => s.seasonNumber == seasonNumber && s.episodeNumber != null)
+                                  .map((s) => s.episodeNumber)
+                                  .toSet()
+                                  .length;
                               final isComplete = episodesSeenInSeason == season.episodeCount && season.episodeCount > 0;
 
                               return Column(

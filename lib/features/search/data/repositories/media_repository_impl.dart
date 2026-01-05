@@ -360,4 +360,44 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<void> fillCache() async {
     await _initCache();
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> exportSeenData({
+    DateTime? start,
+    DateTime? end,
+    int? tmdbId,
+    MediaType? type,
+  }) async {
+    await _ensureInitialized();
+    final items = await localDataSource.getExportData(
+      start: start,
+      end: end,
+      tmdbId: tmdbId,
+      type: type?.name,
+    );
+
+    return items.map((item) => {
+      'tmdbId': item.tmdbId,
+      'type': item.type,
+      'title': item.title,
+      'seenDate': item.seenDate.toIso8601String(),
+      'seasonNumber': item.seasonNumber,
+      'episodeNumber': item.episodeNumber,
+    }).toList();
+  }
+
+  @override
+  Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
+    await _ensureInitialized();
+
+    final items = data.map((json) => SeenItemModel(
+      tmdbId: json['tmdbId'] as int,
+      type: json['type'] as String,
+      title: json['title'] as String,
+      seenDate: DateTime.parse(json['seenDate'] as String),
+      seasonNumber: json['seasonNumber'] as int?,
+      episodeNumber: json['episodeNumber'] as int?,
+    )).toList();
+    await localDataSource.importSeenItems(items, mode: mode);
+  }
 }

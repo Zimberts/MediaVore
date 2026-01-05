@@ -2,37 +2,17 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
-class SeenHistoryPage extends StatefulWidget {
+class SeenHistoryPage extends StatelessWidget {
   const SeenHistoryPage({super.key});
 
-  @override
-  State<SeenHistoryPage> createState() => _SeenHistoryPageState();
-}
-
-class _SeenHistoryPageState extends State<SeenHistoryPage> {
-  late final MediaRepository _mediaRepository;
-  List<dynamic> _groupedItems = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _mediaRepository = locator<MediaRepository>();
-    _loadSeenItems();
-  }
-
-  Future<void> _loadSeenItems() async {
-    final items = await _mediaRepository.getSeenItems();
-    
+  List<dynamic> _groupItems(List<SeenItem> items) {
     final List<dynamic> grouped = [];
     if (items.isNotEmpty) {
       DateTime? lastDate;
@@ -45,13 +25,7 @@ class _SeenHistoryPageState extends State<SeenHistoryPage> {
         grouped.add(item);
       }
     }
-
-    if (mounted) {
-      setState(() {
-        _groupedItems = grouped;
-        _isLoading = false;
-      });
-    }
+    return grouped;
   }
 
   Future<bool?> _confirmDeletion(BuildContext context) {
@@ -75,30 +49,11 @@ class _SeenHistoryPageState extends State<SeenHistoryPage> {
     );
   }
 
-  void _deleteEntry(SeenItem seenItem) {
-    setState(() {
-      final index = _groupedItems.indexWhere((item) => item is SeenItem && item.id == seenItem.id);
-      if (index != -1) {
-        _groupedItems.removeAt(index);
-        if (index > 0 && _groupedItems[index - 1] is DateTime) {
-          bool isLastInDay = index >= _groupedItems.length || _groupedItems[index] is DateTime;
-          if (isLastInDay) {
-            _groupedItems.removeAt(index - 1);
-          }
-        }
-      }
-    });
-
-    context.read<SearchProvider>().deleteSeenEntry(seenItem.id!).then((_) {
-      if (mounted) {
-        _loadSeenItems();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<SearchProvider>();
+    final provider = context.watch<SearchProvider>();
+    final seenItems = provider.seenItems;
+    final groupedItems = _groupItems(seenItems);
 
     return Scaffold(
       appBar: AppBar(
@@ -106,7 +61,7 @@ class _SeenHistoryPageState extends State<SeenHistoryPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadSeenItems,
+            onPressed: () => provider.loadAllSeenStatus(),
             tooltip: 'Refresh',
           ),
           IconButton(
@@ -120,93 +75,93 @@ class _SeenHistoryPageState extends State<SeenHistoryPage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _groupedItems.isEmpty
-              ? const Center(child: Text('No items seen yet.'))
-              : ListView.builder(
-                  itemCount: _groupedItems.length,
-                  itemBuilder: (context, index) {
-                    final item = _groupedItems[index];
+      body: seenItems.isEmpty
+          ? const Center(child: Text('No items seen yet.'))
+          : ListView.builder(
+              itemCount: groupedItems.length,
+              itemBuilder: (context, index) {
+                final item = groupedItems[index];
 
-                    if (item is DateTime) {
-                      return Container(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        child: Text(
-                          DateFormat.yMMMMEEEEd().format(item),
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                if (item is DateTime) {
+                  return Container(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    child: Text(
+                      DateFormat.yMMMMEEEEd().format(item),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }
+
+                final seenItem = item as SeenItem;
+                final isTv = seenItem.type == MediaType.tv;
+                
+                String subtitle = '';
+                if (isTv && seenItem.seasonNumber != null) {
+                  subtitle = 'S${seenItem.seasonNumber} E${seenItem.episodeNumber}';
+                }
+
+                return Dismissible(
+                  key: Key('seen_${seenItem.id}'),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  confirmDismiss: (direction) => _confirmDeletion(context),
+                  onDismissed: (direction) {
+                    provider.deleteSeenEntry(seenItem.id!);
+                  },
+                  child: ListTile(
+                    leading: seenItem.posterPath != null && !Platform.environment.containsKey('FLUTTER_TEST')
+                        ? CachedNetworkImage(
+                            imageUrl: 'https://image.tmdb.org/t/p/w92${seenItem.posterPath}',
+                            width: 50,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const SizedBox(
+                              width: 50,
+                              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                            ),
+                            errorWidget: (context, url, error) {
+                              provider.notifyNetworkError();
+                              return SizedBox(
+                                width: 50,
+                                child: Icon(isTv ? Icons.tv : Icons.movie),
+                              );
+                            },
+                          )
+                        : SizedBox(
+                            width: 50,
+                            child: Icon(isTv ? Icons.tv : Icons.movie),
+                          ),
+                    title: Text(seenItem.title),
+                    subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MediaDetailPage(
+                            item: MediaItem(
+                              id: seenItem.tmdbId,
+                              title: seenItem.title,
+                              overview: '',
+                              releaseDate: '',
+                              mediaType: seenItem.type,
+                              posterPath: seenItem.posterPath,
+                            ),
                           ),
                         ),
                       );
-                    }
-
-                    final seenItem = item as SeenItem;
-                    final isTv = seenItem.type == MediaType.tv;
-                    
-                    String subtitle = '';
-                    if (isTv && seenItem.seasonNumber != null) {
-                      subtitle = 'S${seenItem.seasonNumber} E${seenItem.episodeNumber}';
-                    }
-
-                    return Dismissible(
-                      key: Key('seen_${seenItem.id}'),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      confirmDismiss: (direction) => _confirmDeletion(context),
-                      onDismissed: (direction) => _deleteEntry(seenItem),
-                      child: ListTile(
-                        leading: seenItem.posterPath != null && !Platform.environment.containsKey('FLUTTER_TEST')
-                            ? CachedNetworkImage(
-                                imageUrl: 'https://image.tmdb.org/t/p/w92${seenItem.posterPath}',
-                                width: 50,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => const SizedBox(
-                                  width: 50,
-                                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                                ),
-                                errorWidget: (context, url, error) {
-                                  provider.notifyNetworkError();
-                                  return SizedBox(
-                                    width: 50,
-                                    child: Icon(isTv ? Icons.tv : Icons.movie),
-                                  );
-                                },
-                              )
-                            : SizedBox(
-                                width: 50,
-                                child: Icon(isTv ? Icons.tv : Icons.movie),
-                              ),
-                        title: Text(seenItem.title),
-                        subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MediaDetailPage(
-                                item: MediaItem(
-                                  id: seenItem.tmdbId,
-                                  title: seenItem.title,
-                                  overview: '',
-                                  releaseDate: '',
-                                  mediaType: seenItem.type,
-                                  posterPath: seenItem.posterPath,
-                                ),
-                              ),
-                            ),
-                          ).then((_) => _loadSeenItems());
-                        },
-                      ),
-                    );
-                  },
-                ),
+                    },
+                  ),
+                );
+              },
+            ),
     );
   }
 }

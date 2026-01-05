@@ -7,6 +7,7 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
 
@@ -35,6 +36,7 @@ void main() {
       cast: const [],
     ));
     registerFallbackValue(Duration.zero);
+    registerFallbackValue(ImportMode.append);
   });
 
   setUp(() {
@@ -210,6 +212,45 @@ void main() {
 
       await repository.removeFromSeen(1, MediaType.movie);
       verify(() => mockLocalDataSource.removeFromSeen(1, 'movie')).called(1);
+    });
+
+    test('exportSeenData should call local data source with filters', () async {
+      final tModel = SeenItemModel(
+        tmdbId: 1,
+        type: 'movie',
+        title: 'Dune',
+        seenDate: DateTime(2023, 10, 1),
+      );
+      when(() => mockLocalDataSource.getExportData(
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+        tmdbId: any(named: 'tmdbId'),
+        type: any(named: 'type'),
+      )).thenAnswer((_) async => [tModel]);
+
+      final result = await repository.exportSeenData(tmdbId: 1);
+
+      expect(result.first['tmdbId'], 1);
+      verify(() => mockLocalDataSource.getExportData(tmdbId: 1)).called(1);
+    });
+
+    test('importSeenData should call local data source with items and mode', () async {
+      final tData = [
+        {
+          'tmdbId': 1,
+          'type': 'movie',
+          'title': 'Dune',
+          'seenDate': '2023-10-01T00:00:00.000',
+          'seasonNumber': null,
+          'episodeNumber': null,
+        }
+      ];
+      when(() => mockLocalDataSource.importSeenItems(any(), mode: any(named: 'mode')))
+          .thenAnswer((_) async {});
+
+      await repository.importSeenData(tData, mode: ImportMode.merge);
+
+      verify(() => mockLocalDataSource.importSeenItems(any(), mode: ImportMode.merge)).called(1);
     });
   });
 
