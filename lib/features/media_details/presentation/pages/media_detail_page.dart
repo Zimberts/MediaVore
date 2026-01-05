@@ -381,7 +381,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           ),
                           const SizedBox(height: 8),
                           SizedBox(
-                            height: 150,
+                            height: 180,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               itemCount: _mediaDetails!.cast.length,
@@ -421,6 +421,14 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                             textAlign: TextAlign.center,
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                            member.character,
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context).textTheme.bodySmall,
                                           ),
                                         ],
                                       ),

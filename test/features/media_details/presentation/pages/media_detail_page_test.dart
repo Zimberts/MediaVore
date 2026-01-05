@@ -106,6 +106,7 @@ void main() {
       expect(find.text('A mind-bending thriller'), findsOneWidget);
       expect(find.text('Cast'), findsOneWidget);
       expect(find.text('Leonardo DiCaprio'), findsOneWidget);
+      expect(find.text('Cobb'), findsOneWidget);
     });
 
     testWidgets('displays offline mode when loading fails with connection error', (WidgetTester tester) async {
