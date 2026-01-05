@@ -171,9 +171,15 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> deleteSeenEntry(int id) {
+    return localDataSource.deleteSeenEntry(id);
+  }
+
+  @override
   Future<List<SeenItem>> getSeenItems() async {
     final items = await localDataSource.getAllSeenItems();
     return items.map((m) => SeenItem(
+      id: m.isarId,
       tmdbId: m.tmdbId,
       type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
       title: m.title,
@@ -188,6 +194,7 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<SeenItem>> getSeenStatus(int tmdbId, MediaType type) async {
     final items = await localDataSource.getSeenStatus(tmdbId, type.name);
     return items.map((m) => SeenItem(
+      id: m.isarId,
       tmdbId: m.tmdbId,
       type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
       title: m.title,

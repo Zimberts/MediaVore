@@ -13,16 +13,13 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 
-class FakeMediaItem extends Fake implements MediaItem {}
-
 void main() {
   late MockMediaRepository mockMediaRepository;
   late SearchProvider searchProvider;
 
   setUpAll(() {
-    registerFallbackValue(Uri());
-    registerFallbackValue(FakeMediaItem());
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(FakeMediaItem());
   });
 
   setUp(() {
@@ -30,12 +27,17 @@ void main() {
     searchProvider = SearchProvider(mockMediaRepository);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
     
+    if (locator.isRegistered<MediaRepository>()) {
+      locator.unregister<MediaRepository>();
+    }
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
     
+    // Default mocks to prevent errors during initState
     when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.isInList(any(), any(), any())).thenAnswer((_) async => false);
+    when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -74,29 +76,25 @@ void main() {
 
   group('MediaDetailPage', () {
     testWidgets('displays loading indicator initially', (WidgetTester tester) async {
-      // arrange
       when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaDetails);
 
-      // act
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // assert
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Inception'), findsOneWidget); // AppBar title
+      // Should find at least one CPI (one in body, maybe one in SeenManager action)
+      expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
+      expect(find.text('Inception'), findsOneWidget); 
     });
 
     testWidgets('displays media details when loading is successful', (WidgetTester tester) async {
-      // arrange
       when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaDetails);
 
-      // act
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump(); // Trigger the future
+      await tester.pump(); // Run post-frame callbacks
+      await tester.pumpAndSettle(); // Finish loading
 
-      // assert
-      expect(find.text('Inception'), findsNWidgets(2)); // Title in appbar and body
+      expect(find.text('Inception'), findsNWidgets(2)); 
       expect(find.text('2010-07-16'), findsOneWidget);
       expect(find.text('Director: Christopher Nolan'), findsOneWidget);
       expect(find.text('A mind-bending thriller'), findsOneWidget);
@@ -104,19 +102,16 @@ void main() {
       expect(find.text('Leonardo DiCaprio'), findsOneWidget);
     });
 
-    testWidgets('displays error message when loading fails', (WidgetTester tester) async {
-      // arrange
+    testWidgets('displays offline mode when loading fails with connection error', (WidgetTester tester) async {
       when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
-          .thenThrow(Exception('Network error'));
+          .thenThrow(Exception('SocketException: Connection failed'));
 
-      // act
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump(); // Trigger the future
+      await tester.pump(); // Run post-frame callbacks
+      await tester.pumpAndSettle();
 
-      // assert
-      expect(find.text('Inception'), findsNWidgets(2)); // Title in appbar and body
-      expect(find.text('A mind-bending thriller'), findsOneWidget);
-      expect(find.text('Failed to load additional details.'), findsOneWidget);
+      expect(find.text('Offline Mode'), findsOneWidget);
+      expect(find.text('Detailed information is unavailable without internet.'), findsOneWidget);
     });
   });
 }

@@ -53,13 +53,16 @@ abstract class MediaRepository {
   /// Marks a media item (movie or episode) as seen.
   Future<void> markAsSeen(SeenItem item);
 
-  /// Removes a seen entry.
+  /// Removes all seen entries for a specific media item (optionally filtered by season/episode).
   Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber});
+
+  /// Deletes a specific viewing entry by its local ID.
+  Future<void> deleteSeenEntry(int id);
 
   /// Gets all seen items.
   Future<List<SeenItem>> getSeenItems();
 
-  /// Gets seen status for a specific media item (all episodes seen for a series if applicable).
+  /// Gets all viewing entries for a specific media item.
   Future<List<SeenItem>> getSeenStatus(int tmdbId, MediaType type);
 
   /// Fetches details for a specific season of a TV show.

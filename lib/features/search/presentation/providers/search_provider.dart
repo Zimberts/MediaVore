@@ -23,7 +23,7 @@ class SearchProvider extends ChangeNotifier {
   // Previews for each list
   Map<String, List<MediaItemPreview>> _listPreviews = {};
 
-  // Seen status: Map of "id:type" to count of seen items
+  // Seen status: Map of "id:type" to count of UNIQUE seen items (episodes for TV, 1 for movie if seen)
   Map<String, int> _seenStatus = {};
 
   int _currentPage = 1;
@@ -67,7 +67,8 @@ class SearchProvider extends ChangeNotifier {
   void setOffline(bool offline) {
     if (_isOffline != offline) {
       _isOffline = offline;
-      notifyListeners();
+      // Delaying notification ensures we are out of the build phase
+      Future.microtask(() => notifyListeners());
     }
   }
 
@@ -80,10 +81,23 @@ class SearchProvider extends ChangeNotifier {
       final allSeen = await _mediaRepository.getSeenItems();
       final Map<String, int> newStatus = {};
       
+      // We group by media id to count UNIQUE episodes/viewings for progress bars
+      final Map<String, Set<String>> uniqueEpisodes = {};
+      
       for (final item in allSeen) {
         final key = '${item.tmdbId}:${item.type.name}';
-        newStatus[key] = (newStatus[key] ?? 0) + 1;
+        if (item.type == MediaType.tv) {
+          uniqueEpisodes[key] ??= {};
+          uniqueEpisodes[key]!.add('${item.seasonNumber}:${item.episodeNumber}');
+        } else {
+          // For movies, we just need to know it's been seen at least once
+          newStatus[key] = 1;
+        }
       }
+      
+      uniqueEpisodes.forEach((key, episodes) {
+        newStatus[key] = episodes.length;
+      });
       
       _seenStatus = newStatus;
       notifyListeners();
@@ -253,6 +267,11 @@ class SearchProvider extends ChangeNotifier {
 
   Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
     await _mediaRepository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
+    await loadAllSeenStatus();
+  }
+
+  Future<void> deleteSeenEntry(int id) async {
+    await _mediaRepository.deleteSeenEntry(id);
     await loadAllSeenStatus();
   }
 

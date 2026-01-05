@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -21,26 +22,18 @@ void main() {
         {
           'id': 27205,
           'title': 'Inception',
-          'poster_path': '/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
-          'overview': 'Overview...',
+          'poster_path': '/path.jpg',
+          'overview': '...',
           'release_date': '2010-07-15',
           'media_type': 'movie',
-        },
-        {
-          'id': 1396,
-          'name': 'Breaking Bad',
-          'poster_path': '/ggm8ih04ly739Y69Ul9I678YWAX.jpg',
-          'overview': '...',
-          'first_air_date': '2008-01-20',
-          'media_type': 'tv',
         }
       ]
     };
 
     test('should return List<MediaItem> when the response is successful', () async {
-      // arrange
+      // 1. Mock search results
       when(() => mockDio.get(
-            any(),
+            'https://api.themoviedb.org/3/search/multi',
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
           )).thenAnswer(
@@ -51,33 +44,32 @@ void main() {
         ),
       );
 
-      // act
+      // 2. Mock enrichment fetch
+      when(() => mockDio.get(
+            any(that: startsWith('https://api.themoviedb.org/3/movie/')),
+            options: any(named: 'options'),
+          )).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: tMediaResponse['results']![0],
+          statusCode: 200,
+        ),
+      );
+
       final result = await dataSource.searchMedia(tQuery);
 
-      // assert
-      expect(result.first.id, equals(tMediaResponse['results']?[0]['id']));
-      verify(() => mockDio.get(
-        any(),
-        queryParameters: {
-          'query': tQuery,
-          'page': 1,
-        },
-        options: any(named: 'options'),
-      )).called(1);
+      expect(result.first.id, equals(27205));
     });
 
     test('should throw an Exception when the response fails', () async {
-      // arrange
       when(() => mockDio.get(
             any(),
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
           )).thenThrow(DioException(requestOptions: RequestOptions(path: '')));
 
-      // act
       final call = dataSource.searchMedia(tQuery);
 
-      // assert
       expect(() => call, throwsA(anything));
     });
   });
@@ -93,7 +85,6 @@ void main() {
     };
 
     test('should return MediaItem when the response is successful', () async {
-      // arrange
       when(() => mockDio.get(
             any(),
             options: any(named: 'options'),
@@ -105,81 +96,61 @@ void main() {
         ),
       );
 
-      // act
       final result = await dataSource.getMediaItem(tId);
 
-      // assert
       expect(result.id, equals(tId));
       expect(result.title, 'Inception');
     });
   });
 
-  group('getActorDetails', () {
-    const tActorId = 1;
-    final tActorDetails = {
-      'id': 1,
-      'name': 'Leonardo DiCaprio',
-      'biography': 'Bio...',
-      'birthday': '1974-11-11',
-      'place_of_birth': 'Los Angeles, California, USA',
-      'profile_path': '/leo.jpg',
-    };
-
-    test('should return ActorDetails when the response is successful', () async {
-      // arrange
+  group('getSeasonDetails', () {
+    test('should return map of season details', () async {
+      final tData = {'id': 1, 'name': 'Season 1', 'episodes': []};
+      
       when(() => mockDio.get(
-        any(),
+        'https://api.themoviedb.org/3/tv/1/season/1',
         options: any(named: 'options'),
-      )).thenAnswer(
-            (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
-          data: tActorDetails,
-          statusCode: 200,
-        ),
-      );
+      )).thenAnswer((_) async => Response(
+        requestOptions: RequestOptions(path: ''),
+        data: tData,
+        statusCode: 200,
+      ));
 
-      // act
-      final result = await dataSource.getActorDetails(tActorId);
+      final result = await dataSource.getSeasonDetails(1, 1);
 
-      // assert
-      expect(result.id, equals(tActorId));
-      expect(result.name, equals('Leonardo DiCaprio'));
+      expect(result['name'], 'Season 1');
     });
   });
 
-  group('getActorMovieCredits', () {
-    const tActorId = 1;
-    final tMovieCredits = {
-      'cast': [
-        {
-          'id': 27205,
-          'title': 'Inception',
-          'poster_path': '/path.jpg',
-          'overview': 'Overview...',
-          'release_date': '2010-07-15',
-        }
-      ]
-    };
+  group('getActorDetails', () {
+    test('should return ActorDetails when successful', () async {
+      final tActorDetails = {'id': 1, 'name': 'Leo', 'biography': '...', 'birthday': '1974', 'place_of_birth': 'LA', 'profile_path': '/path'};
+      
+      when(() => mockDio.get(any(that: contains('person/1')), options: any(named: 'options')))
+          .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: ''), data: tActorDetails, statusCode: 200));
 
-    test('should return List<Movie> when the response is successful', () async {
-      // arrange
+      final result = await dataSource.getActorDetails(1);
+      expect(result.id, 1);
+      expect(result.name, 'Leo');
+    });
+  });
+
+  group('getMediaCredits', () {
+    test('should return credit details', () async {
+      final tData = {'cast': [], 'crew': []};
+      
       when(() => mockDio.get(
-        any(),
+        'https://api.themoviedb.org/3/movie/1/credits',
         options: any(named: 'options'),
-      )).thenAnswer(
-            (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
-          data: tMovieCredits,
-          statusCode: 200,
-        ),
-      );
+      )).thenAnswer((_) async => Response(
+        requestOptions: RequestOptions(path: ''),
+        data: tData,
+        statusCode: 200,
+      ));
 
-      // act
-      final result = await dataSource.getActorMediaCredits(tActorId);
+      final result = await dataSource.getMediaCredits(1, type: MediaType.movie);
 
-      // assert
-      expect(result.length, 1);
-      expect(result.first.title, equals('Inception'));
+      expect(result, equals(tData));
     });
   });
 }

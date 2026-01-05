@@ -91,25 +91,16 @@ class MediaListLocalDataSource {
 
   Future<void> markAsSeen(SeenItemModel item) async {
     await _isar.writeTxn(() async {
-      // Check for existing same entry (especially for episodes)
-      final query = _isar.seenItemModels
-          .filter()
-          .tmdbIdEqualTo(item.tmdbId)
-          .typeEqualTo(item.type)
-          .seasonNumberEqualTo(item.seasonNumber)
-          .episodeNumberEqualTo(item.episodeNumber);
-      
-      final existing = await query.findFirst();
-
-      if (existing != null) {
-        item.isarId = existing.isarId;
-      }
+      // We allow multiple seen entries for the same item now.
+      // Always create a new record.
       await _isar.seenItemModels.put(item);
     });
   }
 
   Future<void> removeFromSeen(int tmdbId, String type, {int? seasonNumber, int? episodeNumber}) async {
     await _isar.writeTxn(() async {
+      // Removing "seen" status for a specific item (movie or episode)
+      // currently deletes ALL history entries for that item.
       await _isar.seenItemModels
           .filter()
           .tmdbIdEqualTo(tmdbId)
@@ -135,5 +126,12 @@ class MediaListLocalDataSource {
         .tmdbIdEqualTo(tmdbId)
         .typeEqualTo(type)
         .findAll();
+  }
+  
+  /// Deletes a specific seen entry by its Isar ID.
+  Future<void> deleteSeenEntry(int isarId) async {
+    await _isar.writeTxn(() async {
+      await _isar.seenItemModels.delete(isarId);
+    });
   }
 }

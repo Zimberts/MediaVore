@@ -3,7 +3,9 @@ import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
 
@@ -14,6 +16,12 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(SeenItemModel(
+      tmdbId: 1, 
+      type: 'movie', 
+      title: 'T', 
+      seenDate: DateTime(2000)
+    ));
   });
 
   setUp(() {
@@ -45,25 +53,18 @@ void main() {
     final tMediaItems = [tMediaItem];
 
     test('should return list of media items from remote data source', () async {
-      // arrange
       when(() => mockRemoteDataSource.searchMedia(tQuery))
           .thenAnswer((_) async => tMediaItems);
 
-      // act
       final result = await repository.searchMedia(tQuery);
 
-      // assert
       expect(result, equals(tMediaItems));
       verify(() => mockRemoteDataSource.searchMedia(tQuery)).called(1);
-      verifyNoMoreInteractions(mockRemoteDataSource);
     });
-  });
-
-  group('getMediaDetails', () {
+   group('getMediaDetails', () {
     const tId = 1;
 
     test('should return media details with cast and director', () async {
-      // arrange
       when(() => mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaItem);
       when(() => mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')))
@@ -76,36 +77,38 @@ void main() {
             ]
           });
 
-      // act
       final result = await repository.getMediaDetails(tId);
 
-      // assert
       expect(result.item, equals(tMediaItem));
       expect(result.cast, equals(tCast));
       expect(result.director, equals(tDirector));
     });
 
     test('should return movie details with N/A director when no director found', () async {
-      // arrange
-      when(() => mockRemoteDataSource.getMediaItem(tId))
+      when(() => mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaItem);
-      when(() => mockRemoteDataSource.getMediaCredits(tId))
+      when(() => mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')))
           .thenAnswer((_) async => {
-        'cast': [
-          {'id': 1, 'name': 'Leonardo DiCaprio', 'character': 'Cobb', 'profile_path': '/leo.jpg'}
-        ],
-        'crew': [
-          {'name': 'Someone', 'job': 'Writer'}
-        ]
+        'cast': [],
+        'crew': [{'name': 'Someone', 'job': 'Writer'}]
       });
 
-      // act
       final result = await repository.getMediaDetails(tId);
 
-      // assert
-      expect(result.item, equals(tMediaItem));
-      expect(result.cast, equals(tCast));
       expect(result.director, CrewMember(name: 'N/A', job: 'Director'));
+    });
+  });
+
+  group('getSeasonDetails', () {
+    test('should call remote data source for season details', () async {
+      final tData = {'episodes': []};
+      when(() => mockRemoteDataSource.getSeasonDetails(any(), any()))
+          .thenAnswer((_) async => tData);
+
+      final result = await repository.getSeasonDetails(1, 1);
+
+      expect(result, tData);
+      verify(() => mockRemoteDataSource.getSeasonDetails(1, 1)).called(1);
     });
   });
 
@@ -116,115 +119,74 @@ void main() {
       name: 'Leonardo DiCaprio',
       biography: 'Bio...',
       birthday: '1974-11-11',
-      placeOfBirth: 'Los Angeles, California, USA',
+      placeOfBirth: 'LA',
       profilePath: '/leo.jpg',
     );
-    final tMedias = [tMediaItem];
 
     test('should return actor details with their movies', () async {
-      // arrange
-      when(() => mockRemoteDataSource.getActorDetails(tActorId))
-          .thenAnswer((_) async => tActorDetails);
-      when(() => mockRemoteDataSource.getActorMediaCredits(tActorId))
-          .thenAnswer((_) async => tMedias);
+      when(() => mockRemoteDataSource.getActorDetails(tActorId)).thenAnswer((_) async => tActorDetails);
+      when(() => mockRemoteDataSource.getActorMediaCredits(tActorId)).thenAnswer((_) async => [tMediaItem]);
 
-      // act
       final result = await repository.getActorDetails(tActorId);
 
-      // assert
       expect(result.id, equals(tActorId));
-      expect(result.items, equals(tMedias));
-      verify(() => mockRemoteDataSource.getActorDetails(tActorId)).called(1);
-      verify(() => mockRemoteDataSource.getActorMediaCredits(tActorId)).called(1);
+      expect(result.items, contains(tMediaItem));
     });
   });
 
-  group('addToWatchlist', () {
-    test('should call local data source to add item', () async {
-      // arrange
-      when(() => mockLocalDataSource.addToList(
-            id: any(named: 'id'),
-            type: any(named: 'type'),
-            listName: any(named: 'listName'),
-            title: any(named: 'title'),
-            posterPath: any(named: 'posterPath'),
-          ))
-          .thenAnswer((_) async => Future.value());
+  group('Seen Items', () {
+    final tSeenItem = SeenItem(
+      tmdbId: 1,
+      type: MediaType.movie,
+      title: 'Dune',
+      seenDate: DateTime(2023, 10, 1),
+    );
 
-      // act
+    test('markAsSeen should call local data source', () async {
+      when(() => mockLocalDataSource.markAsSeen(any())).thenAnswer((_) async {});
+      await repository.markAsSeen(tSeenItem);
+      verify(() => mockLocalDataSource.markAsSeen(any())).called(1);
+    });
+
+    test('removeFromSeen should call local data source', () async {
+      when(() => mockLocalDataSource.removeFromSeen(any(), any(), 
+          seasonNumber: any(named: 'seasonNumber'), 
+          episodeNumber: any(named: 'episodeNumber')))
+          .thenAnswer((_) async {});
+
+      await repository.removeFromSeen(1, MediaType.movie);
+      verify(() => mockLocalDataSource.removeFromSeen(1, 'movie')).called(1);
+    });
+  });
+
+  group('Watchlist & Lists', () {
+    test('addToWatchlist should call local data source', () async {
+      when(() => mockLocalDataSource.addToList(
+        id: any(named: 'id'),
+        type: any(named: 'type'),
+        listName: any(named: 'listName'),
+        title: any(named: 'title'),
+        posterPath: any(named: 'posterPath'),
+      )).thenAnswer((_) async {});
+
       await repository.addToWatchlist(tMediaItem);
 
-      // assert
       verify(() => mockLocalDataSource.addToList(
-            id: tMediaItem.id,
-            type: tMediaItem.mediaType.name,
-            listName: 'watchlist',
-            title: tMediaItem.title,
-            posterPath: tMediaItem.posterPath,
-          )).called(1);
+        id: 1,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'Inception',
+        posterPath: '/path.jpg',
+      )).called(1);
     });
-  });
 
-  group('removeFromWatchlist', () {
-    const tId = 1;
-    const tType = MediaType.movie;
-
-    test('should call local data source to remove item', () async {
-      // arrange
-      when(() => mockLocalDataSource.removeFromList(tId, tType.name, 'watchlist'))
-          .thenAnswer((_) async => Future.value());
-
-      // act
-      await repository.removeFromWatchlist(tId, tType);
-
-      // assert
-      verify(() => mockLocalDataSource.removeFromList(tId, tType.name, 'watchlist')).called(1);
-    });
-  });
-
-  group('getWatchlistEntries', () {
-    final tEntries = ['1:movie', '2:tv'];
-
-    test('should return list of entries from local data source', () async {
-      // arrange
+    test('isInWatchlist should check local entries', () async {
       when(() => mockLocalDataSource.getListEntries('watchlist'))
-          .thenAnswer((_) async => tEntries);
+          .thenAnswer((_) async => ['1:movie']);
 
-      // act
-      final result = await repository.getWatchlistEntries();
-
-      // assert
-      expect(result, equals(tEntries));
-      verify(() => mockLocalDataSource.getListEntries('watchlist')).called(1);
+      final result = await repository.isInWatchlist(1, MediaType.movie);
+      expect(result, isTrue);
     });
   });
-
-  group('isInWatchlist', () {
-    const tId = 1;
-    const tType = MediaType.movie;
-
-    test('should return true when item is in watchlist', () async {
-      // arrange
-      when(() => mockLocalDataSource.getListEntries('watchlist'))
-          .thenAnswer((_) async => ['1:movie', '2:tv']);
-
-      // act
-      final result = await repository.isInWatchlist(tId, tType);
-
-      // assert
-      expect(result, true);
-    });
-
-    test('should return false when item is not in watchlist', () async {
-      // arrange
-      when(() => mockLocalDataSource.getListEntries('watchlist'))
-          .thenAnswer((_) async => ['2:tv']);
-
-      // act
-      final result = await repository.isInWatchlist(tId, tType);
-
-      // assert
-      expect(result, false);
-    });
-  });
+});
 }

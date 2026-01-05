@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -53,8 +52,15 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   @override
   void initState() {
     super.initState();
-    _fetchMediaDetails();
-    _fetchSeenStatus();
+    // Use a post-frame callback to start fetching data.
+    // This avoids triggering synchronous state changes (like offline status updates)
+    // in parent widgets (like MainPage) during the build phase.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _fetchMediaDetails();
+        _fetchSeenStatus();
+      }
+    });
   }
 
   /// Fetches the details from the repository via the provider.
@@ -90,7 +96,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   }
 
   Future<void> _fetchSeenStatus() async {
-    final status = await context.read<SearchProvider>().loadSeenStatusForItem(widget.item.id, widget.item.mediaType);
+    final provider = context.read<SearchProvider>();
+    final status = await provider.loadSeenStatusForItem(widget.item.id, widget.item.mediaType);
     if (mounted) {
       setState(() {
         _seenStatus = status;
@@ -112,7 +119,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
     });
 
     try {
-      final data = await context.read<SearchProvider>().getSeasonDetails(widget.item.id, seasonNumber);
+      final provider = context.read<SearchProvider>();
+      final data = await provider.getSeasonDetails(widget.item.id, seasonNumber);
       if (mounted) {
         setState(() {
           _episodesBySeason[seasonNumber] = data['episodes'] ?? [];

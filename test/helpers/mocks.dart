@@ -6,6 +6,8 @@ import 'package:mediavore/features/media_details/data/datasources/watchlist_loca
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar/isar.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 
 class MockDio extends Mock implements Dio {}
 
@@ -20,3 +22,6 @@ class MockWatchlistLocalDataSource extends Mock implements WatchlistLocalDataSou
 class MockMediaListLocalDataSource extends Mock implements MediaListLocalDataSource {}
 
 class MockIsar extends Mock implements Isar {}
+
+class FakeSeenItem extends Fake implements SeenItem {}
+class FakeMediaItem extends Fake implements MediaItem {}
