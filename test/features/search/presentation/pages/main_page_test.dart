@@ -31,6 +31,7 @@ void main() {
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     

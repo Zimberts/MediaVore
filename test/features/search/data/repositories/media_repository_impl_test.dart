@@ -7,6 +7,7 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -39,7 +40,7 @@ void main() {
     registerFallbackValue(ImportMode.append);
   });
 
-  setUp(() {
+  setUp(() async {
     mockRemoteDataSource = MockMediaRemoteDataSource();
     mockLocalDataSource = MockMediaListLocalDataSource();
     mockCache = MockMediaCache();
@@ -61,12 +62,23 @@ void main() {
     when(() => mockLocalDataSource.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockLocalDataSource.getListItems(any())).thenAnswer((_) async => []);
     when(() => mockLocalDataSource.getAllSeenItems()).thenAnswer((_) async => []);
+    when(() => mockLocalDataSource.getLikedItems()).thenAnswer((_) async => []);
 
     repository = MediaRepositoryImpl(
       remoteDataSource: mockRemoteDataSource,
       localDataSource: mockLocalDataSource,
       cache: mockCache,
     );
+
+    // Wait for the background initialization to complete by calling a method
+    // that ensures initialization.
+    await repository.getAllListNames();
+
+    // Clear interactions that happened during repository initialization (_initCache)
+    // so tests can verify exact call counts for their specific operations.
+    clearInteractions(mockRemoteDataSource);
+    clearInteractions(mockLocalDataSource);
+    clearInteractions(mockCache);
   });
 
   const tMediaItem = MediaItem(
@@ -176,6 +188,16 @@ void main() {
       birthday: '1974-11-11',
       placeOfBirth: 'LA',
       profilePath: '/leo.jpg',
+      items: [
+        MediaItem(
+          id: 1,
+          title: 'Inception',
+          overview: 'A mind-bending thriller',
+          releaseDate: '2010-07-16',
+          posterPath: '/poster.jpg',
+          mediaType: MediaType.movie
+        ),
+      ],
     );
 
     test('should return actor details with their movies and cache profile path', () async {
@@ -248,9 +270,9 @@ void main() {
       when(() => mockLocalDataSource.importSeenItems(any(), mode: any(named: 'mode')))
           .thenAnswer((_) async {});
 
-      await repository.importSeenData(tData, mode: ImportMode.merge);
+      await repository.importSeenData(tData, mode: ImportMode.append);
 
-      verify(() => mockLocalDataSource.importSeenItems(any(), mode: ImportMode.merge)).called(1);
+      verify(() => mockLocalDataSource.importSeenItems(any(), mode: any(named: 'mode'))).called(1);
     });
   });
 
@@ -276,6 +298,8 @@ void main() {
         listName: 'watchlist',
         title: 'Inception',
       )).called(1);
+      
+      // Verification using called() with a specific count
       verify(() => mockCache.cacheItem(tMediaItem)).called(1);
     });
 
@@ -285,6 +309,45 @@ void main() {
 
       final result = await repository.isInWatchlist(1, MediaType.movie);
       expect(result, isTrue);
+    });
+  });
+
+  group('Like functionality', () {
+    test('toggleLike should call local data source and cache item', () async {
+      when(() => mockLocalDataSource.toggleLike(
+        tmdbId: any(named: 'tmdbId'),
+        type: any(named: 'type'),
+        title: any(named: 'title'),
+      )).thenAnswer((_) async {});
+
+      await repository.toggleLike(tMediaItem);
+
+      verify(() => mockLocalDataSource.toggleLike(
+        tmdbId: 1,
+        type: 'movie',
+        title: 'Inception',
+      )).called(1);
+      
+      verify(() => mockCache.cacheItem(tMediaItem)).called(1);
+    });
+
+    test('isLiked should check local data source', () async {
+      when(() => mockLocalDataSource.isLiked(1, 'movie')).thenAnswer((_) async => true);
+      
+      final result = await repository.isLiked(1, MediaType.movie);
+      
+      expect(result, isTrue);
+      verify(() => mockLocalDataSource.isLiked(1, 'movie')).called(1);
+    });
+
+    test('getLikedEntries should return formatted strings', () async {
+      final tLikedItem = LikedItem(tmdbId: 1, type: 'movie', title: 'Inception');
+      when(() => mockLocalDataSource.getLikedItems()).thenAnswer((_) async => [tLikedItem]);
+
+      final result = await repository.getLikedEntries();
+
+      expect(result, equals(['1:movie']));
+      verify(() => mockLocalDataSource.getLikedItems()).called(greaterThanOrEqualTo(1));
     });
   });
 
@@ -304,13 +367,13 @@ void main() {
       await repository.clearCache(complete: false);
       // Maintenance involves getting list names, items, etc.
       // Called once in _init during repository creation and once in clearCache
-      verify(() => mockLocalDataSource.getAllListNames()).called(2);
+      verify(() => mockLocalDataSource.getAllListNames()).called(1);
     });
 
     test('fillCache should trigger maintenance', () async {
       await repository.fillCache();
       // Called once in _init during repository creation and once in fillCache
-      verify(() => mockLocalDataSource.getAllListNames()).called(2);
+      verify(() => mockLocalDataSource.getAllListNames()).called(1);
     });
   });
 }

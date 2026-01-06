@@ -38,11 +38,13 @@ void main() {
     when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
+    when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
 
     provider = SearchProvider(mockRepository);
     
     // The SearchProvider calls several async methods in its constructor (_init).
-    await untilCalled(() => mockRepository.getWatchlistEntries());
+    // getLikedEntries is the last one in _init.
+    await untilCalled(() => mockRepository.getLikedEntries());
     clearInteractions(mockRepository);
   });
 

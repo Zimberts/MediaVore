@@ -167,6 +167,7 @@ class _SearchPageState extends State<SearchPage> {
         final isTv = item.mediaType == MediaType.tv;
         final seenCount = provider.getSeenCount(item);
         final isSeen = seenCount > 0;
+        final isLiked = provider.isLiked(item);
 
         return InkWell(
           onTap: () => Navigator.push(
@@ -175,7 +176,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
           child: ListTile(
             leading: _buildPoster(item, isTv, isSeen, seenCount, item.numberOfEpisodes),
-            title: _buildTitle(item, isTv),
+            title: _buildTitle(item, isTv, isLiked),
             subtitle: Text(item.releaseDate),
             trailing: IconButton(
               icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
@@ -236,10 +237,25 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildTitle(MediaItem item, bool isTv) {
+  Widget _buildTitle(MediaItem item, bool isTv, bool isLiked) {
     return Row(
       children: [
-        Expanded(child: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(child: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                if (isLiked)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4.0),
+                    child: Icon(Icons.favorite, size: 16, color: Colors.red),
+                  ),
+              ],
+            ),
+          ),
+        ),
         if (isTv)
           Padding(
             padding: const EdgeInsets.only(left: 8.0),

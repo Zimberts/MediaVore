@@ -3,6 +3,7 @@ import 'package:isar/isar.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 @lazySingleton
@@ -192,5 +193,44 @@ class MediaListLocalDataSource {
   /// Returns the approximate size of the "Seen" database collection in bytes.
   Future<int> getSeenDbSize() async {
     return await _isar.seenItemModels.getSize();
+  }
+
+  // Like methods
+
+  Future<void> toggleLike({
+    required int tmdbId,
+    required String type,
+    required String title,
+  }) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.likedItems
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type)
+          .findFirst();
+
+      if (existing != null) {
+        await _isar.likedItems.delete(existing.isarId!);
+      } else {
+        await _isar.likedItems.put(LikedItem(
+          tmdbId: tmdbId,
+          type: type,
+          title: title,
+        ));
+      }
+    });
+  }
+
+  Future<bool> isLiked(int tmdbId, String type) async {
+    final count = await _isar.likedItems
+        .filter()
+        .tmdbIdEqualTo(tmdbId)
+        .typeEqualTo(type)
+        .count();
+    return count > 0;
+  }
+
+  Future<List<LikedItem>> getLikedItems() async {
+    return await _isar.likedItems.where().findAll();
   }
 }

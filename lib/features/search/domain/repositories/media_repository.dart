@@ -93,6 +93,15 @@ abstract class MediaRepository {
 
   /// Imports seen data.
   Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append});
+
+  /// Likes a media item.
+  Future<void> toggleLike(MediaItem item);
+
+  /// Checks if a media item is liked.
+  Future<bool> isLiked(int tmdbId, MediaType type);
+
+  /// Gets all liked media entries (format "id:type").
+  Future<List<String>> getLikedEntries();
 }
 
 class MediaItemPreview {

@@ -27,6 +27,7 @@ void main() {
     when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockRepository);
     

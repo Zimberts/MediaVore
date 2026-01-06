@@ -29,6 +29,7 @@ class SearchProvider with ChangeNotifier {
   List<SeenItem> _seenItems = [];
   Map<String, int> _seenCounts = {}; // "id:type" -> count
   List<String> _watchlistIds = []; // Simplified IDs for quick checks
+  List<String> _likedIds = []; // "id:type"
 
   List<MediaItem> get items => _searchResults; // For SearchPage
   bool get isLoading => _isLoading;
@@ -43,6 +44,7 @@ class SearchProvider with ChangeNotifier {
   bool get hasMore => _hasMore;
   List<String> get watchlistIds => _watchlistIds;
   List<SeenItem> get seenItems => _seenItems;
+  List<String> get likedIds => _likedIds;
 
   Future<void> _init() async {
     await loadListNames();
@@ -51,6 +53,7 @@ class SearchProvider with ChangeNotifier {
     await updateSeenDbSize();
     await loadAllSeenStatus();
     await loadWatchlist();
+    await loadLikedStatus();
   }
 
   Future<void> updateCacheSize() async {
@@ -106,6 +109,11 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadLikedStatus() async {
+    _likedIds = await repository.getLikedEntries();
+    notifyListeners();
+  }
+
   Future<void> loadAllSeenStatus() async {
     _seenItems = await repository.getSeenItems();
     final Map<String, int> counts = {};
@@ -143,6 +151,16 @@ class SearchProvider with ChangeNotifier {
   bool isItemInList(MediaItem item, String listName) {
     final entry = '${item.id}:${item.mediaType.name}';
     return _listEntries[listName]?.contains(entry) ?? false;
+  }
+
+  bool isLiked(MediaItem item) {
+    return _likedIds.contains('${item.id}:${item.mediaType.name}');
+  }
+
+  Future<void> toggleLike(MediaItem item) async {
+    await repository.toggleLike(item);
+    await loadLikedStatus();
+    await updateCacheSize();
   }
 
   Future<void> toggleInList(MediaItem item, String listName) async {

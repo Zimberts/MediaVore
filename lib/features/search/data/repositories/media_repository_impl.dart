@@ -84,7 +84,17 @@ class MediaRepositoryImpl implements MediaRepository {
       }
     }
 
-    // 3. Perform cleanup of old, unused cache entries (older than 60 days)
+    // 3. Keep liked items in cache
+    final likedItems = await localDataSource.getLikedItems();
+    for (final liked in likedItems) {
+      keysToKeep.add('${liked.type}:${liked.tmdbId}');
+      final type = liked.type == 'movie' ? MediaType.movie : MediaType.tv;
+      try {
+        await getMediaDetails(liked.tmdbId, type: type);
+      } catch (_) {}
+    }
+
+    // 4. Perform cleanup of old, unused cache entries (older than 60 days)
     await cache.cleanup(
       keepKeys: keysToKeep,
       olderThan: const Duration(days: 60),
@@ -404,5 +414,30 @@ class MediaRepositoryImpl implements MediaRepository {
       episodeNumber: json['episodeNumber'] as int?,
     )).toList();
     await localDataSource.importSeenItems(items, mode: mode);
+  }
+
+  @override
+  Future<void> toggleLike(MediaItem item) async {
+    await _ensureInitialized();
+    await localDataSource.toggleLike(
+      tmdbId: item.id,
+      type: item.mediaType.name,
+      title: item.title,
+    );
+    // Cache the item when it's liked
+    await cache.cacheItem(item);
+  }
+
+  @override
+  Future<bool> isLiked(int tmdbId, MediaType type) async {
+    await _ensureInitialized();
+    return localDataSource.isLiked(tmdbId, type.name);
+  }
+
+  @override
+  Future<List<String>> getLikedEntries() async {
+    await _ensureInitialized();
+    final items = await localDataSource.getLikedItems();
+    return items.map((e) => '${e.tmdbId}:${e.type}').toList();
   }
 }

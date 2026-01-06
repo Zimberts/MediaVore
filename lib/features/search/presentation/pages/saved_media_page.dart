@@ -208,6 +208,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 final isTv = item.mediaType == MediaType.tv;
                 final seenCount = provider.getSeenCount(item);
                 final isSeen = seenCount > 0;
+                final isLiked = provider.isLiked(item);
                 
                 bool isFinished = false;
                 if (isSeen) {
@@ -272,7 +273,22 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     ),
                     title: Row(
                       children: [
-                        Expanded(child: Text(item.title)),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(child: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                if (isLiked)
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 4.0),
+                                    child: Icon(Icons.favorite, size: 16, color: Colors.red),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
                         if (isTv)
                           const Padding(
                             padding: EdgeInsets.only(left: 8.0),

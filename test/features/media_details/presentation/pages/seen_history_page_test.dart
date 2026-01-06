@@ -28,6 +28,7 @@ void main() {
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     locator.registerSingleton<MediaRepository>(mockMediaRepository);
@@ -55,7 +56,7 @@ void main() {
     expect(find.text('No items seen yet.'), findsOneWidget);
   });
 
-  testWidgets('displays grouped list of seen items', (WidgetTester tester) async {
+  testWidgets('displays grouped list of seen items and liked status', (WidgetTester tester) async {
     final seenDate = DateTime(2023, 10, 1);
     final seenItems = [
       SeenItem(id: 1, tmdbId: 1, type: MediaType.movie, title: 'Movie A', seenDate: seenDate),
@@ -63,15 +64,18 @@ void main() {
     ];
 
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => seenItems);
+    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
     
     // Manually trigger reload to update Provider's state before building
     await searchProvider.loadAllSeenStatus();
+    await searchProvider.loadLikedStatus();
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
     expect(find.text('Movie A'), findsOneWidget);
     expect(find.text('Show B'), findsOneWidget);
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
     // Check group header
     expect(find.textContaining('October 1, 2023'), findsOneWidget);
   });

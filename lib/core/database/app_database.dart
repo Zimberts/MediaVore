@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
 
 @module
@@ -17,6 +18,7 @@ abstract class DatabaseModule {
         UserListSchema,
         MediaListItemSchema,
         SeenItemModelSchema,
+        LikedItemSchema,
         CachedMediaSchema,
         CachedActorProfileSchema,
         CachedSeasonSchema,

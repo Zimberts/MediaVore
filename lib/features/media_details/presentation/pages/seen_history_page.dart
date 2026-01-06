@@ -98,6 +98,7 @@ class SeenHistoryPage extends StatelessWidget {
 
                 final seenItem = item as SeenItem;
                 final isTv = seenItem.type == MediaType.tv;
+                final isLiked = provider.likedIds.contains('${seenItem.tmdbId}:${seenItem.type.name}');
                 
                 String subtitle = '';
                 if (isTv && seenItem.seasonNumber != null) {
@@ -139,7 +140,17 @@ class SeenHistoryPage extends StatelessWidget {
                             width: 50,
                             child: Icon(isTv ? Icons.tv : Icons.movie),
                           ),
-                    title: Text(seenItem.title),
+                    title: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(child: Text(seenItem.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                        if (isLiked)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 4.0),
+                            child: Icon(Icons.favorite, size: 16, color: Colors.red),
+                          ),
+                      ],
+                    ),
                     subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
                     onTap: () {
                       Navigator.push(

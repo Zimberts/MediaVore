@@ -9,6 +9,7 @@ import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/media_list_manager.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/seen_manager.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/like_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -244,6 +245,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
       appBar: AppBar(
         title: Text(itemToDisplay.title),
         actions: [
+          LikeButton(item: itemToDisplay),
           IconButton(
             icon: const Icon(Icons.file_upload_outlined),
             onPressed: _exportHistory,

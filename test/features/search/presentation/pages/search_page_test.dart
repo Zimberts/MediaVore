@@ -40,6 +40,7 @@ void main() {
     when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
         .thenAnswer((_) async => []);
     when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
+    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
@@ -135,6 +136,34 @@ void main() {
       expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
       expect(find.widgetWithText(ListTile, 'Breaking Bad'), findsOneWidget);
       expect(find.text('TV'), findsOneWidget); 
+    });
+
+    testWidgets('displays favorite icon for liked items', (WidgetTester tester) async {
+      final results = [
+        const MediaItem(
+          id: 1,
+          title: 'Inception',
+          posterPath: null,
+          releaseDate: '2010-07-16',
+          overview: 'A mind-bending thriller',
+          mediaType: MediaType.movie,
+        ),
+      ];
+      when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
+          .thenAnswer((_) async => results);
+      when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
+
+      await searchProvider.loadLikedStatus(); // Ensure liked status is loaded
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.enterText(find.byType(TextField), 'Inception');
+      await tester.pump(const Duration(milliseconds: 600));
+      
+      // Use standard pump instead of pumpAndSettle to avoid timeout from animations/images
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
     });
 
     testWidgets('shows initial message when search results are empty', (WidgetTester tester) async {
