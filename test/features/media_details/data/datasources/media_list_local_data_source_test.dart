@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
+import 'package:mediavore/core/cache/cached_media.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
@@ -22,7 +23,14 @@ void main() {
 
   setUp(() async {
     isar = await Isar.open(
-      [MediaListItemSchema, UserListSchema, SeenItemModelSchema],
+      [
+        MediaListItemSchema, 
+        UserListSchema, 
+        SeenItemModelSchema,
+        CachedMediaSchema,
+        CachedActorProfileSchema,
+        CachedSeasonSchema,
+      ],
       directory: tempPath,
       name: 'test_media_list_db',
     );
@@ -163,6 +171,44 @@ void main() {
 
       final items = await dataSource.getAllSeenItems();
       expect(items.length, 2); // 'A' was merged, 'B' was added
+    });
+  });
+
+  group('MediaListLocalDataSource - Seen DB Size', () {
+    test('getSeenDbSize should only include seen history and ignore lists or cache', () async {
+      // 1. Initial size (may not be 0 due to file metadata, but should be small)
+      final initialSize = await dataSource.getSeenDbSize();
+      
+      // 2. Add seen item
+      await dataSource.markAsSeen(SeenItemModel(
+        tmdbId: 1, type: 'movie', title: 'Seen', seenDate: DateTime.now(),
+      ));
+      final sizeAfterSeen = await dataSource.getSeenDbSize();
+      expect(sizeAfterSeen, greaterThan(initialSize));
+
+      // 3. Add list item
+      await dataSource.addToList(id: 1, type: 'movie', listName: 'L', title: 'List');
+      final sizeAfterList = await dataSource.getSeenDbSize();
+      // Should remain exactly the same as only seenItemModels are counted
+      expect(sizeAfterList, equals(sizeAfterSeen));
+
+      // 4. Add user list
+      await isar.writeTxn(() => isar.userLists.put(UserList(name: 'My New List')));
+      final sizeAfterUserList = await dataSource.getSeenDbSize();
+      expect(sizeAfterUserList, equals(sizeAfterSeen));
+
+      // 5. Add cached item
+      await isar.writeTxn(() async {
+        await isar.cachedMedias.put(CachedMedia(
+          tmdbId: 1, 
+          type: 'movie', 
+          updatedAt: DateTime.now(),
+          mediaItemJson: '{"huge":"json_data_to_increase_actual_file_size"}',
+        ));
+      });
+      final sizeAfterCache = await dataSource.getSeenDbSize();
+      // Should still remain the same
+      expect(sizeAfterCache, equals(sizeAfterSeen));
     });
   });
 

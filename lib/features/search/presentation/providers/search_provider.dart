@@ -14,11 +14,13 @@ class SearchProvider with ChangeNotifier {
   List<MediaItem> _searchResults = [];
   bool _isLoading = false;
   bool _isCacheLoading = false;
+  bool _isDbSizeLoading = false;
   String? _error;
   bool _isOffline = false;
   List<String> _listNames = ['watchlist'];
   final Map<String, List<String>> _listEntries = {}; // listName -> ["id:type"]
   int _cacheSize = 0;
+  int _seenDbSize = 0;
   int _resetCount = 0;
   int _currentPage = 1;
   String _currentQuery = '';
@@ -31,10 +33,12 @@ class SearchProvider with ChangeNotifier {
   List<MediaItem> get items => _searchResults; // For SearchPage
   bool get isLoading => _isLoading;
   bool get isCacheLoading => _isCacheLoading;
+  bool get isDbSizeLoading => _isDbSizeLoading;
   String? get error => _error;
   bool get isOffline => _isOffline;
   List<String> get listNames => _listNames;
   int get cacheSize => _cacheSize;
+  int get seenDbSize => _seenDbSize;
   int get resetCount => _resetCount;
   bool get hasMore => _hasMore;
   List<String> get watchlistIds => _watchlistIds;
@@ -44,6 +48,7 @@ class SearchProvider with ChangeNotifier {
     await loadListNames();
     await _loadAllListEntries();
     await updateCacheSize();
+    await updateSeenDbSize();
     await loadAllSeenStatus();
     await loadWatchlist();
   }
@@ -53,6 +58,14 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
     _cacheSize = await repository.getCacheSize();
     _isCacheLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> updateSeenDbSize() async {
+    _isDbSizeLoading = true;
+    notifyListeners();
+    _seenDbSize = await repository.getSeenDbSize();
+    _isDbSizeLoading = false;
     notifyListeners();
   }
 
@@ -244,14 +257,17 @@ class SearchProvider with ChangeNotifier {
   Future<void> markAsSeen(SeenItem item) async {
     await repository.markAsSeen(item);
     await loadAllSeenStatus();
+    await updateSeenDbSize();
   }
   Future<void> deleteSeenEntry(int id) async {
     await repository.deleteSeenEntry(id);
     await loadAllSeenStatus();
+    await updateSeenDbSize();
   }
   Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
     await repository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
     await loadAllSeenStatus();
+    await updateSeenDbSize();
   }
 
   List<MediaItemPreview> getPreviewsForList(String name) {
@@ -290,5 +306,6 @@ class SearchProvider with ChangeNotifier {
     await repository.importSeenData(data, mode: mode);
     await loadAllSeenStatus();
     await updateCacheSize();
+    await updateSeenDbSize();
   }
 }

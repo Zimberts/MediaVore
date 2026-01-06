@@ -34,6 +34,7 @@ void main() {
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))

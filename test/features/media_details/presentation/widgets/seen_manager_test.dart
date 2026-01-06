@@ -24,6 +24,7 @@ void main() {
     when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
     when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
 

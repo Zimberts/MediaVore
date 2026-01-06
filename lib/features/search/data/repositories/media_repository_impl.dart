@@ -348,6 +348,11 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<int> getSeenDbSize() {
+    return localDataSource.getSeenDbSize();
+  }
+
+  @override
   Future<void> clearCache({required bool complete}) async {
     if (complete) {
       await cache.clearAll();

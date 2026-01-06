@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
     final isCacheLoading = provider.isCacheLoading;
-    final sizeInMb = (provider.cacheSize / (1024 * 1024)).toStringAsFixed(2);
+    final isDbSizeLoading = provider.isDbSizeLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +31,7 @@ class SettingsPage extends StatelessWidget {
               const _SectionHeader(title: 'Cache Management'),
               ListTile(
                 title: const Text('Cache Size'),
-                subtitle: Text('$sizeInMb MB used'),
+                subtitle: Text(_formatBytes(provider.cacheSize)),
                 trailing: isCacheLoading 
                   ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
                   : IconButton(
@@ -73,6 +74,16 @@ class SettingsPage extends StatelessWidget {
               const Divider(),
               const _SectionHeader(title: 'Data Management'),
               ListTile(
+                title: const Text('Seen Database Size'),
+                subtitle: Text(_formatBytes(provider.seenDbSize)),
+                trailing: isDbSizeLoading 
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                  : IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () => provider.updateSeenDbSize(),
+                    ),
+              ),
+              ListTile(
                 leading: const Icon(Icons.upload_file),
                 title: const Text('Export Seen History'),
                 subtitle: const Text('Export your viewing history as JSON.'),
@@ -95,7 +106,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
-          if (isCacheLoading)
+          if (isCacheLoading || isDbSizeLoading)
             Container(
               color: Colors.black12,
               child: const Center(
@@ -107,7 +118,7 @@ class SettingsPage extends StatelessWidget {
                       children: [
                         CircularProgressIndicator(),
                         SizedBox(height: 16),
-                        Text('Processing Cache...', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Processing...', style: TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
@@ -117,6 +128,13 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes <= 0) return "0 B";
+    const suffixes = ["B", "KB", "MB", "GB", "TB"];
+    var i = (math.log(bytes) / math.log(1024)).floor();
+    return '${(bytes / math.pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}';
   }
 
   String get _defaultPath => '/storage/emulated/0/Download/MediaVore';
@@ -360,18 +378,18 @@ class SettingsPage extends StatelessWidget {
   }) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: Text(title),
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
               action();
-              Navigator.pop(dialogContext);
+              Navigator.pop(context);
             },
             child: const Text('Proceed'),
           ),

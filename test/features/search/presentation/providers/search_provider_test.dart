@@ -19,6 +19,12 @@ void main() {
       seenDate: DateTime(2000),
     ));
     registerFallbackValue(ImportMode.append);
+    registerFallbackValue(const MediaItem(
+      id: 0,
+      title: '',
+      overview: '',
+      releaseDate: '',
+    ));
   });
 
   setUp(() async {
@@ -29,6 +35,7 @@ void main() {
     when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
     when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
+    when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
 
@@ -100,6 +107,7 @@ void main() {
       
       when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async {});
       when(() => mockRepository.getSeenItems()).thenAnswer((_) async => [item]);
+      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 10);
 
       await provider.markAsSeen(item);
 
@@ -130,12 +138,43 @@ void main() {
           .thenAnswer((_) async {});
       when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
       when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 100);
+      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 200);
 
       await provider.importSeenData(data, mode: ImportMode.replace);
 
       verify(() => mockRepository.importSeenData(data, mode: ImportMode.replace)).called(1);
       verify(() => mockRepository.getSeenItems()).called(1);
       verify(() => mockRepository.getCacheSize()).called(1);
+      verify(() => mockRepository.getSeenDbSize()).called(1);
+    });
+  });
+
+  group('SearchProvider - Database Isolation', () {
+    test('seenDbSize should only update when seen history changes', () async {
+      // 1. Initial state
+      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 100);
+      await provider.updateSeenDbSize();
+      expect(provider.seenDbSize, 100);
+
+      // 2. Seen History Change -> Should update size
+      when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async {});
+      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
+      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 150); // Increased
+      
+      final item = SeenItem(tmdbId: 1, type: MediaType.movie, title: 'T', seenDate: DateTime.now());
+      await provider.markAsSeen(item);
+      expect(provider.seenDbSize, 150);
+
+      // 3. List Database Change -> Should NOT trigger seenDbSize update
+      when(() => mockRepository.addToList(any(), any())).thenAnswer((_) async {});
+      when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => ['1:movie']);
+      
+      const mediaItem = MediaItem(id: 1, title: 'T', overview: '', releaseDate: '');
+      await provider.toggleInList(mediaItem, 'watchlist');
+      
+      // We check that the count hasn't increased since the markAsSeen call
+      // (1 initial + 1 markAsSeen = 2)
+      verify(() => mockRepository.getSeenDbSize()).called(2);
     });
   });
 }

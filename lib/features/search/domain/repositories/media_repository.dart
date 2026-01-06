@@ -73,6 +73,9 @@ abstract class MediaRepository {
   /// Gets the approximate size of the cache in bytes.
   Future<int> getCacheSize();
 
+  /// Gets the approximate size of the seen database in bytes.
+  Future<int> getSeenDbSize();
+
   /// Clears the cache. If [complete] is true, everything is deleted.
   /// If false, only non-essential items are deleted.
   Future<void> clearCache({required bool complete});

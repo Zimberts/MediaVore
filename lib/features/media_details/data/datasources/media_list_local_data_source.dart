@@ -188,4 +188,9 @@ class MediaListLocalDataSource {
       }
     });
   }
+
+  /// Returns the approximate size of the "Seen" database collection in bytes.
+  Future<int> getSeenDbSize() async {
+    return await _isar.seenItemModels.getSize();
+  }
 }
