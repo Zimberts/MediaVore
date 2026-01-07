@@ -53,6 +53,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   final Map<int, bool> _loadingSeasons = {};
   List<SeenItem> _seenStatus = [];
   bool _isOffline = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -66,6 +67,12 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
         _fetchSeenStatus();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   /// Fetches the details from the repository via the provider.
@@ -258,12 +265,14 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
               title: itemToDisplay.title,
               posterPath: itemToDisplay.posterPath,
               onSeenChanged: _fetchSeenStatus,
+              scrollController: _scrollController,
             ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
+              controller: _scrollController,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

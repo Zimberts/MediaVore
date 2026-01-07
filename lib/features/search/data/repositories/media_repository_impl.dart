@@ -64,20 +64,28 @@ class MediaRepositoryImpl implements MediaRepository {
       }
     }
 
-    // 2. Keep recently seen items in cache (e.g., seen in the last 30 days)
+    // 2. Seen items: recently seen AND items missing posters
     final seenItems = await localDataSource.getAllSeenItems();
     final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
     
     for (final seen in seenItems) {
-      if (seen.seenDate.isAfter(thirtyDaysAgo)) {
-        keysToKeep.add('${seen.type}:${seen.tmdbId}');
-        final type = seen.type == 'movie' ? MediaType.movie : MediaType.tv;
+      final type = seen.type == 'movie' ? MediaType.movie : MediaType.tv;
+      final isRecent = seen.seenDate.isAfter(thirtyDaysAgo);
+      final isMissingPoster = seen.posterPath == null;
 
+      if (isRecent || isMissingPoster) {
+        keysToKeep.add('${seen.type}:${seen.tmdbId}');
+        
         try {
-          await getMediaDetails(seen.tmdbId, type: type);
+          // This will fetch from network and cache if not present
+          final details = await getMediaDetails(seen.tmdbId, type: type);
           
+          if (isMissingPoster && details.item.posterPath != null) {
+            await localDataSource.updatePosterPath(seen.tmdbId, seen.type, details.item.posterPath!);
+          }
+
           // For TV shows in history, also ensure the relevant season is cached
-          if (type == MediaType.tv && seen.seasonNumber != null) {
+          if (isRecent && type == MediaType.tv && seen.seasonNumber != null) {
             await getSeasonDetails(seen.tmdbId, seen.seasonNumber!);
           }
         } catch (_) {}
@@ -129,7 +137,13 @@ class MediaRepositoryImpl implements MediaRepository {
     final creditsFuture = remoteDataSource.getMediaCredits(id, type: type);
 
     final item = await itemFuture;
-    final credits = await creditsFuture;
+    
+    Map<String, dynamic> credits = {'cast': [], 'crew': []};
+    try {
+      credits = await creditsFuture;
+    } catch (_) {
+      // Credits are not essential, so we can ignore 404s or other errors here
+    }
 
     final List castResults = credits['cast'] ?? [];
     final List crewResults = credits['crew'] ?? [];
@@ -276,6 +290,7 @@ class MediaRepositoryImpl implements MediaRepository {
       tmdbId: item.tmdbId,
       type: item.type.name,
       title: item.title,
+      posterPath: item.posterPath,
       seenDate: item.seenDate,
       seasonNumber: item.seasonNumber,
       episodeNumber: item.episodeNumber,
@@ -303,20 +318,31 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<SeenItem>> getSeenItems() async {
     await cache.init();
     final items = await localDataSource.getAllSeenItems();
-    return items.map((m) {
+    final List<SeenItem> results = [];
+
+    for (final m in items) {
       final type = m.type == 'movie' ? MediaType.movie : MediaType.tv;
       final cachedItem = cache.getItem(m.tmdbId, type);
-      return SeenItem(
+      String? posterPath = m.posterPath;
+      final cachedPoster = cachedItem?.posterPath;
+      
+      if (posterPath == null && cachedPoster != null) {
+        posterPath = cachedPoster;
+        unawaited(localDataSource.updatePosterPath(m.tmdbId, m.type, posterPath));
+      }
+
+      results.add(SeenItem(
         id: m.isarId,
         tmdbId: m.tmdbId,
         type: type,
         title: m.title,
-        posterPath: cachedItem?.posterPath,
+        posterPath: posterPath,
         seenDate: m.seenDate,
         seasonNumber: m.seasonNumber,
         episodeNumber: m.episodeNumber,
-      );
-    }).toList();
+      ));
+    }
+    return results;
   }
 
   @override
@@ -324,16 +350,29 @@ class MediaRepositoryImpl implements MediaRepository {
     await cache.init();
     final items = await localDataSource.getSeenStatus(tmdbId, type.name);
     final cachedItem = cache.getItem(tmdbId, type);
-    return items.map((m) => SeenItem(
-      id: m.isarId,
-      tmdbId: m.tmdbId,
-      type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
-      title: m.title,
-      posterPath: cachedItem?.posterPath,
-      seenDate: m.seenDate,
-      seasonNumber: m.seasonNumber,
-      episodeNumber: m.episodeNumber,
-    )).toList();
+    
+    final List<SeenItem> results = [];
+    for (final m in items) {
+      String? posterPath = m.posterPath;
+      final cachedPoster = cachedItem?.posterPath;
+      
+      if (posterPath == null && cachedPoster != null) {
+        posterPath = cachedPoster;
+        unawaited(localDataSource.updatePosterPath(tmdbId, m.type, posterPath));
+      }
+
+      results.add(SeenItem(
+        id: m.isarId,
+        tmdbId: m.tmdbId,
+        type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
+        title: m.title,
+        posterPath: posterPath,
+        seenDate: m.seenDate,
+        seasonNumber: m.seasonNumber,
+        episodeNumber: m.episodeNumber,
+      ));
+    }
+    return results;
   }
 
   @override
@@ -395,6 +434,7 @@ class MediaRepositoryImpl implements MediaRepository {
       'tmdbId': item.tmdbId,
       'type': item.type,
       'title': item.title,
+      'posterPath': item.posterPath,
       'seenDate': item.seenDate.toIso8601String(),
       'seasonNumber': item.seasonNumber,
       'episodeNumber': item.episodeNumber,
@@ -409,6 +449,7 @@ class MediaRepositoryImpl implements MediaRepository {
       tmdbId: json['tmdbId'] as int,
       type: json['type'] as String,
       title: json['title'] as String,
+      posterPath: json['posterPath'] as String?,
       seenDate: DateTime.parse(json['seenDate'] as String),
       seasonNumber: json['seasonNumber'] as int?,
       episodeNumber: json['episodeNumber'] as int?,

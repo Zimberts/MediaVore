@@ -46,6 +46,8 @@ class _MainPageState extends State<MainPage> {
     GlobalKey<SavedMediaPageState>(), // Index 2 not used
   ];
 
+  final GlobalKey<SeenHistoryPageState> _seenHistoryPageKey = GlobalKey<SeenHistoryPageState>();
+
   void _onTap(int index) {
     if (_currentIndex == index) {
       final navigator = _navigatorKeys[index].currentState;
@@ -64,6 +66,8 @@ class _MainPageState extends State<MainPage> {
         } else if (index == 2) {
           if (navigator.canPop()) {
             navigator.popUntil((route) => route.isFirst);
+          } else {
+            _seenHistoryPageKey.currentState?.scrollToTop();
           }
         }
       }
@@ -122,7 +126,7 @@ class _MainPageState extends State<MainPage> {
                 children: [
                   _StatefulNavigator(navigatorKey: _navigatorKeys[0], rootPage: const SearchPage()),
                   _StatefulNavigator(navigatorKey: _navigatorKeys[1], rootPage: SavedMediaPage(key: _savedMediaPageKeys[1])),
-                  _StatefulNavigator(navigatorKey: _navigatorKeys[2], rootPage: const SeenHistoryPage()),
+                  _StatefulNavigator(navigatorKey: _navigatorKeys[2], rootPage: SeenHistoryPage(key: _seenHistoryPageKey)),
                 ],
               ),
             ),

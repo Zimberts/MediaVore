@@ -130,6 +130,37 @@ class MediaListLocalDataSource {
     });
   }
 
+  Future<SeenItemModel?> getSeenEntryByIsarId(int isarId) async {
+    return await _isar.seenItemModels.get(isarId);
+  }
+
+  Future<void> updatePosterPath(int tmdbId, String type, String posterPath) async {
+    await _isar.writeTxn(() async {
+      final items = await _isar.seenItemModels
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type, caseSensitive: false)
+          .findAll();
+      
+      for (final item in items) {
+        // Only update if it's currently null or empty, to avoid unnecessary overwrites
+        if (item.posterPath == null || item.posterPath!.isEmpty) {
+          final updated = SeenItemModel(
+            tmdbId: item.tmdbId,
+            type: item.type,
+            title: item.title,
+            posterPath: posterPath,
+            seenDate: item.seenDate,
+            seasonNumber: item.seasonNumber,
+            episodeNumber: item.episodeNumber,
+          );
+          updated.isarId = item.isarId;
+          await _isar.seenItemModels.put(updated);
+        }
+      }
+    });
+  }
+
   Future<List<SeenItemModel>> getExportData({
     DateTime? start,
     DateTime? end,
@@ -144,8 +175,7 @@ class MediaListLocalDataSource {
     
     if (start != null) {
       query = query.and().seenDateGreaterThan(start, include: true);
-    }
-    if (end != null) {
+    } if (end != null) {
       query = query.and().seenDateLessThan(end, include: true);
     }
     if (tmdbId != null) {

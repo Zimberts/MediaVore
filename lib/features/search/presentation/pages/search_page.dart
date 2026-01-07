@@ -177,7 +177,31 @@ class _SearchPageState extends State<SearchPage> {
           child: ListTile(
             leading: _buildPoster(item, isTv, isSeen, seenCount, item.numberOfEpisodes),
             title: _buildTitle(item, isTv, isLiked),
-            subtitle: Text(item.releaseDate),
+            subtitle: Row(
+              children: [
+                Expanded(
+                  child: Align(
+                  alignment: Alignment.centerLeft,
+                      child: Text(item.releaseDate)
+                  )
+                ),
+                if (isTv)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Badge(
+                      label: Text(item.numberOfSeasons != null ? '${item.numberOfSeasons}S' : 'TV'),
+                    ),
+                  )
+                else if (item.runtime != null && item.runtime! > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Badge(
+                      label: Text(Formatters.formatRuntime(item.runtime)),
+                      backgroundColor: Colors.blueGrey,
+                    ),
+                  ),
+              ],
+            ),
             trailing: IconButton(
               icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
               onPressed: () => provider.toggleWatchlist(item),
@@ -255,22 +279,7 @@ class _SearchPageState extends State<SearchPage> {
               ],
             ),
           ),
-        ),
-        if (isTv)
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Badge(
-              label: Text(item.numberOfSeasons != null ? '${item.numberOfSeasons}S' : 'TV'),
-            ),
-          )
-        else if (item.runtime != null && item.runtime! > 0)
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Badge(
-              label: Text(Formatters.formatRuntime(item.runtime)),
-              backgroundColor: Colors.blueGrey,
-            ),
-          ),
+        )
       ],
     );
   }

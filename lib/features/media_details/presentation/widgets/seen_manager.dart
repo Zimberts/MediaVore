@@ -13,6 +13,7 @@ class SeenManager extends StatefulWidget {
   final int? seasonNumber;
   final int? episodeNumber;
   final VoidCallback? onSeenChanged;
+  final ScrollController? scrollController;
 
   const SeenManager({
     super.key,
@@ -23,6 +24,7 @@ class SeenManager extends StatefulWidget {
     this.seasonNumber,
     this.episodeNumber,
     this.onSeenChanged,
+    this.scrollController,
   });
 
   @override
@@ -210,42 +212,53 @@ class _SeenManagerState extends State<SeenManager> {
 
     final isSeen = _viewings.isNotEmpty;
 
-    return IconButton(
-      icon: Stack(
-        children: [
-          Icon(
-            isSeen ? Icons.visibility : Icons.visibility_off,
-            color: isSeen ? Theme.of(context).primaryColor : Colors.grey,
-          ),
-          if (_viewings.length > 1)
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.all(1),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 12,
-                  minHeight: 12,
-                ),
-                child: Text(
-                  '${_viewings.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onDoubleTap: () {
+        if (widget.scrollController != null && widget.scrollController!.hasClients) {
+          widget.scrollController!.animateTo(
+            0,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      },
+      child: IconButton(
+        icon: Stack(
+          children: [
+            Icon(
+              isSeen ? Icons.visibility : Icons.visibility_off,
+              color: isSeen ? Theme.of(context).primaryColor : Colors.grey,
+            ),
+            if (_viewings.length > 1)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(1),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  textAlign: TextAlign.center,
+                  constraints: const BoxConstraints(
+                    minWidth: 12,
+                    minHeight: 12,
+                  ),
+                  child: Text(
+                    '${_viewings.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
+        onPressed: isSeen ? _showViewingsSheet : _addViewing,
+        tooltip: isSeen ? 'Manage viewings' : 'Mark as seen',
       ),
-      onPressed: isSeen ? _showViewingsSheet : _addViewing,
-      tooltip: isSeen ? 'Manage viewings' : 'Mark as seen',
     );
   }
 }

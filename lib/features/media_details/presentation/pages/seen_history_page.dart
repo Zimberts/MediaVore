@@ -9,8 +9,31 @@ import 'package:mediavore/features/search/presentation/providers/search_provider
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
-class SeenHistoryPage extends StatelessWidget {
+class SeenHistoryPage extends StatefulWidget {
   const SeenHistoryPage({super.key});
+
+  @override
+  State<SeenHistoryPage> createState() => SeenHistoryPageState();
+}
+
+class SeenHistoryPageState extends State<SeenHistoryPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
 
   List<dynamic> _groupItems(List<SeenItem> items) {
     final List<dynamic> grouped = [];
@@ -78,6 +101,7 @@ class SeenHistoryPage extends StatelessWidget {
       body: seenItems.isEmpty
           ? const Center(child: Text('No items seen yet.'))
           : ListView.builder(
+              controller: _scrollController,
               itemCount: groupedItems.length,
               itemBuilder: (context, index) {
                 final item = groupedItems[index];
