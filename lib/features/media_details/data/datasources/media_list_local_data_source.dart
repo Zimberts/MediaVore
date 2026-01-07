@@ -28,11 +28,17 @@ class MediaListLocalDataSource {
           .findFirst();
 
       if (existing == null) {
+        final count = await _isar.mediaListItems
+            .filter()
+            .listNameEqualTo(listName)
+            .count();
+            
         final item = MediaListItem(
           id: id,
           type: type,
           listName: listName,
           title: title,
+          position: count,
         );
         await _isar.mediaListItems.put(item);
       }
@@ -54,12 +60,35 @@ class MediaListLocalDataSource {
     return await _isar.mediaListItems
         .filter()
         .listNameEqualTo(listName)
+        .sortByPosition()
         .findAll();
   }
 
   Future<List<String>> getListEntries(String listName) async {
     final items = await getListItems(listName);
     return items.map((item) => '${item.id}:${item.type}').toList();
+  }
+
+  Future<void> updateListOrder(String listName, List<String> orderedEntries) async {
+    await _isar.writeTxn(() async {
+      for (int i = 0; i < orderedEntries.length; i++) {
+        final parts = orderedEntries[i].split(':');
+        final id = int.parse(parts[0]);
+        final type = parts[1];
+        
+        final item = await _isar.mediaListItems
+            .filter()
+            .idEqualTo(id)
+            .typeEqualTo(type)
+            .listNameEqualTo(listName)
+            .findFirst();
+            
+        if (item != null) {
+          item.position = i;
+          await _isar.mediaListItems.put(item);
+        }
+      }
+    });
   }
 
   Future<List<String>> getAllListNames() async {
@@ -89,7 +118,6 @@ class MediaListLocalDataSource {
   }
 
   // Seen Items methods
-
   Future<void> markAsSeen(SeenItemModel item) async {
     await _isar.writeTxn(() async {
       await _isar.seenItemModels.put(item);
@@ -144,7 +172,6 @@ class MediaListLocalDataSource {
           .findAll();
       
       for (final item in items) {
-        // Only update if it's currently null or empty, to avoid unnecessary overwrites
         if (item.posterPath == null || item.posterPath!.isEmpty) {
           final updated = SeenItemModel(
             tmdbId: item.tmdbId,
@@ -221,13 +248,11 @@ class MediaListLocalDataSource {
     });
   }
 
-  /// Returns the approximate size of the "Seen" database collection in bytes.
   Future<int> getSeenDbSize() async {
     return await _isar.seenItemModels.getSize();
   }
 
   // Like methods
-
   Future<void> toggleLike({
     required int tmdbId,
     required String type,
@@ -266,7 +291,6 @@ class MediaListLocalDataSource {
   }
 
   // Notification methods
-
   Future<void> toggleNotification({
     required int tmdbId,
     required String type,
@@ -288,7 +312,6 @@ class MediaListLocalDataSource {
         if (!autoNotify) {
           await _isar.notifiedItemModels.delete(existing.isarId!);
         } else if (releaseDate != null) {
-          // Update the date if it's an auto-notify and we have a new date
           final updated = NotifiedItemModel(
             tmdbId: tmdbId,
             type: type,

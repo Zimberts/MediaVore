@@ -343,6 +343,12 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> updateListOrder(String listName, List<String> orderedEntries) async {
+    await _ensureInitialized();
+    return localDataSource.updateListOrder(listName, orderedEntries);
+  }
+
+  @override
   Future<void> addToWatchlist(MediaItem item) {
     return addToList(item, 'watchlist');
   }

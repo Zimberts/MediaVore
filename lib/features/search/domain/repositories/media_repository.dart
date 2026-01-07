@@ -37,6 +37,9 @@ abstract class MediaRepository {
   /// Deletes a list and its items.
   Future<void> deleteList(String name);
 
+  /// Updates the order of items in a list.
+  Future<void> updateListOrder(String listName, List<String> orderedEntries);
+
   /// Adds a media item to the user's watchlist.
   Future<void> addToWatchlist(MediaItem item) => addToList(item, 'watchlist');
 

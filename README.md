@@ -2,6 +2,30 @@
 
 An app to keep track of movies/series/books seen/read or to watch/to read
 
+## Deep Linking Configuration
+
+To enable shared links (`https://mediavore.app/share`) to open the app directly on Android without opening the browser first, you must host a configuration file on your domain.
+
+### Android App Links
+Host a file at: `https://mediavore.app/.well-known/assetlinks.json`
+
+Content:
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.mediavore",
+      "sha256_cert_fingerprints": [
+        "YOUR_APP_SHA256_FINGERPRINT"
+      ]
+    }
+  }
+]
+```
+Replace `YOUR_APP_SHA256_FINGERPRINT` with your actual release/debug certificate fingerprint.
+
 ## Participate
 
 Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)

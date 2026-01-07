@@ -15,10 +15,13 @@ class MediaListItem {
   
   final String title;
 
+  int position;
+
   MediaListItem({
     required this.id,
     required this.type,
     required this.title,
     this.listName = 'watchlist',
+    this.position = 0,
   });
 }
