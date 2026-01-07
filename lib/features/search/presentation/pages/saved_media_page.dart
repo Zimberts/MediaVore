@@ -1,5 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
@@ -7,8 +13,11 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class SavedMediaPage extends StatefulWidget {
   const SavedMediaPage({super.key});
@@ -26,15 +35,57 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   bool _isRefreshing = false;
   SortMethod _sortMethod = SortMethod.manual;
   List<MediaItem> _currentItems = [];
+  final GlobalKey _qrKey = GlobalKey();
+  Uint8List? _croppedLogoBytes;
 
   @override
   void initState() {
     super.initState();
     _mediaRepository = locator<MediaRepository>();
+    _prepareCroppedLogo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SearchProvider>().loadLists();
-      loadSavedMedia();
+      if (mounted) {
+        context.read<SearchProvider>().loadLists();
+        loadSavedMedia();
+      }
     });
+  }
+
+  /// Programmatically crops the white space from the app icon to make the logo 
+  /// appear larger in the QR code.
+  Future<void> _prepareCroppedLogo() async {
+    try {
+      final data = await rootBundle.load('assets/icon/app_icon.png');
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final frame = await codec.getNextFrame();
+      final fullImage = frame.image;
+
+      // Crop to the central 58% where the character is located
+      final double size = fullImage.width.toDouble();
+      final double cropSize = size * 0.58; 
+      final double offset = (size - cropSize) / 2;
+
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+
+      canvas.drawImageRect(
+        fullImage,
+        Rect.fromLTWH(offset, offset, cropSize, cropSize),
+        Rect.fromLTWH(0, 0, cropSize, cropSize),
+        ui.Paint()..isAntiAlias = true..filterQuality = ui.FilterQuality.high,
+      );
+
+      final croppedImage = await recorder.endRecording().toImage(cropSize.toInt(), cropSize.toInt());
+      final byteData = await croppedImage.toByteData(format: ui.ImageByteFormat.png);
+      
+      if (mounted) {
+        setState(() {
+          _croppedLogoBytes = byteData?.buffer.asUint8List();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error cropping logo: $e');
+    }
   }
 
   Future<void> loadSavedMedia({bool forceRefresh = false}) async {
@@ -153,18 +204,225 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         result.shuffle();
         break;
       case SortMethod.manual:
-      default:
         break;
     }
     
     return result;
   }
 
-  void _shareCurrentList(SearchProvider provider) {
-    final link = provider.getShareLinkForList(_selectedList);
-    if (link.isNotEmpty) {
-      Share.share('Check out my $_selectedList on MediaVore: $link');
+  void _showShareAndImportOptions(SearchProvider provider, SettingsProvider settings) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Sharing & Importing', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.qr_code_scanner),
+              title: const Text('Scan QR Code'),
+              onTap: () {
+                Navigator.pop(context);
+                _showScanner();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.link),
+              title: const Text('Import via Link'),
+              onTap: () {
+                Navigator.pop(context);
+                _showImportLinkDialog(provider);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Share Web Link (WhatsApp/SMS)'),
+              onTap: () {
+                Navigator.pop(context);
+                final link = provider.getShareLinkForList(_selectedList);
+                Share.share('Check out my $_selectedList on MediaVore: $link');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.qr_code),
+              title: const Text('Show QR Code'),
+              onTap: () {
+                Navigator.pop(context);
+                _showQRCodeDialog(provider, settings);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareQRCodeImage() async {
+    try {
+      final boundary = _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
+
+      final buffer = byteData.buffer.asUint8List();
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/mediavore_qr_${_selectedList.replaceAll(' ', '_')}.png').create();
+      await file.writeAsBytes(buffer);
+
+      await Share.shareXFiles([XFile(file.path)], text: 'Scan this QR code to import my $_selectedList on MediaVore');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sharing QR code: $e')),
+        );
+      }
     }
+  }
+
+  void _showQRCodeDialog(SearchProvider provider, SettingsProvider settings) {
+    final link = provider.getCustomSchemeShareLinkForList(_selectedList);
+    // Respect CURRENT visible order and filters
+    final visibleItems = _getFilteredAndSortedItems(_currentItems, settings);
+    final previewPosters = visibleItems.where((i) => i.posterPath != null).take(3).toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Share $_selectedList'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RepaintBoundary(
+              key: _qrKey,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_selectedList, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: 250,
+                      height: 250,
+                      child: QrImageView(
+                        data: link,
+                        version: QrVersions.auto,
+                        size: 250.0,
+                        backgroundColor: Colors.white,
+                        eyeStyle: const QrEyeStyle(
+                          eyeShape: QrEyeShape.circle,
+                          color: Colors.deepPurple,
+                        ),
+                        dataModuleStyle: const QrDataModuleStyle(
+                          dataModuleShape: QrDataModuleShape.circle,
+                          color: Colors.black,
+                        ),
+                        embeddedImage: _croppedLogoBytes != null ? MemoryImage(_croppedLogoBytes!) : null,
+                        embeddedImageStyle: const QrEmbeddedImageStyle(
+                          size: Size(70, 70), // Significant size due to cropping
+                        ),
+                      ),
+                    ),
+                    if (previewPosters.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: previewPosters.map((item) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: CachedNetworkImage(
+                              imageUrl: 'https://image.tmdb.org/t/p/w92${item.posterPath}',
+                              width: 45,
+                              height: 65,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(color: Colors.grey[200]),
+                            ),
+                          ),
+                        )).toList(),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    const Text('MediaVore List Share', style: TextStyle(color: Colors.deepPurple, fontSize: 14, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Scan this with another phone to import the list.', textAlign: TextAlign.center),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _shareQRCodeImage,
+            tooltip: 'Share QR Code Image',
+          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  void _showScanner() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: Column(
+          children: [
+            AppBar(
+              title: const Text('Scan MediaVore List'),
+              leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+            ),
+            Expanded(
+              child: MobileScanner(
+                onDetect: (capture) {
+                  final List<Barcode> barcodes = capture.barcodes;
+                  for (final barcode in barcodes) {
+                    final String? code = barcode.rawValue;
+                    if (code != null && (code.startsWith('mediavore://share') || code.startsWith('https://mediavore.app/share'))) {
+                      Navigator.pop(context);
+                      _handleScannedLink(code);
+                      break;
+                    }
+                  }
+                },
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Text('Point your camera at a MediaVore QR code'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleScannedLink(String link) {
+    try {
+      final uri = Uri.parse(link);
+      final name = uri.queryParameters['name'];
+      final itemsStr = uri.queryParameters['items'];
+      
+      if (name != null && itemsStr != null) {
+        final items = itemsStr.split(',');
+        _showImportConfirmationDialog(context.read<SearchProvider>(), name, items);
+      }
+    } catch (_) {}
   }
 
   void _showImportLinkDialog(SearchProvider provider) {
@@ -273,13 +531,8 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () => _shareCurrentList(provider),
-            tooltip: 'Share List',
-          ),
-          IconButton(
-            icon: const Icon(Icons.link),
-            onPressed: () => _showImportLinkDialog(provider),
-            tooltip: 'Import via Link',
+            onPressed: () => _showShareAndImportOptions(provider, settings),
+            tooltip: 'Sharing & Importing',
           ),
           PopupMenuButton<SortMethod>(
             icon: const Icon(Icons.sort),
@@ -529,7 +782,6 @@ class _MediaListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTv = item.mediaType == MediaType.tv;
-    final seenCount = provider.getSeenCount(item);
     final isLiked = provider.isLiked(item);
     
     String lengthText = '';

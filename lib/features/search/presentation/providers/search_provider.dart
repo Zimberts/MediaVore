@@ -238,8 +238,14 @@ class SearchProvider with ChangeNotifier {
     final entries = _listEntries[listName] ?? [];
     if (entries.isEmpty) return '';
     final encodedItems = Uri.encodeComponent(entries.join(','));
-    // Use https to ensure it is recognized as a clickable link in messaging apps
     return 'https://mediavore.app/share?name=${Uri.encodeComponent(listName)}&items=$encodedItems';
+  }
+
+  String getCustomSchemeShareLinkForList(String listName) {
+    final entries = _listEntries[listName] ?? [];
+    if (entries.isEmpty) return '';
+    final encodedItems = Uri.encodeComponent(entries.join(','));
+    return 'mediavore://share?name=${Uri.encodeComponent(listName)}&items=$encodedItems';
   }
 
   Future<void> importList(String name, List<String> entries) async {
