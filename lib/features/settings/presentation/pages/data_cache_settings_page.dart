@@ -380,7 +380,7 @@ class DataCacheSettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () {
               action();
-              Navigator.pop(context);
+              Navigator.pop(dialogContext); // Fixed: Pop dialogContext instead of context
             },
             child: const Text('Proceed'),
           ),

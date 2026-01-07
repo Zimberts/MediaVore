@@ -4,6 +4,7 @@ import 'package:mediavore/features/media_details/data/models/media_list_item.dar
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 @lazySingleton
@@ -262,5 +263,100 @@ class MediaListLocalDataSource {
 
   Future<List<LikedItem>> getLikedItems() async {
     return await _isar.likedItems.where().findAll();
+  }
+
+  // Notification methods
+
+  Future<void> toggleNotification({
+    required int tmdbId,
+    required String type,
+    required String title,
+    String? posterPath,
+    DateTime? releaseDate,
+    int? seasonNumber,
+    int? episodeNumber,
+    bool autoNotify = false,
+  }) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.notifiedItemModels
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type)
+          .findFirst();
+
+      if (existing != null) {
+        if (!autoNotify) {
+          await _isar.notifiedItemModels.delete(existing.isarId!);
+        } else if (releaseDate != null) {
+          // Update the date if it's an auto-notify and we have a new date
+          final updated = NotifiedItemModel(
+            tmdbId: tmdbId,
+            type: type,
+            title: title,
+            posterPath: posterPath ?? existing.posterPath,
+            releaseDate: releaseDate,
+            seasonNumber: seasonNumber ?? existing.seasonNumber,
+            episodeNumber: episodeNumber ?? existing.episodeNumber,
+            autoNotify: existing.autoNotify,
+          );
+          updated.isarId = existing.isarId;
+          await _isar.notifiedItemModels.put(updated);
+        }
+      } else {
+        await _isar.notifiedItemModels.put(NotifiedItemModel(
+          tmdbId: tmdbId,
+          type: type,
+          title: title,
+          posterPath: posterPath,
+          releaseDate: releaseDate,
+          seasonNumber: seasonNumber,
+          episodeNumber: episodeNumber,
+          autoNotify: autoNotify,
+        ));
+      }
+    });
+  }
+
+  Future<void> updateNotificationDate(
+    int tmdbId, 
+    String type, 
+    DateTime date, 
+    {int? seasonNumber, int? episodeNumber}
+  ) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.notifiedItemModels
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type)
+          .findFirst();
+      
+      if (existing != null) {
+        final updated = NotifiedItemModel(
+          tmdbId: existing.tmdbId,
+          type: existing.type,
+          title: existing.title,
+          posterPath: existing.posterPath,
+          releaseDate: date,
+          seasonNumber: seasonNumber ?? existing.seasonNumber,
+          episodeNumber: episodeNumber ?? existing.episodeNumber,
+          autoNotify: existing.autoNotify,
+        );
+        updated.isarId = existing.isarId;
+        await _isar.notifiedItemModels.put(updated);
+      }
+    });
+  }
+
+  Future<bool> isNotified(int tmdbId, String type) async {
+    final count = await _isar.notifiedItemModels
+        .filter()
+        .tmdbIdEqualTo(tmdbId)
+        .typeEqualTo(type)
+        .count();
+    return count > 0;
+  }
+
+  Future<List<NotifiedItemModel>> getNotifiedItems() async {
+    return await _isar.notifiedItemModels.where().findAll();
   }
 }

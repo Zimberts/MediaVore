@@ -10,6 +10,8 @@ import 'package:mediavore/features/media_details/presentation/pages/actor_detail
 import 'package:mediavore/features/media_details/presentation/widgets/media_list_manager.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/seen_manager.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/like_button.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/notify_button.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/watch_next_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -253,6 +255,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
         title: Text(itemToDisplay.title),
         actions: [
           LikeButton(item: itemToDisplay),
+          NotifyButton(item: itemToDisplay),
           IconButton(
             icon: const Icon(Icons.file_upload_outlined),
             onPressed: _exportHistory,
@@ -337,6 +340,14 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           ),
                           const SizedBox(height: 8),
                         ],
+
+                        if (itemToDisplay.mediaType == MediaType.tv)
+                          WatchNextButton(
+                            item: itemToDisplay,
+                            onSeenChanged: () {
+                              _fetchSeenStatus();
+                            },
+                          ),
                         
                         if (_isOffline)
                           Container(

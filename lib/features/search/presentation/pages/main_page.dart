@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
@@ -38,15 +39,18 @@ class _MainPageState extends State<MainPage> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
   ];
 
   final List<GlobalKey<SavedMediaPageState>> _savedMediaPageKeys = [
     GlobalKey<SavedMediaPageState>(), // Index 0 not used
     GlobalKey<SavedMediaPageState>(), // Index 1
     GlobalKey<SavedMediaPageState>(), // Index 2 not used
+    GlobalKey<SavedMediaPageState>(), // Index 3 not used
   ];
 
   final GlobalKey<SeenHistoryPageState> _seenHistoryPageKey = GlobalKey<SeenHistoryPageState>();
+  final GlobalKey<NotificationCenterPageState> _notificationCenterPageKey = GlobalKey<NotificationCenterPageState>();
 
   void _onTap(int index) {
     if (_currentIndex == index) {
@@ -68,6 +72,12 @@ class _MainPageState extends State<MainPage> {
             navigator.popUntil((route) => route.isFirst);
           } else {
             _seenHistoryPageKey.currentState?.scrollToTop();
+          }
+        } else if (index == 3) {
+          if (navigator.canPop()) {
+            navigator.popUntil((route) => route.isFirst);
+          } else {
+            _notificationCenterPageKey.currentState?.refresh();
           }
         }
       }
@@ -127,6 +137,7 @@ class _MainPageState extends State<MainPage> {
                   _StatefulNavigator(navigatorKey: _navigatorKeys[0], rootPage: const SearchPage()),
                   _StatefulNavigator(navigatorKey: _navigatorKeys[1], rootPage: SavedMediaPage(key: _savedMediaPageKeys[1])),
                   _StatefulNavigator(navigatorKey: _navigatorKeys[2], rootPage: SeenHistoryPage(key: _seenHistoryPageKey)),
+                  _StatefulNavigator(navigatorKey: _navigatorKeys[3], rootPage: NotificationCenterPage(key: _notificationCenterPageKey)),
                 ],
               ),
             ),
@@ -148,6 +159,10 @@ class _MainPageState extends State<MainPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.visibility),
               label: 'Seen',
+            ),
+             BottomNavigationBarItem(
+              icon: Icon(Icons.notifications),
+              label: 'Alerts',
             ),
           ],
         ),

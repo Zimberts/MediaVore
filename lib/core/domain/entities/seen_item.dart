@@ -22,6 +22,23 @@ class SeenItem extends Equatable {
     this.episodeNumber,
   });
 
+  SeenItem copyWith({
+    DateTime? seenDate,
+    int? seasonNumber,
+    int? episodeNumber,
+  }) {
+    return SeenItem(
+      id: id,
+      tmdbId: tmdbId,
+      type: type,
+      title: title,
+      posterPath: posterPath,
+      seenDate: seenDate ?? this.seenDate,
+      seasonNumber: seasonNumber ?? this.seasonNumber,
+      episodeNumber: episodeNumber ?? this.episodeNumber,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,

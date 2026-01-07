@@ -102,6 +102,40 @@ abstract class MediaRepository {
 
   /// Gets all liked media entries (format "id:type").
   Future<List<String>> getLikedEntries();
+
+  /// Toggles notification for a media item.
+  Future<void> toggleNotification(MediaItem item, {bool autoNotify = false});
+
+  /// Checks if a media item is notified.
+  Future<bool> isNotified(int tmdbId, MediaType type);
+
+  /// Gets all notified media entries.
+  Future<List<NotifiedItem>> getNotifiedItems();
+
+  /// Force refreshes all notified items from network.
+  Future<void> refreshNotifiedItems();
+}
+
+class NotifiedItem {
+  final int tmdbId;
+  final MediaType type;
+  final String title;
+  final String? posterPath;
+  final DateTime? releaseDate;
+  final int? seasonNumber;
+  final int? episodeNumber;
+  final bool autoNotify;
+
+  NotifiedItem({
+    required this.tmdbId,
+    required this.type,
+    required this.title,
+    this.posterPath,
+    this.releaseDate,
+    this.seasonNumber,
+    this.episodeNumber,
+    this.autoNotify = false,
+  });
 }
 
 class MediaItemPreview {

@@ -51,6 +51,12 @@ class MediaItem extends Equatable {
   final double? voteAverage;
   final int? runtime;
   final List<TVSeason>? seasons;
+  final String? nextEpisodeAirDate;
+  final int? nextEpisodeNumber;
+  final int? nextSeasonNumber;
+  final String? lastEpisodeAirDate;
+  final int? lastEpisodeNumber;
+  final int? lastSeasonNumber;
 
   const MediaItem({
     required this.id,
@@ -66,6 +72,12 @@ class MediaItem extends Equatable {
     this.voteAverage,
     this.runtime,
     this.seasons,
+    this.nextEpisodeAirDate,
+    this.nextEpisodeNumber,
+    this.nextSeasonNumber,
+    this.lastEpisodeAirDate,
+    this.lastEpisodeNumber,
+    this.lastSeasonNumber,
   });
 
   factory MediaItem.fromJson(Map<String, dynamic> json) {
@@ -95,6 +107,24 @@ class MediaItem extends Equatable {
       }
     }
 
+    String? nextAirDate;
+    int? nextEpNum;
+    int? nextSeasNum;
+    if (json['next_episode_to_air'] != null && json['next_episode_to_air'] is Map) {
+      nextAirDate = json['next_episode_to_air']['air_date'] as String?;
+      nextEpNum = json['next_episode_to_air']['episode_number'] as int?;
+      nextSeasNum = json['next_episode_to_air']['season_number'] as int?;
+    }
+
+    String? lastAirDate;
+    int? lastEpNum;
+    int? lastSeasNum;
+    if (json['last_episode_to_air'] != null && json['last_episode_to_air'] is Map) {
+      lastAirDate = json['last_episode_to_air']['air_date'] as String?;
+      lastEpNum = json['last_episode_to_air']['episode_number'] as int?;
+      lastSeasNum = json['last_episode_to_air']['season_number'] as int?;
+    }
+
     return MediaItem(
       id: json['id'] ?? 0,
       title: json['title'] ?? json['name'] ?? '',
@@ -109,6 +139,12 @@ class MediaItem extends Equatable {
       voteAverage: (json['vote_average'] as num?)?.toDouble(),
       runtime: json['runtime'] as int?,
       seasons: seasonsList,
+      nextEpisodeAirDate: nextAirDate,
+      nextEpisodeNumber: nextEpNum,
+      nextSeasonNumber: nextSeasNum,
+      lastEpisodeAirDate: lastAirDate,
+      lastEpisodeNumber: lastEpNum,
+      lastSeasonNumber: lastSeasNum,
     );
   }
 
@@ -140,6 +176,16 @@ class MediaItem extends Equatable {
       'vote_average': voteAverage,
       'runtime': runtime,
       'seasons': seasons?.map((s) => s.toJson()).toList(),
+      'next_episode_to_air': nextEpisodeAirDate != null ? {
+        'air_date': nextEpisodeAirDate,
+        'episode_number': nextEpisodeNumber,
+        'season_number': nextSeasonNumber,
+      } : null,
+      'last_episode_to_air': lastEpisodeAirDate != null ? {
+        'air_date': lastEpisodeAirDate,
+        'episode_number': lastEpisodeNumber,
+        'season_number': lastSeasonNumber,
+      } : null,
     };
   }
 
@@ -158,5 +204,11 @@ class MediaItem extends Equatable {
         voteAverage,
         runtime,
         seasons,
+        nextEpisodeAirDate,
+        nextEpisodeNumber,
+        nextSeasonNumber,
+        lastEpisodeAirDate,
+        lastEpisodeNumber,
+        lastSeasonNumber,
       ];
 }

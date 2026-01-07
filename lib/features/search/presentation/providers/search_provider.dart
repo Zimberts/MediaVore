@@ -15,6 +15,7 @@ class SearchProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _isCacheLoading = false;
   bool _isDbSizeLoading = false;
+  bool _isNotifiedRefreshing = false;
   String? _error;
   bool _isOffline = false;
   List<String> _listNames = ['watchlist'];
@@ -30,11 +31,13 @@ class SearchProvider with ChangeNotifier {
   Map<String, int> _seenCounts = {}; // "id:type" -> count
   List<String> _watchlistIds = []; // Simplified IDs for quick checks
   List<String> _likedIds = []; // "id:type"
+  List<NotifiedItem> _notifiedItems = [];
 
   List<MediaItem> get items => _searchResults; // For SearchPage
   bool get isLoading => _isLoading;
   bool get isCacheLoading => _isCacheLoading;
   bool get isDbSizeLoading => _isDbSizeLoading;
+  bool get isNotifiedRefreshing => _isNotifiedRefreshing;
   String? get error => _error;
   bool get isOffline => _isOffline;
   List<String> get listNames => _listNames;
@@ -45,6 +48,7 @@ class SearchProvider with ChangeNotifier {
   List<String> get watchlistIds => _watchlistIds;
   List<SeenItem> get seenItems => _seenItems;
   List<String> get likedIds => _likedIds;
+  List<NotifiedItem> get notifiedItems => _notifiedItems;
 
   Future<void> _init() async {
     await loadListNames();
@@ -54,6 +58,7 @@ class SearchProvider with ChangeNotifier {
     await loadAllSeenStatus();
     await loadWatchlist();
     await loadLikedStatus();
+    await loadNotifiedItems();
   }
 
   Future<void> updateCacheSize() async {
@@ -144,6 +149,11 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadNotifiedItems() async {
+    _notifiedItems = await repository.getNotifiedItems();
+    notifyListeners();
+  }
+
   int getSeenCount(MediaItem item) {
     return _seenCounts['${item.id}:${item.mediaType.name}'] ?? 0;
   }
@@ -155,6 +165,10 @@ class SearchProvider with ChangeNotifier {
 
   bool isLiked(MediaItem item) {
     return _likedIds.contains('${item.id}:${item.mediaType.name}');
+  }
+
+  bool isNotified(MediaItem item) {
+    return _notifiedItems.any((n) => n.tmdbId == item.id && n.type == item.mediaType);
   }
 
   Future<void> toggleLike(MediaItem item) async {
@@ -178,6 +192,9 @@ class SearchProvider with ChangeNotifier {
       _listEntries[listName] = [...currentEntries, entry];
       if (listName == 'watchlist') {
         _watchlistIds.add(item.id.toString());
+        // Auto-notify when added to watchlist
+        await repository.toggleNotification(item, autoNotify: true);
+        await loadNotifiedItems();
       }
     }
     await updateCacheSize();
@@ -186,6 +203,12 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> toggleWatchlist(MediaItem item) async {
     await toggleInList(item, 'watchlist');
+  }
+
+  Future<void> toggleNotification(MediaItem item) async {
+    await repository.toggleNotification(item);
+    await loadNotifiedItems();
+    notifyListeners();
   }
 
   Future<void> createList(String name) async {
@@ -275,16 +298,19 @@ class SearchProvider with ChangeNotifier {
   Future<void> markAsSeen(SeenItem item) async {
     await repository.markAsSeen(item);
     await loadAllSeenStatus();
+    await loadNotifiedItems(); // Added to refresh notified items immediately
     await updateSeenDbSize();
   }
   Future<void> deleteSeenEntry(int id) async {
     await repository.deleteSeenEntry(id);
     await loadAllSeenStatus();
+    await loadNotifiedItems(); // Added to refresh notified items immediately
     await updateSeenDbSize();
   }
   Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
     await repository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
     await loadAllSeenStatus();
+    await loadNotifiedItems(); // Added to refresh notified items immediately
     await updateSeenDbSize();
   }
 
@@ -323,7 +349,102 @@ class SearchProvider with ChangeNotifier {
   Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
     await repository.importSeenData(data, mode: mode);
     await loadAllSeenStatus();
+    await loadNotifiedItems(); // Refresh alerted items after import
     await updateCacheSize();
     await updateSeenDbSize();
+  }
+
+  /// Finds the next episode to watch for a given TV series.
+  Future<({int seasonNumber, int episodeNumber})?> getNextEpisode(int tmdbId) async {
+    final seen = await repository.getSeenStatus(tmdbId, MediaType.tv);
+    
+    int nextS = 1;
+    int nextE = 1;
+
+    if (seen.isNotEmpty) {
+      // Filter to only include entries with season and episode numbers
+      final episodeSeen = seen.where((s) => s.seasonNumber != null && s.episodeNumber != null).toList();
+      if (episodeSeen.isNotEmpty) {
+        // Sort by season and episode to find the latest seen
+        episodeSeen.sort((a, b) {
+          final seasonCompare = b.seasonNumber!.compareTo(a.seasonNumber!);
+          if (seasonCompare != 0) return seasonCompare;
+          return b.episodeNumber!.compareTo(a.episodeNumber!);
+        });
+
+        final latest = episodeSeen.first;
+        final details = await repository.getMediaDetails(tmdbId, type: MediaType.tv);
+        
+        // Find current season details to see if there's a next episode
+        final currentSeason = details.item.seasons?.firstWhere(
+          (s) => s.seasonNumber == latest.seasonNumber,
+          orElse: () => details.item.seasons!.firstWhere((s) => s.seasonNumber == latest.seasonNumber), // fallback
+        );
+        
+        if (currentSeason != null && latest.episodeNumber! < currentSeason.episodeCount) {
+          nextS = latest.seasonNumber!;
+          nextE = latest.episodeNumber! + 1;
+        } else {
+          // Look for next season
+          final nextSeason = details.item.seasons?.firstWhere(
+            (s) => s.seasonNumber == latest.seasonNumber! + 1,
+            orElse: () => details.item.seasons!.firstWhere((s) => s.seasonNumber == -1, orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0)), // Dummy fallback
+          );
+          
+          if (nextSeason != null && nextSeason.seasonNumber > latest.seasonNumber!) {
+             nextS = nextSeason.seasonNumber;
+             nextE = 1;
+          } else {
+            return null; // All seen or cannot determine
+          }
+        }
+      }
+    }
+
+    // Check if (nextS, nextE) is already released
+    try {
+      final seasonDetails = await repository.getSeasonDetails(tmdbId, nextS);
+      final episodes = seasonDetails['episodes'] as List;
+      final epData = episodes.firstWhere((e) => e['episode_number'] == nextE, orElse: () => null);
+      
+      if (epData != null) {
+        final airDateStr = epData['air_date'] as String?;
+        if (airDateStr != null) {
+          final airDate = DateTime.tryParse(airDateStr);
+          if (airDate != null) {
+            final now = DateTime.now();
+            final today = DateTime(now.year, now.month, now.day);
+            if (airDate.isAfter(today)) {
+              return null; // Not released yet
+            }
+          } else {
+            // No valid air date, assume not released
+            return null;
+          }
+        } else {
+          // air_date is null
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } catch (_) {
+      // On error (offline or not found), don't show in quick add
+      return null;
+    }
+
+    return (seasonNumber: nextS, episodeNumber: nextE);
+  }
+
+  Future<void> refreshNotifiedItems() async {
+    _isNotifiedRefreshing = true;
+    notifyListeners();
+    try {
+      await repository.refreshNotifiedItems();
+      await loadNotifiedItems();
+    } finally {
+      _isNotifiedRefreshing = false;
+      notifyListeners();
+    }
   }
 }
