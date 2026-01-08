@@ -91,9 +91,10 @@ class _MainPageState extends State<MainPage> {
           TextButton(
             onPressed: () async {
               final provider = context.read<SearchProvider>();
+              final navigator = Navigator.of(context);
               await provider.importList(controller.text, entries);
               if (mounted) {
-                Navigator.pop(context);
+                navigator.pop();
                 setState(() => _selectedIndex = 1); 
               }
             },

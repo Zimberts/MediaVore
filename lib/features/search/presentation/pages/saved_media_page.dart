@@ -27,7 +27,7 @@ class SavedMediaPage extends StatefulWidget {
   State<SavedMediaPage> createState() => SavedMediaPageState();
 }
 
-enum SortMethod { manual, releaseDate, releaseDateDesc, shuffle }
+enum SortMethod { manual, releaseDate, shuffle }
 
 class SavedMediaPageState extends State<SavedMediaPage> {
   late final MediaRepository _mediaRepository;
@@ -35,6 +35,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   Future<List<MediaItem>>? _savedMediaFuture;
   bool _isRefreshing = false;
   SortMethod _sortMethod = SortMethod.manual;
+  bool _isReversed = false;
   List<MediaItem> _currentItems = [];
   final GlobalKey _qrKey = GlobalKey();
   Uint8List? _croppedLogoBytes;
@@ -213,14 +214,15 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       case SortMethod.releaseDate:
         result.sort((a, b) => a.releaseDate.compareTo(b.releaseDate));
         break;
-      case SortMethod.releaseDateDesc:
-        result.sort((a, b) => b.releaseDate.compareTo(a.releaseDate));
-        break;
       case SortMethod.shuffle:
         result.shuffle();
         break;
       case SortMethod.manual:
         break;
+    }
+
+    if (_isReversed) {
+      result = result.reversed.toList();
     }
     
     return result;
@@ -511,9 +513,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               await provider.importList(controller.text, entries);
               if (mounted) {
-                Navigator.pop(context);
+                navigator.pop();
                 setState(() {
                    _selectedList = controller.text;
                 });
@@ -524,6 +527,83 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Text('Sort Options', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  _buildSortItem(SortMethod.manual, 'Manual Order', Icons.drag_indicator, 'Drag and drop items to reorder'),
+                  _buildSortItem(SortMethod.releaseDate, 'Release Date', Icons.calendar_today, 'Sort by when it was released'),
+                  _buildSortItem(SortMethod.shuffle, 'Shuffle', Icons.shuffle, 'Randomize the list'),
+                  const Divider(),
+                  ListTile(
+                    leading: Icon(_isReversed ? Icons.swap_vert_circle : Icons.swap_vert, color: _isReversed ? Colors.deepPurple : null),
+                    title: const Text('Reverse Order'),
+                    trailing: Switch(
+                      value: _isReversed,
+                      activeThumbColor: Colors.deepPurple, // activeColor is deprecated
+                      onChanged: (value) {
+                        setState(() {
+                          _isReversed = value;
+                        });
+                        setSheetState(() {});
+                      },
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _isReversed = !_isReversed;
+                      });
+                      setSheetState(() {});
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSortItem(SortMethod method, String label, IconData icon, String subtitle) {
+    final isSelected = _sortMethod == method;
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? Colors.deepPurple : null),
+      title: Text(label, style: TextStyle(
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        color: isSelected ? Colors.deepPurple : null,
+      )),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.deepPurple) : null,
+      onTap: () {
+        setState(() {
+          _sortMethod = method;
+        });
+        Navigator.pop(context);
+      },
     );
   }
 
@@ -547,7 +627,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
     return PopScope(
       canPop: !_isEditMode,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop && _isEditMode) {
           setState(() {
             _isEditMode = false;
@@ -584,15 +664,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                   onPressed: () => _showShareAndImportOptions(provider, settings),
                   tooltip: 'Sharing & Importing',
                 ),
-                PopupMenuButton<SortMethod>(
+                IconButton(
                   icon: const Icon(Icons.sort),
-                  onSelected: (method) => setState(() => _sortMethod = method),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: SortMethod.manual, child: Text('Manual Order')),
-                    const PopupMenuItem(value: SortMethod.releaseDate, child: Text('Release Date (Oldest)')),
-                    const PopupMenuItem(value: SortMethod.releaseDateDesc, child: Text('Release Date (Newest)')),
-                    const PopupMenuItem(value: SortMethod.shuffle, child: Text('Shuffle')),
-                  ],
+                  onPressed: _showSortOptions,
+                  tooltip: 'Sort Options',
                 ),
                 IconButton(
                   icon: _isRefreshing 
@@ -638,6 +713,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   Widget _buildListView(List<MediaItem> items, SearchProvider provider, SettingsProvider settings) {
     return ReorderableListView.builder(
       itemCount: items.length,
+      clipBehavior: Clip.none,
       onReorder: (oldIndex, newIndex) async {
         if (_sortMethod != SortMethod.manual) return; 
 
@@ -646,9 +722,17 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
           
-          // CRITICAL: Update the persistent list in place to maintain order across rebuilds
-          final persistentItem = _currentItems.removeAt(oldIndex);
-          _currentItems.insert(newIndex, persistentItem);
+          // Map indices to _currentItems to handle filtering correctly
+          final oldPersistentIndex = _currentItems.indexOf(item);
+          _currentItems.removeAt(oldPersistentIndex);
+          
+          if (newIndex < items.length - 1) {
+             final nextItemInFiltered = items[newIndex + 1];
+             final nextPersistentIndex = _currentItems.indexOf(nextItemInFiltered);
+             _currentItems.insert(nextPersistentIndex, item);
+          } else {
+             _currentItems.add(item);
+          }
         });
         
         final orderedEntries = _currentItems.map((e) => '${e.id}:${e.mediaType.name}').toList();
@@ -692,12 +776,13 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         canvasColor: Colors.transparent, 
       ),
       child: ReorderableGridView.builder(
-        padding: const EdgeInsets.all(12), 
+        padding: const EdgeInsets.all(8), 
+        clipBehavior: Clip.none,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: settings.gridSize.round(),
           childAspectRatio: 0.66,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
         ),
         itemCount: items.length,
         onReorder: (oldIndex, newIndex) async {
@@ -707,9 +792,17 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             final item = items.removeAt(oldIndex);
             items.insert(newIndex, item);
             
-            // CRITICAL: Update the persistent list in place to maintain order across rebuilds
-            final persistentItem = _currentItems.removeAt(oldIndex);
-            _currentItems.insert(newIndex, persistentItem);
+            // Map indices to _currentItems to handle filtering correctly
+            final oldPersistentIndex = _currentItems.indexOf(item);
+            _currentItems.removeAt(oldPersistentIndex);
+            
+            if (newIndex < items.length - 1) {
+               final nextItemInFiltered = items[newIndex + 1];
+               final nextPersistentIndex = _currentItems.indexOf(nextItemInFiltered);
+               _currentItems.insert(nextPersistentIndex, item);
+            } else {
+               _currentItems.add(item);
+            }
           });
 
           final orderedEntries = _currentItems.map((e) => '${e.id}:${e.mediaType.name}').toList();
@@ -958,8 +1051,7 @@ class _MediaGridItem extends StatelessWidget {
   final VoidCallback? onLongPress;
 
   const _MediaGridItem({
-    super.key,
-    required this.item, 
+    required this.item,
     required this.provider,
     required this.isSelected,
     required this.isEditMode,
@@ -975,28 +1067,28 @@ class _MediaGridItem extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none, 
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0), 
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: isSelected ? Border.all(color: Colors.deepPurple, width: 3) : null,
+          _PosterWithBadge(item: item, provider: provider, width: double.infinity, height: double.infinity, showBadge: false),
+          if (isSelected)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.deepPurple, width: 3),
+                ),
               ),
-              child: _PosterWithBadge(item: item, provider: provider, width: double.infinity, height: double.infinity),
             ),
-          ),
+          _PosterBadgeOnly(item: item, provider: provider),
           if (isEditMode)
             Positioned(
-              top: 4,
-              left: 4,
+              top: 6, // Moved more into view
+              left: 6, // Moved more into view
               child: Container(
                 decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                width: 24,
-                height: 24,
+                padding: const EdgeInsets.all(1),
                 child: Icon(
                   isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
                   color: isSelected ? Colors.deepPurple : Colors.grey,
-                  size: 24,
+                  size: 20,
                 ),
               ),
             ),
@@ -1010,7 +1102,7 @@ class _MediaSwipeItem extends StatelessWidget {
   final MediaItem item;
   final SearchProvider provider;
 
-  const _MediaSwipeItem({super.key, required this.item, required this.provider});
+  const _MediaSwipeItem({required this.item, required this.provider});
 
   @override
   Widget build(BuildContext context) {
@@ -1025,7 +1117,7 @@ class _MediaSwipeItem extends StatelessWidget {
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0), 
+                  padding: const EdgeInsets.all(16.0), 
                   child: _PosterWithBadge(item: item, provider: provider, width: double.infinity, height: double.infinity),
                 ),
               ),
@@ -1046,8 +1138,9 @@ class _PosterWithBadge extends StatelessWidget {
   final SearchProvider provider;
   final double? width;
   final double? height;
+  final bool showBadge;
 
-  const _PosterWithBadge({super.key, required this.item, required this.provider, this.width = 50, this.height});
+  const _PosterWithBadge({required this.item, required this.provider, this.width = 50, this.height, this.showBadge = true});
 
   @override
   Widget build(BuildContext context) {
@@ -1055,16 +1148,7 @@ class _PosterWithBadge extends StatelessWidget {
     final isSeen = seenCount > 0;
     final isTv = item.mediaType == MediaType.tv;
     
-    bool isFinished = false;
-    if (isSeen) {
-      if (isTv && item.numberOfEpisodes != null && item.numberOfEpisodes! > 0) {
-        isFinished = seenCount >= item.numberOfEpisodes!;
-      } else if (!isTv) {
-        isFinished = true;
-      }
-    }
-
-    return Stack(
+      return Stack(
       clipBehavior: Clip.none, 
       children: [
         ClipRRect(
@@ -1083,25 +1167,46 @@ class _PosterWithBadge extends StatelessWidget {
                 child: Icon(isTv ? Icons.tv : Icons.movie, size: width != null ? width! / 2 : 24),
               ),
         ),
-        if (isSeen)
-          Positioned(
-            right: -4, 
-            bottom: -4, 
-            child: Container(
-              decoration: BoxDecoration(
-                color: isFinished ? Colors.blue : Colors.green, 
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5), 
-              ),
-              padding: const EdgeInsets.all(2),
-              child: Icon(
-                isFinished ? Icons.done_all : Icons.check, 
-                size: 10, 
-                color: Colors.white
-              ),
-            ),
-          ),
+        if (isSeen && showBadge)
+          _PosterBadgeOnly(item: item, provider: provider),
       ],
+    );
+  }
+}
+
+// Extract the badge into its own widget
+class _PosterBadgeOnly extends StatelessWidget {
+  final MediaItem item;
+  final SearchProvider provider;
+
+  const _PosterBadgeOnly({required this.item, required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final seenCount = provider.getSeenCount(item);
+    if (seenCount <= 0) return const SizedBox.shrink();
+
+    final isTv = item.mediaType == MediaType.tv;
+    bool isFinished = isTv && item.numberOfEpisodes != null
+        ? seenCount >= item.numberOfEpisodes!
+        : !isTv;
+
+    return Positioned(
+      right: -4,
+      bottom: -4,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isFinished ? Colors.blue : Colors.green,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        padding: const EdgeInsets.all(2),
+        child: Icon(
+          isFinished ? Icons.done_all : Icons.check,
+          size: 10,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }
