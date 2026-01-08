@@ -2,262 +2,237 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 
-class SeenManager extends StatefulWidget {
-  final int tmdbId;
-  final MediaType type;
-  final String title;
-  final String? posterPath;
+class SeenManager extends StatelessWidget {
+  final MediaItem item;
   final int? seasonNumber;
   final int? episodeNumber;
-  final VoidCallback? onSeenChanged;
-  final ScrollController? scrollController;
+  final bool compact;
 
   const SeenManager({
-    super.key,
-    required this.tmdbId,
-    required this.type,
-    required this.title,
-    this.posterPath,
+    super.key, 
+    required this.item,
     this.seasonNumber,
     this.episodeNumber,
-    this.onSeenChanged,
-    this.scrollController,
+    this.compact = false,
   });
 
   @override
-  State<SeenManager> createState() => _SeenManagerState();
-}
-
-class _SeenManagerState extends State<SeenManager> {
-  List<SeenItem> _viewings = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkSeenStatus();
-  }
-
-  Future<void> _checkSeenStatus() async {
-    final provider = context.read<SearchProvider>();
-    final allEntries = await provider.loadSeenStatusForItem(widget.tmdbId, widget.type);
+  Widget build(BuildContext context) {
+    final provider = context.watch<SearchProvider>();
+    final colors = context.appColors;
     
-    if (mounted) {
-      setState(() {
-        _viewings = allEntries.where((s) => 
-          s.seasonNumber == widget.seasonNumber && 
-          s.episodeNumber == widget.episodeNumber
-        ).toList();
-        _viewings.sort((a, b) => b.seenDate.compareTo(a.seenDate));
-        _isLoading = false;
-      });
+    // Determine seen status
+    bool isSeen;
+    int? count;
+    
+    if (seasonNumber != null && episodeNumber != null) {
+      final history = provider.seenItems.where((s) => 
+        s.tmdbId == item.id && 
+        s.type == item.mediaType && 
+        s.seasonNumber == seasonNumber && 
+        s.episodeNumber == episodeNumber
+      ).toList();
+      isSeen = history.isNotEmpty;
+      count = history.length;
+    } else {
+      count = provider.getSeenCount(item);
+      isSeen = count > 0;
     }
-  }
 
-  Future<void> _addViewing() async {
-    final provider = context.read<SearchProvider>();
-    
-    if (!context.mounted) return;
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      helpText: 'When did you see this?',
+    final isTv = item.mediaType == MediaType.tv;
+    final bool isSpecificEpisode = seasonNumber != null && episodeNumber != null;
+
+    if (isSpecificEpisode || compact) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isSeen && !isSpecificEpisode)
+            IconButton(
+              icon: Icon(Icons.history, color: colors.logicFlow),
+              onPressed: () => _showSeenHistory(context, provider),
+              tooltip: 'View History',
+            ),
+          IconButton(
+            icon: Icon(
+              isSeen ? (isSpecificEpisode ? Icons.check_circle : Icons.add_circle) : Icons.check_circle_outline,
+              color: isSeen ? colors.success : colors.comments,
+            ),
+            tooltip: isSeen ? (isSpecificEpisode ? 'Seen' : 'Add viewing') : 'Mark as seen',
+            onPressed: () {
+              if (isSpecificEpisode && isSeen) {
+                _showSeenHistory(context, provider);
+              } else if (isTv && !isSpecificEpisode) {
+                _showAddMultipleDialog(context, provider);
+              } else {
+                provider.markAsSeen(SeenItem(
+                  tmdbId: item.id,
+                  type: item.mediaType,
+                  title: item.title,
+                  posterPath: item.posterPath,
+                  seasonNumber: seasonNumber,
+                  episodeNumber: episodeNumber,
+                  seenDate: DateTime.now(),
+                ));
+              }
+            },
+          ),
+        ],
+      );
+    }
+
+    return ListTile(
+      title: Text(isTv ? 'Episodes Seen' : 'Seen'),
+      subtitle: Text(isTv ? '$count episodes' : (isSeen ? 'Yes' : 'No')),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isSeen)
+            IconButton(
+              icon: Icon(Icons.history, color: colors.logicFlow),
+              onPressed: () => _showSeenHistory(context, provider),
+            ),
+          IconButton(
+            icon: Icon(
+              isSeen ? Icons.add_circle : Icons.check_circle_outline,
+              color: isSeen ? colors.success : colors.comments,
+            ),
+            onPressed: () => isTv 
+              ? _showAddMultipleDialog(context, provider)
+              : provider.markAsSeen(SeenItem(
+                  tmdbId: item.id,
+                  type: item.mediaType,
+                  title: item.title,
+                  posterPath: item.posterPath,
+                  seenDate: DateTime.now(),
+                )),
+          ),
+        ],
+      ),
+      onLongPress: isSeen ? () => _confirmClear(context, provider) : null,
     );
-
-    if (pickedDate != null) {
-      await provider.markAsSeen(SeenItem(
-        tmdbId: widget.tmdbId,
-        type: widget.type,
-        title: widget.title,
-        posterPath: widget.posterPath,
-        seenDate: pickedDate,
-        seasonNumber: widget.seasonNumber,
-        episodeNumber: widget.episodeNumber,
-      ));
-      
-      await _checkSeenStatus();
-      widget.onSeenChanged?.call();
-    }
   }
 
-  Future<bool?> _confirmDeletion({required bool all}) {
-    return showDialog<bool>(
+  void _showAddMultipleDialog(BuildContext context, SearchProvider provider) {
+    final controller = TextEditingController(text: '1');
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(all ? 'Remove all logs?' : 'Remove log?'),
-        content: Text(all 
-          ? 'Are you sure you want to remove all viewing history for this item?' 
-          : 'Are you sure you want to remove this specific viewing entry?'),
+        title: const Text('Add Multiple Viewings'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Number of episodes'),
+          keyboardType: TextInputType.number,
+          autofocus: true,
+        ),
         actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Remove'),
+            onPressed: () {
+              final count = int.tryParse(controller.text) ?? 1;
+              for (int i = 0; i < count; i++) {
+                provider.markAsSeen(SeenItem(
+                  tmdbId: item.id,
+                  type: item.mediaType,
+                  title: item.title,
+                  posterPath: item.posterPath,
+                  seenDate: DateTime.now(),
+                ));
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Add'),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _removeViewing(int id) async {
-    final provider = context.read<SearchProvider>();
-    await provider.deleteSeenEntry(id);
-    await _checkSeenStatus();
-    widget.onSeenChanged?.call();
-  }
-
-  Future<void> _removeAll() async {
-    final provider = context.read<SearchProvider>();
-    await provider.removeFromSeen(
-      widget.tmdbId,
-      widget.type,
-      seasonNumber: widget.seasonNumber,
-      episodeNumber: widget.episodeNumber,
+  void _confirmClear(BuildContext context, SearchProvider provider) {
+    final colors = context.appColors;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear History'),
+        content: Text('Are you sure you want to clear all viewing history for "${item.title}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              provider.removeFromSeen(item.id, item.mediaType);
+              Navigator.pop(context);
+            },
+            child: Text('Clear All', style: TextStyle(color: colors.error)),
+          ),
+        ],
+      ),
     );
-    await _checkSeenStatus();
-    widget.onSeenChanged?.call();
   }
 
-  void _showViewingsSheet() {
+  void _showSeenHistory(BuildContext context, SearchProvider provider) {
+    final history = provider.seenItems.where((s) => 
+      s.tmdbId == item.id && 
+      s.type == item.mediaType &&
+      s.seasonNumber == seasonNumber &&
+      s.episodeNumber == episodeNumber
+    ).toList();
+    
+    final colors = context.appColors;
+
     showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (sheetContext, setModalState) {
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Viewings: ${widget.title}${widget.seasonNumber != null ? " (S${widget.seasonNumber} E${widget.episodeNumber})" : ""}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.add_circle_outline, color: Colors.green),
-                    title: const Text('Add another viewing'),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      _addViewing();
-                    },
-                  ),
-                  if (_viewings.isNotEmpty) ...[
-                    const Divider(),
-                    Flexible(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: _viewings.length,
-                        itemBuilder: (context, index) {
-                          final viewing = _viewings[index];
-                          return ListTile(
-                            leading: const Icon(Icons.history),
-                            title: Text(DateFormat.yMMMMd().format(viewing.seenDate)),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              onPressed: () async {
-                                final confirm = await _confirmDeletion(all: false);
-                                if (confirm == true) {
-                                  await _removeViewing(viewing.id!);
-                                  setModalState(() {
-                                    _viewings.removeAt(index);
-                                  });
-                                  if (_viewings.isEmpty) {
-                                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                                  }
-                                }
-                              },
-                            ),
-                          );
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Viewing History', style: Theme.of(context).textTheme.titleLarge),
+            ),
+            const Divider(),
+            if (history.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Text('No viewing history found for this item.'),
+              )
+            else
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: history.length,
+                  itemBuilder: (context, index) {
+                    final seenEntry = history[index];
+                    return ListTile(
+                      leading: Icon(Icons.event, color: colors.comments),
+                      title: Text(DateFormat('MMM dd, yyyy - HH:mm').format(seenEntry.seenDate)),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline, color: colors.error),
+                        onPressed: () {
+                          provider.deleteSeenEntry(seenEntry.id!);
+                          if (history.length <= 1) Navigator.pop(context);
                         },
                       ),
-                    ),
-                    const Divider(),
-                    ListTile(
-                      leading: const Icon(Icons.delete_forever, color: Colors.red),
-                      title: const Text('Remove all viewings'),
-                      onTap: () async {
-                        final confirm = await _confirmDeletion(all: true);
-                        if (confirm == true) {
-                          await _removeAll();
-                          if (sheetContext.mounted) Navigator.pop(sheetContext);
-                        }
-                      },
-                    ),
-                  ],
-                ],
-              ),
-            );
-          }
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) return const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2));
-
-    final isSeen = _viewings.isNotEmpty;
-
-    return GestureDetector(
-      onDoubleTap: () {
-        if (widget.scrollController != null && widget.scrollController!.hasClients) {
-          widget.scrollController!.animateTo(
-            0,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-          );
-        }
-      },
-      child: IconButton(
-        icon: Stack(
-          children: [
-            Icon(
-              isSeen ? Icons.visibility : Icons.visibility_off,
-              color: isSeen ? Theme.of(context).primaryColor : Colors.grey,
-            ),
-            if (_viewings.length > 1)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(1),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 12,
-                    minHeight: 12,
-                  ),
-                  child: Text(
-                    '${_viewings.length}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                    );
+                  },
                 ),
               ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextButton(
+                style: TextButton.styleFrom(foregroundColor: colors.error),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _confirmClear(context, provider);
+                },
+                child: const Text('Remove All History'),
+              ),
+            ),
           ],
         ),
-        onPressed: isSeen ? _showViewingsSheet : _addViewing,
-        tooltip: isSeen ? 'Manage viewings' : 'Mark as seen',
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,12 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final theme = Theme.of(context);
+    final dropdownStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.w600,
+      fontSize: 13,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -16,21 +23,133 @@ class SettingsPage extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          const _SectionHeader(title: 'Appearance'),
+          ListTile(
+            title: const Text('Theme Mode'),
+            trailing: DropdownButtonHideUnderline(
+              child: DropdownButton<ThemeMode>(
+                value: settings.themeMode,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: (mode) {
+                  if (mode != null) settings.setThemeMode(mode);
+                },
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                selectedItemBuilder: (context) => ThemeMode.values.map((mode) {
+                  return Container(
+                    alignment: Alignment.centerRight,
+                    child: Text(_getThemeModeName(mode)),
+                  );
+                }).toList(),
+                items: ThemeMode.values.map((mode) {
+                  return DropdownMenuItem(
+                    value: mode,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_getThemeModeIcon(mode), size: 14),
+                        const SizedBox(width: 6),
+                        Text(_getThemeModeName(mode)),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          ListTile(
+            title: const Text('Light Theme'),
+            enabled: settings.themeMode != ThemeMode.dark,
+            trailing: DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                value: settings.lightAppThemeIndex,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: settings.themeMode != ThemeMode.dark
+                    ? (themeIndex) => themeIndex != null ? settings.setLightAppTheme(themeIndex) : null
+                    : null,
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                disabledHint: Text(lightThemes[settings.lightAppThemeIndex].name),
+                items: lightThemes.asMap().entries.map((entry) {
+                  return DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value.name),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          ListTile(
+            title: const Text('Dark Theme'),
+            enabled: settings.themeMode != ThemeMode.light,
+            trailing: DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                value: settings.darkAppThemeIndex,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: settings.themeMode != ThemeMode.light
+                    ? (themeIndex) => themeIndex != null ? settings.setDarkAppTheme(themeIndex) : null
+                    : null,
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                disabledHint: Text(darkThemes[settings.darkAppThemeIndex].name),
+                items: darkThemes.asMap().entries.map((entry) {
+                  return DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value.name),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const Divider(),
           const _SectionHeader(title: 'Display'),
           ListTile(
             title: const Text('Display Mode'),
-            subtitle: Text(settings.displayMode.name.toUpperCase()),
-            trailing: DropdownButton<DisplayMode>(
-              value: settings.displayMode,
-              onChanged: (mode) {
-                if (mode != null) settings.setDisplayMode(mode);
-              },
-              items: DisplayMode.values.map((mode) {
-                return DropdownMenuItem(
-                  value: mode,
-                  child: Text(mode.name.toUpperCase()),
-                );
-              }).toList(),
+            trailing: DropdownButtonHideUnderline(
+              child: DropdownButton<DisplayMode>(
+                value: settings.displayMode,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: (mode) {
+                  if (mode != null) settings.setDisplayMode(mode);
+                },
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                selectedItemBuilder: (context) => DisplayMode.values.map((mode) {
+                  return Container(
+                    alignment: Alignment.centerRight,
+                    child: Text(_capitalize(mode.name)),
+                  );
+                }).toList(),
+                items: DisplayMode.values.map((mode) {
+                  return DropdownMenuItem(
+                    value: mode,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_getDisplayModeIcon(mode), size: 14),
+                        const SizedBox(width: 6),
+                        Text(_capitalize(mode.name)),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
           if (settings.displayMode == DisplayMode.grid)
@@ -44,7 +163,7 @@ class SettingsPage extends StatelessWidget {
                 label: settings.gridSize.round().toString(),
                 onChanged: (val) => settings.setGridSize(val),
               ),
-              trailing: Text(settings.gridSize.round().toString()),
+              trailing: Text(settings.gridSize.round().toString(), style: dropdownStyle),
             ),
           SwitchListTile(
             title: const Text('Hide Non-Released Media'),
@@ -80,6 +199,32 @@ class SettingsPage extends StatelessWidget {
       ),
     );
   }
+
+  String _getThemeModeName(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system: return 'System';
+      case ThemeMode.light: return 'Light';
+      case ThemeMode.dark: return 'Dark';
+    }
+  }
+
+  IconData _getThemeModeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system: return Icons.brightness_auto;
+      case ThemeMode.light: return Icons.light_mode;
+      case ThemeMode.dark: return Icons.dark_mode;
+    }
+  }
+
+  IconData _getDisplayModeIcon(DisplayMode mode) {
+    switch (mode) {
+      case DisplayMode.list: return Icons.view_list;
+      case DisplayMode.grid: return Icons.grid_view;
+      case DisplayMode.swipe: return Icons.view_carousel;
+    }
+  }
+
+  String _capitalize(String s) => s[0].toUpperCase() + s.substring(1).toLowerCase();
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -93,7 +238,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: TextStyle(
-          color: Theme.of(context).primaryColor,
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),

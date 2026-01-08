@@ -6,6 +6,7 @@ import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class SearchPage extends StatefulWidget {
@@ -221,6 +222,10 @@ class _SearchPageState extends State<SearchPage> {
         isFinished = true;
       }
     }
+    final settings = context.watch<SettingsProvider>();
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? settings.darkPalette
+        : settings.lightPalette;
 
     return Stack(
       children: [
@@ -245,7 +250,7 @@ class _SearchPageState extends State<SearchPage> {
             bottom: 0,
             child: Container(
               decoration: BoxDecoration(
-                color: isFinished ? Colors.blue : Colors.green,
+                color: isFinished ? palette.badgeBgSeen : palette.badgeBg,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 1),
               ),
@@ -253,7 +258,7 @@ class _SearchPageState extends State<SearchPage> {
               child: Icon(
                 isFinished ? Icons.done_all : Icons.check,
                 size: 10,
-                color: Colors.white,
+                color: palette.badgeText,
               ),
             ),
           ),
@@ -262,6 +267,11 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildTitle(MediaItem item, bool isTv, bool isLiked) {
+    final settings = context.watch<SettingsProvider>();
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? settings.darkPalette
+        : settings.lightPalette;
+
     return Row(
       children: [
         Expanded(
@@ -272,9 +282,9 @@ class _SearchPageState extends State<SearchPage> {
               children: [
                 Flexible(child: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
                 if (isLiked)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(left: 4.0),
-                    child: Icon(Icons.favorite, size: 16, color: Colors.red),
+                    child: Icon(Icons.favorite, size: 16, color: palette.likeHeart),
                   ),
               ],
             ),

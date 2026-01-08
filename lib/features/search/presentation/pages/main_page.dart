@@ -119,7 +119,7 @@ class _MainPageState extends State<MainPage> {
         children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // Added to show more than 3 items
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'My Lists'),
@@ -127,7 +127,6 @@ class _MainPageState extends State<MainPage> {
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepPurple,
         onTap: _onItemTapped,
       ),
     );

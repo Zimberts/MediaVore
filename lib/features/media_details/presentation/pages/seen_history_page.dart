@@ -7,6 +7,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class SeenHistoryPage extends StatefulWidget {
@@ -77,6 +78,12 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
     final provider = context.watch<SearchProvider>();
     final seenItems = provider.seenItems;
     final groupedItems = _groupItems(seenItems);
+
+
+    final settings = context.watch<SettingsProvider>();
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? settings.darkPalette
+        : settings.lightPalette;
 
     return Scaffold(
       appBar: AppBar(
@@ -169,9 +176,9 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                       children: [
                         Flexible(child: Text(seenItem.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
                         if (isLiked)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(left: 4.0),
-                            child: Icon(Icons.favorite, size: 16, color: Colors.red),
+                            child: Icon(Icons.favorite, size: 16, color: palette.likeHeart),
                           ),
                       ],
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 /// A button that allows users to add/remove an item from their watchlist.
@@ -70,13 +71,16 @@ class _WatchlistButtonState extends State<WatchlistButton> {
     if (_isLoading) {
       return const CircularProgressIndicator();
     }
+    final colors = context.appColors;
+    final theme = Theme.of(context);
+
     return ElevatedButton.icon(
       onPressed: _toggleWatchlist,
       icon: Icon(_isAdded ? Icons.check : Icons.add),
       label: Text(_isAdded ? 'On Watchlist' : 'Add to Watchlist'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: _isAdded ? Colors.green : Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: _isAdded ? colors.onWatchlist : theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
     );
   }

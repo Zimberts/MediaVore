@@ -119,12 +119,8 @@ class _ReleasesTabState extends State<_ReleasesTab> {
         final startOfDay = DateTime(now.year, now.month, now.day);
         final oneMonthAgo = startOfDay.subtract(const Duration(days: 30));
         
-        debugPrint('--- Releases Tab Filtering Log ---');
-        debugPrint('Total notified items in provider: ${provider.notifiedItems.length}');
-
         final releases = provider.notifiedItems.where((item) {
           if (item.releaseDate == null) {
-            debugPrint('Item "${item.title}" excluded: releaseDate is null');
             return false;
           }
           
@@ -135,7 +131,6 @@ class _ReleasesTabState extends State<_ReleasesTab> {
           if (item.type == MediaType.movie) {
             final seenCount = provider.seenItems.where((s) => s.tmdbId == item.tmdbId).length;
             if (seenCount > 0) {
-              debugPrint('Movie "${item.title}" excluded: already seen ($seenCount times)');
               return false;
             }
           }
@@ -150,7 +145,6 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                 s.episodeNumber == item.episodeNumber
               );
               if (isEpSeen) {
-                debugPrint('Series "${item.title}" excluded: specific episode S${item.seasonNumber} E${item.episodeNumber} already seen');
                 return false;
               }
             } else {
@@ -162,21 +156,14 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                  DateUtils.isSameDay(s.seenDate, releaseDay))
               );
               if (alreadySeenRecent) {
-                debugPrint('Series "${item.title}" excluded: marked as seen on/after release date (date-fallback)');
                 return false;
               }
             }
           }
 
           // Check if it's within our window
-          final isRecent = releaseDay.isAfter(oneMonthAgo) || DateUtils.isSameDay(releaseDay, startOfDay);
-          if (!isRecent) {
-            debugPrint('Item "${item.title}" excluded: release day ${DateFormat.yMd().format(releaseDay)} is outside window (after ${DateFormat.yMd().format(oneMonthAgo)})');
-          } else {
-            debugPrint('Item "${item.title}" INCLUDED: release day ${DateFormat.yMd().format(releaseDay)}');
-          }
+          return  releaseDay.isAfter(oneMonthAgo) || DateUtils.isSameDay(releaseDay, startOfDay);
 
-          return isRecent;
         }).toList();
 
         releases.sort((a, b) => a.releaseDate!.compareTo(b.releaseDate!));
