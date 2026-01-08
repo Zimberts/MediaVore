@@ -18,6 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
 class SavedMediaPage extends StatefulWidget {
   const SavedMediaPage({super.key});
@@ -37,6 +38,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   List<MediaItem> _currentItems = [];
   final GlobalKey _qrKey = GlobalKey();
   Uint8List? _croppedLogoBytes;
+
+  // Edit Mode State
+  bool _isEditMode = false;
+  final Set<String> _selectedItems = {};
 
   @override
   void initState() {
@@ -104,6 +109,8 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     if (_selectedList != 'watchlist') {
       setState(() {
         _selectedList = 'watchlist';
+        _isEditMode = false;
+        _selectedItems.clear();
       });
       loadSavedMedia();
     }
@@ -175,9 +182,18 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     return items;
   }
 
-  Future<void> _removeItem(MediaItem item) async {
-    final provider = Provider.of<SearchProvider>(context, listen: false);
-    await provider.toggleInList(item, _selectedList);
+  Future<void> _removeSelectedItems() async {
+    final provider = context.read<SearchProvider>();
+    final itemsToRemove = _currentItems.where((item) => _selectedItems.contains('${item.id}:${item.mediaType.name}')).toList();
+    
+    for (final item in itemsToRemove) {
+      await provider.toggleInList(item, _selectedList);
+    }
+    
+    setState(() {
+      _isEditMode = false;
+      _selectedItems.clear();
+    });
     loadSavedMedia();
   }
 
@@ -511,80 +527,115 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     );
   }
 
+  void _toggleItemSelection(MediaItem item) {
+    final key = '${item.id}:${item.mediaType.name}';
+    setState(() {
+      if (_selectedItems.contains(key)) {
+        _selectedItems.remove(key);
+        if (_selectedItems.isEmpty) _isEditMode = false;
+      } else {
+        _selectedItems.add(key);
+        _isEditMode = true;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SearchProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: GestureDetector(
-          onTap: () => _showListPicker(context, provider),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_selectedList == 'watchlist' ? 'Watchlist' : _selectedList),
-              const Icon(Icons.arrow_drop_down),
-            ],
+    return PopScope(
+      canPop: !_isEditMode,
+      onPopInvoked: (didPop) {
+        if (!didPop && _isEditMode) {
+          setState(() {
+            _isEditMode = false;
+            _selectedItems.clear();
+          });
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: _isEditMode 
+            ? IconButton(icon: const Icon(Icons.close), onPressed: () => setState(() { _isEditMode = false; _selectedItems.clear(); }))
+            : null,
+          title: GestureDetector(
+            onTap: _isEditMode ? null : () => _showListPicker(context, provider),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_isEditMode ? '${_selectedItems.length} selected' : (_selectedList == 'watchlist' ? 'Watchlist' : _selectedList)),
+                if (!_isEditMode) const Icon(Icons.arrow_drop_down),
+              ],
+            ),
           ),
+          actions: _isEditMode 
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: _selectedItems.isEmpty ? null : _removeSelectedItems,
+                  tooltip: 'Remove selected',
+                ),
+              ]
+            : [
+                IconButton(
+                  icon: const Icon(Icons.share),
+                  onPressed: () => _showShareAndImportOptions(provider, settings),
+                  tooltip: 'Sharing & Importing',
+                ),
+                PopupMenuButton<SortMethod>(
+                  icon: const Icon(Icons.sort),
+                  onSelected: (method) => setState(() => _sortMethod = method),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: SortMethod.manual, child: Text('Manual Order')),
+                    const PopupMenuItem(value: SortMethod.releaseDate, child: Text('Release Date (Oldest)')),
+                    const PopupMenuItem(value: SortMethod.releaseDateDesc, child: Text('Release Date (Newest)')),
+                    const PopupMenuItem(value: SortMethod.shuffle, child: Text('Shuffle')),
+                  ],
+                ),
+                IconButton(
+                  icon: _isRefreshing 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+                    : const Icon(Icons.refresh),
+                  onPressed: _isRefreshing ? null : () async {
+                    setState(() => _isRefreshing = true);
+                    await loadSavedMedia(forceRefresh: true);
+                    if (mounted) setState(() => _isRefreshing = false);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsPage())),
+                ),
+              ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () => _showShareAndImportOptions(provider, settings),
-            tooltip: 'Sharing & Importing',
-          ),
-          PopupMenuButton<SortMethod>(
-            icon: const Icon(Icons.sort),
-            onSelected: (method) => setState(() => _sortMethod = method),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: SortMethod.manual, child: Text('Manual Order')),
-              const PopupMenuItem(value: SortMethod.releaseDate, child: Text('Release Date (Oldest)')),
-              const PopupMenuItem(value: SortMethod.releaseDateDesc, child: Text('Release Date (Newest)')),
-              const PopupMenuItem(value: SortMethod.shuffle, child: Text('Shuffle')),
-            ],
-          ),
-          IconButton(
-            icon: _isRefreshing 
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
-              : const Icon(Icons.refresh),
-            onPressed: _isRefreshing ? null : () async {
-              setState(() => _isRefreshing = true);
-              await loadSavedMedia(forceRefresh: true);
-              if (mounted) setState(() => _isRefreshing = false);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsPage())),
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<MediaItem>>(
-        future: _savedMediaFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && _savedMediaFuture != null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No items in this list.'));
-          }
+        body: FutureBuilder<List<MediaItem>>(
+          future: _savedMediaFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting && _savedMediaFuture != null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('No items in this list.'));
+            }
 
-          final sortedItems = _getFilteredAndSortedItems(snapshot.data!, settings);
-          
-          if (settings.displayMode == DisplayMode.grid) {
-            return _buildGridView(sortedItems, provider, settings);
-          } else if (settings.displayMode == DisplayMode.swipe) {
-            return _buildSwipeView(sortedItems, provider);
-          } else {
-            return _buildListView(sortedItems, provider);
-          }
-        },
+            final sortedItems = _getFilteredAndSortedItems(snapshot.data!, settings);
+            
+            if (settings.displayMode == DisplayMode.grid) {
+              return _buildGridView(sortedItems, provider, settings);
+            } else if (settings.displayMode == DisplayMode.swipe) {
+              return _buildSwipeView(sortedItems, provider);
+            } else {
+              return _buildListView(sortedItems, provider, settings);
+            }
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildListView(List<MediaItem> items, SearchProvider provider) {
+  Widget _buildListView(List<MediaItem> items, SearchProvider provider, SettingsProvider settings) {
     return ReorderableListView.builder(
       itemCount: items.length,
       onReorder: (oldIndex, newIndex) async {
@@ -594,39 +645,105 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           if (newIndex > oldIndex) newIndex -= 1;
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
+          
+          // CRITICAL: Update the persistent list in place to maintain order across rebuilds
+          final persistentItem = _currentItems.removeAt(oldIndex);
+          _currentItems.insert(newIndex, persistentItem);
         });
         
-        _currentItems = items;
-        
-        final orderedEntries = items.map((e) => '${e.id}:${e.mediaType.name}').toList();
+        final orderedEntries = _currentItems.map((e) => '${e.id}:${e.mediaType.name}').toList();
         await provider.updateListOrder(_selectedList, orderedEntries);
       },
       itemBuilder: (context, index) {
         final item = items[index];
+        final isSelected = _selectedItems.contains('${item.id}:${item.mediaType.name}');
+
         return _MediaListTile(
           key: ValueKey('${item.id}_${item.mediaType.name}'),
+          index: index,
           item: item,
           provider: provider,
-          onRemove: () => _removeItem(item),
+          settings: settings,
+          isEditMode: _isEditMode,
+          isSelected: isSelected,
+          onTap: () {
+            if (_isEditMode) {
+              _toggleItemSelection(item);
+            } else {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => MediaDetailPage(item: item)));
+            }
+          },
+          onLongPress: () {
+            if (!_isEditMode) {
+              setState(() {
+                _isEditMode = true;
+                _selectedItems.add('${item.id}:${item.mediaType.name}');
+              });
+            }
+          },
         );
       },
     );
   }
 
   Widget _buildGridView(List<MediaItem> items, SearchProvider provider, SettingsProvider settings) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: settings.gridSize.round(),
-        childAspectRatio: 0.66,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        canvasColor: Colors.transparent, 
       ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return _MediaGridItem(item: item, provider: provider, onRemove: () => _removeItem(item));
-      },
+      child: ReorderableGridView.builder(
+        padding: const EdgeInsets.all(12), 
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: settings.gridSize.round(),
+          childAspectRatio: 0.66,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: items.length,
+        onReorder: (oldIndex, newIndex) async {
+          if (_sortMethod != SortMethod.manual) return;
+
+          setState(() {
+            final item = items.removeAt(oldIndex);
+            items.insert(newIndex, item);
+            
+            // CRITICAL: Update the persistent list in place to maintain order across rebuilds
+            final persistentItem = _currentItems.removeAt(oldIndex);
+            _currentItems.insert(newIndex, persistentItem);
+          });
+
+          final orderedEntries = _currentItems.map((e) => '${e.id}:${e.mediaType.name}').toList();
+          await provider.updateListOrder(_selectedList, orderedEntries);
+        },
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final isSelected = _selectedItems.contains('${item.id}:${item.mediaType.name}');
+
+          return ReorderableDelayedDragStartListener(
+            key: ValueKey('${item.id}_${item.mediaType.name}'),
+            index: index,
+            child: _MediaGridItem(
+              item: item,
+              provider: provider,
+              isSelected: isSelected,
+              isEditMode: _isEditMode,
+              onTap: () {
+                if (_isEditMode) {
+                  _toggleItemSelection(item);
+                } else {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => MediaDetailPage(item: item)));
+                }
+              },
+              onLongPress: _isEditMode ? null : () {
+                setState(() {
+                  _isEditMode = true;
+                  _selectedItems.add('${item.id}:${item.mediaType.name}');
+                });
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -635,7 +752,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return _MediaSwipeItem(item: item, provider: provider, onRemove: () => _removeItem(item));
+        return _MediaSwipeItem(item: item, provider: provider);
       },
     );
   }
@@ -674,7 +791,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                           )
                         : null,
                       onTap: () {
-                        setState(() { _selectedList = name; });
+                        setState(() { _selectedList = name; _isEditMode = false; _selectedItems.clear(); });
                         loadSavedMedia();
                         Navigator.pop(context);
                       },
@@ -735,7 +852,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             onPressed: () async {
               if (controller.text.isNotEmpty) {
                 await provider.createList(controller.text);
-                setState(() { _selectedList = controller.text; });
+                setState(() { _selectedList = controller.text; _isEditMode = false; _selectedItems.clear(); });
                 loadSavedMedia();
                 if (context.mounted) Navigator.pop(context);
               }
@@ -758,7 +875,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           TextButton(
             onPressed: () async {
               if (_selectedList == listName) {
-                setState(() { _selectedList = 'watchlist'; });
+                setState(() { _selectedList = 'watchlist'; _isEditMode = false; _selectedItems.clear(); });
               }
               await provider.deleteList(listName);
               if (context.mounted) Navigator.pop(context);
@@ -774,10 +891,25 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
 class _MediaListTile extends StatelessWidget {
   final MediaItem item;
+  final int index;
   final SearchProvider provider;
-  final VoidCallback onRemove;
+  final SettingsProvider settings;
+  final bool isEditMode;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
-  const _MediaListTile({super.key, required this.item, required this.provider, required this.onRemove});
+  const _MediaListTile({
+    super.key, 
+    required this.index, 
+    required this.item, 
+    required this.provider, 
+    required this.settings,
+    required this.isEditMode,
+    required this.isSelected,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -792,35 +924,26 @@ class _MediaListTile extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MediaDetailPage(item: item))),
-      onLongPress: () => _showRemoveDialog(context),
-      child: ListTile(
-        leading: _PosterWithBadge(item: item, provider: provider),
-        title: Row(
-          children: [
-            Expanded(child: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
-            if (isLiked) const Icon(Icons.favorite, size: 16, color: Colors.red),
-          ],
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Container(
+        color: isSelected ? Colors.deepPurple.withValues(alpha: 0.1) : null,
+        child: ListTile(
+          leading: _PosterWithBadge(item: item, provider: provider),
+          title: Row(
+            children: [
+              Expanded(child: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+              if (isLiked) const Icon(Icons.favorite, size: 16, color: Colors.red),
+            ],
+          ),
+          subtitle: Text('${item.releaseDate} • $lengthText'),
+          trailing: isEditMode 
+            ? Checkbox(value: isSelected, onChanged: (_) => onTap())
+            : ReorderableDragStartListener(
+                index: index,
+                child: const Icon(Icons.drag_handle),
+              ),
         ),
-        subtitle: Text('${item.releaseDate} • $lengthText'),
-        trailing: ReorderableDragStartListener(
-          index: context.findAncestorStateOfType<SavedMediaPageState>()?._currentItems.indexOf(item) ?? 0,
-          child: const Icon(Icons.drag_handle),
-        ),
-      ),
-    );
-  }
-
-  void _showRemoveDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove from list?'),
-        content: Text('Do you want to remove "${item.title}"?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () { onRemove(); Navigator.pop(context); }, child: const Text('Remove', style: TextStyle(color: Colors.red))),
-        ],
       ),
     );
   }
@@ -829,30 +952,54 @@ class _MediaListTile extends StatelessWidget {
 class _MediaGridItem extends StatelessWidget {
   final MediaItem item;
   final SearchProvider provider;
-  final VoidCallback onRemove;
+  final bool isSelected;
+  final bool isEditMode;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
-  const _MediaGridItem({required this.item, required this.provider, required this.onRemove});
+  const _MediaGridItem({
+    super.key,
+    required this.item, 
+    required this.provider,
+    required this.isSelected,
+    required this.isEditMode,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MediaDetailPage(item: item))),
-      onLongPress: () => _showRemoveDialog(context),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: _PosterWithBadge(item: item, provider: provider, width: double.infinity, height: double.infinity),
-      ),
-    );
-  }
-
-  void _showRemoveDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove from list?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () { onRemove(); Navigator.pop(context); }, child: const Text('Remove', style: TextStyle(color: Colors.red))),
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Stack(
+        clipBehavior: Clip.none, 
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0), 
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: isSelected ? Border.all(color: Colors.deepPurple, width: 3) : null,
+              ),
+              child: _PosterWithBadge(item: item, provider: provider, width: double.infinity, height: double.infinity),
+            ),
+          ),
+          if (isEditMode)
+            Positioned(
+              top: 4,
+              left: 4,
+              child: Container(
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                width: 24,
+                height: 24,
+                child: Icon(
+                  isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: isSelected ? Colors.deepPurple : Colors.grey,
+                  size: 24,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -862,9 +1009,8 @@ class _MediaGridItem extends StatelessWidget {
 class _MediaSwipeItem extends StatelessWidget {
   final MediaItem item;
   final SearchProvider provider;
-  final VoidCallback onRemove;
 
-  const _MediaSwipeItem({required this.item, required this.provider, required this.onRemove});
+  const _MediaSwipeItem({super.key, required this.item, required this.provider});
 
   @override
   Widget build(BuildContext context) {
@@ -872,15 +1018,14 @@ class _MediaSwipeItem extends StatelessWidget {
       padding: const EdgeInsets.all(32.0),
       child: InkWell(
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MediaDetailPage(item: item))),
-        onLongPress: () => _showRemoveDialog(context),
         child: Card(
           elevation: 8,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Column(
             children: [
               Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0), 
                   child: _PosterWithBadge(item: item, provider: provider, width: double.infinity, height: double.infinity),
                 ),
               ),
@@ -894,19 +1039,6 @@ class _MediaSwipeItem extends StatelessWidget {
       ),
     );
   }
-
-  void _showRemoveDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove from list?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () { onRemove(); Navigator.pop(context); }, child: const Text('Remove', style: TextStyle(color: Colors.red))),
-        ],
-      ),
-    );
-  }
 }
 
 class _PosterWithBadge extends StatelessWidget {
@@ -915,7 +1047,7 @@ class _PosterWithBadge extends StatelessWidget {
   final double? width;
   final double? height;
 
-  const _PosterWithBadge({required this.item, required this.provider, this.width = 50, this.height});
+  const _PosterWithBadge({super.key, required this.item, required this.provider, this.width = 50, this.height});
 
   @override
   Widget build(BuildContext context) {
@@ -933,29 +1065,40 @@ class _PosterWithBadge extends StatelessWidget {
     }
 
     return Stack(
+      clipBehavior: Clip.none, 
       children: [
-        if (item.posterPath != null)
-          CachedNetworkImage(
-            imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
-            width: width,
-            height: height,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            errorWidget: (context, url, error) => Icon(isTv ? Icons.tv : Icons.movie, size: width),
-          )
-        else
-          Container(
-            width: width, height: height, color: Colors.grey[200],
-            child: Icon(isTv ? Icons.tv : Icons.movie, size: width != null ? width! / 2 : 24),
-          ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: item.posterPath != null
+            ? CachedNetworkImage(
+                imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
+                width: width,
+                height: height,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                errorWidget: (context, url, error) => Icon(isTv ? Icons.tv : Icons.movie, size: width),
+              )
+            : Container(
+                width: width, height: height, color: Colors.grey[200],
+                child: Icon(isTv ? Icons.tv : Icons.movie, size: width != null ? width! / 2 : 24),
+              ),
+        ),
         if (isSeen)
           Positioned(
-            right: 4,
-            bottom: 4,
+            right: -4, 
+            bottom: -4, 
             child: Container(
-              decoration: BoxDecoration(color: isFinished ? Colors.blue : Colors.green, shape: BoxShape.circle),
-              padding: const EdgeInsets.all(4),
-              child: Icon(isFinished ? Icons.done_all : Icons.check, size: 16, color: Colors.white),
+              decoration: BoxDecoration(
+                color: isFinished ? Colors.blue : Colors.green, 
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5), 
+              ),
+              padding: const EdgeInsets.all(2),
+              child: Icon(
+                isFinished ? Icons.done_all : Icons.check, 
+                size: 10, 
+                color: Colors.white
+              ),
             ),
           ),
       ],

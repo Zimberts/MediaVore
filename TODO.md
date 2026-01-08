@@ -10,3 +10,5 @@
 - [x] Change the order by method : Manual Order, Release Date (Reverse), shuffle
 - [x] Hide non released medias
 - [x] Ability to share lists (by links ?, when adding a new list name provided from link but possibility to change it)
+- [ ] Need to fix reordering, I can't reorder lists, I would like to be able to reorder lists if the current order allows me (manual order) and if I am either in grid or list mode
+- [ ] Status seen corner of poster in lists should be smaller, like in search and if possible even overflow a bit out of the poster
