@@ -127,11 +127,16 @@ class MediaRepositoryImpl implements MediaRepository {
   @override
   Future<List<MediaItem>> searchMedia(String query, {int page = 1}) async {
     await _ensureInitialized();
-    final results = await remoteDataSource.searchMedia(query, page: page);
-    for (final item in results) {
-      await cache.cacheItem(item);
+    try {
+      final results = await remoteDataSource.searchMedia(query, page: page);
+      for (final item in results) {
+        await cache.cacheItem(item);
+      }
+      return results;
+    } catch (e) {
+      debugPrint('[Repo] searchMedia error: $e');
+      return [];
     }
-    return results;
   }
 
   @override

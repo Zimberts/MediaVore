@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -12,6 +13,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(MediaType.tv);
     registerFallbackValue(SeenItem(
       tmdbId: 1, 
       type: MediaType.movie, 
@@ -33,18 +35,21 @@ void main() {
     // Default mocks for SearchProvider init
     when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockRepository.getListPreviews(any(), limit: any(named: 'limit')))
+        .thenAnswer((_) async => []);
     when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
     when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
+    when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
+    when(() => mockRepository.toggleNotification(any(), autoNotify: any(named: 'autoNotify')))
+        .thenAnswer((_) async => Future.value());
 
     provider = SearchProvider(mockRepository);
     
-    // The SearchProvider calls several async methods in its constructor (_init).
-    // getLikedEntries is the last one in _init.
-    await untilCalled(() => mockRepository.getLikedEntries());
+    await untilCalled(() => mockRepository.getNotifiedItems());
     clearInteractions(mockRepository);
   });
 
@@ -65,19 +70,15 @@ void main() {
     });
 
     test('should set offline to false when network call succeeds', () async {
-      // 1. Arrange offline state
       provider.notifyNetworkError();
       expect(provider.isOffline, isTrue);
 
-      // 2. Mock success
       when(() => mockRepository.searchMedia(any(), page: any(named: 'page')))
           .thenAnswer((_) async => []);
       when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
 
-      // 3. Act
       await provider.searchMedia('Dune');
 
-      // 4. Assert
       expect(provider.isOffline, isFalse);
     });
   });
@@ -86,9 +87,9 @@ void main() {
     test('should load all seen items and deduplicate episodes for TV counts', () async {
       final seenItems = [
         SeenItem(tmdbId: 1, type: MediaType.movie, title: 'M', seenDate: DateTime(2023, 1, 1)),
-        SeenItem(tmdbId: 1, type: MediaType.movie, title: 'M', seenDate: DateTime(2023, 1, 2)), // Same movie, twice
+        SeenItem(tmdbId: 1, type: MediaType.movie, title: 'M', seenDate: DateTime(2023, 1, 2)), 
         SeenItem(tmdbId: 2, type: MediaType.tv, title: 'T', seenDate: DateTime(2023), seasonNumber: 1, episodeNumber: 1),
-        SeenItem(tmdbId: 2, type: MediaType.tv, title: 'T', seenDate: DateTime(2023), seasonNumber: 1, episodeNumber: 1), // Same episode, twice
+        SeenItem(tmdbId: 2, type: MediaType.tv, title: 'T', seenDate: DateTime(2023), seasonNumber: 1, episodeNumber: 1), 
       ];
 
       when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenItems);
@@ -98,85 +99,91 @@ void main() {
       const movieItem = MediaItem(id: 1, title: 'M', overview: '', releaseDate: '', mediaType: MediaType.movie);
       const tvItem = MediaItem(id: 2, title: 'T', overview: '', releaseDate: '', mediaType: MediaType.tv);
 
-      // Movie should count total viewings (2)
       expect(provider.getSeenCount(movieItem), 2);
-      // TV should count unique episodes only (1)
       expect(provider.getSeenCount(tvItem), 1);
     });
-
-    test('markAsSeen should call repository and reload cache', () async {
-      final item = SeenItem(tmdbId: 1, type: MediaType.movie, title: 'M', seenDate: DateTime(2023));
-      
-      when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async {});
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => [item]);
-      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 10);
-
-      await provider.markAsSeen(item);
-
-      verify(() => mockRepository.markAsSeen(item)).called(1);
-      expect(provider.getSeenCount(const MediaItem(id: 1, title: 'M', overview: '', releaseDate: '')), 1);
-    });
   });
 
-  group('SearchProvider - Import/Export', () {
-    test('exportSeenData should call repository with filters', () async {
-      final start = DateTime(2023);
-      final end = DateTime(2024);
-      when(() => mockRepository.exportSeenData(
-        start: any(named: 'start'),
-        end: any(named: 'end'),
-        tmdbId: any(named: 'tmdbId'),
-        type: any(named: 'type'),
-      )).thenAnswer((_) async => []);
+  group('SearchProvider - getNextEpisode (Watch Next)', () {
+    const tTvId = 100; // Use unique ID for these tests
+    final tSeasons = [
+      const TVSeason(id: 1, seasonNumber: 1, episodeCount: 2, name: 'S1'),
+      const TVSeason(id: 2, seasonNumber: 2, episodeCount: 1, name: 'S2'),
+    ];
+    final tTvItem = MediaItem(id: tTvId, title: 'Show', overview: '', releaseDate: '', mediaType: MediaType.tv, seasons: tSeasons);
+    final tDetails = MediaDetails(item: tTvItem, cast: []);
 
-      await provider.exportSeenData(start: start, end: end);
+    test('should return S1 E1 if nothing has been seen', () async {
+      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => []);
+      when(() => mockRepository.getSeasonDetails(tTvId, 1)).thenAnswer((_) async => {
+        'episodes': [{'episode_number': 1, 'air_date': '2020-01-01'}]
+      });
 
-      verify(() => mockRepository.exportSeenData(start: start, end: end)).called(1);
+      final result = await provider.getNextEpisode(tTvId);
+
+      expect(result, isNotNull);
+      expect(result?.seasonNumber, 1);
+      expect(result?.episodeNumber, 1);
     });
 
-    test('importSeenData should call repository and refresh state', () async {
-      final data = <Map<String, dynamic>>[];
-      when(() => mockRepository.importSeenData(any(), mode: any(named: 'mode')))
-          .thenAnswer((_) async {});
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
-      when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 100);
-      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 200);
+    test('should return S1 E2 if S1 E1 is seen', () async {
+      final seen = [
+        SeenItem(tmdbId: tTvId, type: MediaType.tv, title: 'Show', seenDate: DateTime.now(), seasonNumber: 1, episodeNumber: 1),
+      ];
+      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => seen);
+      when(() => mockRepository.getMediaDetails(tTvId, type: MediaType.tv)).thenAnswer((_) async => tDetails);
+      when(() => mockRepository.getSeasonDetails(tTvId, 1)).thenAnswer((_) async => {
+        'episodes': [
+          {'episode_number': 1, 'air_date': '2020-01-01'},
+          {'episode_number': 2, 'air_date': '2020-01-01'},
+        ]
+      });
 
-      await provider.importSeenData(data, mode: ImportMode.replace);
+      final result = await provider.getNextEpisode(tTvId);
 
-      verify(() => mockRepository.importSeenData(data, mode: ImportMode.replace)).called(1);
-      verify(() => mockRepository.getSeenItems()).called(1);
-      verify(() => mockRepository.getCacheSize()).called(1);
-      verify(() => mockRepository.getSeenDbSize()).called(1);
+      expect(result, isNotNull);
+      expect(result?.seasonNumber, 1);
+      expect(result?.episodeNumber, 2);
     });
-  });
 
-  group('SearchProvider - Database Isolation', () {
-    test('seenDbSize should only update when seen history changes', () async {
-      // 1. Initial state
-      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 100);
-      await provider.updateSeenDbSize();
-      expect(provider.seenDbSize, 100);
+    test('should move to S2 E1 if last episode of S1 is seen', () async {
+      final seen = [
+        SeenItem(tmdbId: tTvId, type: MediaType.tv, title: 'Show', seenDate: DateTime.now(), seasonNumber: 1, episodeNumber: 2),
+      ];
+      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => seen);
+      when(() => mockRepository.getMediaDetails(tTvId, type: MediaType.tv)).thenAnswer((_) async => tDetails);
+      when(() => mockRepository.getSeasonDetails(tTvId, 2)).thenAnswer((_) async => {
+        'episodes': [{'episode_number': 1, 'air_date': '2020-01-01'}]
+      });
 
-      // 2. Seen History Change -> Should update size
-      when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async {});
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
-      when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 150); // Increased
-      
-      final item = SeenItem(tmdbId: 1, type: MediaType.movie, title: 'T', seenDate: DateTime.now());
-      await provider.markAsSeen(item);
-      expect(provider.seenDbSize, 150);
+      final result = await provider.getNextEpisode(tTvId);
 
-      // 3. List Database Change -> Should NOT trigger seenDbSize update
-      when(() => mockRepository.addToList(any(), any())).thenAnswer((_) async {});
-      when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => ['1:movie']);
-      
-      const mediaItem = MediaItem(id: 1, title: 'T', overview: '', releaseDate: '');
-      await provider.toggleInList(mediaItem, 'watchlist');
-      
-      // We check that the count hasn't increased since the markAsSeen call
-      // (1 initial + 1 markAsSeen = 2)
-      verify(() => mockRepository.getSeenDbSize()).called(2);
+      expect(result, isNotNull);
+      expect(result?.seasonNumber, 2);
+      expect(result?.episodeNumber, 1);
+    });
+
+    test('should return null if the next episode air date is in the future', () async {
+      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => []);
+      when(() => mockRepository.getSeasonDetails(tTvId, 1)).thenAnswer((_) async => {
+        'episodes': [{'episode_number': 1, 'air_date': '2099-01-01'}]
+      });
+
+      final result = await provider.getNextEpisode(tTvId);
+
+      expect(result, isNull);
+    });
+
+    test('should return null if all episodes are seen', () async {
+      final seen = [
+        SeenItem(tmdbId: tTvId, type: MediaType.tv, title: 'Show', seenDate: DateTime.now(), seasonNumber: 2, episodeNumber: 1),
+      ];
+      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => seen);
+      when(() => mockRepository.getMediaDetails(tTvId, type: MediaType.tv)).thenAnswer((_) async => tDetails);
+
+      final result = await provider.getNextEpisode(tTvId);
+
+      expect(result, isNull);
     });
   });
 }

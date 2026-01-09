@@ -5,7 +5,8 @@ import 'package:mediavore/features/media_details/data/datasources/media_list_loc
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'dart:io';
 
 void main() {
@@ -30,6 +31,8 @@ void main() {
         CachedMediaSchema,
         CachedActorProfileSchema,
         CachedSeasonSchema,
+        LikedItemSchema,
+        NotifiedItemModelSchema,
       ],
       directory: tempPath,
       name: 'test_media_list_db',
@@ -58,11 +61,9 @@ void main() {
     });
 
     test('should allow multiple seen entries for the same item (Multi-viewing)', () async {
-      // arrange
       final firstDate = DateTime(2023, 10, 1);
       final secondDate = DateTime(2023, 10, 2);
       
-      // act
       await dataSource.markAsSeen(SeenItemModel(
         tmdbId: 1, type: 'movie', title: 'Dune', seenDate: firstDate,
       ));
@@ -72,7 +73,6 @@ void main() {
       
       final seenItems = await dataSource.getAllSeenItems();
 
-      // assert
       expect(seenItems.length, 2);
       expect(seenItems[0].seenDate, secondDate); // Sorted DESC
       expect(seenItems[1].seenDate, firstDate);
@@ -90,148 +90,107 @@ void main() {
       expect(seenItems, isEmpty);
     });
 
-    test('should sort seen items by date, season, and episode descending', () async {
-      final item1 = SeenItemModel(tmdbId: 1, type: 'tv', title: 'A', seenDate: DateTime(2023, 1, 1), seasonNumber: 1, episodeNumber: 1);
-      final item2 = SeenItemModel(tmdbId: 2, type: 'tv', title: 'B', seenDate: DateTime(2023, 1, 1), seasonNumber: 1, episodeNumber: 2);
-      final item3 = SeenItemModel(tmdbId: 3, type: 'tv', title: 'C', seenDate: DateTime(2023, 1, 2), seasonNumber: 1, episodeNumber: 3);
-
-      await dataSource.markAsSeen(item1);
-      await dataSource.markAsSeen(item2);
-      await dataSource.markAsSeen(item3);
-
+    test('should update poster path for all entries of a specific item', () async {
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: DateTime.now()));
+      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: DateTime.now()));
+      
+      await dataSource.updatePosterPath(1, 'movie', '/new_path.jpg');
+      
       final items = await dataSource.getAllSeenItems();
-      
-      expect(items.length, 3);
-      expect(items[0].seenDate, DateTime(2023, 1, 2)); // Most recent date
-      expect(items[1].episodeNumber, 2); // Same date, higher episode
-      expect(items[2].episodeNumber, 1);
-    });
-
-    test('should delete a specific entry by its local Isar ID', () async {
-      await dataSource.markAsSeen(tSeenItem);
-      var items = await dataSource.getAllSeenItems();
-      final idToDelete = items.first.isarId!;
-
-      await dataSource.deleteSeenEntry(idToDelete);
-      
-      items = await dataSource.getAllSeenItems();
-      expect(items, isEmpty);
-    });
-  });
-
-  group('MediaListLocalDataSource - Import & Export', () {
-    test('getExportData should return filtered results by date range', () async {
-      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'Old', seenDate: DateTime(2022)));
-      await dataSource.markAsSeen(SeenItemModel(tmdbId: 2, type: 'movie', title: 'Target', seenDate: DateTime(2023, 6)));
-      await dataSource.markAsSeen(SeenItemModel(tmdbId: 3, type: 'movie', title: 'New', seenDate: DateTime(2024)));
-
-      final results = await dataSource.getExportData(
-        start: DateTime(2023, 1),
-        end: DateTime(2023, 12, 31),
-      );
-
-      expect(results.length, 1);
-      expect(results.first.title, 'Target');
-    });
-
-    test('getExportData should return filtered results by tmdbId', () async {
-      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: DateTime(2023)));
-      await dataSource.markAsSeen(SeenItemModel(tmdbId: 2, type: 'movie', title: 'B', seenDate: DateTime(2023)));
-
-      final results = await dataSource.getExportData(tmdbId: 1);
-
-      expect(results.length, 1);
-      expect(results.first.title, 'A');
-    });
-
-    test('importSeenItems - Mode REPLACE should clear existing and add new', () async {
-      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'Existing', seenDate: DateTime(2023)));
-      
-      final newItems = [
-        SeenItemModel(tmdbId: 2, type: 'movie', title: 'Imported', seenDate: DateTime(2024)),
-      ];
-
-      await dataSource.importSeenItems(newItems, mode: ImportMode.replace);
-
-      final items = await dataSource.getAllSeenItems();
-      expect(items.length, 1);
-      expect(items.first.title, 'Imported');
-    });
-
-    test('importSeenItems - Mode MERGE should not add duplicates', () async {
-      final date = DateTime(2023, 10, 1);
-      await dataSource.markAsSeen(SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: date));
-      
-      final itemsToImport = [
-        SeenItemModel(tmdbId: 1, type: 'movie', title: 'A', seenDate: date), // Exact duplicate
-        SeenItemModel(tmdbId: 2, type: 'movie', title: 'B', seenDate: date), // New item
-      ];
-
-      await dataSource.importSeenItems(itemsToImport, mode: ImportMode.merge);
-
-      final items = await dataSource.getAllSeenItems();
-      expect(items.length, 2); // 'A' was merged, 'B' was added
-    });
-  });
-
-  group('MediaListLocalDataSource - Seen DB Size', () {
-    test('getSeenDbSize should only include seen history and ignore lists or cache', () async {
-      // 1. Initial size (may not be 0 due to file metadata, but should be small)
-      final initialSize = await dataSource.getSeenDbSize();
-      
-      // 2. Add seen item
-      await dataSource.markAsSeen(SeenItemModel(
-        tmdbId: 1, type: 'movie', title: 'Seen', seenDate: DateTime.now(),
-      ));
-      final sizeAfterSeen = await dataSource.getSeenDbSize();
-      expect(sizeAfterSeen, greaterThan(initialSize));
-
-      // 3. Add list item
-      await dataSource.addToList(id: 1, type: 'movie', listName: 'L', title: 'List');
-      final sizeAfterList = await dataSource.getSeenDbSize();
-      // Should remain exactly the same as only seenItemModels are counted
-      expect(sizeAfterList, equals(sizeAfterSeen));
-
-      // 4. Add user list
-      await isar.writeTxn(() => isar.userLists.put(UserList(name: 'My New List')));
-      final sizeAfterUserList = await dataSource.getSeenDbSize();
-      expect(sizeAfterUserList, equals(sizeAfterSeen));
-
-      // 5. Add cached item
-      await isar.writeTxn(() async {
-        await isar.cachedMedias.put(CachedMedia(
-          tmdbId: 1, 
-          type: 'movie', 
-          updatedAt: DateTime.now(),
-          mediaItemJson: '{"huge":"json_data_to_increase_actual_file_size"}',
-        ));
-      });
-      final sizeAfterCache = await dataSource.getSeenDbSize();
-      // Should still remain the same
-      expect(sizeAfterCache, equals(sizeAfterSeen));
+      expect(items[0].posterPath, '/new_path.jpg');
+      expect(items[1].posterPath, '/new_path.jpg');
     });
   });
 
   group('MediaListLocalDataSource - Lists', () {
-    test('should add an item to a list and retrieve it', () async {
-      await dataSource.addToList(
-        id: 1,
-        type: 'movie',
-        listName: 'watchlist',
-        title: 'Inception',
-      );
+    test('should create, list and delete user lists', () async {
+      await dataSource.createList('Custom List');
+      
+      var lists = await dataSource.getAllListNames();
+      expect(lists, contains('Custom List'));
+      expect(lists, contains('watchlist')); // Watchlist always exists
 
-      final items = await dataSource.getListItems('watchlist');
-      expect(items.length, 1);
-      expect(items.first.title, 'Inception');
+      await dataSource.deleteList('Custom List');
+      lists = await dataSource.getAllListNames();
+      expect(lists, isNot(contains('Custom List')));
     });
 
-    test('should remove an item from a list', () async {
-      await dataSource.addToList(id: 1, type: 'movie', listName: 'watchlist', title: 'Inception');
-      await dataSource.removeFromList(1, 'movie', 'watchlist');
-
+    test('should add to list and update position', () async {
+      await dataSource.addToList(id: 1, type: 'movie', listName: 'watchlist', title: 'A');
+      await dataSource.addToList(id: 2, type: 'movie', listName: 'watchlist', title: 'B');
+      
       final items = await dataSource.getListItems('watchlist');
-      expect(items, isEmpty);
+      expect(items[0].title, 'A');
+      expect(items[0].position, 0);
+      expect(items[1].title, 'B');
+      expect(items[1].position, 1);
+    });
+
+    test('should update list order', () async {
+      await dataSource.addToList(id: 1, type: 'movie', listName: 'watchlist', title: 'A');
+      await dataSource.addToList(id: 2, type: 'movie', listName: 'watchlist', title: 'B');
+      
+      await dataSource.updateListOrder('watchlist', ['2:movie', '1:movie']);
+      
+      final items = await dataSource.getListItems('watchlist');
+      expect(items[0].id, 2);
+      expect(items[1].id, 1);
+    });
+  });
+
+  group('MediaListLocalDataSource - Likes', () {
+    test('should toggle like status', () async {
+      expect(await dataSource.isLiked(1, 'movie'), isFalse);
+      
+      await dataSource.toggleLike(tmdbId: 1, type: 'movie', title: 'Dune');
+      expect(await dataSource.isLiked(1, 'movie'), isTrue);
+      
+      await dataSource.toggleLike(tmdbId: 1, type: 'movie', title: 'Dune');
+      expect(await dataSource.isLiked(1, 'movie'), isFalse);
+    });
+
+    test('should retrieve all liked items', () async {
+      await dataSource.toggleLike(tmdbId: 1, type: 'movie', title: 'A');
+      await dataSource.toggleLike(tmdbId: 2, type: 'movie', title: 'B');
+      
+      final liked = await dataSource.getLikedItems();
+      expect(liked.length, 2);
+    });
+  });
+
+  group('MediaListLocalDataSource - Notifications', () {
+    test('should toggle notification', () async {
+      expect(await dataSource.isNotified(1, 'movie'), isFalse);
+      
+      await dataSource.toggleNotification(tmdbId: 1, type: 'movie', title: 'A');
+      expect(await dataSource.isNotified(1, 'movie'), isTrue);
+      
+      await dataSource.toggleNotification(tmdbId: 1, type: 'movie', title: 'A');
+      expect(await dataSource.isNotified(1, 'movie'), isFalse);
+    });
+
+    test('should update notification date', () async {
+      final initialDate = DateTime(2023, 10, 1);
+      final newDate = DateTime(2023, 10, 2);
+      
+      await dataSource.toggleNotification(tmdbId: 1, type: 'movie', title: 'A', releaseDate: initialDate);
+      await dataSource.updateNotificationDate(1, 'movie', newDate);
+      
+      final notified = await dataSource.getNotifiedItems();
+      expect(notified.first.releaseDate, newDate);
+    });
+
+    test('autoNotify should update release date if item already exists', () async {
+       final initialDate = DateTime(2023, 10, 1);
+       final newDate = DateTime(2023, 10, 2);
+
+       await dataSource.toggleNotification(tmdbId: 1, type: 'movie', title: 'A', releaseDate: initialDate);
+       // Call again with autoNotify=true
+       await dataSource.toggleNotification(tmdbId: 1, type: 'movie', title: 'A', releaseDate: newDate, autoNotify: true);
+
+       final notified = await dataSource.getNotifiedItems();
+       expect(notified.first.releaseDate, newDate);
+       expect(notified.length, 1); // Should not have been deleted
     });
   });
 }

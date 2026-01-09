@@ -3,16 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockMediaRepository mockMediaRepository;
+  late MockSharedPreferences mockSharedPreferences;
   late SearchProvider searchProvider;
+  late SettingsProvider settingsProvider;
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
@@ -20,17 +24,31 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
+    mockSharedPreferences = MockSharedPreferences();
     
+    // Default mocks for SharedPreferences (used by SettingsProvider)
+    when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
+    when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
+    when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
+
     // Default mocks for SearchProvider init
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
+        .thenAnswer((_) async => []);
     when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
+    settingsProvider = SettingsProvider(mockSharedPreferences);
+    
+    if (locator.isRegistered<MediaRepository>()) {
+      locator.unregister<MediaRepository>();
+    }
     locator.registerSingleton<MediaRepository>(mockMediaRepository);
     
     when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
@@ -41,10 +59,14 @@ void main() {
   });
 
   Widget createWidgetUnderTest() {
-    return ChangeNotifierProvider<SearchProvider>.value(
-      value: searchProvider,
-      child: const MaterialApp(
-        home: SeenHistoryPage(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+      ],
+      child: MaterialApp(
+        theme: DefaultLightPalette().toThemeData(),
+        home: const SeenHistoryPage(),
       ),
     );
   }

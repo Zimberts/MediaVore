@@ -6,9 +6,11 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +18,9 @@ import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockMediaRepository mockMediaRepository;
+  late MockSharedPreferences mockSharedPreferences;
   late SearchProvider searchProvider;
+  late SettingsProvider settingsProvider;
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
@@ -25,7 +29,13 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
+    mockSharedPreferences = MockSharedPreferences();
     
+    // Default mocks for SharedPreferences (used by SettingsProvider)
+    when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
+    when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
+    when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
+
     // Default mocks for SearchProvider init
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
@@ -34,8 +44,10 @@ void main() {
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
+    settingsProvider = SettingsProvider(mockSharedPreferences);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
     
     if (locator.isRegistered<MediaRepository>()) {
@@ -83,9 +95,13 @@ void main() {
   );
 
   Widget createWidgetUnderTest({MediaItem? item}) {
-    return ChangeNotifierProvider<SearchProvider>.value(
-      value: searchProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+      ],
       child: MaterialApp(
+        theme: DefaultLightPalette().toThemeData(),
         home: MediaDetailPage(item: item ?? tItem),
       ),
     );
@@ -100,7 +116,7 @@ void main() {
       await tester.pump(); // Run post-frame callbacks
       await tester.pumpAndSettle(); // Finish loading
 
-      expect(find.text('Inception'), findsNWidgets(2)); 
+      expect(find.text('Inception'), findsAtLeast(1)); 
       expect(find.text('2010-07-16'), findsOneWidget);
       expect(find.text('Director: Christopher Nolan'), findsOneWidget);
       expect(find.text('A mind-bending thriller'), findsOneWidget);

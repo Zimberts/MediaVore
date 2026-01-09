@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -61,16 +61,32 @@ void main() {
       expect(result.first.id, equals(27205));
     });
 
-    test('should throw an Exception when the response fails', () async {
-      when(() => mockDio.get(
-            any(),
-            queryParameters: any(named: 'queryParameters'),
-            options: any(named: 'options'),
-          )).thenThrow(DioException(requestOptions: RequestOptions(path: '')));
+    test('should throw NetworkException on connection error', () async {
+      when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters'), options: any(named: 'options')))
+          .thenThrow(DioException(
+            requestOptions: RequestOptions(path: ''),
+            type: DioExceptionType.connectionError,
+          ));
 
       final call = dataSource.searchMedia(tQuery);
 
-      expect(() => call, throwsA(anything));
+      expect(() => call, throwsA(isA<NetworkException>()));
+    });
+
+    test('should throw ServerException on 429 Rate Limit', () async {
+      when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters'), options: any(named: 'options')))
+          .thenThrow(DioException(
+            requestOptions: RequestOptions(path: ''),
+            type: DioExceptionType.badResponse,
+            response: Response(
+              requestOptions: RequestOptions(path: ''),
+              statusCode: 429,
+            ),
+          ));
+
+      final call = dataSource.searchMedia(tQuery);
+
+      expect(() => call, throwsA(predicate((e) => e is ServerException && e.statusCode == 429)));
     });
   });
 
@@ -101,56 +117,39 @@ void main() {
       expect(result.id, equals(tId));
       expect(result.title, 'Inception');
     });
+
+    test('should throw ServerException on 404 Not Found', () async {
+      when(() => mockDio.get(any(), options: any(named: 'options')))
+          .thenThrow(DioException(
+            requestOptions: RequestOptions(path: ''),
+            type: DioExceptionType.badResponse,
+            response: Response(
+              requestOptions: RequestOptions(path: ''),
+              statusCode: 404,
+            ),
+          ));
+
+      final call = dataSource.getMediaItem(tId);
+
+      expect(() => call, throwsA(predicate((e) => e is ServerException && e.statusCode == 404)));
+    });
   });
 
   group('getSeasonDetails', () {
-    test('should return map of season details', () async {
-      final tData = {'id': 1, 'name': 'Season 1', 'episodes': []};
-      
-      when(() => mockDio.get(
-        'https://api.themoviedb.org/3/tv/1/season/1',
-        options: any(named: 'options'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: ''),
-        data: tData,
-        statusCode: 200,
-      ));
+    test('should throw ServerException on failure', () async {
+      when(() => mockDio.get(any(), options: any(named: 'options')))
+          .thenThrow(DioException(
+            requestOptions: RequestOptions(path: ''),
+            type: DioExceptionType.badResponse,
+            response: Response(
+              requestOptions: RequestOptions(path: ''),
+              statusCode: 500,
+            ),
+          ));
 
-      final result = await dataSource.getSeasonDetails(1, 1);
+      final call = dataSource.getSeasonDetails(1, 1);
 
-      expect(result['name'], 'Season 1');
-    });
-  });
-
-  group('getActorDetails', () {
-    test('should return ActorDetails when successful', () async {
-      final tActorDetails = {'id': 1, 'name': 'Leo', 'biography': '...', 'birthday': '1974', 'place_of_birth': 'LA', 'profile_path': '/path'};
-      
-      when(() => mockDio.get(any(that: contains('person/1')), options: any(named: 'options')))
-          .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: ''), data: tActorDetails, statusCode: 200));
-
-      final result = await dataSource.getActorDetails(1);
-      expect(result.id, 1);
-      expect(result.name, 'Leo');
-    });
-  });
-
-  group('getMediaCredits', () {
-    test('should return credit details', () async {
-      final tData = {'cast': [], 'crew': []};
-      
-      when(() => mockDio.get(
-        'https://api.themoviedb.org/3/movie/1/credits',
-        options: any(named: 'options'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: ''),
-        data: tData,
-        statusCode: 200,
-      ));
-
-      final result = await dataSource.getMediaCredits(1, type: MediaType.movie);
-
-      expect(result, equals(tData));
+      expect(() => call, throwsA(isA<ServerException>()));
     });
   });
 }

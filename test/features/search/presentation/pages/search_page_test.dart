@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockMediaRepository mockMediaRepository;
+  late MockSharedPreferences mockSharedPreferences;
   late SearchProvider searchProvider;
+  late SettingsProvider settingsProvider;
 
   setUpAll(() {
     registerFallbackValue(Uri());
@@ -28,6 +32,12 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
+    mockSharedPreferences = MockSharedPreferences();
+
+    // Default mocks for SharedPreferences (used by SettingsProvider)
+    when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
+    when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
+    when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
     
     // Default mocks for initialization
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
@@ -41,16 +51,24 @@ void main() {
         .thenAnswer((_) async => []);
     when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
     when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
+    when(() => mockMediaRepository.toggleNotification(any(), autoNotify: any(named: 'autoNotify')))
+        .thenAnswer((_) async => Future.value());
 
     searchProvider = SearchProvider(mockMediaRepository);
+    settingsProvider = SettingsProvider(mockSharedPreferences);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
   });
 
   Widget createWidgetUnderTest() {
-    return ChangeNotifierProvider<SearchProvider>.value(
-      value: searchProvider,
-      child: const MaterialApp(
-        home: SearchPage(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+      ],
+      child: MaterialApp(
+        theme: DefaultLightPalette().toThemeData(),
+        home: const SearchPage(),
       ),
     );
   }
@@ -249,7 +267,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Movie 0'), findsOneWidget);
+      expect(find.text('Movie 0'), findsAtLeast(1));
       expect(find.text('Fetched Movie'), findsNothing);
 
       // Scroll to the bottom

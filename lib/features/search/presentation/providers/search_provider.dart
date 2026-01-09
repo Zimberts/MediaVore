@@ -27,7 +27,7 @@ class SearchProvider with ChangeNotifier {
   int _currentPage = 1;
   String _currentQuery = '';
   bool _hasMore = true;
-  
+
   List<SeenItem> _seenItems = [];
   Map<String, int> _seenCounts = {}; // "id:type" -> count
   List<String> _watchlistIds = []; // Simplified IDs for quick checks
@@ -92,7 +92,7 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
     await repository.fillCache();
     await updateCacheSize();
-    await _loadAllListEntries(); 
+    await _loadAllListEntries();
     _isCacheLoading = false;
     notifyListeners();
   }
@@ -126,7 +126,7 @@ class SearchProvider with ChangeNotifier {
   Future<void> loadAllSeenStatus() async {
     _seenItems = await repository.getSeenItems();
     final Map<String, int> counts = {};
-    
+
     final Map<String, List<SeenItem>> grouped = {};
     for (final item in _seenItems) {
       final key = '${item.tmdbId}:${item.type.name}';
@@ -180,7 +180,7 @@ class SearchProvider with ChangeNotifier {
   Future<void> toggleInList(MediaItem item, String listName) async {
     final entry = '${item.id}:${item.mediaType.name}';
     final currentEntries = _listEntries[listName] ?? [];
-    
+
     if (currentEntries.contains(entry)) {
       await repository.removeFromList(item.id, item.mediaType, listName);
       _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
@@ -309,7 +309,7 @@ class SearchProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       _isOffline = true;
-      _currentPage--; 
+      _currentPage--;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -337,19 +337,19 @@ class SearchProvider with ChangeNotifier {
   Future<void> markAsSeen(SeenItem item) async {
     await repository.markAsSeen(item);
     await loadAllSeenStatus();
-    await loadNotifiedItems(); 
+    await loadNotifiedItems();
     await updateSeenDbSize();
   }
   Future<void> deleteSeenEntry(int id) async {
     await repository.deleteSeenEntry(id);
     await loadAllSeenStatus();
-    await loadNotifiedItems(); 
+    await loadNotifiedItems();
     await updateSeenDbSize();
   }
   Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
     await repository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
     await loadAllSeenStatus();
-    await loadNotifiedItems(); 
+    await loadNotifiedItems();
     await updateSeenDbSize();
   }
 
@@ -392,58 +392,68 @@ class SearchProvider with ChangeNotifier {
   Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
     await repository.importSeenData(data, mode: mode);
     await loadAllSeenStatus();
-    await loadNotifiedItems(); 
+    await loadNotifiedItems();
     await updateCacheSize();
     await updateSeenDbSize();
   }
 
   Future<({int seasonNumber, int episodeNumber})?> getNextEpisode(int tmdbId) async {
-    final seen = await repository.getSeenStatus(tmdbId, MediaType.tv);
-    
-    int nextS = 1;
-    int nextE = 1;
+    try {
+      final seen = await repository.getSeenStatus(tmdbId, MediaType.tv);
 
-    if (seen.isNotEmpty) {
-      final episodeSeen = seen.where((s) => s.seasonNumber != null && s.episodeNumber != null).toList();
-      if (episodeSeen.isNotEmpty) {
-        episodeSeen.sort((a, b) {
-          final seasonCompare = b.seasonNumber!.compareTo(a.seasonNumber!);
-          if (seasonCompare != 0) return seasonCompare;
-          return b.episodeNumber!.compareTo(a.episodeNumber!);
-        });
+      int nextS = 1;
+      int nextE = 1;
 
-        final latest = episodeSeen.first;
-        final details = await repository.getMediaDetails(tmdbId, type: MediaType.tv);
-        
-        final currentSeason = details.item.seasons?.firstWhere(
-          (s) => s.seasonNumber == latest.seasonNumber,
-          orElse: () => details.item.seasons!.firstWhere((s) => s.seasonNumber == latest.seasonNumber), 
-        );
-        
-        if (currentSeason != null && latest.episodeNumber! < currentSeason.episodeCount) {
-          nextS = latest.seasonNumber!;
-          nextE = latest.episodeNumber! + 1;
-        } else {
-          final nextSeason = details.item.seasons?.firstWhere(
-            (s) => s.seasonNumber == latest.seasonNumber! + 1,
-            orElse: () => details.item.seasons!.firstWhere((s) => s.seasonNumber == -1, orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0)), 
+      if (seen.isNotEmpty) {
+        final episodeSeen = seen.where((s) => s.seasonNumber != null && s.episodeNumber != null).toList();
+        if (episodeSeen.isNotEmpty) {
+          episodeSeen.sort((a, b) {
+            final seasonCompare = b.seasonNumber!.compareTo(a.seasonNumber!);
+            if (seasonCompare != 0) return seasonCompare;
+            return b.episodeNumber!.compareTo(a.episodeNumber!);
+          });
+
+          final latest = episodeSeen.first;
+          final details = await repository.getMediaDetails(tmdbId, type: MediaType.tv);
+
+          final seasons = details.item.seasons;
+          if (seasons == null || seasons.isEmpty) return null;
+
+          final currentSeason = seasons.firstWhere(
+            (s) => s.seasonNumber == latest.seasonNumber,
+            orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
           );
-          
-          if (nextSeason != null && nextSeason.seasonNumber > latest.seasonNumber!) {
-             nextS = nextSeason.seasonNumber;
-             nextE = 1;
+
+          if (currentSeason.seasonNumber != -1 && latest.episodeNumber! < currentSeason.episodeCount) {
+            nextS = latest.seasonNumber!;
+            nextE = latest.episodeNumber! + 1;
           } else {
-            return null; 
+            final nextSeason = seasons.firstWhere(
+              (s) => s.seasonNumber == latest.seasonNumber! + 1,
+              orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
+            );
+
+            if (nextSeason.seasonNumber != -1) {
+               nextS = nextSeason.seasonNumber;
+               nextE = 1;
+            } else {
+              return null;
+            }
           }
         }
       }
-    }
 
-    try {
       final seasonDetails = await repository.getSeasonDetails(tmdbId, nextS);
-      final episodes = seasonDetails['episodes'] as List;
-      final epData = episodes.firstWhere((e) => e['episode_number'] == nextE, orElse: () => null);
-      
+      final episodes = seasonDetails['episodes'] as List?;
+      if (episodes == null) return null;
+
+      dynamic epData;
+      try {
+        epData = episodes.firstWhere((e) => e['episode_number'] == nextE);
+      } catch (_) {
+        epData = null;
+      }
+
       if (epData != null) {
         final airDateStr = epData['air_date'] as String?;
         if (airDateStr != null) {
@@ -452,7 +462,7 @@ class SearchProvider with ChangeNotifier {
             final now = DateTime.now();
             final today = DateTime(now.year, now.month, now.day);
             if (airDate.isAfter(today)) {
-              return null; 
+              return null;
             }
           } else {
             return null;
@@ -463,11 +473,11 @@ class SearchProvider with ChangeNotifier {
       } else {
         return null;
       }
+
+      return (seasonNumber: nextS, episodeNumber: nextE);
     } catch (_) {
       return null;
     }
-
-    return (seasonNumber: nextS, episodeNumber: nextE);
   }
 
   Future<void> refreshNotifiedItems() async {
