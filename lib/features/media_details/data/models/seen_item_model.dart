@@ -20,6 +20,10 @@ class SeenItemModel {
 
   final int? episodeNumber;
 
+  final int? runtime; // in minutes
+
+  final List<String>? genres;
+
   SeenItemModel({
     required this.tmdbId,
     required this.type,
@@ -28,5 +32,7 @@ class SeenItemModel {
     required this.seenDate,
     this.seasonNumber,
     this.episodeNumber,
+    this.runtime,
+    this.genres,
   });
 }

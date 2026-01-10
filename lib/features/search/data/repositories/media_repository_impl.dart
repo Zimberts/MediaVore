@@ -452,6 +452,30 @@ class MediaRepositoryImpl implements MediaRepository {
   @override
   Future<void> markAsSeen(SeenItem item) async {
     await _ensureInitialized();
+    
+    int? runtime = item.runtime;
+    List<String>? genres = item.genres;
+    
+    if (runtime == null || genres == null) {
+      try {
+        final details = await getMediaDetails(item.tmdbId, type: item.type);
+        genres ??= details.item.genres;
+        if (item.type == MediaType.movie) {
+          runtime = details.item.runtime;
+        } else if (item.seasonNumber != null && item.episodeNumber != null) {
+          final seasonDetails = await getSeasonDetails(item.tmdbId, item.seasonNumber!);
+          final episodes = seasonDetails['episodes'] as List?;
+          final episode = episodes?.firstWhere(
+            (e) => e['episode_number'] == item.episodeNumber,
+            orElse: () => null,
+          );
+          if (episode != null) {
+            runtime = episode['runtime'] as int?;
+          }
+        }
+      } catch (_) {}
+    }
+
     await localDataSource.markAsSeen(SeenItemModel(
       tmdbId: item.tmdbId,
       type: item.type.name,
@@ -460,6 +484,8 @@ class MediaRepositoryImpl implements MediaRepository {
       seenDate: item.seenDate,
       seasonNumber: item.seasonNumber,
       episodeNumber: item.episodeNumber,
+      runtime: runtime,
+      genres: genres,
     ));
 
     // If it's a movie, remove it from watchlist (not other lists as per requirement)
@@ -533,6 +559,8 @@ class MediaRepositoryImpl implements MediaRepository {
         seenDate: m.seenDate,
         seasonNumber: m.seasonNumber,
         episodeNumber: m.episodeNumber,
+        runtime: m.runtime,
+        genres: m.genres,
       ));
     }
     return results;
@@ -563,6 +591,8 @@ class MediaRepositoryImpl implements MediaRepository {
         seenDate: m.seenDate,
         seasonNumber: m.seasonNumber,
         episodeNumber: m.episodeNumber,
+        runtime: m.runtime,
+        genres: m.genres,
       ));
     }
     return results;
@@ -635,22 +665,73 @@ class MediaRepositoryImpl implements MediaRepository {
       'seenDate': item.seenDate.toIso8601String(),
       'seasonNumber': item.seasonNumber,
       'episodeNumber': item.episodeNumber,
+      'runtime': item.runtime,
+      'genres': item.genres,
     }).toList();
   }
 
   @override
-  Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
+  Future<void> importSeenData(
+    List<Map<String, dynamic>> data, {
+    ImportMode mode = ImportMode.append,
+    Function(double progress, String status)? onProgress,
+  }) async {
     await _ensureInitialized();
 
-    final items = data.map((json) => SeenItemModel(
-      tmdbId: json['tmdbId'] as int,
-      type: json['type'] as String,
-      title: json['title'] as String,
-      posterPath: json['posterPath'] as String?,
-      seenDate: DateTime.parse(json['seenDate'] as String),
-      seasonNumber: json['seasonNumber'] as int?,
-      episodeNumber: json['episodeNumber'] as int?,
-    )).toList();
+    final List<SeenItemModel> items = [];
+    final total = data.length;
+    
+    for (int i = 0; i < total; i++) {
+      final json = data[i];
+      int? runtime = json['runtime'] as int?;
+      List<String>? genres = (json['genres'] as List?)?.cast<String>();
+      final tmdbId = json['tmdbId'] as int;
+      final typeStr = json['type'] as String;
+      final type = typeStr == 'movie' ? MediaType.movie : MediaType.tv;
+      final seasonNumber = json['seasonNumber'] as int?;
+      final episodeNumber = json['episodeNumber'] as int?;
+      final title = json['title'] as String;
+
+      if (onProgress != null) {
+        onProgress(i / total, 'Processing $title...');
+      }
+
+      if (runtime == null || genres == null) {
+        try {
+          final details = await getMediaDetails(tmdbId, type: type);
+          genres ??= details.item.genres;
+          if (type == MediaType.movie) {
+            runtime = details.item.runtime;
+          } else if (seasonNumber != null && episodeNumber != null) {
+            final seasonDetails = await getSeasonDetails(tmdbId, seasonNumber);
+            final episodes = seasonDetails['episodes'] as List?;
+            final episode = episodes?.firstWhere(
+              (e) => e['episode_number'] == episodeNumber,
+              orElse: () => null,
+            );
+            if (episode != null) {
+              runtime = episode['runtime'] as int?;
+            }
+          }
+        } catch (_) {}
+      }
+
+      items.add(SeenItemModel(
+        tmdbId: tmdbId,
+        type: typeStr,
+        title: title,
+        posterPath: json['posterPath'] as String?,
+        seenDate: DateTime.parse(json['seenDate'] as String),
+        seasonNumber: seasonNumber,
+        episodeNumber: episodeNumber,
+        runtime: runtime,
+        genres: genres,
+      ));
+    }
+    
+    if (onProgress != null) {
+      onProgress(1.0, 'Saving entries...');
+    }
     await localDataSource.importSeenItems(items, mode: mode);
   }
 

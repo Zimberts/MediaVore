@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/media_details/presentation/pages/media_stats_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -242,6 +243,15 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const MediaStatsPage()),
+              );
+            },
+            tooltip: 'Statistics',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => provider.loadAllSeenStatus(),

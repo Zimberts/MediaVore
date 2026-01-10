@@ -20,6 +20,7 @@ class DataCacheSettingsPage extends StatelessWidget {
     final provider = context.watch<SearchProvider>();
     final isCacheLoading = provider.isCacheLoading;
     final isDbSizeLoading = provider.isDbSizeLoading;
+    final isImporting = provider.isImporting;
     final colors = context.appColors;
 
     return Scaffold(
@@ -86,6 +87,21 @@ class DataCacheSettingsPage extends StatelessWidget {
                     ),
               ),
               ListTile(
+                leading: const Icon(Icons.update),
+                title: const Text('Refetch Media Runtimes'),
+                subtitle: const Text('Fetch missing runtimes and genres for your history.'),
+                enabled: !isImporting,
+                onTap: () => _confirmAction(
+                  context,
+                  title: 'Refetch Data',
+                  message: 'This will check your seen history and fetch any missing runtimes or genres from TMDb. This might take a while.',
+                  action: () async {
+                    final data = await provider.exportSeenData();
+                    await provider.importSeenData(data, mode: ImportMode.replace);
+                  },
+                ),
+              ),
+              ListTile(
                 leading: const Icon(Icons.upload_file),
                 title: const Text('Export Seen History'),
                 subtitle: const Text('Export your viewing history as JSON.'),
@@ -99,19 +115,28 @@ class DataCacheSettingsPage extends StatelessWidget {
               ),
             ],
           ),
-          if (isCacheLoading || isDbSizeLoading)
+          if (isCacheLoading || isDbSizeLoading || isImporting)
             Container(
               color: colors.placeholder.withValues(alpha: 0.1),
-              child: const Center(
+              child: Center(
                 child: Card(
                   child: Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(24.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Processing...', style: TextStyle(fontWeight: FontWeight.bold)),
+                        CircularProgressIndicator(value: isImporting ? provider.importProgress : null),
+                        const SizedBox(height: 16),
+                        Text(
+                          isImporting ? provider.importStatus : 'Processing...', 
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (isImporting)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text('${(provider.importProgress * 100).toInt()}%'),
+                          ),
                       ],
                     ),
                   ),
@@ -369,7 +394,7 @@ class DataCacheSettingsPage extends StatelessWidget {
     BuildContext context, {
     required String title,
     required String message,
-    required VoidCallback action,
+    required Future<void> Function() action,
   }) {
     showDialog(
       context: context,
@@ -382,9 +407,9 @@ class DataCacheSettingsPage extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              action();
+            onPressed: () async {
               Navigator.pop(dialogContext); 
+              await action();
             },
             child: const Text('Proceed'),
           ),

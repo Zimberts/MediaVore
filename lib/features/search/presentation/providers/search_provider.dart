@@ -29,6 +29,11 @@ class SearchProvider with ChangeNotifier {
   bool _hasMore = true;
   int _selectedTab = 0; // Default to "Discover" (SearchPage)
 
+  // Progress feedback for refetching/importing
+  double _importProgress = 0.0;
+  String _importStatus = '';
+  bool _isImporting = false;
+
   // Filter states
   List<int>? _genreIds;
   int? _releaseYear;
@@ -60,6 +65,10 @@ class SearchProvider with ChangeNotifier {
   List<String> get likedIds => _likedIds;
   List<NotifiedItem> get notifiedItems => _notifiedItems;
   int get selectedTab => _selectedTab;
+
+  double get importProgress => _importProgress;
+  String get importStatus => _importStatus;
+  bool get isImporting => _isImporting;
 
   // Filter getters
   List<int>? get genreIds => _genreIds;
@@ -523,11 +532,35 @@ class SearchProvider with ChangeNotifier {
   }
 
   Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
-    await repository.importSeenData(data, mode: mode);
-    await loadAllSeenStatus();
-    await loadNotifiedItems();
-    await updateCacheSize();
-    await updateSeenDbSize();
+    _isImporting = true;
+    _importProgress = 0.0;
+    _importStatus = 'Starting import...';
+    notifyListeners();
+
+    try {
+      await repository.importSeenData(
+        data, 
+        mode: mode,
+        onProgress: (progress, status) {
+          _importProgress = progress;
+          _importStatus = status;
+          notifyListeners();
+        },
+      );
+      
+      _importProgress = 1.0;
+      _importStatus = 'Done!';
+    } catch (e) {
+      _importStatus = 'Error: $e';
+    } finally {
+      await loadAllSeenStatus();
+      await loadNotifiedItems();
+      await updateCacheSize();
+      await updateSeenDbSize();
+      
+      _isImporting = false;
+      notifyListeners();
+    }
   }
 
   Future<({int seasonNumber, int episodeNumber})?> getNextEpisode(int tmdbId) async {

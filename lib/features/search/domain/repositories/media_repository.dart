@@ -114,7 +114,11 @@ abstract class MediaRepository {
   });
 
   /// Imports seen data.
-  Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append});
+  Future<void> importSeenData(
+    List<Map<String, dynamic>> data, {
+    ImportMode mode = ImportMode.append,
+    Function(double progress, String status)? onProgress,
+  });
 
   /// Likes a media item.
   Future<void> toggleLike(MediaItem item);
