@@ -30,6 +30,8 @@ dependencies:
   mobile_scanner: ^5.1.1
   reorderable_grid_view: ^2.2.8
   fl_chart: ^0.70.0
+  scrollable_positioned_list: ^0.3.8
+  rxdart: ^0.27.7
 
 dev_dependencies:
   flutter_test:

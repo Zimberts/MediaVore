@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -112,6 +113,20 @@ class SettingsPage extends StatelessWidget {
                 }).toList(),
               ),
             ),
+          ),
+          const Divider(),
+          const _SectionHeader(title: 'Gaming & Milestones'),
+          ListTile(
+            leading: const Icon(Icons.emoji_events_outlined),
+            title: const Text('Achievements'),
+            subtitle: const Text('View your collection of badges and progress.'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AchievementsPage()),
+              );
+            },
           ),
           const Divider(),
           const _SectionHeader(title: 'Lists Display'),

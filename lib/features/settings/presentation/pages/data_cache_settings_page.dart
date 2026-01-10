@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +19,7 @@ class DataCacheSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
+    final achievementProvider = context.watch<AchievementProvider>();
     final isCacheLoading = provider.isCacheLoading;
     final isDbSizeLoading = provider.isDbSizeLoading;
     final isImporting = provider.isImporting;
@@ -113,6 +115,27 @@ class DataCacheSettingsPage extends StatelessWidget {
                 subtitle: const Text('Import viewing history from a JSON file.'),
                 onTap: () => _importSeenData(context, provider),
               ),
+              const Divider(),
+              const _SectionHeader(title: 'Achievement Data'),
+              ListTile(
+                leading: Icon(Icons.stars_outlined, color: colors.error),
+                title: Text('Clear Achievement Database', style: TextStyle(color: colors.error)),
+                subtitle: const Text('Remove all persisted achievement milestones.'),
+                onTap: () => _confirmAction(
+                  context,
+                  title: 'Clear Achievements?',
+                  message: 'This will remove all persisted achievement dates from the database. '
+                           'Achievements calculated from your watch history will reappear automatically.',
+                  action: () async {
+                    await achievementProvider.clearAchievements();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Achievement database cleared.')),
+                      );
+                    }
+                  },
+                ),
+              ),
             ],
           ),
           if (isCacheLoading || isDbSizeLoading || isImporting)
@@ -202,12 +225,12 @@ class DataCacheSettingsPage extends StatelessWidget {
     try {
       final data = await provider.exportSeenData(start: start, end: end);
       
+      if (!context.mounted) return;
+
       if (data.isEmpty) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No history found for the selected criteria.')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No history found for the selected criteria.')),
+        );
         return;
       }
 
@@ -296,9 +319,13 @@ class DataCacheSettingsPage extends StatelessWidget {
       initialDirectory: Platform.isAndroid ? _defaultPath : null,
     );
 
+    if (!context.mounted) return;
+
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
       final content = await file.readAsString();
+      
+      if (!context.mounted) return;
       final colors = context.appColors;
       
       try {

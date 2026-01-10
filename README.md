@@ -76,6 +76,10 @@ Additional features:
 - [ ] (might add possibility to enter the time it took to read the book)
 - [ ] Add a book by scanning its barcode
 
+## Achievements
+
+MediaVore includes a gamified achievement system to track your viewing habits and milestones. Check out the [Achievements documentation](ACHIEVEMENTS.md) for a full list of available badges.
+
 ## Project Setup on a New Machine
 
 If you have cloned this project on a new machine, you may encounter errors when trying to run it for the first time. This is often due to missing dependencies or stale auto-generated files that are specific to the previous development environment (like Windows).

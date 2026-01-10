@@ -549,8 +549,8 @@ class _ActivityChart extends StatelessWidget {
                   if (index < 0 || index >= sortedKeys.length) return const SizedBox();
                   
                   int skip = 1;
-                  if (sortedKeys.length > 20) skip = 5;
-                  else if (sortedKeys.length > 10) skip = 2;
+                  if (sortedKeys.length > 20){ skip = 5;}
+                  else if (sortedKeys.length > 10) {skip = 2;}
                   
                   if (index % skip != 0 && index != sortedKeys.length - 1) {
                      return const SizedBox();
@@ -674,7 +674,7 @@ class _DistributionTab extends StatelessWidget {
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: sortedGenres.isNotEmpty ? e.value / sortedGenres.first.value : 0,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ],

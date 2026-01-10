@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/di/injection.config.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -59,6 +60,9 @@ class MediaVoreApp extends StatelessWidget {
             final prefs = locator<SharedPreferences>();
             return SettingsProvider(prefs);
           },
+        ),
+        ChangeNotifierProvider(
+          create: (context) => locator<AchievementProvider>(),
         ),
       ],
       builder: (context, child) {

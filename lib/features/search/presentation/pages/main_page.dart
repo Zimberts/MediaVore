@@ -1,5 +1,11 @@
 import 'dart:async';
+import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
+import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
+import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
@@ -20,6 +26,12 @@ class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0; // Default to Discover (SearchPage)
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+  StreamSubscription? _achievementSubscription;
+
+  // Achievement queue logic
+  final Queue<Achievement> _achievementQueue = Queue<Achievement>();
+  bool _isProcessingQueue = false;
+  OverlayEntry? _currentNotification;
 
   static const List<Widget> _pages = [
     SearchPage(),
@@ -32,12 +44,79 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _initDeepLinks();
+    
+    // Listen for achievements
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<AchievementProvider>();
+      _achievementSubscription = provider.onAchievementUnlocked.listen((achievement) {
+        _queueAchievementNotification(achievement);
+      });
+    });
   }
 
   @override
   void dispose() {
     _linkSubscription?.cancel();
+    _achievementSubscription?.cancel();
+    _currentNotification?.remove();
     super.dispose();
+  }
+
+  void _queueAchievementNotification(Achievement achievement) {
+    _achievementQueue.add(achievement);
+    if (!_isProcessingQueue) {
+      _processAchievementQueue();
+    }
+  }
+
+  Future<void> _processAchievementQueue() async {
+    if (_achievementQueue.isEmpty || !mounted) {
+      _isProcessingQueue = false;
+      return;
+    }
+
+    _isProcessingQueue = true;
+    final achievement = _achievementQueue.removeFirst();
+    
+    await _showTopNotification(achievement);
+    
+    if (mounted) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _processAchievementQueue();
+    }
+  }
+
+  Future<void> _showTopNotification(Achievement achievement) async {
+    if (!mounted) return;
+
+    final completer = Completer<void>();
+    final mainPageContext = context;
+
+    _currentNotification = OverlayEntry(
+      builder: (context) => _AchievementTopBanner(
+        achievement: achievement,
+        selectedIndex: _selectedIndex,
+        mainPageContext: mainPageContext,
+        onDismiss: () {
+          _currentNotification?.remove();
+          _currentNotification = null;
+          if (!completer.isCompleted) completer.complete();
+        },
+      ),
+    );
+
+    Overlay.of(context).insert(_currentNotification!);
+
+    // Auto-dismiss after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (_currentNotification != null && !completer.isCompleted) {
+        _currentNotification?.remove();
+        _currentNotification = null;
+        completer.complete();
+      }
+    });
+
+    return completer.future;
   }
 
   void _initDeepLinks() async {
@@ -146,6 +225,165 @@ class _MainPageState extends State<MainPage> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+      ),
+    );
+  }
+}
+
+class _AchievementTopBanner extends StatefulWidget {
+  final Achievement achievement;
+  final int selectedIndex;
+  final BuildContext mainPageContext;
+  final VoidCallback onDismiss;
+
+  const _AchievementTopBanner({
+    required this.achievement,
+    required this.selectedIndex,
+    required this.mainPageContext,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_AchievementTopBanner> createState() => _AchievementTopBannerState();
+}
+
+class _AchievementTopBannerState extends State<_AchievementTopBanner> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _offsetAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _offsetAnimation = Tween<Offset>(
+      begin: const Offset(0.0, -1.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    ));
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleDismiss() async {
+    await _controller.reverse();
+    widget.onDismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final appBarHeight = kToolbarHeight;
+
+    // Determine current route context
+    final route = ModalRoute.of(widget.mainPageContext);
+    final isMainPageCurrent = route?.isCurrent ?? true;
+    
+    // Check if we are on MediaDetailPage.
+    // MediaDetailPage uses Scaffold, so it has its own AppBar.
+    // We can check the route name if defined, but usually checking the widget type in the route settings works.
+    final bool isMediaDetails = route?.settings.name == '/media_details' || 
+                                (route is MaterialPageRoute && route.builder(context) is MediaDetailPage);
+
+    double topOffset = statusBarHeight + appBarHeight + 8;
+    
+    if (isMainPageCurrent) {
+      if (widget.selectedIndex == 2) {
+        // Seen History search bar
+        topOffset += 60; 
+      } else if (widget.selectedIndex == 3) {
+        // Notification Center TabBar
+        topOffset += 48;
+      }
+    } else if (isMediaDetails) {
+      // MediaDetailPage has a pinned SliverAppBar that expands.
+      // We'll give it a bit more clearance so it doesn't cover the title when pinned.
+      topOffset += 8; 
+    }
+
+    return Positioned(
+      top: topOffset,
+      left: 16,
+      right: 16,
+      child: SlideTransition(
+        position: _offsetAnimation,
+        child: Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AchievementsPage(initialAchievementId: widget.achievement.id),
+                ),
+              );
+              _handleDismiss();
+            },
+            onVerticalDragUpdate: (details) {
+              if (details.primaryDelta! < -10) {
+                _handleDismiss();
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.logicFlow,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.emoji_events, color: Colors.white, size: 28),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Achievement Unlocked!',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          widget.achievement.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                    onPressed: _handleDismiss,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

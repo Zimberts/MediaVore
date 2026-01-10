@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar/isar.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -22,6 +24,10 @@ class MockMediaListLocalDataSource extends Mock implements MediaListLocalDataSou
 class MockIsar extends Mock implements Isar {}
 
 class MockMediaCache extends Mock implements MediaCache {}
+
+class MockAchievementRepository extends Mock implements AchievementRepository {}
+
+class MockAchievementProvider extends Mock implements AchievementProvider {}
 
 class FakeSeenItem extends Fake implements SeenItem {}
 class FakeMediaItem extends Fake implements MediaItem {}

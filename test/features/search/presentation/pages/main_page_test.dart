@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -14,6 +16,7 @@ import '../../../../helpers/mocks.dart';
 void main() {
   late MockMediaRepository mockRepository;
   late MockSharedPreferences mockSharedPreferences;
+  late MockAchievementProvider mockAchievementProvider;
   late SearchProvider searchProvider;
   late SettingsProvider settingsProvider;
 
@@ -24,6 +27,7 @@ void main() {
   setUp(() {
     mockRepository = MockMediaRepository();
     mockSharedPreferences = MockSharedPreferences();
+    mockAchievementProvider = MockAchievementProvider();
 
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
@@ -44,6 +48,10 @@ void main() {
       type: any(named: 'type'),
     )).thenAnswer((_) async => []);
 
+    // Achievement Provider mocks
+    when(() => mockAchievementProvider.achievements).thenReturn([]);
+    when(() => mockAchievementProvider.onAchievementUnlocked).thenAnswer((_) => const Stream<Achievement>.empty());
+
     searchProvider = SearchProvider(mockRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
 
@@ -51,6 +59,11 @@ void main() {
       locator.unregister<MediaRepository>();
     }
     locator.registerLazySingleton<MediaRepository>(() => mockRepository);
+    
+    if (locator.isRegistered<AchievementProvider>()) {
+      locator.unregister<AchievementProvider>();
+    }
+    locator.registerLazySingleton<AchievementProvider>(() => mockAchievementProvider);
   });
 
   tearDown(() {
@@ -62,6 +75,7 @@ void main() {
       providers: [
         ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<AchievementProvider>.value(value: mockAchievementProvider),
       ],
       child: MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
