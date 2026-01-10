@@ -189,6 +189,50 @@ class MediaItem extends Equatable {
     };
   }
 
+  MediaItem copyWith({
+    int? id,
+    String? title,
+    String? posterPath,
+    String? overview,
+    String? releaseDate,
+    MediaType? mediaType,
+    int? numberOfSeasons,
+    int? numberOfEpisodes,
+    String? status,
+    List<String>? genres,
+    double? voteAverage,
+    int? runtime,
+    List<TVSeason>? seasons,
+    String? nextEpisodeAirDate,
+    int? nextEpisodeNumber,
+    int? nextSeasonNumber,
+    String? lastEpisodeAirDate,
+    int? lastEpisodeNumber,
+    int? lastSeasonNumber,
+  }) {
+    return MediaItem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      posterPath: posterPath ?? this.posterPath,
+      overview: overview ?? this.overview,
+      releaseDate: releaseDate ?? this.releaseDate,
+      mediaType: mediaType ?? this.mediaType,
+      numberOfSeasons: numberOfSeasons ?? this.numberOfSeasons,
+      numberOfEpisodes: numberOfEpisodes ?? this.numberOfEpisodes,
+      status: status ?? this.status,
+      genres: genres ?? this.genres,
+      voteAverage: voteAverage ?? this.voteAverage,
+      runtime: runtime ?? this.runtime,
+      seasons: seasons ?? this.seasons,
+      nextEpisodeAirDate: nextEpisodeAirDate ?? this.nextEpisodeAirDate,
+      nextEpisodeNumber: nextEpisodeNumber ?? this.nextEpisodeNumber,
+      nextSeasonNumber: nextSeasonNumber ?? this.nextSeasonNumber,
+      lastEpisodeAirDate: lastEpisodeAirDate ?? this.lastEpisodeAirDate,
+      lastEpisodeNumber: lastEpisodeNumber ?? this.lastEpisodeNumber,
+      lastSeasonNumber: lastSeasonNumber ?? this.lastSeasonNumber,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,

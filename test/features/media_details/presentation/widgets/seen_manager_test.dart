@@ -33,6 +33,7 @@ void main() {
     when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
+    when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async => Future.value());
 
     searchProvider = SearchProvider(mockRepository);
     
@@ -74,7 +75,7 @@ void main() {
       expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
     });
 
-    testWidgets('displays history icon when seen', (WidgetTester tester) async {
+    testWidgets('displays check_circle icon when seen', (WidgetTester tester) async {
       final viewings = [
         SeenItem(id: 1, tmdbId: 1, type: MediaType.movie, title: 'Inception', seenDate: DateTime(2023)),
       ];
@@ -85,10 +86,10 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
 
-      expect(find.byIcon(Icons.history), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('tapping history icon opens bottom sheet', (WidgetTester tester) async {
+    testWidgets('tapping check_circle icon opens bottom sheet', (WidgetTester tester) async {
       final viewings = [
         SeenItem(id: 1, tmdbId: 1, type: MediaType.movie, title: 'Inception', seenDate: DateTime(2023)),
       ];
@@ -98,7 +99,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.history));
+      await tester.tap(find.byIcon(Icons.check_circle));
       await tester.pumpAndSettle();
 
       expect(find.byType(BottomSheet), findsOneWidget);
@@ -133,14 +134,15 @@ void main() {
     });
 
     group('Tv Support', () {
-      testWidgets('shows add multiple dialog for TV shows', (WidgetTester tester) async {
+      testWidgets('tapping check_circle_outline opens date picker dialog', (WidgetTester tester) async {
         await tester.pumpWidget(createWidgetUnderTest(type: MediaType.tv));
         await tester.pump();
 
         await tester.tap(find.byIcon(Icons.check_circle_outline));
         await tester.pumpAndSettle();
 
-        expect(find.text('Add Multiple Viewings'), findsOneWidget);
+        expect(find.byType(Dialog), findsOneWidget);
+        expect(find.text('Mark as seen'), findsOneWidget);
       });
     });
   });

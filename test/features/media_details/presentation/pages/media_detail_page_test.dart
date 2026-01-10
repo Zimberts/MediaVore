@@ -120,6 +120,13 @@ void main() {
       expect(find.text('2010-07-16'), findsOneWidget);
       expect(find.text('Director: Christopher Nolan'), findsOneWidget);
       expect(find.text('A mind-bending thriller'), findsOneWidget);
+
+      // The page uses a CustomScrollView with slivers which build lazily.
+      // Scroll the view so the sliver children (including the Cast header)
+      // are built, then settle before asserting.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+
       expect(find.text('Cast'), findsOneWidget);
     });
 
@@ -191,6 +198,10 @@ void main() {
 
       await tester.pumpWidget(createWidgetUnderTest(item: tTvItem));
       await tester.pump(); 
+      await tester.pumpAndSettle();
+
+      // Scroll to ensure sliver children (Seasons list) are built, then assert.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
       await tester.pumpAndSettle();
 
       // Check the season list tile subtitle

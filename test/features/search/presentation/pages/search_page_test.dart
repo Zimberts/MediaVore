@@ -54,6 +54,17 @@ void main() {
     when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.toggleNotification(any(), autoNotify: any(named: 'autoNotify')))
         .thenAnswer((_) async => Future.value());
+    
+    // Default discovery mocks
+    when(() => mockMediaRepository.discoverMedia(
+      page: any(named: 'page'),
+      genreIds: any(named: 'genreIds'),
+      releaseYear: any(named: 'releaseYear'),
+      minRating: any(named: 'minRating'),
+      language: any(named: 'language'),
+      type: any(named: 'type'),
+      sortBy: any(named: 'sortBy'),
+    )).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
@@ -73,211 +84,115 @@ void main() {
     );
   }
 
-  group('SearchPage', () {
-    testWidgets('clears text when clear button is tapped', (WidgetTester tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      await tester.enterText(find.byType(TextField), 'Inception');
-      await tester.pump(); // Rebuild to show clear button
-
-      expect(find.byIcon(Icons.clear), findsOneWidget);
-
-      await tester.tap(find.byIcon(Icons.clear));
-      await tester.pump();
-
-      expect(find.text('Inception'), findsNothing);
-      expect(find.byIcon(Icons.clear), findsNothing);
-    });
-
-    testWidgets('triggers search automatically after typing with debounce', (WidgetTester tester) async {
-      final movies = [
-        const MediaItem(
-          id: 1,
-          title: 'Inception',
-          posterPath: null,
-          releaseDate: '2010-07-16',
-          overview: 'A mind-bending thriller',
-          mediaType: MediaType.movie
-        ),
+  group('SearchPage (DiscoveryPage)', () {
+    testWidgets('shows discovery results initially', (WidgetTester tester) async {
+      final movieItems = [
+        const MediaItem(id: 1, title: 'Trending Movie', overview: 'O', releaseDate: '2023', mediaType: MediaType.movie),
       ];
-      when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
-          .thenAnswer((_) async => movies);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      await tester.enterText(find.byType(TextField), 'Inception');
-      
-      // Should not have triggered search immediately due to debounce
-      verifyNever(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')));
-
-      // Wait for debounce (500ms)
-      await tester.pump(const Duration(milliseconds: 600));
-
-      verify(() => mockMediaRepository.searchMedia('Inception', page: 1)).called(1);
-      
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      
-      expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
-    });
-
-    testWidgets('displays results from TMDB when search is successful', (WidgetTester tester) async {
-      final results = [
-        const MediaItem(
-          id: 1,
-          title: 'Inception',
-          posterPath: null,
-          releaseDate: '2010-07-16',
-          overview: 'A mind-bending thriller',
-          mediaType: MediaType.movie,
-        ),
-        const MediaItem(
-          id: 2,
-          title: 'Breaking Bad',
-          posterPath: null,
-          releaseDate: '2008-01-20',
-          overview: 'A high school chemistry teacher...',
-          mediaType: MediaType.tv,
-        ),
-      ];
-      when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
-          .thenAnswer((_) async => results);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      await tester.enterText(find.byType(TextField), 'Inception');
-      // Wait for debounce
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
-      expect(find.widgetWithText(ListTile, 'Breaking Bad'), findsOneWidget);
-      expect(find.text('TV'), findsOneWidget); 
-    });
-
-    testWidgets('displays favorite icon for liked items', (WidgetTester tester) async {
-      final results = [
-        const MediaItem(
-          id: 1,
-          title: 'Inception',
-          posterPath: null,
-          releaseDate: '2010-07-16',
-          overview: 'A mind-bending thriller',
-          mediaType: MediaType.movie,
-        ),
-      ];
-      when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
-          .thenAnswer((_) async => results);
-      when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
-
-      await searchProvider.loadLikedStatus(); // Ensure liked status is loaded
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      await tester.enterText(find.byType(TextField), 'Inception');
-      await tester.pump(const Duration(milliseconds: 600));
-      
-      // Use standard pump instead of pumpAndSettle to avoid timeout from animations/images
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byIcon(Icons.favorite), findsOneWidget);
-    });
-
-    testWidgets('shows initial message when search results are empty', (WidgetTester tester) async {
-      // Return empty list instead of throwing to test "Search for movies or series!"
-      when(() => mockMediaRepository.searchMedia(any(), page: any(named: 'page')))
-          .thenAnswer((_) async => []);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      await tester.enterText(find.byType(TextField), 'Inception');
-
-      // Wait for debounce
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byType(ListTile), findsNothing);
-      expect(find.text('Search for movies or series!'), findsOneWidget);
-    });
-
-
-    testWidgets('calls addToWatchlist when save button is tapped', (WidgetTester tester) async {
-      final item = const MediaItem(
-          id: 1,
-          title: 'Inception',
-          posterPath: null,
-          releaseDate: '2010-07-16',
-          overview: 'A mind-bending thriller',
-          mediaType: MediaType.movie,
-        );
-      final items = [item];
-      
-      when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
-          .thenAnswer((_) async => items);
-      when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
-      when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
-          .thenAnswer((_) async => []);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      await tester.enterText(find.byType(TextField), 'Inception');
-      // Wait for debounce
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      await tester.tap(find.byIcon(Icons.bookmark_border).first);
-      
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      verify(() => mockMediaRepository.addToList(any(), 'watchlist')).called(1);
-    });
-
-    testWidgets('loads more movies when scrolled to bottom', (WidgetTester tester) async {
-      final page1 = List.generate(20, (i) => MediaItem(
-        id: i,
-        title: 'Movie $i',
-        posterPath: null,
-        releaseDate: '2020-01-01',
-        overview: 'Overview $i',
-        mediaType: MediaType.movie,
-      ));
-      final page2 = [
-        const MediaItem(
-          id: 100,
-          title: 'Fetched Movie',
-          posterPath: null,
-          releaseDate: '2021-01-01',
-          overview: 'New movie',
-          mediaType: MediaType.movie,
-        ),
+      final tvItems = [
+        const MediaItem(id: 2, title: 'Trending TV', overview: 'O', releaseDate: '2023', mediaType: MediaType.tv),
       ];
 
-      when(() => mockMediaRepository.searchMedia('test', page: 1)).thenAnswer((_) async => page1);
-      when(() => mockMediaRepository.searchMedia('test', page: 2)).thenAnswer((_) async => page2);
+      when(() => mockMediaRepository.discoverMedia(
+        type: MediaType.movie,
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        sortBy: any(named: 'sortBy'),
+      )).thenAnswer((_) async => movieItems);
+
+      when(() => mockMediaRepository.discoverMedia(
+        type: MediaType.tv,
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        sortBy: any(named: 'sortBy'),
+      )).thenAnswer((_) async => tvItems);
 
       await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump();
 
+      expect(find.text('Trending Movie'), findsOneWidget);
+      expect(find.text('Trending TV'), findsOneWidget);
+      expect(find.text('Discover'), findsOneWidget);
+    });
+
+    testWidgets('toggles search bar and triggers auto-search', (WidgetTester tester) async {
+      final searchItems = [
+        const MediaItem(id: 2, title: 'Search Result', overview: 'O', releaseDate: '2023', mediaType: MediaType.movie),
+      ];
+      when(() => mockMediaRepository.searchMedia(
+        'test', 
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        type: any(named: 'type'),
+      )).thenAnswer((_) async => searchItems);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Tap search icon in Discovery AppBar
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pump();
+
+      // Verify TextField is present
+      expect(find.byType(TextField), findsOneWidget);
+
+      // Enter text
       await tester.enterText(find.byType(TextField), 'test');
-      // Wait for debounce instead of tapping non-existent button
+      
+      // Wait for debounce
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Movie 0'), findsAtLeast(1));
-      expect(find.text('Fetched Movie'), findsNothing);
+      expect(find.text('Search Result'), findsOneWidget);
+    });
 
-      // Scroll to the bottom
-      await tester.drag(find.byType(ListView), const Offset(0, -5000));
-      await tester.pump(); // Trigger scroll listener
-      await tester.pump(const Duration(milliseconds: 100)); // Wait for fetch
-      await tester.pump(); // Rebuild with new items
+    testWidgets('opens filter dialog and applies changes', (WidgetTester tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      
+      // Clear initial discovery calls
+      clearInteractions(mockMediaRepository);
 
-      expect(find.text('Fetched Movie'), findsOneWidget);
-      verify(() => mockMediaRepository.searchMedia('test', page: 2)).called(1);
+      // Open filters
+      await tester.tap(find.byIcon(Icons.filter_list));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discovery Filters'), findsOneWidget);
+
+      // Select TV Show type from dropdown
+      await tester.tap(find.text('Both'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('TV Shows').last);
+      await tester.pumpAndSettle();
+
+      // Apply
+      await tester.tap(find.text('Apply'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      verify(() => mockMediaRepository.discoverMedia(
+        page: 1,
+        type: MediaType.tv,
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        sortBy: any(named: 'sortBy'),
+      )).called(1);
     });
   });
 }

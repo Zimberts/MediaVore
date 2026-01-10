@@ -7,8 +7,27 @@ enum ImportMode { append, replace, merge }
 
 /// Abstract class for a repository that handles media (movies and series) data.
 abstract class MediaRepository {
-  /// Searches for media based on a query.
-  Future<List<MediaItem>> searchMedia(String query, {int page = 1});
+  /// Searches for media based on a query with optional filters.
+  Future<List<MediaItem>> searchMedia(
+    String query, {
+    int page = 1,
+    List<int>? genreIds,
+    int? releaseYear,
+    double? minRating,
+    String? language,
+    MediaType? type,
+  });
+
+  /// Discovers media using TMDb's discovery endpoint.
+  Future<List<MediaItem>> discoverMedia({
+    int page = 1,
+    List<int>? genreIds,
+    int? releaseYear,
+    double? minRating,
+    String? language,
+    MediaType type = MediaType.movie,
+    String sortBy = 'popularity.desc',
+  });
 
   /// Gets the details for a specific media item.
   Future<MediaDetails> getMediaDetails(int id, {MediaType type = MediaType.movie});
@@ -117,6 +136,18 @@ abstract class MediaRepository {
 
   /// Force refreshes all notified items from network.
   Future<void> refreshNotifiedItems();
+
+  /// Gets similar media items.
+  Future<List<MediaItem>> getSimilarMedia(int id, MediaType type);
+
+  /// Gets recommended media items.
+  Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type);
+
+  /// Gets watch providers for a media item.
+  Future<Map<String, dynamic>> getWatchProviders(int id, MediaType type);
+
+  /// Gets videos (trailers, etc.) for a media item.
+  Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type);
 }
 
 class NotifiedItem {

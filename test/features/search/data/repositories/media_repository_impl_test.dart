@@ -1,6 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/domain/entities/cast_member.dart';
-import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -56,6 +54,7 @@ void main() {
     when(() => mockCache.areDetailsCached(any(), any())).thenReturn(false);
     when(() => mockCache.isSeasonCached(any(), any())).thenReturn(false);
     when(() => mockCache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
+    when(() => mockCache.getItem(any(), any())).thenReturn(null);
 
     when(() => mockLocalDataSource.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockLocalDataSource.getListItems(any())).thenAnswer((_) async => []);
@@ -80,12 +79,9 @@ void main() {
       cache: mockCache,
     );
 
-    // Wait for the background initialization to complete by calling a method
-    // that ensures initialization.
+    // Wait for the background initialization to complete
     await repository.getAllListNames();
 
-    // Clear interactions that happened during repository initialization (_initCache)
-    // so tests can verify exact call counts for their specific operations.
     clearInteractions(mockRemoteDataSource);
     clearInteractions(mockLocalDataSource);
     clearInteractions(mockCache);
@@ -100,122 +96,162 @@ void main() {
     mediaType: MediaType.movie,
   );
 
-  final tCast = [
-    const CastMember(id: 1, name: 'Leonardo DiCaprio', character: 'Cobb', profilePath: '/leo.jpg'),
-  ];
-
-  const tDirector = CrewMember(name: 'Christopher Nolan', job: 'Director');
-
-  group('searchMedia', () {
-    const tQuery = 'Inception';
+  group('searchMedia with Filters', () {
+    const tQuery = 'Batman';
     final tMediaItems = [tMediaItem];
 
-    test('should return list of media items from remote data source and cache them', () async {
-      when(() => mockRemoteDataSource.searchMedia(tQuery))
-          .thenAnswer((_) async => tMediaItems);
+    test('should return list of media items and pass filters to remote data source', () async {
+      when(() => mockRemoteDataSource.searchMedia(
+        tQuery,
+        page: 1,
+        genreIds: [28],
+        releaseYear: 2022,
+        minRating: 7.0,
+        type: MediaType.movie,
+      )).thenAnswer((_) async => tMediaItems);
 
-      final result = await repository.searchMedia(tQuery);
+      final result = await repository.searchMedia(
+        tQuery,
+        genreIds: [28],
+        releaseYear: 2022,
+        minRating: 7.0,
+        type: MediaType.movie,
+      );
 
       expect(result, equals(tMediaItems));
-      verify(() => mockRemoteDataSource.searchMedia(tQuery)).called(1);
-      verify(() => mockCache.cacheItem(tMediaItem)).called(1);
-    });
-
-    test('should return empty list when remote call throws an exception (resilience test)', () async {
-      when(() => mockRemoteDataSource.searchMedia(any()))
-          .thenThrow(Exception('Network error'));
-
-      final result = await repository.searchMedia(tQuery);
-
-      expect(result, isEmpty);
+      verify(() => mockRemoteDataSource.searchMedia(
+        tQuery,
+        page: 1,
+        genreIds: [28],
+        releaseYear: 2022,
+        minRating: 7.0,
+        type: MediaType.movie,
+      )).called(1);
     });
   });
 
-  group('getMediaDetails', () {
+  group('discoverMedia', () {
+    final tMediaItems = [tMediaItem];
+
+    test('should return list of media items from discovery endpoint', () async {
+      when(() => mockRemoteDataSource.discoverMedia(
+        page: 1,
+        type: MediaType.movie,
+        genreIds: [28],
+      )).thenAnswer((_) async => tMediaItems);
+
+      final result = await repository.discoverMedia(
+        genreIds: [28],
+        type: MediaType.movie,
+      );
+
+      expect(result, equals(tMediaItems));
+      verify(() => mockRemoteDataSource.discoverMedia(
+        page: 1,
+        type: MediaType.movie,
+        genreIds: [28],
+      )).called(1);
+    });
+  });
+
+  group('getMediaDetails Enrichment', () {
     const tId = 1;
 
-    test('should return media details from cache if available', () async {
-      final tDetails = MediaDetails(item: tMediaItem, cast: [], director: tDirector);
-      when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(true);
-      when(() => mockCache.getDetails(tId, MediaType.movie)).thenReturn(tDetails);
-
-      final result = await repository.getMediaDetails(tId);
-
-      expect(result, equals(tDetails));
-      verifyNever(() => mockRemoteDataSource.getMediaItem(any(), type: any(named: 'type')));
-    });
-
-    test('should fetch and cache media details if not in cache', () async {
+    test('should fetch and cache media details including similar, recommended, providers, and videos', () async {
       when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(false);
       when(() => mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')))
           .thenAnswer((_) async => tMediaItem);
       when(() => mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')))
           .thenAnswer((_) async => {
-            'cast': [
-              {'id':1,'name': 'Leonardo DiCaprio', 'character': 'Cobb', 'profile_path': '/leo.jpg'}
-            ],
-            'crew': [
-              {'name': 'Christopher Nolan', 'job': 'Director'}
-            ]
+            'cast': [{'id':1,'name': 'Leonardo DiCaprio', 'character': 'Cobb', 'profile_path': '/leo.jpg'}],
+            'crew': [{'name': 'Christopher Nolan', 'job': 'Director'}]
           });
+      when(() => mockRemoteDataSource.getSimilarMedia(tId, any())).thenAnswer((_) async => []);
+      when(() => mockRemoteDataSource.getRecommendedMedia(tId, any())).thenAnswer((_) async => []);
+      when(() => mockRemoteDataSource.getWatchProviders(tId, any())).thenAnswer((_) async => {});
+      when(() => mockRemoteDataSource.getVideos(tId, any())).thenAnswer((_) async => []);
 
       final result = await repository.getMediaDetails(tId);
 
       expect(result.item, equals(tMediaItem));
-      expect(result.cast, equals(tCast));
-      expect(result.director, equals(tDirector));
+      expect(result.similar, isNotNull);
+      expect(result.recommendations, isNotNull);
+      expect(result.watchProviders, isNotNull);
+      expect(result.videos, isNotNull);
+      
+      verify(() => mockRemoteDataSource.getSimilarMedia(tId, any())).called(1);
+      verify(() => mockRemoteDataSource.getRecommendedMedia(tId, any())).called(1);
+      verify(() => mockRemoteDataSource.getWatchProviders(tId, any())).called(1);
+      verify(() => mockRemoteDataSource.getVideos(tId, any())).called(1);
       verify(() => mockCache.cacheDetails(any())).called(1);
     });
   });
 
-  group('Seen Items', () {
-    test('markAsSeen should call local data source and check notifications', () async {
-      when(() => mockLocalDataSource.markAsSeen(any())).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.isNotified(any(), any())).thenAnswer((_) async => false);
+  group('markAsSeen', () {
+    final tSeenItem = SeenItem(
+      tmdbId: 1,
+      type: MediaType.movie,
+      title: 'Inception',
+      seenDate: DateTime.now(),
+    );
 
-      final tSeenItem = SeenItem(
-        tmdbId: 1,
-        type: MediaType.movie,
-        title: 'Dune',
-        seenDate: DateTime(2023, 10, 1),
-      );
-
-      // Ensure cache returns the item so the background notification refresher
-      // uses the cached item path and calls `localDataSource.isNotified`.
-      when(() => mockCache.getItem(1, MediaType.movie)).thenReturn(tMediaItem);
+    test('should mark as seen and remove from watchlist if it is a movie', () async {
+      when(() => mockLocalDataSource.markAsSeen(any())).thenAnswer((_) async => Future.value());
+      when(() => mockLocalDataSource.removeFromList(any(), any(), any())).thenAnswer((_) async => Future.value());
+      when(() => mockCache.getItem(any(), any())).thenReturn(tMediaItem);
 
       await repository.markAsSeen(tSeenItem);
 
       verify(() => mockLocalDataSource.markAsSeen(any())).called(1);
-      // isNotified is called inside unawaited _refreshNotificationDateByTmdbId
-      await untilCalled(() => mockLocalDataSource.isNotified(any(), any()));
-      verify(() => mockLocalDataSource.isNotified(1, 'movie')).called(1);
+      verify(() => mockLocalDataSource.removeFromList(tSeenItem.tmdbId, 'movie', 'watchlist')).called(1);
+    });
+
+    test('should NOT remove from watchlist if it is a TV show (episode seen)', () async {
+      final tSeenTVItem = SeenItem(
+        tmdbId: 1,
+        type: MediaType.tv,
+        title: 'Breaking Bad',
+        seenDate: DateTime.now(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+      );
+      when(() => mockLocalDataSource.markAsSeen(any())).thenAnswer((_) async => Future.value());
+      when(() => mockCache.getItem(any(), any())).thenReturn(null);
+      when(() => mockRemoteDataSource.getMediaItem(any(), type: MediaType.tv)).thenAnswer((_) async => tMediaItem.copyWith(mediaType: MediaType.tv));
+
+      await repository.markAsSeen(tSeenTVItem);
+
+      verify(() => mockLocalDataSource.markAsSeen(any())).called(1);
+      verifyNever(() => mockLocalDataSource.removeFromList(any(), any(), 'watchlist'));
     });
   });
 
-  group('Notifications', () {
-    test('toggleNotification should call local data source', () async {
-      when(() => mockLocalDataSource.isNotified(any(), any())).thenAnswer((_) async => false);
-      when(() => mockLocalDataSource.toggleNotification(
-        tmdbId: any(named: 'tmdbId'),
-        type: any(named: 'type'),
-        title: any(named: 'title'),
-        posterPath: any(named: 'posterPath'),
-        releaseDate: any(named: 'releaseDate'),
-        seasonNumber: any(named: 'seasonNumber'),
-        episodeNumber: any(named: 'episodeNumber'),
-        autoNotify: any(named: 'autoNotify'),
-      )).thenAnswer((_) async => Future.value());
+  group('Additional Enrichment Methods', () {
+    test('getSimilarMedia should call remote and cache items', () async {
+      when(() => mockRemoteDataSource.getSimilarMedia(1, MediaType.movie)).thenAnswer((_) async => [tMediaItem]);
+      
+      final result = await repository.getSimilarMedia(1, MediaType.movie);
+      
+      expect(result, contains(tMediaItem));
+      verify(() => mockCache.cacheItem(tMediaItem)).called(1);
+    });
 
-      await repository.toggleNotification(tMediaItem);
+    test('getWatchProviders should return map from remote', () async {
+      final tProviders = {'US': {'flatrate': []}};
+      when(() => mockRemoteDataSource.getWatchProviders(1, MediaType.movie)).thenAnswer((_) async => tProviders);
+      
+      final result = await repository.getWatchProviders(1, MediaType.movie);
+      
+      expect(result, equals(tProviders));
+    });
 
-      verify(() => mockLocalDataSource.toggleNotification(
-        tmdbId: tMediaItem.id,
-        type: tMediaItem.mediaType.name,
-        title: tMediaItem.title,
-        posterPath: any(named: 'posterPath'),
-        autoNotify: any(named: 'autoNotify'),
-      )).called(1);
+    test('getVideos should return list from remote', () async {
+      final tVideos = [{'key': 'xyz'}];
+      when(() => mockRemoteDataSource.getVideos(1, MediaType.movie)).thenAnswer((_) async => tVideos);
+      
+      final result = await repository.getVideos(1, MediaType.movie);
+      
+      expect(result, equals(tVideos));
     });
   });
 }

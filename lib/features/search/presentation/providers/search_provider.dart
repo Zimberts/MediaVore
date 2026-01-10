@@ -27,6 +27,15 @@ class SearchProvider with ChangeNotifier {
   int _currentPage = 1;
   String _currentQuery = '';
   bool _hasMore = true;
+  int _selectedTab = 0; // Default to "Discover" (SearchPage)
+
+  // Filter states
+  List<int>? _genreIds;
+  int? _releaseYear;
+  double? _minRating;
+  String? _language;
+  MediaType? _filterType;
+  bool _isDiscoverMode = false;
 
   List<SeenItem> _seenItems = [];
   Map<String, int> _seenCounts = {}; // "id:type" -> count
@@ -50,6 +59,16 @@ class SearchProvider with ChangeNotifier {
   List<SeenItem> get seenItems => _seenItems;
   List<String> get likedIds => _likedIds;
   List<NotifiedItem> get notifiedItems => _notifiedItems;
+  int get selectedTab => _selectedTab;
+
+  // Filter getters
+  List<int>? get genreIds => _genreIds;
+  int? get releaseYear => _releaseYear;
+  double? get minRating => _minRating;
+  String? get language => _language;
+  MediaType? get filterType => _filterType;
+  bool get isDiscoverMode => _isDiscoverMode;
+  String get currentQuery => _currentQuery;
 
   Future<void> _init() async {
     await loadListNames();
@@ -60,6 +79,13 @@ class SearchProvider with ChangeNotifier {
     await loadWatchlist();
     await loadLikedStatus();
     await loadNotifiedItems();
+  }
+
+  void setSelectedTab(int index) {
+    if (_selectedTab != index) {
+      _selectedTab = index;
+      notifyListeners();
+    }
   }
 
   Future<void> updateCacheSize() async {
@@ -265,21 +291,86 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setFilters({
+    List<int>? genreIds,
+    int? releaseYear,
+    double? minRating,
+    String? language,
+    MediaType? type,
+  }) {
+    _genreIds = genreIds;
+    _releaseYear = releaseYear;
+    _minRating = minRating;
+    _language = language;
+    _filterType = type;
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    _genreIds = null;
+    _releaseYear = null;
+    _minRating = null;
+    _language = null;
+    _filterType = null;
+    notifyListeners();
+  }
+
   Future<void> searchMedia(String query) async {
-    if (query.isEmpty) {
-      clearSearch();
-      return;
+    _currentQuery = query;
+    if (query.isEmpty && !_isDiscoverMode) {
+      _isDiscoverMode = true;
+    } else if (query.isNotEmpty) {
+      _isDiscoverMode = false;
     }
 
     _isLoading = true;
     _error = null;
-    _currentQuery = query;
     _currentPage = 1;
     _hasMore = true;
     notifyListeners();
 
     try {
-      _searchResults = await repository.searchMedia(query, page: _currentPage);
+      if (_isDiscoverMode && _currentQuery.isEmpty) {
+        if (_filterType == null) {
+          // Both types mode
+          final movies = await repository.discoverMedia(
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.movie,
+          );
+          final tv = await repository.discoverMedia(
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.tv,
+          );
+          _searchResults = [...movies, ...tv]..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
+        } else {
+          _searchResults = await repository.discoverMedia(
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: _filterType!,
+          );
+        }
+      } else {
+        _searchResults = await repository.searchMedia(
+          _currentQuery,
+          page: _currentPage,
+          genreIds: _genreIds,
+          releaseYear: _releaseYear,
+          minRating: _minRating,
+          language: _language,
+          type: _filterType,
+        );
+      }
       _isOffline = false;
     } catch (e) {
       _error = e.toString();
@@ -292,14 +383,55 @@ class SearchProvider with ChangeNotifier {
   }
 
   Future<void> fetchNextPage() async {
-    if (_isLoading || !_hasMore || _currentQuery.isEmpty) return;
+    if (_isLoading || !_hasMore) return;
 
     _isLoading = true;
     notifyListeners();
 
     try {
       _currentPage++;
-      final results = await repository.searchMedia(_currentQuery, page: _currentPage);
+      List<MediaItem> results;
+      if (_isDiscoverMode && _currentQuery.isEmpty) {
+        if (_filterType == null) {
+          final movies = await repository.discoverMedia(
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.movie,
+          );
+          final tv = await repository.discoverMedia(
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.tv,
+          );
+          results = [...movies, ...tv]..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
+        } else {
+          results = await repository.discoverMedia(
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: _filterType!,
+          );
+        }
+      } else {
+        results = await repository.searchMedia(
+          _currentQuery,
+          page: _currentPage,
+          genreIds: _genreIds,
+          releaseYear: _releaseYear,
+          minRating: _minRating,
+          language: _language,
+          type: _filterType,
+        );
+      }
+
       if (results.isEmpty) {
         _hasMore = false;
       } else {
@@ -322,6 +454,7 @@ class SearchProvider with ChangeNotifier {
     _currentPage = 1;
     _hasMore = true;
     _error = null;
+    _isDiscoverMode = false;
     notifyListeners();
   }
 
@@ -491,4 +624,9 @@ class SearchProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) => repository.getSimilarMedia(id, type);
+  Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) => repository.getRecommendedMedia(id, type);
+  Future<Map<String, dynamic>> getWatchProviders(int id, MediaType type) => repository.getWatchProviders(id, type);
+  Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type) => repository.getVideos(id, type);
 }

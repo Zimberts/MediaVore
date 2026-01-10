@@ -5,6 +5,7 @@ import 'package:mediavore/features/media_details/presentation/pages/seen_history
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 
@@ -16,7 +17,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 1; // Default to SavedMediaPage
+  int _selectedIndex = 0; // Default to Discover (SearchPage)
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
@@ -60,7 +61,7 @@ class _MainPageState extends State<MainPage> {
     if (uri.path == '/share' || (uri.scheme == 'mediavore' && uri.host == 'share')) {
       final name = uri.queryParameters['name'];
       final itemsStr = uri.queryParameters['items'];
-      
+
       if (name != null && itemsStr != null) {
         final items = itemsStr.split(',');
         _showImportDialog(name, items);
@@ -95,7 +96,7 @@ class _MainPageState extends State<MainPage> {
               await provider.importList(controller.text, entries);
               if (mounted) {
                 navigator.pop();
-                setState(() => _selectedIndex = 1); 
+                setState(() => _selectedIndex = 1);
               }
             },
             child: const Text('Import'),
@@ -109,6 +110,12 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _selectedIndex = index;
     });
+
+    // Update provider selected tab if available
+    try {
+      final provider = context.read<SearchProvider>();
+      provider.setSelectedTab(index);
+    } catch (_) {}
   }
 
   @override
@@ -118,6 +125,17 @@ class _MainPageState extends State<MainPage> {
         index: _selectedIndex,
         children: _pages,
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (ctx) => const SearchOverlay(),
+            fullscreenDialog: true,
+          ));
+        },
+        tooltip: 'Search',
+        child: const Icon(Icons.search),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[

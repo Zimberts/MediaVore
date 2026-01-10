@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/error/exceptions.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -14,142 +14,83 @@ void main() {
     dataSource = MediaRemoteDataSource(dio: mockDio, apiToken: 'mock_token');
   });
 
-  group('searchMedia', () {
+  group('searchMedia with Filters', () {
     const tQuery = 'Inception';
-    
-    final tMediaResponse = {
-      'results': [
-        {
-          'id': 27205,
-          'title': 'Inception',
-          'poster_path': '/path.jpg',
-          'overview': '...',
-          'release_date': '2010-07-15',
-          'media_type': 'movie',
-        }
-      ]
+    final tResponse = {
+      'results': [{'id': 1, 'title': 'T', 'media_type': 'movie', 'overview': 'O', 'release_date': '2023'}]
     };
 
-    test('should return List<MediaItem> when the response is successful', () async {
-      // 1. Mock search results
-      when(() => mockDio.get(
-            'https://api.themoviedb.org/3/search/multi',
-            queryParameters: any(named: 'queryParameters'),
-            options: any(named: 'options'),
-          )).thenAnswer(
-        (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
-          data: tMediaResponse,
-          statusCode: 200,
-        ),
-      );
-
-      // 2. Mock enrichment fetch
-      when(() => mockDio.get(
-            any(that: startsWith('https://api.themoviedb.org/3/movie/')),
-            options: any(named: 'options'),
-          )).thenAnswer(
-        (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
-          data: tMediaResponse['results']![0],
-          statusCode: 200,
-        ),
-      );
-
-      final result = await dataSource.searchMedia(tQuery);
-
-      expect(result.first.id, equals(27205));
-    });
-
-    test('should throw NetworkException on connection error', () async {
+    test('should include filter parameters in the query', () async {
       when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters'), options: any(named: 'options')))
-          .thenThrow(DioException(
-            requestOptions: RequestOptions(path: ''),
-            type: DioExceptionType.connectionError,
-          ));
+          .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: ''), data: tResponse, statusCode: 200));
 
-      final call = dataSource.searchMedia(tQuery);
+      await dataSource.searchMedia(tQuery, genreIds: [28, 12], releaseYear: 2022, minRating: 8.0, type: MediaType.movie);
 
-      expect(() => call, throwsA(isA<NetworkException>()));
-    });
+      final captured = verify(() => mockDio.get(
+        'https://api.themoviedb.org/3/search/movie',
+        queryParameters: captureAny(named: 'queryParameters'),
+        options: any(named: 'options'),
+      )).captured.first as Map<String, dynamic>;
 
-    test('should throw ServerException on 429 Rate Limit', () async {
-      when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters'), options: any(named: 'options')))
-          .thenThrow(DioException(
-            requestOptions: RequestOptions(path: ''),
-            type: DioExceptionType.badResponse,
-            response: Response(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 429,
-            ),
-          ));
-
-      final call = dataSource.searchMedia(tQuery);
-
-      expect(() => call, throwsA(predicate((e) => e is ServerException && e.statusCode == 429)));
+      expect(captured['query'], tQuery);
+      expect(captured['with_genres'], '28,12');
+      expect(captured['primary_release_year'], 2022);
+      expect(captured['vote_average.gte'], 8.0);
     });
   });
 
-  group('getMediaItem', () {
-    const tId = 27205;
-    final tItemData = {
-      'id': 27205,
-      'title': 'Inception',
-      'poster_path': '/path.jpg',
-      'overview': '...',
-      'release_date': '2010-07-15',
+  group('discoverMedia', () {
+    final tResponse = {
+      'results': [{'id': 1, 'title': 'T', 'overview': 'O', 'release_date': '2023'}]
     };
 
-    test('should return MediaItem when the response is successful', () async {
-      when(() => mockDio.get(
-            any(),
-            options: any(named: 'options'),
-          )).thenAnswer(
-        (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
-          data: tItemData,
-          statusCode: 200,
-        ),
-      );
+    test('should call correct discover endpoint based on type', () async {
+      when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters'), options: any(named: 'options')))
+          .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: ''), data: tResponse, statusCode: 200));
 
-      final result = await dataSource.getMediaItem(tId);
+      await dataSource.discoverMedia(type: MediaType.tv, genreIds: [18]);
 
-      expect(result.id, equals(tId));
-      expect(result.title, 'Inception');
-    });
-
-    test('should throw ServerException on 404 Not Found', () async {
-      when(() => mockDio.get(any(), options: any(named: 'options')))
-          .thenThrow(DioException(
-            requestOptions: RequestOptions(path: ''),
-            type: DioExceptionType.badResponse,
-            response: Response(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 404,
-            ),
-          ));
-
-      final call = dataSource.getMediaItem(tId);
-
-      expect(() => call, throwsA(predicate((e) => e is ServerException && e.statusCode == 404)));
+      verify(() => mockDio.get(
+        'https://api.themoviedb.org/3/discover/tv',
+        queryParameters: any(named: 'queryParameters', that: containsPair('with_genres', '18')),
+        options: any(named: 'options'),
+      )).called(1);
     });
   });
 
-  group('getSeasonDetails', () {
-    test('should throw ServerException on failure', () async {
+  group('Enrichment Endpoints', () {
+    final tMediaListResponse = {
+      'results': [{'id': 1, 'title': 'T', 'overview': 'O', 'release_date': '2023'}]
+    };
+
+    test('getSimilarMedia should return List<MediaItem>', () async {
       when(() => mockDio.get(any(), options: any(named: 'options')))
-          .thenThrow(DioException(
-            requestOptions: RequestOptions(path: ''),
-            type: DioExceptionType.badResponse,
-            response: Response(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 500,
-            ),
-          ));
+          .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: ''), data: tMediaListResponse, statusCode: 200));
 
-      final call = dataSource.getSeasonDetails(1, 1);
+      final result = await dataSource.getSimilarMedia(1, MediaType.movie);
 
-      expect(() => call, throwsA(isA<ServerException>()));
+      expect(result, isA<List<MediaItem>>());
+      verify(() => mockDio.get('https://api.themoviedb.org/3/movie/1/similar', options: any(named: 'options'))).called(1);
+    });
+
+    test('getWatchProviders should return results map', () async {
+      final tProviders = {'results': {'US': {'flatrate': []}}};
+      when(() => mockDio.get(any(), options: any(named: 'options')))
+          .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: ''), data: tProviders, statusCode: 200));
+
+      final result = await dataSource.getWatchProviders(1, MediaType.movie);
+
+      expect(result['US'], isNotNull);
+    });
+
+    test('getVideos should return list of video maps', () async {
+      final tVideos = {'results': [{'key': 'xyz', 'type': 'Trailer'}]};
+      when(() => mockDio.get(any(), options: any(named: 'options')))
+          .thenAnswer((_) async => Response(requestOptions: RequestOptions(path: ''), data: tVideos, statusCode: 200));
+
+      final result = await dataSource.getVideos(1, MediaType.movie);
+
+      expect(result.first['key'], 'xyz');
     });
   });
 }

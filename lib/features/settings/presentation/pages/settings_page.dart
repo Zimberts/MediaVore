@@ -114,57 +114,7 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           const Divider(),
-          const _SectionHeader(title: 'Display'),
-          ListTile(
-            title: const Text('Display Mode'),
-            trailing: DropdownButtonHideUnderline(
-              child: DropdownButton<DisplayMode>(
-                value: settings.displayMode,
-                isDense: true,
-                padding: EdgeInsets.zero,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 3,
-                onChanged: (mode) {
-                  if (mode != null) settings.setDisplayMode(mode);
-                },
-                style: dropdownStyle,
-                alignment: Alignment.centerRight,
-                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                selectedItemBuilder: (context) => DisplayMode.values.map((mode) {
-                  return Container(
-                    alignment: Alignment.centerRight,
-                    child: Text(_capitalize(mode.name)),
-                  );
-                }).toList(),
-                items: DisplayMode.values.map((mode) {
-                  return DropdownMenuItem(
-                    value: mode,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(_getDisplayModeIcon(mode), size: 14),
-                        const SizedBox(width: 6),
-                        Text(_capitalize(mode.name)),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          if (settings.displayMode == DisplayMode.grid)
-            ListTile(
-              title: const Text('Grid Size (Items per row)'),
-              subtitle: Slider(
-                value: settings.gridSize,
-                min: 2,
-                max: 5,
-                divisions: 3,
-                label: settings.gridSize.round().toString(),
-                onChanged: (val) => settings.setGridSize(val),
-              ),
-              trailing: Text(settings.gridSize.round().toString(), style: dropdownStyle),
-            ),
+          const _SectionHeader(title: 'Lists Display'),
           SwitchListTile(
             title: const Text('Hide Non-Released Media'),
             subtitle: const Text('Only show movies and episodes that have already aired.'),
@@ -215,16 +165,6 @@ class SettingsPage extends StatelessWidget {
       case ThemeMode.dark: return Icons.dark_mode;
     }
   }
-
-  IconData _getDisplayModeIcon(DisplayMode mode) {
-    switch (mode) {
-      case DisplayMode.list: return Icons.view_list;
-      case DisplayMode.grid: return Icons.grid_view;
-      case DisplayMode.swipe: return Icons.view_carousel;
-    }
-  }
-
-  String _capitalize(String s) => s[0].toUpperCase() + s.substring(1).toLowerCase();
 }
 
 class _SectionHeader extends StatelessWidget {

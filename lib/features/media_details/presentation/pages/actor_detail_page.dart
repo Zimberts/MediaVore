@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ActorDetailPage extends StatefulWidget {
   final int actorId;
@@ -46,7 +48,6 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
         setState(() {
           _isLoading = false;
         });
-        // Use addPostFrameCallback to show snackbar after build to avoid "initState" related errors
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -60,139 +61,159 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final bool isAndroid = Theme.of(context).platform == TargetPlatform.android;
-    final bool isAndroidButtons = isAndroid &&
-        (mediaQuery.systemGestureInsets.bottom < 8 || mediaQuery.padding.bottom > 30);
+    final colors = context.appColors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_actorDetails?.name ?? widget.actorName),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 400,
+            pinned: true,
+            title: Text(_actorDetails?.name ?? widget.actorName),
+            flexibleSpace: FlexibleSpaceBar(
+              background: _actorDetails?.profilePath != null && !Platform.environment.containsKey('FLUTTER_TEST')
+                  ? CachedNetworkImage(
+                      imageUrl: 'https://image.tmdb.org/t/p/w500${_actorDetails!.profilePath}',
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => Container(
+                        color: colors.placeholder,
+                        child: Center(child: Icon(Icons.broken_image, size: 64, color: colors.comments)),
+                      ),
+                    )
+                  : Container(
+                      color: colors.placeholder,
+                      child: Center(
+                        child: Icon(Icons.person, size: 100, color: colors.comments),
+                      ),
+                    ),
+            ),
+          ),
+          SliverSafeArea(
+            top: false,
+            sliver: SliverPadding(
+              padding: const EdgeInsets.all(16.0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (_isLoading)
+                    const Center(child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator()))
+                  else ...[
+                    Text(
+                      _actorDetails?.name ?? widget.actorName,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 8,
+                      children: [
+                        if (_actorDetails?.birthday != null)
+                          _ActorIconText(icon: Icons.cake, text: _actorDetails!.birthday!),
+                        if (_actorDetails?.placeOfBirth != null)
+                          _ActorIconText(icon: Icons.location_on, text: _actorDetails!.placeOfBirth!),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    if (_actorDetails?.biography != null && _actorDetails!.biography!.isNotEmpty) ...[
+                      const Text(
+                        'Biography',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _actorDetails!.biography!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    if (_actorDetails != null && _actorDetails!.items.isNotEmpty) ...[
+                      const Text(
+                        'Known For',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildKnownForList(_actorDetails!.items),
+                    ],
+                    const SizedBox(height: 40),
+                  ],
+                ]),
+              ),
+            ),
+          ),
+        ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+    );
+  }
+
+  Widget _buildKnownForList(List<MediaItem> items) {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return GestureDetector(
+            onTap: () {
+              MediaDetailPage.show(context, item);
+            },
+            child: Container(
+              width: 120,
+              margin: const EdgeInsets.only(right: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_actorDetails?.profilePath != null && !Platform.environment.containsKey('FLUTTER_TEST'))
-                    Image.network(
-                      'https://image.tmdb.org/t/p/w500${_actorDetails!.profilePath}',
-                      width: double.infinity,
-                      height: 400,
-                      fit: BoxFit.cover,
-                    )
-                  else
-                    Container(
-                      height: 250,
-                      color: Colors.grey,
-                      child: const Center(
-                        child: Icon(Icons.person, size: 100),
-                      ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _actorDetails?.name ?? widget.actorName,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        if (_actorDetails?.birthday != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            'Birthday: ${_actorDetails!.birthday}',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                        ],
-                        if (_actorDetails?.placeOfBirth != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            'Place of Birth: ${_actorDetails!.placeOfBirth}',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        if (_actorDetails?.biography != null && _actorDetails!.biography!.isNotEmpty) ...[
-                          Text(
-                            'Biography',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _actorDetails!.biography!,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 24),
-                        ],
-                        if (_actorDetails != null && _actorDetails!.items.isNotEmpty) ...[
-                          Text(
-                            'Known For',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: 200,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: _actorDetails!.items.length,
-                              itemBuilder: (context, index) {
-                                final item = _actorDetails!.items[index];
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => MediaDetailPage(item: item),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 120,
-                                    margin: const EdgeInsets.only(right: 12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: item.posterPath != null && !Platform.environment.containsKey('FLUTTER_TEST')
-                                                ? Image.network(
-                                                    'https://image.tmdb.org/t/p/w185${item.posterPath}',
-                                                    fit: BoxFit.cover,
-                                                    width: 120,
-                                                  )
-                                                : Container(
-                                                    color: Colors.grey[300],
-                                                    child: Center(child: Icon(item.mediaType == MediaType.tv ? Icons.tv : Icons.movie)),
-                                                  ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          item.title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: item.posterPath != null && !Platform.environment.containsKey('FLUTTER_TEST')
+                          ? CachedNetworkImage(
+                              imageUrl: 'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                              fit: BoxFit.cover,
+                              width: 120,
+                              placeholder: (context, url) => Container(color: Colors.grey[200]),
+                              errorWidget: (context, url, error) => Icon(item.mediaType == MediaType.tv ? Icons.tv : Icons.movie),
+                            )
+                          : Container(
+                              color: Colors.grey[300],
+                              child: Center(child: Icon(item.mediaType == MediaType.tv ? Icons.tv : Icons.movie)),
                             ),
-                          ),
-                        ],
-                      ],
                     ),
                   ),
-                  if (isAndroidButtons) const SizedBox(height: 80) else const SizedBox(height: 24),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ],
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ActorIconText extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ActorIconText({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: context.appColors.comments),
+        const SizedBox(width: 4),
+        Text(text, style: Theme.of(context).textTheme.bodySmall),
+      ],
     );
   }
 }

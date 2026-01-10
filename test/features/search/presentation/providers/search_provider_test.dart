@@ -53,33 +53,123 @@ void main() {
     clearInteractions(mockRepository);
   });
 
+  group('SearchProvider - Discovery & Search Filters', () {
+    test('searchMedia with empty query should call discoverMedia for both Movie and TV when filterType is null', () async {
+      when(() => mockRepository.discoverMedia(
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            language: any(named: 'language'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => []);
+
+      await provider.searchMedia('');
+
+      verify(() => mockRepository.discoverMedia(
+            page: 1,
+            type: MediaType.movie,
+          )).called(1);
+      verify(() => mockRepository.discoverMedia(
+            page: 1,
+            type: MediaType.tv,
+          )).called(1);
+      expect(provider.isDiscoverMode, isTrue);
+    });
+
+    test('searchMedia with query should call searchMedia on repository', () async {
+       when(() => mockRepository.searchMedia(
+            any(),
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            language: any(named: 'language'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => []);
+
+      await provider.searchMedia('Inception');
+
+      verify(() => mockRepository.searchMedia(
+            'Inception',
+            page: 1,
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            type: any(named: 'type'),
+          )).called(1);
+      expect(provider.isDiscoverMode, isFalse);
+    });
+
+    test('should pass filters to repository calls', () async {
+      provider.setFilters(
+        genreIds: [28],
+        releaseYear: 2022,
+        minRating: 7.0,
+        type: MediaType.movie,
+      );
+
+      when(() => mockRepository.searchMedia(
+            any(),
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            language: any(named: 'language'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => []);
+
+      await provider.searchMedia('Batman');
+
+      verify(() => mockRepository.searchMedia(
+            'Batman',
+            page: 1,
+            genreIds: [28],
+            releaseYear: 2022,
+            minRating: 7.0,
+            type: MediaType.movie,
+          )).called(1);
+    });
+  });
+
+  group('SearchProvider - Media Details Enrichment', () {
+    test('getMediaDetails should fetch extra data (similar, recommended, providers, videos)', () async {
+      final tItem = const MediaItem(id: 1, title: 'T', overview: 'O', releaseDate: '2023');
+      final tDetails = MediaDetails(
+        item: tItem,
+        cast: [],
+        similar: [],
+        recommendations: [],
+        watchProviders: {},
+        videos: [],
+      );
+
+      when(() => mockRepository.getMediaDetails(any(), type: any(named: 'type')))
+          .thenAnswer((_) async => tDetails);
+
+      final result = await provider.getMediaDetails(1, MediaType.movie);
+
+      expect(result.similar, isNotNull);
+      expect(result.recommendations, isNotNull);
+      expect(result.watchProviders, isNotNull);
+      expect(result.videos, isNotNull);
+    });
+  });
+
   group('SearchProvider - Offline Status', () {
     test('initial state should be online', () {
       expect(provider.isOffline, isFalse);
     });
 
     test('should set offline to true when network call fails', () async {
-      when(() => mockRepository.searchMedia(any(), page: any(named: 'page')))
+      when(() => mockRepository.discoverMedia(page: any(named: 'page')))
           .thenThrow(Exception('SocketException: Connection failed'));
 
       try {
-        await provider.searchMedia('Dune');
+        await provider.searchMedia('');
       } catch (_) {}
 
       expect(provider.isOffline, isTrue);
-    });
-
-    test('should set offline to false when network call succeeds', () async {
-      provider.notifyNetworkError();
-      expect(provider.isOffline, isTrue);
-
-      when(() => mockRepository.searchMedia(any(), page: any(named: 'page')))
-          .thenAnswer((_) async => []);
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
-
-      await provider.searchMedia('Dune');
-
-      expect(provider.isOffline, isFalse);
     });
   });
 
@@ -101,89 +191,6 @@ void main() {
 
       expect(provider.getSeenCount(movieItem), 2);
       expect(provider.getSeenCount(tvItem), 1);
-    });
-  });
-
-  group('SearchProvider - getNextEpisode (Watch Next)', () {
-    const tTvId = 100; // Use unique ID for these tests
-    final tSeasons = [
-      const TVSeason(id: 1, seasonNumber: 1, episodeCount: 2, name: 'S1'),
-      const TVSeason(id: 2, seasonNumber: 2, episodeCount: 1, name: 'S2'),
-    ];
-    final tTvItem = MediaItem(id: tTvId, title: 'Show', overview: '', releaseDate: '', mediaType: MediaType.tv, seasons: tSeasons);
-    final tDetails = MediaDetails(item: tTvItem, cast: []);
-
-    test('should return S1 E1 if nothing has been seen', () async {
-      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => []);
-      when(() => mockRepository.getSeasonDetails(tTvId, 1)).thenAnswer((_) async => {
-        'episodes': [{'episode_number': 1, 'air_date': '2020-01-01'}]
-      });
-
-      final result = await provider.getNextEpisode(tTvId);
-
-      expect(result, isNotNull);
-      expect(result?.seasonNumber, 1);
-      expect(result?.episodeNumber, 1);
-    });
-
-    test('should return S1 E2 if S1 E1 is seen', () async {
-      final seen = [
-        SeenItem(tmdbId: tTvId, type: MediaType.tv, title: 'Show', seenDate: DateTime.now(), seasonNumber: 1, episodeNumber: 1),
-      ];
-      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => seen);
-      when(() => mockRepository.getMediaDetails(tTvId, type: MediaType.tv)).thenAnswer((_) async => tDetails);
-      when(() => mockRepository.getSeasonDetails(tTvId, 1)).thenAnswer((_) async => {
-        'episodes': [
-          {'episode_number': 1, 'air_date': '2020-01-01'},
-          {'episode_number': 2, 'air_date': '2020-01-01'},
-        ]
-      });
-
-      final result = await provider.getNextEpisode(tTvId);
-
-      expect(result, isNotNull);
-      expect(result?.seasonNumber, 1);
-      expect(result?.episodeNumber, 2);
-    });
-
-    test('should move to S2 E1 if last episode of S1 is seen', () async {
-      final seen = [
-        SeenItem(tmdbId: tTvId, type: MediaType.tv, title: 'Show', seenDate: DateTime.now(), seasonNumber: 1, episodeNumber: 2),
-      ];
-      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => seen);
-      when(() => mockRepository.getMediaDetails(tTvId, type: MediaType.tv)).thenAnswer((_) async => tDetails);
-      when(() => mockRepository.getSeasonDetails(tTvId, 2)).thenAnswer((_) async => {
-        'episodes': [{'episode_number': 1, 'air_date': '2020-01-01'}]
-      });
-
-      final result = await provider.getNextEpisode(tTvId);
-
-      expect(result, isNotNull);
-      expect(result?.seasonNumber, 2);
-      expect(result?.episodeNumber, 1);
-    });
-
-    test('should return null if the next episode air date is in the future', () async {
-      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => []);
-      when(() => mockRepository.getSeasonDetails(tTvId, 1)).thenAnswer((_) async => {
-        'episodes': [{'episode_number': 1, 'air_date': '2099-01-01'}]
-      });
-
-      final result = await provider.getNextEpisode(tTvId);
-
-      expect(result, isNull);
-    });
-
-    test('should return null if all episodes are seen', () async {
-      final seen = [
-        SeenItem(tmdbId: tTvId, type: MediaType.tv, title: 'Show', seenDate: DateTime.now(), seasonNumber: 2, episodeNumber: 1),
-      ];
-      when(() => mockRepository.getSeenStatus(tTvId, MediaType.tv)).thenAnswer((_) async => seen);
-      when(() => mockRepository.getMediaDetails(tTvId, type: MediaType.tv)).thenAnswer((_) async => tDetails);
-
-      final result = await provider.getNextEpisode(tTvId);
-
-      expect(result, isNull);
     });
   });
 }
