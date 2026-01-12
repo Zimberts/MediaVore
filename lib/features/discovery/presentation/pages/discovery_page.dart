@@ -8,6 +8,7 @@ import 'package:mediavore/features/media_details/presentation/pages/media_detail
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 
 class DiscoveryPage extends StatefulWidget {
   const DiscoveryPage({super.key});
@@ -47,7 +48,11 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
   void _refreshDiscovery() {
     final provider = context.read<SearchProvider>();
-    provider.searchMedia(_controller.text);
+    provider.searchMedia(_controller.text).then((_) {
+      if (mounted && provider.items.isNotEmpty) {
+        MainPage.updateDiscoveryWidget(provider.items);
+      }
+    });
   }
 
   void _onSearchChanged(String value) {

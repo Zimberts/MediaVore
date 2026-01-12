@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_search_label">MediaVore: Quick Search</string>
+    <string name="widget_discovery_label">MediaVore: Discover</string>
+    <string name="widget_shelf_label">MediaVore: My Shelf</string>
+    <string name="widget_watch_next_label">MediaVore: Watch Next</string>
+</resources>

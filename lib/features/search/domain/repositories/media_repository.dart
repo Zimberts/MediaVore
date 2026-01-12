@@ -181,6 +181,7 @@ class MediaItemPreview {
   final String title;
   final String? posterPath;
   final String type;
+  final String? releaseDate;
 
-  MediaItemPreview({required this.id, required this.title, this.posterPath, required this.type});
+  MediaItemPreview({required this.id, required this.title, this.posterPath, required this.type, this.releaseDate});
 }

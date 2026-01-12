@@ -12,6 +12,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/like_button.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -69,8 +70,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     }
   }
 
-  /// Programmatically crops the white space from the app icon and applies theme colors
-  /// to create a branded logo for the QR code.
   Future<void> _prepareCroppedLogo() async {
     try {
       final data = await rootBundle.load('assets/icon/app_icon.png');
@@ -78,7 +77,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       final frame = await codec.getNextFrame();
       final fullImage = frame.image;
 
-      // Crop to the central 58% where the character is located
       final double size = fullImage.width.toDouble();
       final double cropSize = size * 0.58; 
       final double offset = (size - cropSize) / 2;
@@ -88,14 +86,12 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       final center = Offset(cropSize / 2, cropSize / 2);
       final radius = cropSize / 2;
 
-      // 1. Draw theme-colored background circle
       canvas.drawCircle(
         center,
         radius,
         ui.Paint()..color = _lastThemeColor ?? Colors.blue,
       );
 
-      // 2. Draw white border for contrast against QR modules
       canvas.drawCircle(
         center,
         radius,
@@ -105,7 +101,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ..strokeWidth = cropSize * 0.08,
       );
 
-      // 3. Draw the cropped logo
       canvas.drawImageRect(
         fullImage,
         Rect.fromLTWH(offset, offset, cropSize, cropSize),
@@ -136,17 +131,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     setState(() {
       _savedMediaFuture = _fetchSavedMedia();
     });
-  }
-
-  void resetToDefault() {
-    if (_selectedList != 'watchlist') {
-      setState(() {
-        _selectedList = 'watchlist';
-        _isEditMode = false;
-        _selectedItems.clear();
-      });
-      loadSavedMedia();
-    }
   }
 
   Future<List<MediaItem>> _fetchSavedMedia() async {
@@ -210,6 +194,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     
     if (mounted) {
       provider.loadAllSeenStatus();
+      // Update the shelf widget if we are on the watchlist
+      if (_selectedList == 'watchlist') {
+        MainPage.updateShelfWidget(items);
+      }
     }
     _currentItems = items;
     return items;
@@ -400,7 +388,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
   void _showQRCodeDialog(SearchProvider provider, SettingsProvider settings) {
     final link = provider.getCustomSchemeShareLinkForList(_selectedList);
-    // Respect CURRENT visible order and filters
     final visibleItems = _getFilteredAndSortedItems(_currentItems, settings);
     final previewPosters = visibleItems.where((i) => i.posterPath != null).take(3).toList();
     final colors = context.appColors;
@@ -446,7 +433,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                         ),
                         embeddedImage: _croppedLogoBytes != null ? MemoryImage(_croppedLogoBytes!) : null,
                         embeddedImageStyle: const QrEmbeddedImageStyle(
-                          size: Size(70, 70), // Significant size due to cropping
+                          size: Size(70, 70),
                         ),
                       ),
                     ),
@@ -828,7 +815,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
           
-          // Map indices to _currentItems to handle filtering correctly
           final oldPersistentIndex = _currentItems.indexOf(item);
           _currentItems.removeAt(oldPersistentIndex);
           
@@ -894,7 +880,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
           
-          // Map indices to _currentItems to handle filtering correctly
           final oldPersistentIndex = _currentItems.indexOf(item);
           _currentItems.removeAt(oldPersistentIndex);
           
@@ -1234,7 +1219,7 @@ class _MediaSwipeItem extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: [
-                  const SizedBox(width: 56), // Balances the larger LikeButton
+                  const SizedBox(width: 56),
                   Expanded(
                     child: InkWell(
                       onTap: () => MediaDetailPage.show(context, item),
@@ -1294,7 +1279,6 @@ class _PosterWithBadge extends StatelessWidget {
   }
 }
 
-// Extract the badge into its own widget
 class _PosterBadgeOnly extends StatelessWidget {
   final MediaItem item;
   final SearchProvider provider;

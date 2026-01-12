@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/pages/main_page.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:home_widget/home_widget.dart';
 
 class SearchProvider with ChangeNotifier {
   final MediaRepository repository;
@@ -19,7 +23,7 @@ class SearchProvider with ChangeNotifier {
   String? _error;
   bool _isOffline = false;
   List<String> _listNames = ['watchlist'];
-  final Map<String, List<String>> _listEntries = {}; // listName -> ["id:type"]
+  final Map<String, List<String>> _listEntries = {}; 
   final Map<String, List<MediaItemPreview>> _listPreviews = {};
   int _cacheSize = 0;
   int _seenDbSize = 0;
@@ -27,14 +31,12 @@ class SearchProvider with ChangeNotifier {
   int _currentPage = 1;
   String _currentQuery = '';
   bool _hasMore = true;
-  int _selectedTab = 0; // Default to "Discover" (SearchPage)
+  int _selectedTab = 0; 
 
-  // Progress feedback for refetching/importing
   double _importProgress = 0.0;
   String _importStatus = '';
   bool _isImporting = false;
 
-  // Filter states
   List<int>? _genreIds;
   int? _releaseYear;
   double? _minRating;
@@ -43,12 +45,12 @@ class SearchProvider with ChangeNotifier {
   bool _isDiscoverMode = false;
 
   List<SeenItem> _seenItems = [];
-  Map<String, int> _seenCounts = {}; // "id:type" -> count
-  List<String> _watchlistIds = []; // Simplified IDs for quick checks
-  List<String> _likedIds = []; // "id:type"
+  Map<String, int> _seenCounts = {}; 
+  List<String> _watchlistIds = []; 
+  List<String> _likedIds = []; 
   List<NotifiedItem> _notifiedItems = [];
 
-  List<MediaItem> get items => _searchResults; // For SearchPage
+  List<MediaItem> get items => _searchResults; 
   bool get isLoading => _isLoading;
   bool get isCacheLoading => _isCacheLoading;
   bool get isDbSizeLoading => _isDbSizeLoading;
@@ -70,7 +72,6 @@ class SearchProvider with ChangeNotifier {
   String get importStatus => _importStatus;
   bool get isImporting => _isImporting;
 
-  // Filter getters
   List<int>? get genreIds => _genreIds;
   int? get releaseYear => _releaseYear;
   double? get minRating => _minRating;
@@ -78,6 +79,9 @@ class SearchProvider with ChangeNotifier {
   MediaType? get filterType => _filterType;
   bool get isDiscoverMode => _isDiscoverMode;
   String get currentQuery => _currentQuery;
+
+  SettingsProvider? _settings;
+  void setSettings(SettingsProvider settings) => _settings = settings;
 
   Future<void> _init() async {
     await loadListNames();
@@ -142,6 +146,7 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> loadListNames() async {
     _listNames = await repository.getAllListNames();
+    await HomeWidget.saveWidgetData('available_lists', jsonEncode(_listNames));
     notifyListeners();
   }
 
@@ -182,6 +187,7 @@ class SearchProvider with ChangeNotifier {
 
     _seenCounts = counts;
     notifyListeners();
+    MainPage.updateWatchNextWidget(this);
   }
 
   Future<void> loadNotifiedItems() async {
@@ -210,6 +216,7 @@ class SearchProvider with ChangeNotifier {
     await repository.toggleLike(item);
     await loadLikedStatus();
     await updateCacheSize();
+    if (_settings != null) MainPage.syncAllListsToWidget(this, _settings!);
   }
 
   Future<void> toggleInList(MediaItem item, String listName) async {
@@ -234,6 +241,7 @@ class SearchProvider with ChangeNotifier {
     _listPreviews[listName] = await repository.getListPreviews(listName);
     await updateCacheSize();
     notifyListeners();
+    if (_settings != null) MainPage.syncAllListsToWidget(this, _settings!);
   }
 
   Future<void> toggleWatchlist(MediaItem item) async {
@@ -260,6 +268,7 @@ class SearchProvider with ChangeNotifier {
     _listEntries.remove(name);
     _listPreviews.remove(name);
     notifyListeners();
+    if (_settings != null) MainPage.syncAllListsToWidget(this, _settings!);
   }
 
   Future<void> updateListOrder(String listName, List<String> orderedEntries) async {
@@ -267,6 +276,7 @@ class SearchProvider with ChangeNotifier {
     _listEntries[listName] = orderedEntries;
     _listPreviews[listName] = await repository.getListPreviews(listName);
     notifyListeners();
+    if (_settings != null) MainPage.syncAllListsToWidget(this, _settings!);
   }
 
   String getShareLinkForList(String listName) {
@@ -298,6 +308,7 @@ class SearchProvider with ChangeNotifier {
     }
     await _loadAllListEntries();
     notifyListeners();
+    if (_settings != null) MainPage.syncAllListsToWidget(this, _settings!);
   }
 
   void setFilters({
@@ -341,7 +352,6 @@ class SearchProvider with ChangeNotifier {
     try {
       if (_isDiscoverMode && _currentQuery.isEmpty) {
         if (_filterType == null) {
-          // Both types mode
           final movies = await repository.discoverMedia(
             page: _currentPage,
             genreIds: _genreIds,

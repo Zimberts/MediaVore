@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/config_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/config_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Widget Configuration"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+        <LinearLayout
+            android:id="@+id/config_list_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select List"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp" />
+
+            <Spinner
+                android:id="@+id/config_list_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@android:drawable/btn_dropdown"
+                android:backgroundTint="#333333" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/config_mode_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Display Mode"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp" />
+
+            <RadioGroup
+                android:id="@+id/config_mode_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp">
+                <RadioButton android:id="@+id/radio_list" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="List" android:textColor="#FFFFFF" android:buttonTint="#4CAF50" />
+                <RadioButton android:id="@+id/radio_grid" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Grid" android:textColor="#FFFFFF" android:buttonTint="#4CAF50" />
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/config_grid_cols_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:id="@+id/config_grid_cols_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grid Columns (3)"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp" />
+
+            <SeekBar
+                android:id="@+id/config_grid_cols_seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="3"
+                android:progress="1" />
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/config_hide_unreleased"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hide Unreleased Media"
+            android:textColor="#FFFFFF"
+            android:buttonTint="#4CAF50"
+            android:layout_marginBottom="32dp" />
+
+        <Button
+            android:id="@+id/config_save_button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="SAVE SETTINGS"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+</ScrollView>

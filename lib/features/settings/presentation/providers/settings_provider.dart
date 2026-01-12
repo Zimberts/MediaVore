@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:home_widget/home_widget.dart';
 
 enum DisplayMode { list, grid, swipe }
 
@@ -15,6 +17,11 @@ class SettingsProvider with ChangeNotifier {
   double _gridSize = 3.0;
   bool _hideNonReleased = false;
 
+  // Restore widget specific settings to unblock build
+  String _widgetShelfListName = 'watchlist';
+  DisplayMode _widgetShelfDisplayMode = DisplayMode.list;
+  bool _widgetShelfHideUnreleased = false;
+
   int _lightAppThemeIndex = 0;
   int _darkAppThemeIndex = 0;
   ThemeMode _themeMode = ThemeMode.system;
@@ -22,6 +29,11 @@ class SettingsProvider with ChangeNotifier {
   DisplayMode get displayMode => _displayMode;
   double get gridSize => _gridSize;
   bool get hideNonReleased => _hideNonReleased;
+
+  // Getters for MainPage
+  String get widgetShelfListName => _widgetShelfListName;
+  DisplayMode get widgetShelfDisplayMode => _widgetShelfDisplayMode;
+  bool get widgetShelfHideUnreleased => _widgetShelfHideUnreleased;
 
   int get lightAppThemeIndex => _lightAppThemeIndex;
   int get darkAppThemeIndex => _darkAppThemeIndex;
@@ -40,6 +52,12 @@ class SettingsProvider with ChangeNotifier {
     _gridSize = _prefs.getDouble('gridSize') ?? 3.0;
     _hideNonReleased = _prefs.getBool('hideNonReleased') ?? false;
 
+    // Load widget settings (legacy/global fallback)
+    _widgetShelfListName = _prefs.getString('widgetShelfListName') ?? 'watchlist';
+    int wDisplayModeIndex = _prefs.getInt('widgetShelfDisplayMode') ?? 0;
+    _widgetShelfDisplayMode = DisplayMode.values[wDisplayModeIndex];
+    _widgetShelfHideUnreleased = _prefs.getBool('widgetShelfHideUnreleased') ?? false;
+
     _lightAppThemeIndex = _prefs.getInt('lightAppTheme') ?? 0;
     if (_lightAppThemeIndex < 0 || _lightAppThemeIndex >= lightThemes.length) {
       _lightAppThemeIndex = 0;
@@ -57,6 +75,18 @@ class SettingsProvider with ChangeNotifier {
     _themeMode = ThemeMode.values[themeModeIndex];
     
     notifyListeners();
+    _syncThemeToWidget();
+  }
+
+  String _colorToHex(Color color) {
+    return '#${color.value.toRadixString(16).substring(2, 8).toUpperCase()}';
+  }
+
+  Future<void> _syncThemeToWidget() async {
+    final palette = _themeMode == ThemeMode.light ? lightPalette : darkPalette;
+    await HomeWidget.saveWidgetData('theme_primary_bg', _colorToHex(palette.primaryBg));
+    await HomeWidget.saveWidgetData('theme_accent', _colorToHex(palette.logicFlow));
+    await HomeWidget.saveWidgetData('theme_text_primary', _colorToHex(palette.primaryText));
   }
 
   Future<void> setDisplayMode(DisplayMode mode) async {
@@ -80,18 +110,21 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setLightAppTheme(int themeIndex) async {
     _lightAppThemeIndex = themeIndex;
     await _prefs.setInt('lightAppTheme', themeIndex);
+    await _syncThemeToWidget();
     notifyListeners();
   }
 
   Future<void> setDarkAppTheme(int themeIndex) async {
     _darkAppThemeIndex = themeIndex;
     await _prefs.setInt('darkAppTheme', themeIndex);
+    await _syncThemeToWidget();
     notifyListeners();
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     await _prefs.setInt('themeMode', mode.index);
+    await _syncThemeToWidget();
     notifyListeners();
   }
 }

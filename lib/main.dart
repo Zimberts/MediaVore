@@ -51,14 +51,20 @@ class MediaVoreApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (context) {
+            final prefs = locator<SharedPreferences>();
+            return SettingsProvider(prefs);
+          },
+        ),
+        ChangeNotifierProxyProvider<SettingsProvider, SearchProvider>(
+          create: (context) {
             final repo = locator<MediaRepository>();
             return SearchProvider(repo);
           },
-        ),
-        ChangeNotifierProvider(
-          create: (context) {
-            final prefs = locator<SharedPreferences>();
-            return SettingsProvider(prefs);
+          update: (context, settings, search) {
+            if (search != null) {
+              search.setSettings(settings);
+            }
+            return search!;
           },
         ),
         ChangeNotifierProvider(

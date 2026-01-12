@@ -221,10 +221,17 @@ class MediaRepositoryImpl implements MediaRepository {
           orElse: () => CrewMember(name: 'N/A', job: 'Director'),
         );
 
-    final List<MediaItem> similar = await similarFuture;
-    final List<MediaItem> recommendations = await recommendationsFuture;
-    final Map<String, dynamic> watchProviders = await watchProvidersFuture;
-    final List<Map<String, dynamic>> videos = await videosFuture;
+    List<MediaItem> similar = [];
+    try { similar = await similarFuture; } catch (_) {}
+    
+    List<MediaItem> recommendations = [];
+    try { recommendations = await recommendationsFuture; } catch (_) {}
+    
+    Map<String, dynamic> watchProviders = {};
+    try { watchProviders = await watchProvidersFuture; } catch (_) {}
+    
+    List<Map<String, dynamic>> videos = [];
+    try { videos = await videosFuture; } catch (_) {}
 
     final details = MediaDetails(
       item: item,
@@ -445,6 +452,7 @@ class MediaRepositoryImpl implements MediaRepository {
         title: item.title,
         posterPath: cachedItem?.posterPath,
         type: item.type,
+        releaseDate: cachedItem?.releaseDate,
       );
     }).toList();
   }

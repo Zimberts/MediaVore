@@ -36,9 +36,78 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="mediavore" android:host="search" />
+                <data android:scheme="mediavore" android:host="scan" />
                 <data android:scheme="mediavore" android:host="share" />
+                <data android:scheme="mediavore" android:host="discovery" />
+                <data android:scheme="mediavore" android:host="details" />
+                <data android:scheme="mediavore" android:host="markSeen" />
+                <data android:scheme="mediavore" android:host="settings" />
             </intent-filter>
         </activity>
+
+        <!-- Widget Configuration Activity -->
+        <activity android:name=".WidgetConfigurationActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Search Widget Provider -->
+        <receiver android:name=".SearchWidgetProvider"
+            android:label="@string/widget_search_label"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/search_widget_info" />
+        </receiver>
+
+        <!-- Discovery Widget Provider -->
+        <receiver android:name=".DiscoveryWidgetProvider"
+            android:label="@string/widget_discovery_label"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/discovery_widget_info" />
+        </receiver>
+
+        <!-- Shelf Widget Provider -->
+        <receiver android:name=".ShelfWidgetProvider"
+            android:label="@string/widget_shelf_label"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/shelf_widget_info" />
+        </receiver>
+
+        <!-- Watch Next Widget Provider -->
+        <receiver android:name=".WatchNextWidgetProvider"
+            android:label="@string/widget_watch_next_label"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/watch_next_widget_info" />
+        </receiver>
+
+        <!-- Widget Services -->
+        <service android:name=".ShelfWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+            
+        <service android:name=".WatchNextWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
