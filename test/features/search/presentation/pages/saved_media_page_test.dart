@@ -87,14 +87,21 @@ void main() {
     );
     
     when(() => mockMediaRepository.getListEntries('watchlist')).thenAnswer((_) async => ['1:movie']);
-    when(() => mockMediaRepository.getMediaDetails(1, type: MediaType.movie))
+    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => ['1:movie']);
+    when(() => mockMediaRepository.getMediaDetails(1, type: any(named: 'type')))
         .thenAnswer((_) async => MediaDetails(item: item, cast: []));
     when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
 
-    // Ensure provider has the updated liked status before building
+    // Ensure provider has the updated state before building
     await searchProvider.loadLikedStatus();
+    await searchProvider.loadWatchlist();
 
     await tester.pumpWidget(createWidgetUnderTest());
+    
+    // Explicitly pump several times to allow FutureBuilder inside SavedMediaPage to resolve
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     await tester.pumpAndSettle();
 
     expect(find.text('Inception'), findsOneWidget);

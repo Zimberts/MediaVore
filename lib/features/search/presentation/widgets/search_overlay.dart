@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
@@ -32,6 +33,8 @@ class _SearchOverlayState extends State<SearchOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -68,6 +71,8 @@ class _SearchOverlayState extends State<SearchOverlay> {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
+              final isInWatchlist = provider.isItemInList(item, 'watchlist');
+              
               return ListTile(
                 leading: item.posterPath != null
                     ? Image.network(
@@ -80,6 +85,14 @@ class _SearchOverlayState extends State<SearchOverlay> {
                     : const Icon(Icons.movie),
                 title: Text(item.title),
                 subtitle: Text(item.releaseDate),
+                trailing: IconButton(
+                  icon: Icon(
+                    isInWatchlist ? Icons.bookmark : Icons.bookmark_add_outlined,
+                    color: isInWatchlist ? colors.onWatchlist : null,
+                  ),
+                  onPressed: () => provider.toggleWatchlist(item),
+                  tooltip: isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist',
+                ),
                 onTap: () {
                   MediaDetailPage.show(context, item);
                 },

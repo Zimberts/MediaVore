@@ -42,6 +42,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   final GlobalKey _qrKey = GlobalKey();
   Uint8List? _croppedLogoBytes;
   Color? _lastThemeColor;
+  int _lastListsVersion = -1;
 
   // Edit Mode State
   bool _isEditMode = false;
@@ -62,6 +63,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    
+    final provider = context.watch<SearchProvider>();
+    if (provider.listsVersion != _lastListsVersion) {
+      _lastListsVersion = provider.listsVersion;
+      // We use microtask to avoid calling setState during build/dependencies change if not necessary
+      Future.microtask(() => loadSavedMedia());
+    }
+
     final newColor = context.appColors.logicFlow;
     if (_lastThemeColor != newColor) {
       _lastThemeColor = newColor;
@@ -151,7 +160,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
   Future<List<MediaItem>> _fetchSavedMedia() async {
     final provider = context.read<SearchProvider>();
-    final entries = await _mediaRepository.getListEntries(_selectedList);
+    final entries = provider.getListEntries(_selectedList);
     final localItems = await _mediaRepository.getListPreviews(_selectedList, limit: 1000);
 
     List<MediaItem> items;
@@ -188,17 +197,37 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             final details = await provider.getMediaDetails(id, type);
             return details.item;
           } catch (e) {
+            // Fallback 1: Local Cache
             final local = localItems.firstWhere(
               (l) => l.id == id && l.type == typeStr,
-              orElse: () => MediaItemPreview(id: id, title: 'Unknown', type: typeStr),
+              orElse: () => MediaItemPreview(id: -1, title: '', type: ''),
             );
+            
+            if (local.id != -1) {
+              return MediaItem(
+                id: local.id,
+                title: local.title,
+                overview: '', 
+                releaseDate: '', 
+                mediaType: type,
+                posterPath: local.posterPath,
+              );
+            }
+
+            // Fallback 2: Search Provider currently loaded items (prevents "Unknown" on new addition)
+            final inSearch = provider.items.firstWhere(
+              (i) => i.id == id && i.mediaType == type,
+              orElse: () => const MediaItem(id: -1, title: '', overview: '', releaseDate: ''),
+            );
+
+            if (inSearch.id != -1) return inSearch;
+
             return MediaItem(
-              id: local.id,
-              title: local.title,
+              id: id,
+              title: 'Loading...', 
               overview: '', 
               releaseDate: '', 
               mediaType: type,
-              posterPath: local.posterPath,
             );
           }
         } catch (e) {
@@ -208,9 +237,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       items = (await Future.wait(itemFutures)).where((item) => item.id != 0).toList();
     }
     
-    if (mounted) {
-      provider.loadAllSeenStatus();
-    }
     _currentItems = items;
     return items;
   }
@@ -227,7 +253,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       _isEditMode = false;
       _selectedItems.clear();
     });
-    loadSavedMedia();
+    // Provider will notify and didChangeDependencies will trigger reload via version change
   }
 
   List<MediaItem> _getFilteredAndSortedItems(List<MediaItem> items, SettingsProvider settings) {
@@ -264,57 +290,60 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     final settings = context.read<SettingsProvider>();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Display Options', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 16),
-                ToggleButtons(
-                  isSelected: [
-                    settings.displayMode == DisplayMode.list,
-                    settings.displayMode == DisplayMode.grid,
-                    settings.displayMode == DisplayMode.swipe,
-                  ],
-                  onPressed: (index) {
-                    settings.setDisplayMode(DisplayMode.values[index]);
-                    setSheetState(() {});
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  children: const [
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.list)),
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.grid_view)),
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.view_carousel)),
-                  ],
-                ),
-                if (settings.displayMode == DisplayMode.grid) ...[
-                  const SizedBox(height: 24),
-                  const Text('Grid Size', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Row(
-                    children: [
-                      const Icon(Icons.grid_view, size: 20),
-                      Expanded(
-                        child: Slider(
-                          value: settings.gridSize,
-                          min: 2,
-                          max: 5,
-                          divisions: 3,
-                          label: settings.gridSize.round().toString(),
-                          onChanged: (v) {
-                            settings.setGridSize(v);
-                            setSheetState(() {});
-                          },
-                        ),
-                      ),
-                      Text(settings.gridSize.round().toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Display Options', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 16),
+                  ToggleButtons(
+                    isSelected: [
+                      settings.displayMode == DisplayMode.list,
+                      settings.displayMode == DisplayMode.grid,
+                      settings.displayMode == DisplayMode.swipe,
+                    ],
+                    onPressed: (index) {
+                      settings.setDisplayMode(DisplayMode.values[index]);
+                      setSheetState(() {});
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    children: const [
+                      Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.list)),
+                      Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.grid_view)),
+                      Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.view_carousel)),
                     ],
                   ),
+                  if (settings.displayMode == DisplayMode.grid) ...[
+                    const SizedBox(height: 24),
+                    const Text('Grid Size', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        const Icon(Icons.grid_view, size: 20),
+                        Expanded(
+                          child: Slider(
+                            value: settings.gridSize,
+                            min: 2,
+                            max: 5,
+                            divisions: 3,
+                            label: settings.gridSize.round().toString(),
+                            onChanged: (v) {
+                              settings.setGridSize(v);
+                              setSheetState(() {});
+                            },
+                          ),
+                        ),
+                        Text(settings.gridSize.round().toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 8),
-              ],
+              ),
             ),
           ),
         ),
@@ -618,7 +647,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 setState(() {
                    _selectedList = controller.text;
                 });
-                loadSavedMedia();
+                // didChangeDependencies will trigger loadSavedMedia
               }
             },
             child: const Text('Confirm'),
@@ -632,6 +661,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     final colors = context.appColors;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -640,45 +670,47 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: colors.placeholder,
-                      borderRadius: BorderRadius.circular(2),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: colors.placeholder,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  Text('Sort Options', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  _buildSortItem(SortMethod.manual, 'Manual Order', Icons.drag_indicator, 'Drag and drop items to reorder'),
-                  _buildSortItem(SortMethod.releaseDate, 'Release Date', Icons.calendar_today, 'Sort by when it was released'),
-                  _buildSortItem(SortMethod.shuffle, 'Shuffle', Icons.shuffle, 'Randomize the list'),
-                  const Divider(),
-                  ListTile(
-                    leading: Icon(_isReversed ? Icons.swap_vert_circle : Icons.swap_vert, color: _isReversed ? colors.logicFlow : null),
-                    title: const Text('Reverse Order'),
-                    trailing: Switch(
-                      value: _isReversed,
-                      activeThumbColor: colors.logicFlow, 
-                      onChanged: (value) {
+                    Text('Sort Options', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    _buildSortItem(SortMethod.manual, 'Manual Order', Icons.drag_indicator, 'Drag and drop items to reorder'),
+                    _buildSortItem(SortMethod.releaseDate, 'Release Date', Icons.calendar_today, 'Sort by when it was released'),
+                    _buildSortItem(SortMethod.shuffle, 'Shuffle', Icons.shuffle, 'Randomize the list'),
+                    const Divider(),
+                    ListTile(
+                      leading: Icon(_isReversed ? Icons.swap_vert_circle : Icons.swap_vert, color: _isReversed ? colors.logicFlow : null),
+                      title: const Text('Reverse Order'),
+                      trailing: Switch(
+                        value: _isReversed,
+                        activeThumbColor: colors.logicFlow, 
+                        onChanged: (value) {
+                          setState(() {
+                            _isReversed = value;
+                          });
+                          setSheetState(() {});
+                        },
+                      ),
+                      onTap: () {
                         setState(() {
-                          _isReversed = value;
+                          _isReversed = !_isReversed;
                         });
                         setSheetState(() {});
                       },
                     ),
-                    onTap: () {
-                      setState(() {
-                        _isReversed = !_isReversed;
-                      });
-                      setSheetState(() {});
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -1049,7 +1081,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               if (controller.text.isNotEmpty) {
                 await provider.createList(controller.text);
                 setState(() { _selectedList = controller.text; _isEditMode = false; _selectedItems.clear(); });
-                loadSavedMedia();
+                // didChangeDependencies will trigger reload
                 if (context.mounted) Navigator.pop(context);
               }
             },
@@ -1076,7 +1108,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               }
               await provider.deleteList(listName);
               if (context.mounted) Navigator.pop(context);
-              loadSavedMedia();
+              // didChangeDependencies will trigger reload
             },
             child: Text('Delete', style: TextStyle(color: colors.error)),
           ),
@@ -1280,11 +1312,11 @@ class _PosterWithBadge extends StatelessWidget {
                 height: height,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                errorWidget: (context, url, error) => Icon(isTv ? Icons.tv : Icons.movie, size: width),
+                errorWidget: (context, url, error) => Icon(isTv ? Icons.tv : Icons.movie, size: (width != null && width!.isFinite) ? width : 24),
               )
             : Container(
                 width: width, height: height, color: colors.placeholder,
-                child: Icon(isTv ? Icons.tv : Icons.movie, size: width != null ? width! / 2 : 24),
+                child: Icon(isTv ? Icons.tv : Icons.movie, size: (width != null && width!.isFinite) ? width! / 2 : 24),
               ),
         ),
         if (isSeen && showBadge)

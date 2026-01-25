@@ -37,7 +37,7 @@ class MediaListManager extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(10), // Slightly smaller to stay inside border
+                borderRadius: BorderRadius.circular(10), 
                 onTap: () => provider.toggleInList(item, 'watchlist'),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
@@ -45,7 +45,7 @@ class MediaListManager extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        isInWatchlist ? Icons.check : Icons.add,
+                        isInWatchlist ? Icons.bookmark : Icons.bookmark_add_outlined,
                         color: isInWatchlist ? palette.primaryBg : palette.onWatchlist,
                       ),
                       const SizedBox(width: 8),
@@ -70,7 +70,7 @@ class MediaListManager extends StatelessWidget {
           return ListTile(
             title: Text(name),
             leading: Icon(
-              isInList ? Icons.check : Icons.add,
+              isInList ? Icons.bookmark : Icons.bookmark_add_outlined,
               color: isInList ? palette.onWatchlist : null,
             ),
             onTap: () => provider.toggleInList(item, name),

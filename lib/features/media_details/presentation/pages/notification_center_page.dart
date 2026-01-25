@@ -136,7 +136,6 @@ class _ReleasesTabState extends State<_ReleasesTab> {
           }
           
           if (item.type == MediaType.tv) {
-            // FIX: Use season and episode number for precise filtering
             if (item.seasonNumber != null && item.episodeNumber != null) {
               final isEpSeen = provider.seenItems.any((s) => 
                 s.tmdbId == item.tmdbId && 
@@ -148,7 +147,6 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                 return false;
               }
             } else {
-              // Fallback to date-based logic ONLY if episode info is missing
               final alreadySeenRecent = provider.seenItems.any((s) => 
                 s.tmdbId == item.tmdbId && 
                 s.type == MediaType.tv &&
@@ -161,7 +159,6 @@ class _ReleasesTabState extends State<_ReleasesTab> {
             }
           }
 
-          // Check if it's within our window
           return  releaseDay.isAfter(oneMonthAgo) || DateUtils.isSameDay(releaseDay, startOfDay);
 
         }).toList();
@@ -215,7 +212,6 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                                     seenDate: DateTime.now(),
                                   ));
                                 } else {
-                                  // Mark the SPECIFIC notified episode as seen
                                   await provider.markAsSeen(SeenItem(
                                     tmdbId: item.tmdbId,
                                     type: item.type,
@@ -227,7 +223,6 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                                   ));
                                 }
                                 
-                                // Refresh to find the NEXT episode milestone
                                 await provider.getMediaDetails(item.tmdbId, item.type);
                                 await provider.loadNotifiedItems();
                                 
@@ -256,10 +251,7 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                       onTap: () async {
                         final details = await provider.getMediaDetails(item.tmdbId, item.type);
                         if (context.mounted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => MediaDetailPage(item: details.item)),
-                          );
+                          MediaDetailPage.show(context, details.item);
                         }
                       },
                     );
@@ -362,10 +354,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                       onTap: () async {
                          final details = await provider.getMediaDetails(tmdbId, MediaType.tv);
                          if (context.mounted) {
-                           Navigator.push(
-                             context,
-                             MaterialPageRoute(builder: (_) => MediaDetailPage(item: details.item)),
-                           );
+                           MediaDetailPage.show(context, details.item);
                          }
                       },
                     );

@@ -28,6 +28,7 @@ class SearchProvider with ChangeNotifier {
   String _currentQuery = '';
   bool _hasMore = true;
   int _selectedTab = 0; // Default to "Discover" (SearchPage)
+  int _listsVersion = 0;
 
   // Progress feedback for refetching/importing
   double _importProgress = 0.0;
@@ -65,6 +66,7 @@ class SearchProvider with ChangeNotifier {
   List<String> get likedIds => _likedIds;
   List<NotifiedItem> get notifiedItems => _notifiedItems;
   int get selectedTab => _selectedTab;
+  int get listsVersion => _listsVersion;
 
   double get importProgress => _importProgress;
   String get importStatus => _importStatus;
@@ -137,6 +139,7 @@ class SearchProvider with ChangeNotifier {
       _listEntries[name] = await repository.getListEntries(name);
       _listPreviews[name] = await repository.getListPreviews(name);
     }
+    _listsVersion++;
     notifyListeners();
   }
 
@@ -150,6 +153,7 @@ class SearchProvider with ChangeNotifier {
     _watchlistIds = entries.map((e) => e.split(':')[0]).toList();
     _listEntries['watchlist'] = entries;
     _listPreviews['watchlist'] = await repository.getListPreviews('watchlist');
+    _listsVersion++;
     notifyListeners();
   }
 
@@ -231,7 +235,12 @@ class SearchProvider with ChangeNotifier {
         await loadNotifiedItems();
       }
     }
+    
+    // Explicitly refresh both state containers to ensure UI consistency
+    _listEntries[listName] = await repository.getListEntries(listName);
     _listPreviews[listName] = await repository.getListPreviews(listName);
+    
+    _listsVersion++;
     await updateCacheSize();
     notifyListeners();
   }
@@ -251,6 +260,7 @@ class SearchProvider with ChangeNotifier {
     await loadListNames();
     _listEntries[name] = [];
     _listPreviews[name] = [];
+    _listsVersion++;
     notifyListeners();
   }
 
@@ -259,6 +269,7 @@ class SearchProvider with ChangeNotifier {
     await loadListNames();
     _listEntries.remove(name);
     _listPreviews.remove(name);
+    _listsVersion++;
     notifyListeners();
   }
 
@@ -266,6 +277,7 @@ class SearchProvider with ChangeNotifier {
     await repository.updateListOrder(listName, orderedEntries);
     _listEntries[listName] = orderedEntries;
     _listPreviews[listName] = await repository.getListPreviews(listName);
+    _listsVersion++;
     notifyListeners();
   }
 
@@ -297,6 +309,7 @@ class SearchProvider with ChangeNotifier {
       }
     }
     await _loadAllListEntries();
+    _listsVersion++;
     notifyListeners();
   }
 
@@ -497,6 +510,10 @@ class SearchProvider with ChangeNotifier {
 
   List<MediaItemPreview> getPreviewsForList(String name) {
     return _listPreviews[name] ?? [];
+  }
+
+  List<String> getListEntries(String name) {
+    return _listEntries[name] ?? [];
   }
 
   int getListItemCount(String name) {
