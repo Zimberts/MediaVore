@@ -18,6 +18,59 @@ class ActorDetailPage extends StatefulWidget {
     required this.actorName,
   });
 
+  static void show(BuildContext context, {required int actorId, required String actorName}) {
+    try {
+      final scaffold = Scaffold.maybeOf(context);
+      if (scaffold != null) {
+        scaffold.showBottomSheet((ctx) => DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            clipBehavior: Clip.antiAliasWithSaveLayer,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: kBottomNavigationBarHeight + MediaQuery.of(context).padding.bottom),
+              child: ActorDetailPage(
+                actorId: actorId,
+                actorName: actorName,
+              ),
+            ),
+          ),
+        ));
+        return;
+      }
+    } catch (_) {}
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: false,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          clipBehavior: Clip.antiAliasWithSaveLayer,
+          child: ActorDetailPage(
+            actorId: actorId,
+            actorName: actorName,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   State<ActorDetailPage> createState() => _ActorDetailPageState();
 }

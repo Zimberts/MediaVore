@@ -17,7 +17,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 1; // Default to SavedMediaPage
+  int _selectedIndex = 0; // Default to Discover (SearchPage)
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
@@ -32,6 +32,13 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _initDeepLinks();
+    // Ensure provider's selected tab matches the initial index after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final provider = context.read<SearchProvider>();
+        provider.setSelectedTab(_selectedIndex);
+      } catch (_) {}
+    });
   }
 
   @override
@@ -58,7 +65,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _handleLink(Uri uri) {
-    if (uri.path == '/share' || (uri.scheme == 'mediavore' && uri.host == 'share')) {
+    if (uri.path == '/share' ||
+        (uri.scheme == 'mediavore' && uri.host == 'share')) {
       final name = uri.queryParameters['name'];
       final itemsStr = uri.queryParameters['items'];
 
@@ -79,16 +87,24 @@ class _MainPageState extends State<MainPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('You are about to import a list with ${entries.length} items.'),
+            Text(
+              'You are about to import a list with ${entries.length} items.',
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(labelText: 'List Name', hintText: 'Enter name'),
+              decoration: const InputDecoration(
+                labelText: 'List Name',
+                hintText: 'Enter name',
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () async {
               final provider = context.read<SearchProvider>();
@@ -110,37 +126,95 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _selectedIndex = index;
     });
+    try {
+      context.read<SearchProvider>().setSelectedTab(index);
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (ctx) => const SearchOverlay(),
-            fullscreenDialog: true,
-          ));
-        },
-        tooltip: 'Search',
-        child: const Icon(Icons.search),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'My Lists'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Seen'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
+    // Render the main scaffold as the background and position the
+    // BottomNavigationBar and FAB above it so they physically overlay
+    // any bottom sheets or modal content (keeps home row on top).
+    final mq = MediaQuery.of(context);
+    final bottomInset = mq.padding.bottom;
+    final navHeight = 64.0; // tuned nav height
+
+    return Stack(
+      children: [
+        Scaffold(
+          body: Padding(
+            padding: EdgeInsets.only(bottom: navHeight + bottomInset),
+            child: IndexedStack(index: _selectedIndex, children: _pages),
+          ),
+        ),
+
+        // Positioned Bottom Navigation Bar on top of the scaffold
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SafeArea(
+            top: false,
+            child: Material(
+              elevation: 0,
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: SizedBox(
+                height: navHeight,
+                child: Center(
+                  child: SizedBox(
+                    height: navHeight,
+                    child: BottomNavigationBar(
+                      elevation: 0,
+                      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                      type: BottomNavigationBarType.fixed,
+                      items: const <BottomNavigationBarItem>[
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.search),
+                          label: 'Discover',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.bookmark),
+                          label: 'My Lists',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.history),
+                          label: 'Seen',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.notifications),
+                          label: 'Alerts',
+                        ),
+                      ],
+                      currentIndex: _selectedIndex,
+                      onTap: _onItemTapped,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Floating Action Button positioned above the BottomNavigationBar
+        Positioned(
+          right: 16,
+          // place the FAB fully above the nav to avoid overlap
+          bottom: navHeight + bottomInset + 12,
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) => const SearchOverlay(),
+                  fullscreenDialog: true,
+                ),
+              );
+            },
+            tooltip: 'Search',
+            child: const Icon(Icons.search),
+          ),
+        ),
+      ],
     );
   }
 }
