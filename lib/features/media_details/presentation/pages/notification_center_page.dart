@@ -6,6 +6,7 @@ import 'package:mediavore/features/media_details/presentation/pages/media_detail
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:provider/provider.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 
 class NotificationCenterPage extends StatefulWidget {
   const NotificationCenterPage({super.key});
@@ -14,10 +15,13 @@ class NotificationCenterPage extends StatefulWidget {
   State<NotificationCenterPage> createState() => NotificationCenterPageState();
 }
 
-class NotificationCenterPageState extends State<NotificationCenterPage> with SingleTickerProviderStateMixin {
+class NotificationCenterPageState extends State<NotificationCenterPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final GlobalKey<_QuickAddTabState> _quickAddKey = GlobalKey<_QuickAddTabState>();
-  final GlobalKey<_ReleasesTabState> _releasesKey = GlobalKey<_ReleasesTabState>();
+  final GlobalKey<_QuickAddTabState> _quickAddKey =
+      GlobalKey<_QuickAddTabState>();
+  final GlobalKey<_ReleasesTabState> _releasesKey =
+      GlobalKey<_ReleasesTabState>();
 
   @override
   void initState() {
@@ -89,7 +93,10 @@ class NotificationCenterPageState extends State<NotificationCenterPage> with Sin
                       children: [
                         CircularProgressIndicator(),
                         SizedBox(height: 16),
-                        Text('Syncing releases...', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(
+                          'Syncing releases...',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ),
@@ -118,40 +125,48 @@ class _ReleasesTabState extends State<_ReleasesTab> {
         final now = DateTime.now();
         final startOfDay = DateTime(now.year, now.month, now.day);
         final oneMonthAgo = startOfDay.subtract(const Duration(days: 30));
-        
+
         final releases = provider.notifiedItems.where((item) {
           if (item.releaseDate == null) {
             return false;
           }
-          
+
           final releaseDate = item.releaseDate!;
-          final releaseDay = DateTime(releaseDate.year, releaseDate.month, releaseDate.day);
+          final releaseDay = DateTime(
+            releaseDate.year,
+            releaseDate.month,
+            releaseDate.day,
+          );
 
           // Filtering by "Seen" status
           if (item.type == MediaType.movie) {
-            final seenCount = provider.seenItems.where((s) => s.tmdbId == item.tmdbId).length;
+            final seenCount = provider.seenItems
+                .where((s) => s.tmdbId == item.tmdbId)
+                .length;
             if (seenCount > 0) {
               return false;
             }
           }
-          
+
           if (item.type == MediaType.tv) {
             if (item.seasonNumber != null && item.episodeNumber != null) {
-              final isEpSeen = provider.seenItems.any((s) => 
-                s.tmdbId == item.tmdbId && 
-                s.type == MediaType.tv &&
-                s.seasonNumber == item.seasonNumber && 
-                s.episodeNumber == item.episodeNumber
+              final isEpSeen = provider.seenItems.any(
+                (s) =>
+                    s.tmdbId == item.tmdbId &&
+                    s.type == MediaType.tv &&
+                    s.seasonNumber == item.seasonNumber &&
+                    s.episodeNumber == item.episodeNumber,
               );
               if (isEpSeen) {
                 return false;
               }
             } else {
-              final alreadySeenRecent = provider.seenItems.any((s) => 
-                s.tmdbId == item.tmdbId && 
-                s.type == MediaType.tv &&
-                (s.seenDate.isAfter(releaseDay) || 
-                 DateUtils.isSameDay(s.seenDate, releaseDay))
+              final alreadySeenRecent = provider.seenItems.any(
+                (s) =>
+                    s.tmdbId == item.tmdbId &&
+                    s.type == MediaType.tv &&
+                    (s.seenDate.isAfter(releaseDay) ||
+                        DateUtils.isSameDay(s.seenDate, releaseDay)),
               );
               if (alreadySeenRecent) {
                 return false;
@@ -159,8 +174,8 @@ class _ReleasesTabState extends State<_ReleasesTab> {
             }
           }
 
-          return  releaseDay.isAfter(oneMonthAgo) || DateUtils.isSameDay(releaseDay, startOfDay);
-
+          return releaseDay.isAfter(oneMonthAgo) ||
+              DateUtils.isSameDay(releaseDay, startOfDay);
         }).toList();
 
         releases.sort((a, b) => a.releaseDate!.compareTo(b.releaseDate!));
@@ -180,55 +195,77 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                   itemBuilder: (context, index) {
                     final item = releases[index];
                     final isReleased = !item.releaseDate!.isAfter(now);
-                    
+
                     String title = item.title;
-                    if (item.type == MediaType.tv && item.seasonNumber != null) {
-                      title += ' (S${item.seasonNumber} E${item.episodeNumber})';
+                    if (item.type == MediaType.tv &&
+                        item.seasonNumber != null) {
+                      title +=
+                          ' (S${item.seasonNumber} E${item.episodeNumber})';
                     }
 
                     return ListTile(
-                      leading: item.posterPath != null 
-                        ? Image.network('https://image.tmdb.org/t/p/w92${item.posterPath}')
-                        : const Icon(Icons.movie),
+                      leading: item.posterPath != null
+                          ? Image.network(
+                              'https://image.tmdb.org/t/p/w92${item.posterPath}',
+                            )
+                          : const Icon(Icons.movie),
                       title: Text(title),
                       subtitle: Text(
                         '${isReleased ? "Released" : "Releases"}: ${DateFormat.yMMMd().format(item.releaseDate!)}',
-                        style: TextStyle(color: isReleased ? Colors.green : Colors.orange),
+                        style: TextStyle(
+                          color: isReleased
+                              ? context.appColors.success
+                              : context.appColors.warning,
+                        ),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (isReleased)
                             IconButton(
-                              icon: const Icon(Icons.visibility_outlined, color: Colors.green),
+                              icon: Icon(
+                                Icons.visibility_outlined,
+                                color: context.appColors.success,
+                              ),
                               tooltip: 'Mark as seen',
                               onPressed: () async {
                                 if (item.type == MediaType.movie) {
-                                  await provider.markAsSeen(SeenItem(
-                                    tmdbId: item.tmdbId,
-                                    type: item.type,
-                                    title: item.title,
-                                    posterPath: item.posterPath,
-                                    seenDate: DateTime.now(),
-                                  ));
+                                  await provider.markAsSeen(
+                                    SeenItem(
+                                      tmdbId: item.tmdbId,
+                                      type: item.type,
+                                      title: item.title,
+                                      posterPath: item.posterPath,
+                                      seenDate: DateTime.now(),
+                                    ),
+                                  );
                                 } else {
-                                  await provider.markAsSeen(SeenItem(
-                                    tmdbId: item.tmdbId,
-                                    type: item.type,
-                                    title: item.title,
-                                    posterPath: item.posterPath,
-                                    seenDate: DateTime.now(),
-                                    seasonNumber: item.seasonNumber,
-                                    episodeNumber: item.episodeNumber,
-                                  ));
+                                  await provider.markAsSeen(
+                                    SeenItem(
+                                      tmdbId: item.tmdbId,
+                                      type: item.type,
+                                      title: item.title,
+                                      posterPath: item.posterPath,
+                                      seenDate: DateTime.now(),
+                                      seasonNumber: item.seasonNumber,
+                                      episodeNumber: item.episodeNumber,
+                                    ),
+                                  );
                                 }
-                                
-                                await provider.getMediaDetails(item.tmdbId, item.type);
+
+                                await provider.getMediaDetails(
+                                  item.tmdbId,
+                                  item.type,
+                                );
                                 await provider.loadNotifiedItems();
-                                
+
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Marked ${item.title} as seen')),
+                                    SnackBar(
+                                      content: Text(
+                                        'Marked ${item.title} as seen',
+                                      ),
+                                    ),
                                   );
                                 }
                               },
@@ -240,7 +277,8 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                                 id: item.tmdbId,
                                 title: item.title,
                                 overview: '',
-                                releaseDate: item.releaseDate?.toIso8601String() ?? '',
+                                releaseDate:
+                                    item.releaseDate?.toIso8601String() ?? '',
                                 mediaType: item.type,
                               );
                               provider.toggleNotification(mediaItem);
@@ -249,7 +287,10 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                         ],
                       ),
                       onTap: () async {
-                        final details = await provider.getMediaDetails(item.tmdbId, item.type);
+                        final details = await provider.getMediaDetails(
+                          item.tmdbId,
+                          item.type,
+                        );
                         if (context.mounted) {
                           MediaDetailPage.show(context, details.item);
                         }
@@ -284,7 +325,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
   Future<void> loadNextEpisodes() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    
+
     final provider = context.read<SearchProvider>();
     final seenSeries = provider.seenItems
         .where((s) => s.type == MediaType.tv)
@@ -329,33 +370,51 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                     final entry = seriesToDisplay[index];
                     final tmdbId = entry.key;
                     final nextEp = entry.value!;
-                    
-                    final title = provider.seenItems.firstWhere((s) => s.tmdbId == tmdbId).title;
-                    final posterPath = provider.seenItems.firstWhere((s) => s.tmdbId == tmdbId).posterPath;
+
+                    final title = provider.seenItems
+                        .firstWhere((s) => s.tmdbId == tmdbId)
+                        .title;
+                    final posterPath = provider.seenItems
+                        .firstWhere((s) => s.tmdbId == tmdbId)
+                        .posterPath;
 
                     return ListTile(
-                      leading: posterPath != null 
-                        ? Image.network('https://image.tmdb.org/t/p/w92$posterPath')
-                        : const Icon(Icons.tv),
+                      leading: posterPath != null
+                          ? Image.network(
+                              'https://image.tmdb.org/t/p/w92$posterPath',
+                            )
+                          : const Icon(Icons.tv),
                       title: Text(title),
-                      subtitle: Text('Next: Season ${nextEp.seasonNumber}, Episode ${nextEp.episodeNumber}'),
+                      subtitle: Text(
+                        'Next: Season ${nextEp.seasonNumber}, Episode ${nextEp.episodeNumber}',
+                      ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+                        icon: Icon(
+                          Icons.check_circle_outline,
+                          color: context.appColors.success,
+                        ),
                         onPressed: () async {
-                          final seenItem = provider.seenItems.firstWhere((s) => s.tmdbId == tmdbId);
-                          await provider.markAsSeen(seenItem.copyWith(
-                            seenDate: DateTime.now(),
-                            seasonNumber: nextEp.seasonNumber,
-                            episodeNumber: nextEp.episodeNumber,
-                          ));
+                          final seenItem = provider.seenItems.firstWhere(
+                            (s) => s.tmdbId == tmdbId,
+                          );
+                          await provider.markAsSeen(
+                            seenItem.copyWith(
+                              seenDate: DateTime.now(),
+                              seasonNumber: nextEp.seasonNumber,
+                              episodeNumber: nextEp.episodeNumber,
+                            ),
+                          );
                           loadNextEpisodes();
                         },
                       ),
                       onTap: () async {
-                         final details = await provider.getMediaDetails(tmdbId, MediaType.tv);
-                         if (context.mounted) {
-                           MediaDetailPage.show(context, details.item);
-                         }
+                        final details = await provider.getMediaDetails(
+                          tmdbId,
+                          MediaType.tv,
+                        );
+                        if (context.mounted) {
+                          MediaDetailPage.show(context, details.item);
+                        }
                       },
                     );
                   },

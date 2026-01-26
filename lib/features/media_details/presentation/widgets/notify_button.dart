@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:provider/provider.dart';
 
 class NotifyButton extends StatelessWidget {
@@ -13,7 +14,7 @@ class NotifyButton extends StatelessWidget {
     return Consumer<SearchProvider>(
       builder: (context, provider, child) {
         final isNotified = provider.isNotified(item);
-        
+
         // Only show if not released or if it's a TV show (could have new episodes)
         bool shouldShow = false;
         if (item.mediaType == MediaType.tv) {
@@ -36,10 +37,12 @@ class NotifyButton extends StatelessWidget {
         return IconButton(
           icon: Icon(
             isNotified ? Icons.notifications_active : Icons.notifications_none,
-            color: isNotified ? Colors.orange : null,
+            color: isNotified ? context.appColors.warning : null,
           ),
           onPressed: () => provider.toggleNotification(item),
-          tooltip: isNotified ? 'Disable notifications' : 'Notify me on release',
+          tooltip: isNotified
+              ? 'Disable notifications'
+              : 'Notify me on release',
         );
       },
     );

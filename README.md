@@ -1,110 +1,66 @@
 # MediaVore
 
-An app to keep track of movies/series/books seen/read or to watch/to read
+An app to keep track of movies, series, and books you've seen/read or want to watch/read.
 
-## Deep Linking Configuration
+---
 
-To enable shared links (`https://mediavore.app/share`) to open the app directly on Android without opening the browser first, you must host a configuration file on your domain.
+## Table of Contents
 
-### Android App Links
-Host a file at: `https://mediavore.app/.well-known/assetlinks.json`
+- [About](#about)
+- [Status & Features](#status--features)
+- [Deep Linking](#deep-linking)
+- [Quick Start](#quick-start)
+- [Project Documentation](#project-documentation)
+- [Contributing](#contributing)
 
-Content:
-```json
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.example.mediavore",
-      "sha256_cert_fingerprints": [
-        "YOUR_APP_SHA256_FINGERPRINT"
-      ]
-    }
-  }
-]
+---
+
+## About
+
+MediaVore helps users track media (movies, series, books), manage watch/read lists, and record when content was consumed. The project is a cross-platform Flutter app and is actively developed.
+
+## Status & Features
+
+- **Implemented features:** see [Implemented Features](DOCS/IMPLEMENTED_FEATURES.md) for a concise, maintained list of completed work.
+- **Planned features / roadmap:** the product vision and checklists live in [Planned Features](DOCS/PLANNED_FEATURES.md).
+
+If you want to propose or implement features, add them to the roadmap or open a PR with the completed work and move items between the documents as appropriate.
+
+## Deep Linking
+
+Platform-specific deep linking configuration is maintained in [Deep Linking](DOCS/DEEP_LINKING.md).
+
+## Quick Start
+
+If you have cloned this project on a new machine, you may encounter errors when trying to run it for the first time. This is often due to missing dependencies or stale auto-generated files that are specific to the previous development environment.
+
+Run the following to get started (PowerShell example):
+
+```pwsh
+flutter doctor
+flutter pub get
+flutter pub run build_runner build --delete-conflicting-outputs
 ```
-Replace `YOUR_APP_SHA256_FINGERPRINT` with your actual release/debug certificate fingerprint.
 
-## Participate
+These steps check your Flutter setup, fetch dependencies, and regenerate generated code.
 
-Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+## Project Documentation
 
-\<type>(\<scope>): \<description>
+- **Project structure & developer guidelines:** [Project Structure](DOCS/PROJECT_STRUCTURE.md)
+- **Requirements:** [Requirements](DOCS/REQUIREMENTS.md)
+- **Achievements:** [Achievements](DOCS/ACHIEVEMENTS.md)
+- **Implemented features:** [Implemented Features](DOCS/IMPLEMENTED_FEATURES.md)
+- **Planned features / roadmap:** [Planned Features](DOCS/PLANNED_FEATURES.md)
+- **Deep linking details:** [Deep Linking](DOCS/DEEP_LINKING.md)
 
-The main types are `feat`, `fix`, `chore`, `bump`
+Open those files for more detail about architecture, testing, and planned work.
 
-The main scopes at the moment are `README`, `back`, `front`
+## Contributing
 
-## Product description
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch naming, commit, and PR guidance. We use Conventional Commits for commit messages.
 
-The aim of MediaVore is to record movies/series/books read/seen or which you want to.
+Format: `<type>(<scope>): <description>`
 
-At first the app will be stand alone (no server) but might evolve in the end.
+Common types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `bump`
 
-For more details, the app will be split between books and movies/series (will start by the movies part, then series and will end with books).
-
-### Movies/Series
-
-- [ ] You'll have the possibility to fetch movies you want based on their name and year (at first).
-
-- [ ] Then add them to your main watchlist (ordered by date added, but can be changed in front)
-
-- [ ] Or add them to another Named list ordered by choice (not date added)
-
-- [ ] Once you have seen them you enter manually with date seen, rating
-
-- [ ] Possibility to import through csv
-
-- [ ] get the platform where you can whatch it
-
-- [ ] add a movie that is not published, send a notification / reminder when it'll be publish
-  (same for series when a new episode gets out)
-
-### Books
-
-- [ ] Just like the movies and series, you have the possibility to record a book you have read or you want to read
-
-Books data:
-
-- Time of finish (if set as read)
-- Rating on how you liked the book
-- Number of the books (for series) (example 0 and number / -1 and 0 based number)
-
-Additional features:
-
-- [ ] (might add possibility to enter the time it took to read the book)
-- [ ] Add a book by scanning its barcode
-
-## Achievements
-
-MediaVore includes a gamified achievement system to track your viewing habits and milestones. Check out the [Achievements documentation](ACHIEVEMENTS.md) for a full list of available badges.
-
-## Project Setup on a New Machine
-
-If you have cloned this project on a new machine, you may encounter errors when trying to run it for the first time. This is often due to missing dependencies or stale auto-generated files that are specific to the previous development environment (like Windows).
-
-Follow these steps in your terminal to set up the project correctly on your new machine (macOS):
-
-1. **Check your Flutter environment:**
-    Run this command to check that your Flutter installation is correct and that you have the necessary tools (like Xcode and Android Studio) to build the app.
-
-    ```sh
-    flutter doctor
-    ```
-
-2. **Get dependencies:**
-    This command downloads all the project's dependencies and links them for your current platform.
-
-    ```sh
-    flutter pub get
-    ```
-
-3. **Regenerate auto-generated files:**
-    Your project uses code generation. This command will delete old files and create new ones that are compatible with your current setup. This is a crucial step.
-
-    ```sh
-    flutter pub run build_runner build --delete-conflicting-outputs
-    ```
-
-After completing these three steps, the project should build and run correctly.
+Common scopes: `README`, `back`, `front`

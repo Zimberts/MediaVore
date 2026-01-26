@@ -40,7 +40,8 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       context.read<SearchProvider>().fetchNextPage();
     }
   }
@@ -59,7 +60,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
   void _openFilterDialog() async {
     final provider = context.read<SearchProvider>();
-    
+
     // Local state for the dialog
     MediaType? selectedType = provider.filterType; // null means "Both"
     List<int> selectedGenres = List.from(provider.genreIds ?? []);
@@ -78,7 +79,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           } else {
             genres = GenreUtils.getAllGenres();
           }
-          
+
           return AlertDialog(
             title: const Text('Discovery Filters'),
             content: SizedBox(
@@ -88,14 +89,23 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Media Type', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Media Type',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     DropdownButton<MediaType?>(
                       value: selectedType,
                       isExpanded: true,
                       items: const [
                         DropdownMenuItem(value: null, child: Text('Both')),
-                        DropdownMenuItem(value: MediaType.movie, child: Text('Movies')),
-                        DropdownMenuItem(value: MediaType.tv, child: Text('TV Shows')),
+                        DropdownMenuItem(
+                          value: MediaType.movie,
+                          child: Text('Movies'),
+                        ),
+                        DropdownMenuItem(
+                          value: MediaType.tv,
+                          child: Text('TV Shows'),
+                        ),
                       ],
                       onChanged: (v) {
                         setDialogState(() {
@@ -105,7 +115,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    const Text('Release Year', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Release Year',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 50,
@@ -120,7 +133,8 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                 label: const Text('Any'),
                                 selected: selectedYear == null,
                                 onSelected: (selected) {
-                                  if (selected) setDialogState(() => selectedYear = null);
+                                  if (selected)
+                                    setDialogState(() => selectedYear = null);
                                 },
                               ),
                             );
@@ -132,7 +146,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                               label: Text(year.toString()),
                               selected: selectedYear == year,
                               onSelected: (selected) {
-                                setDialogState(() => selectedYear = selected ? year : null);
+                                setDialogState(
+                                  () => selectedYear = selected ? year : null,
+                                );
                               },
                             ),
                           );
@@ -140,24 +156,34 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                       ),
                     ),
                     const Divider(),
-                    Text('Min Rating: ${selectedRating.toStringAsFixed(1)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Min Rating: ${selectedRating.toStringAsFixed(1)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     Slider(
                       value: selectedRating,
                       min: 0,
                       max: 9,
                       divisions: 18,
                       label: selectedRating.toStringAsFixed(1),
-                      onChanged: (v) => setDialogState(() => selectedRating = v),
+                      onChanged: (v) =>
+                          setDialogState(() => selectedRating = v),
                     ),
                     const Divider(),
-                    const Text('Genres', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Genres',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       children: genres.entries.map((entry) {
                         final isSelected = selectedGenres.contains(entry.key);
                         return FilterChip(
-                          label: Text(entry.value, style: const TextStyle(fontSize: 12)),
+                          label: Text(
+                            entry.value,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                           selected: isSelected,
                           onSelected: (selected) {
                             setDialogState(() {
@@ -187,7 +213,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 },
                 child: const Text('Reset'),
               ),
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
               TextButton(
                 onPressed: () {
                   provider.setFilters(
@@ -219,7 +248,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Adjust Grid Size', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text(
+                  'Adjust Grid Size',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -237,7 +269,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                         },
                       ),
                     ),
-                    Text(settings.gridSize.round().toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      settings.gridSize.round().toString(),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -253,7 +288,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
     final colors = context.appColors;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: _showSearch
@@ -294,7 +329,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
       body: Consumer<SearchProvider>(
         builder: (context, provider, _) {
           final items = provider.items;
-          
+
           if (provider.isLoading && items.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -335,11 +370,13 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 if (index == items.length) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 final item = items[index];
                 final seenCount = provider.getSeenCount(item);
                 final isSeen = seenCount > 0;
-                final isFinished = item.mediaType == MediaType.tv && item.numberOfEpisodes != null
+                final isFinished =
+                    item.mediaType == MediaType.tv &&
+                        item.numberOfEpisodes != null
                     ? seenCount >= item.numberOfEpisodes!
                     : isSeen;
 
@@ -355,15 +392,21 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                           children: [
                             if (item.posterPath != null)
                               CachedNetworkImage(
-                                imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
+                                imageUrl:
+                                    'https://image.tmdb.org/t/p/w342${item.posterPath}',
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(color: Colors.grey[800]),
-                                errorWidget: (context, url, error) => const Icon(Icons.error),
+                                placeholder: (context, url) =>
+                                    Container(color: Colors.grey[800]),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
                               )
                             else
                               Container(
                                 color: Colors.grey[800],
-                                child: const Icon(Icons.movie, color: Colors.white54),
+                                child: const Icon(
+                                  Icons.movie,
+                                  color: Colors.white54,
+                                ),
                               ),
                             Positioned(
                               bottom: 0,
@@ -374,7 +417,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                   gradient: LinearGradient(
                                     begin: Alignment.bottomCenter,
                                     end: Alignment.topCenter,
-                                    colors: [Colors.black87, Colors.transparent],
+                                    colors: [
+                                      Colors.black87,
+                                      Colors.transparent,
+                                    ],
                                   ),
                                 ),
                                 padding: const EdgeInsets.all(4),
@@ -399,18 +445,28 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                           top: 4,
                           right: 4,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.black54,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.star, color: Colors.amber, size: 10),
+                                Icon(
+                                  Icons.star,
+                                  color: colors.ratingStar,
+                                  size: 10,
+                                ),
                                 const SizedBox(width: 2),
                                 Text(
                                   item.voteAverage!.toStringAsFixed(1),
-                                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
                             ),
@@ -426,7 +482,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Icon(
-                            item.mediaType == MediaType.tv ? Icons.tv : Icons.movie,
+                            item.mediaType == MediaType.tv
+                                ? Icons.tv
+                                : Icons.movie,
                             color: Colors.white,
                             size: 10,
                           ),
@@ -438,9 +496,14 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                           bottom: -4,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isFinished ? colors.badgeBgSeen : colors.badgeBg,
+                              color: isFinished
+                                  ? colors.badgeBgSeen
+                                  : colors.badgeBg,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
                             ),
                             padding: const EdgeInsets.all(2),
                             child: Icon(
