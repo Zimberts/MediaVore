@@ -65,7 +65,9 @@ void main() {
     ).thenAnswer((_) async => <NotifiedItem>[]);
 
     final provider = SearchProvider(mockRepo);
-    debugPrint('HELPER: created SearchProvider, returning provider immediately');
+    debugPrint(
+      'HELPER: created SearchProvider, returning provider immediately',
+    );
     return provider;
   }
 

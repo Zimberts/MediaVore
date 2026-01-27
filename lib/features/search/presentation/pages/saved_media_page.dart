@@ -940,12 +940,16 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _isEditMode
-                      ? '${_selectedItems.length} selected'
-                      : (_selectedList == 'watchlist'
-                            ? 'Watchlist'
-                            : _selectedList),
+                Flexible(
+                  child: Text(
+                    _isEditMode
+                        ? '${_selectedItems.length} selected'
+                        : (_selectedList == 'watchlist'
+                              ? 'Watchlist'
+                              : _selectedList),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 ),
                 if (!_isEditMode) const Icon(Icons.arrow_drop_down),
               ],
