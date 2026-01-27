@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:mediavore/main.dart';
 import 'package:mediavore/core/di/injection.dart' as di;
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';

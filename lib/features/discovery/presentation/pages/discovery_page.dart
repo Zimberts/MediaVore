@@ -133,8 +133,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                 label: const Text('Any'),
                                 selected: selectedYear == null,
                                 onSelected: (selected) {
-                                  if (selected)
+                                  if (selected) {
                                     setDialogState(() => selectedYear = null);
+                                  }
                                 },
                               ),
                             );

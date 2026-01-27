@@ -108,10 +108,6 @@ void main() {
 
     // Find the menu item text 'Library (Unique titles)' and tap it
     // First tap the trailing dropdown to open menu
-    final viewModeDropdown = find.descendant(
-      of: dropdown.first,
-      matching: find.byType(DropdownButton<SeenViewMode>),
-    );
     await tester.tap(dropdown.first);
     await tester.pumpAndSettle();
 

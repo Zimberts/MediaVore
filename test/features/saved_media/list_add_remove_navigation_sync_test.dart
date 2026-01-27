@@ -48,11 +48,8 @@ void main() {
 
     await provider.createList('MySyncList');
 
-    // Create a MediaItem-like shell for toggleInList
-    final shell = const {'id': 999, 'title': 'X'};
-
     // addToList should be called when toggling (we stubbed repo.addToList above)
-    // We can't instantiate MediaItem here without importing its constructor conveniently,
+    // We can't instantiate MediaItem here without importing its constructor conveniently.
     // Instead, verify listsVersion increments when createList called and toggle operations
     final beforeVersion = provider.listsVersion;
 

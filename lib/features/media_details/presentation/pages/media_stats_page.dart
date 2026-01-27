@@ -675,11 +675,12 @@ class _ActivityChart extends StatelessWidget {
     final sortedKeys = activityData.keys.toList();
     _sortKeys(sortedKeys, dateFormat);
 
-    if (sortedKeys.isEmpty)
+    if (sortedKeys.isEmpty) {
       return const SizedBox(
         height: 200,
         child: Center(child: Text('No activity data')),
       );
+    }
 
     return SizedBox(
       height: 200,
@@ -714,8 +715,9 @@ class _ActivityChart extends StatelessWidget {
                 reservedSize: 30,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
-                  if (index < 0 || index >= sortedKeys.length)
+                  if (index < 0 || index >= sortedKeys.length) {
                     return const SizedBox();
+                  }
 
                   int skip = 1;
                   if (sortedKeys.length > 20) {

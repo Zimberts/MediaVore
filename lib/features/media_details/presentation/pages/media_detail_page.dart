@@ -840,8 +840,9 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   }
 
   Widget _buildTrailers() {
-    if (_mediaDetails?.videos == null || _mediaDetails!.videos!.isEmpty)
+    if (_mediaDetails?.videos == null || _mediaDetails!.videos!.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     final trailers = _mediaDetails!.videos!
         .where((v) => v['type'] == 'Trailer' && v['site'] == 'YouTube')

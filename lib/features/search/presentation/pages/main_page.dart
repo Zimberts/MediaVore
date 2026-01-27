@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -361,7 +360,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withAlpha((0.3 * 255).round()),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

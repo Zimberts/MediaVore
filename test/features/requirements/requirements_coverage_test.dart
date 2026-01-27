@@ -7,18 +7,13 @@ import 'package:mediavore/features/media_details/presentation/pages/media_detail
 import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_stats_page.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
-import 'package:mediavore/features/search/presentation/widgets/search_overlay.dart';
-import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
-import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
@@ -91,12 +86,14 @@ void main() {
     searchProvider = SearchProvider(mockRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
 
-    if (locator.isRegistered<MediaRepository>())
+    if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
+    }
     locator.registerLazySingleton<MediaRepository>(() => mockRepository);
 
-    if (locator.isRegistered<AchievementProvider>())
+    if (locator.isRegistered<AchievementProvider>()) {
       locator.unregister<AchievementProvider>();
+    }
     locator.registerLazySingleton<AchievementProvider>(
       () => mockAchievementProvider,
     );

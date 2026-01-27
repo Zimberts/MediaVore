@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('No hard-coded color usage outside theme files', () {
     final repoRoot = Directory.current.path;
-    final libDir = Directory('${repoRoot}${Platform.pathSeparator}lib');
+    final libDir = Directory('$repoRoot${Platform.pathSeparator}lib');
     expect(libDir.existsSync(), isTrue, reason: 'lib directory not found');
 
     // Files/folders that are allowed to contain literal colors (theme implementations)
@@ -24,7 +24,7 @@ void main() {
     void checkFile(File file) {
       // compute a repo-relative path for clearer output
       final relative = file.path.replaceFirst(
-        '${repoRoot}${Platform.pathSeparator}',
+        '$repoRoot${Platform.pathSeparator}',
         '',
       );
 
@@ -93,7 +93,9 @@ void main() {
       msg.writeln('Hard-coded color usage detected in UI code.');
       msg.writeln('Allowed: theme palette files under `lib/core/theme`.');
       msg.writeln('\nViolations:');
-      for (final v in violations) msg.writeln('- $v');
+      for (final v in violations) {
+        msg.writeln('- $v');
+      }
       msg.writeln(
         '\nFix by using `Theme.of(context).colorScheme` or `context.appColors` instead of literal colors.',
       );

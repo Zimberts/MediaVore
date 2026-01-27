@@ -8,12 +8,10 @@ import 'package:mediavore/features/search/presentation/providers/search_provider
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
-import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 

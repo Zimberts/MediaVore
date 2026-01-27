@@ -82,6 +82,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   /// to create a branded logo for the QR code.
   Future<void> _prepareCroppedLogo() async {
     try {
+      final Color themeColor = _lastThemeColor ?? context.appColors.logicFlow;
       final data = await rootBundle.load('assets/icon/app_icon.png');
       final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
       final frame = await codec.getNextFrame();
@@ -98,11 +99,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       final radius = cropSize / 2;
 
       // 1. Draw theme-colored background circle
-      canvas.drawCircle(
-        center,
-        radius,
-        ui.Paint()..color = _lastThemeColor ?? context.appColors.logicFlow,
-      );
+      canvas.drawCircle(center, radius, ui.Paint()..color = themeColor);
 
       // 2. Draw white border for contrast against QR modules
       canvas.drawCircle(
@@ -459,6 +456,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   }
 
   Future<void> _shareQRCodeImage() async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final boundary =
           _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
@@ -480,9 +478,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       ], text: 'Scan this QR code to import my $_selectedList on MediaVore');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error sharing QR code: $e')));
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error sharing QR code: $e')),
+        );
       }
     }
   }
@@ -766,13 +764,12 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             onPressed: () async {
               final navigator = Navigator.of(context);
               await provider.importList(controller.text, entries);
-              if (mounted) {
-                navigator.pop();
-                setState(() {
-                  _selectedList = controller.text;
-                });
-                // didChangeDependencies will trigger loadSavedMedia
-              }
+              if (!mounted) return;
+              navigator.pop();
+              setState(() {
+                _selectedList = controller.text;
+              });
+              // didChangeDependencies will trigger loadSavedMedia
             },
             child: const Text('Confirm'),
           ),
@@ -1305,8 +1302,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         ),
         itemCount: 4,
         itemBuilder: (context, index) {
-          if (index >= previews.length || previews[index].posterPath == null)
+          if (index >= previews.length || previews[index].posterPath == null) {
             return Container(color: colors.placeholder);
+          }
           return CachedNetworkImage(
             imageUrl:
                 'https://image.tmdb.org/t/p/w92${previews[index].posterPath}',
@@ -1338,14 +1336,16 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           TextButton(
             onPressed: () async {
               if (controller.text.isNotEmpty) {
+                final navigator = Navigator.of(context);
                 await provider.createList(controller.text);
+                if (!mounted) return;
                 setState(() {
                   _selectedList = controller.text;
                   _isEditMode = false;
                   _selectedItems.clear();
                 });
                 // didChangeDependencies will trigger reload
-                if (context.mounted) Navigator.pop(context);
+                navigator.pop();
               }
             },
             child: const Text('Create'),
@@ -1375,6 +1375,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ),
           TextButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               if (_selectedList == listName) {
                 setState(() {
                   _selectedList = 'watchlist';
@@ -1383,7 +1384,8 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 });
               }
               await provider.deleteList(listName);
-              if (context.mounted) Navigator.pop(context);
+              if (!mounted) return;
+              navigator.pop();
               // didChangeDependencies will trigger reload
             },
             child: Text('Delete', style: TextStyle(color: colors.error)),

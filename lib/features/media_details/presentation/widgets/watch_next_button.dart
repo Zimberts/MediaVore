@@ -63,12 +63,13 @@ class _WatchNextButtonState extends State<WatchNextButton> {
   @override
   Widget build(BuildContext context) {
     if (widget.item.mediaType != MediaType.tv) return const SizedBox.shrink();
-    if (_isLoading)
+    if (_isLoading) {
       return const SizedBox(
         width: 24,
         height: 24,
         child: CircularProgressIndicator(strokeWidth: 2),
       );
+    }
     if (_nextEpisode == null) return const SizedBox.shrink();
 
     return Padding(

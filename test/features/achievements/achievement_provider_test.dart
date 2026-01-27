@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
-import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/mocks.dart';

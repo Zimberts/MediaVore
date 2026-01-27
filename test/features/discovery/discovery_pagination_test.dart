@@ -6,7 +6,6 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';

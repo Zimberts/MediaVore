@@ -25,7 +25,7 @@ Testing layout
 
 Requirements and docs
 
-- `DOCS/REQUIREMENTS.md` and `DOCS/requirements/` contain user-visible requirements. Tests should be mapped to the requirement they validate and referenced in the `TODO.md` for coverage tracking.
+- `DOCS/REQUIREMENTS.md` and `DOCS/requirements/` contain user-visible requirements. Tests should be mapped to the requirement they validate for coverage tracking.
 
 Quick commands
 

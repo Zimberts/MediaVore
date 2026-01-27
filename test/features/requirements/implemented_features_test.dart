@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/core/domain/entities/media_details.dart';
-import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
@@ -88,12 +86,14 @@ void main() {
     searchProvider = SearchProvider(mockRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
 
-    if (locator.isRegistered<MediaRepository>())
+    if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
+    }
     locator.registerLazySingleton<MediaRepository>(() => mockRepository);
 
-    if (locator.isRegistered<AchievementProvider>())
+    if (locator.isRegistered<AchievementProvider>()) {
       locator.unregister<AchievementProvider>();
+    }
     locator.registerLazySingleton<AchievementProvider>(
       () => mockAchievementProvider,
     );

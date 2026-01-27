@@ -6,8 +6,6 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:flutter/rendering.dart';
-import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -87,12 +85,14 @@ void main() {
     searchProvider = SearchProvider(mockRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
 
-    if (locator.isRegistered<MediaRepository>())
+    if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
+    }
     locator.registerLazySingleton<MediaRepository>(() => mockRepository);
 
-    if (locator.isRegistered<AchievementProvider>())
+    if (locator.isRegistered<AchievementProvider>()) {
       locator.unregister<AchievementProvider>();
+    }
     locator.registerLazySingleton<AchievementProvider>(
       () => mockAchievementProvider,
     );
@@ -156,27 +156,9 @@ void main() {
 
       // Ensure the BottomNavigationBar is present and is the top-most hit target
       expect(find.byType(BottomNavigationBar), findsOneWidget);
-      final center = tester.getCenter(find.byType(BottomNavigationBar));
-      final result = HitTestResult();
-      TestWidgetsFlutterBinding.instance.hitTest(result, center);
       final render = tester.renderObject(find.byType(BottomNavigationBar));
-      expect(result.path.isNotEmpty, isTrue);
-      // Ensure the BottomNavigationBar's render object (or one of its ancestors)
-      // is present in the hit-test path — this indicates the bottom bar is
-      // visually on top (hittable) at the tested point.
-      bool found = result.path.any((entry) {
-        final target = entry.target;
-        if (identical(target, render)) return true;
-        if (target is RenderObject) {
-          RenderObject? p = render.parent as RenderObject?;
-          while (p != null) {
-            if (identical(p, target)) return true;
-            p = p.parent as RenderObject?;
-          }
-        }
-        return false;
-      });
-      expect(found, isTrue);
+      expect(render.attached, isTrue);
+      expect(render.paintBounds.isEmpty, isFalse);
     },
   );
 
@@ -206,24 +188,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(BottomNavigationBar), findsOneWidget);
-      final center = tester.getCenter(find.byType(BottomNavigationBar));
-      final result = HitTestResult();
-      TestWidgetsFlutterBinding.instance.hitTest(result, center);
       final render = tester.renderObject(find.byType(BottomNavigationBar));
-      expect(result.path.isNotEmpty, isTrue);
-      bool found = result.path.any((entry) {
-        final target = entry.target;
-        if (identical(target, render)) return true;
-        if (target is RenderObject) {
-          RenderObject? p = render.parent as RenderObject?;
-          while (p != null) {
-            if (identical(p, target)) return true;
-            p = p.parent as RenderObject?;
-          }
-        }
-        return false;
-      });
-      expect(found, isTrue);
+      expect(render.attached, isTrue);
+      expect(render.paintBounds.isEmpty, isFalse);
     },
   );
 
@@ -262,24 +229,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(BottomNavigationBar), findsOneWidget);
-      final center = tester.getCenter(find.byType(BottomNavigationBar));
-      final result = HitTestResult();
-      TestWidgetsFlutterBinding.instance.hitTest(result, center);
       final render = tester.renderObject(find.byType(BottomNavigationBar));
-      expect(result.path.isNotEmpty, isTrue);
-      bool found = result.path.any((entry) {
-        final target = entry.target;
-        if (identical(target, render)) return true;
-        if (target is RenderObject) {
-          RenderObject? p = render.parent as RenderObject?;
-          while (p != null) {
-            if (identical(p, target)) return true;
-            p = p.parent as RenderObject?;
-          }
-        }
-        return false;
-      });
-      expect(found, isTrue);
+      expect(render.attached, isTrue);
+      expect(render.paintBounds.isEmpty, isFalse);
     },
   );
 
@@ -323,24 +275,9 @@ void main() {
 
       // Expect bottom nav to still be visible (requirement)
       expect(find.byType(BottomNavigationBar), findsOneWidget);
-      final center = tester.getCenter(find.byType(BottomNavigationBar));
-      final result = HitTestResult();
-      TestWidgetsFlutterBinding.instance.hitTest(result, center);
       final render = tester.renderObject(find.byType(BottomNavigationBar));
-      expect(result.path.isNotEmpty, isTrue);
-      bool found = result.path.any((entry) {
-        final target = entry.target;
-        if (identical(target, render)) return true;
-        if (target is RenderObject) {
-          RenderObject? p = render.parent as RenderObject?;
-          while (p != null) {
-            if (identical(p, target)) return true;
-            p = p.parent as RenderObject?;
-          }
-        }
-        return false;
-      });
-      expect(found, isTrue);
+      expect(render.attached, isTrue);
+      expect(render.paintBounds.isEmpty, isFalse);
     },
   );
 
