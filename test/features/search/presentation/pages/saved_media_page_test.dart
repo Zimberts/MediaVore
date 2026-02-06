@@ -79,6 +79,8 @@ void main() {
     await searchProvider.loadLikedStatus();
 
     await tester.pumpWidget(createWidgetUnderTest());
+    // Crucial: Update provider's internal list state
+    await searchProvider.loadWatchlist();
     await tester.pumpAndSettle();
 
     expect(find.text('Inception'), findsOneWidget);

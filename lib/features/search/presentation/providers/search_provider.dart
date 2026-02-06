@@ -296,6 +296,7 @@ class SearchProvider with ChangeNotifier {
 
     _isLoading = true;
     notifyListeners();
+  }
 
     try {
       _currentPage++;
@@ -314,6 +315,7 @@ class SearchProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+    notifyListeners();
   }
 
   void clearSearch() {
@@ -480,5 +482,28 @@ class SearchProvider with ChangeNotifier {
       _isNotifiedRefreshing = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadLists() => loadListNames();
+
+  Future<List<Map<String, dynamic>>> exportSeenData({
+    DateTime? start,
+    DateTime? end,
+    int? tmdbId,
+    MediaType? type,
+  }) {
+    return repository.exportSeenData(
+      start: start,
+      end: end,
+      tmdbId: tmdbId,
+      type: type,
+    );
+  }
+
+  Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
+    await repository.importSeenData(data, mode: mode);
+    await loadAllSeenStatus();
+    await updateCacheSize();
+    await updateSeenDbSize();
   }
 }

@@ -1209,4 +1209,147 @@ class _PosterBadgeOnly extends StatelessWidget {
       ),
     );
   }
+
+  void _showListPicker(BuildContext context, SearchProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(padding: const EdgeInsets.all(16.0), child: Text('Switch List', style: Theme.of(context).textTheme.titleLarge)),
+              const Divider(height: 1),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: provider.listNames.length,
+                  itemBuilder: (context, index) {
+                    final name = provider.listNames[index];
+                    final previews = provider.getPreviewsForList(name);
+                    
+                    return ListTile(
+                      leading: _buildListPreviewIcon(previews, provider),
+                      title: Text(name == 'watchlist' ? 'Watchlist' : name),
+                      subtitle: Text('${provider.getPreviewsForList(name).length} items'),
+                      selected: name == _selectedList,
+                      trailing: name == _selectedList ? const Icon(Icons.check) : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedList = name;
+                        });
+                        loadSavedMedia();
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text('Create New List'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreateListDialog(context, provider);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListPreviewIcon(List<MediaItemPreview> previews, SearchProvider provider) {
+    if (previews.isEmpty) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+        child: const Icon(Icons.movie_outlined, size: 20),
+      );
+    }
+    if (previews.length == 1) {
+       return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: CachedNetworkImage(
+          imageUrl: 'https://image.tmdb.org/t/p/w92${previews[0].posterPath}',
+          width: 40, height: 40, fit: BoxFit.cover,
+          errorWidget: (context, url, error) {
+            provider.notifyNetworkError();
+            return const Icon(Icons.movie);
+          },
+        ),
+      );
+    }
+    return SizedBox(
+      width: 40, height: 40,
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 1, mainAxisSpacing: 1),
+        itemCount: 4,
+        itemBuilder: (context, index) {
+          if (index >= previews.length || previews[index].posterPath == null) return Container(color: Colors.grey[200]);
+          return CachedNetworkImage(
+            imageUrl: 'https://image.tmdb.org/t/p/w92${previews[index].posterPath}',
+            fit: BoxFit.cover, 
+            errorWidget: (context, url, error) {
+              provider.notifyNetworkError();
+              return Container(color: Colors.grey);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  void _showCreateListDialog(BuildContext context, SearchProvider provider) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('New List'),
+        content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'List name'), autofocus: true),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              if (controller.text.isNotEmpty) {
+                final newName = controller.text;
+                await provider.createList(newName);
+                setState(() { _selectedList = newName; });
+                loadSavedMedia();
+                if (context.mounted) Navigator.pop(context);
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteListConfirm(BuildContext context, SearchProvider provider) {
+     showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete List'),
+        content: Text('Are you sure you want to delete "$_selectedList"? This will also remove all items from this list.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final toDelete = _selectedList;
+              setState(() { _selectedList = 'watchlist'; });
+              await provider.deleteList(toDelete);
+              if (context.mounted) Navigator.pop(context);
+              loadSavedMedia();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 }
