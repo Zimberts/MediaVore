@@ -26,14 +26,14 @@ Future<void> main() async {
   } catch (e, stackTrace) {
     debugPrint('Fatal error during initialization: $e');
     debugPrint(stackTrace.toString());
-    
+
     runApp(MaterialApp(
       home: Scaffold(
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Text('Failed to start app:\n$e', 
-              textAlign: TextAlign.center, 
+            child: Text('Failed to start app:\n$e',
+              textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.red)),
           ),
         ),

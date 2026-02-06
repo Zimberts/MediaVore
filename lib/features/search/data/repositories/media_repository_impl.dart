@@ -213,11 +213,11 @@ class MediaRepositoryImpl implements MediaRepository {
 
     final List<CastMember> cast =
         castResults.map((c) => CastMember.fromJson(c)).toList();
-    
+
     final CrewMember director = crewResults
         .map((c) => CrewMember.fromJson(c))
         .firstWhere(
-          (member) => member.job == 'Director' || member.job == 'Executive Producer', 
+          (member) => member.job == 'Director' || member.job == 'Executive Producer',
           orElse: () => CrewMember(name: 'N/A', job: 'Director'),
         );
 
@@ -337,6 +337,8 @@ class MediaRepositoryImpl implements MediaRepository {
     final actorDetails = await actorDetailsFuture;
     final items = await actorMediasFuture;
     
+    await cache.cacheActorProfile(actorId, actorDetails.profilePath);
+
     await cache.cacheActorProfile(actorId, actorDetails.profilePath);
 
     return ActorDetails(
