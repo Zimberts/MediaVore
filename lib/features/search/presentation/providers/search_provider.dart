@@ -181,6 +181,7 @@ class SearchProvider with ChangeNotifier {
 
     _isLoading = true;
     notifyListeners();
+  }
 
     try {
       _currentPage++;
@@ -199,6 +200,7 @@ class SearchProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+    notifyListeners();
   }
 
   void clearSearch() {
