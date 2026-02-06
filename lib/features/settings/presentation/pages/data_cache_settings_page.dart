@@ -34,7 +34,7 @@ class DataCacheSettingsPage extends StatelessWidget {
               ListTile(
                 title: const Text('Cache Size'),
                 subtitle: Text(_formatBytes(provider.cacheSize)),
-                trailing: isCacheLoading 
+                trailing: isCacheLoading
                   ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
                   : IconButton(
                       icon: const Icon(Icons.refresh),
@@ -78,7 +78,7 @@ class DataCacheSettingsPage extends StatelessWidget {
               ListTile(
                 title: const Text('Seen Database Size'),
                 subtitle: Text(_formatBytes(provider.seenDbSize)),
-                trailing: isDbSizeLoading 
+                trailing: isDbSizeLoading
                   ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
                   : IconButton(
                       icon: const Icon(Icons.refresh),
@@ -169,14 +169,14 @@ class DataCacheSettingsPage extends StatelessWidget {
   }
 
   Future<void> _exportSeenData(
-    BuildContext context, 
+    BuildContext context,
     SearchProvider provider, {
-    DateTime? start, 
+    DateTime? start,
     DateTime? end,
   }) async {
     try {
       final data = await provider.exportSeenData(start: start, end: end);
-      
+
       if (data.isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -187,7 +187,7 @@ class DataCacheSettingsPage extends StatelessWidget {
       }
 
       final jsonString = jsonEncode(data);
-      
+
       final tempDir = await getTemporaryDirectory();
       String suffix = '';
       if (start != null && end != null) {
@@ -220,7 +220,7 @@ class DataCacheSettingsPage extends StatelessWidget {
                   onTap: () async {
                     Navigator.pop(saveSheetContext);
                     await Share.shareXFiles(
-                      [XFile(tempFile.path, mimeType: 'application/json')], 
+                      [XFile(tempFile.path, mimeType: 'application/json')],
                       text: 'My MediaVore Seen History'
                     );
                   },
@@ -242,7 +242,7 @@ class DataCacheSettingsPage extends StatelessWidget {
   Future<void> _saveFileToDevice(BuildContext context, String jsonString, String fileName) async {
     try {
       final bytes = utf8.encode(jsonString);
-      
+
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Save Seen History',
         fileName: fileName,
@@ -275,7 +275,7 @@ class DataCacheSettingsPage extends StatelessWidget {
       final file = File(result.files.single.path!);
       final content = await file.readAsString();
       final colors = context.appColors;
-      
+
       try {
         final List<dynamic> data = jsonDecode(content);
         final List<Map<String, dynamic>> seenData = data.cast<Map<String, dynamic>>();
@@ -384,7 +384,7 @@ class DataCacheSettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () {
               action();
-              Navigator.pop(dialogContext); 
+              Navigator.pop(dialogContext);
             },
             child: const Text('Proceed'),
           ),

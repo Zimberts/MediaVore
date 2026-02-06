@@ -130,7 +130,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                 final seenItem = item as SeenItem;
                 final isTv = seenItem.type == MediaType.tv;
                 final isLiked = provider.likedIds.contains('${seenItem.tmdbId}:${seenItem.type.name}');
-                
+
                 String subtitle = '';
                 if (isTv && seenItem.seasonNumber != null) {
                   subtitle = 'S${seenItem.seasonNumber} E${seenItem.episodeNumber}';

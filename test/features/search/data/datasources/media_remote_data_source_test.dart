@@ -16,12 +16,14 @@ void main() {
 
   group('searchMedia', () {
     const tQuery = 'Inception';
-    
+
     final tMediaResponse = {
       'results': [
         {
           'id': 27205,
           'title': 'Inception',
+          'poster_path': '/path.jpg',
+          'overview': '...',
           'poster_path': '/path.jpg',
           'overview': '...',
           'release_date': '2010-07-15',
@@ -32,7 +34,9 @@ void main() {
 
     test('should return List<MediaItem> when the response is successful', () async {
       // 1. Mock search results
+      // 1. Mock search results
       when(() => mockDio.get(
+            'https://api.themoviedb.org/3/search/multi',
             'https://api.themoviedb.org/3/search/multi',
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
@@ -40,6 +44,18 @@ void main() {
         (_) async => Response(
           requestOptions: RequestOptions(path: ''),
           data: tMediaResponse,
+          statusCode: 200,
+        ),
+      );
+
+      // 2. Mock enrichment fetch
+      when(() => mockDio.get(
+            any(that: startsWith('https://api.themoviedb.org/3/movie/')),
+            options: any(named: 'options'),
+          )).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: tMediaResponse['results']![0],
           statusCode: 200,
         ),
       );

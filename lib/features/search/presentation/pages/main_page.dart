@@ -60,7 +60,7 @@ class _MainPageState extends State<MainPage> {
     if (uri.path == '/share' || (uri.scheme == 'mediavore' && uri.host == 'share')) {
       final name = uri.queryParameters['name'];
       final itemsStr = uri.queryParameters['items'];
-      
+
       if (name != null && itemsStr != null) {
         final items = itemsStr.split(',');
         _showImportDialog(name, items);
@@ -95,7 +95,7 @@ class _MainPageState extends State<MainPage> {
               await provider.importList(controller.text, entries);
               if (mounted) {
                 navigator.pop();
-                setState(() => _selectedIndex = 1); 
+                setState(() => _selectedIndex = 1);
               }
             },
             child: const Text('Import'),

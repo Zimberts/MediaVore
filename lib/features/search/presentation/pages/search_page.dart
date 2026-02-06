@@ -134,7 +134,7 @@ class _SearchPageState extends State<SearchPage> {
     if (provider.isLoading && provider.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (provider.items.isEmpty) {
       return Center(
         child: Column(

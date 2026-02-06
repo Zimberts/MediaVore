@@ -4,6 +4,8 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -13,6 +15,8 @@ import '../../../../helpers/mocks.dart';
 void main() {
   late MediaRepositoryImpl repository;
   late MockMediaRemoteDataSource mockRemoteDataSource;
+  late MockMediaListLocalDataSource mockLocalDataSource;
+  late MockMediaCache mockCache;
   late MockMediaListLocalDataSource mockLocalDataSource;
   late MockMediaCache mockCache;
 
@@ -38,6 +42,7 @@ void main() {
     registerFallbackValue(ImportMode.append);
   });
 
+  setUp(() async {
   setUp(() async {
     mockRemoteDataSource = MockMediaRemoteDataSource();
     mockLocalDataSource = MockMediaListLocalDataSource();
@@ -89,6 +94,18 @@ void main() {
     clearInteractions(mockRemoteDataSource);
     clearInteractions(mockLocalDataSource);
     clearInteractions(mockCache);
+      cache: mockCache,
+    );
+
+    // Wait for the background initialization to complete by calling a method
+    // that ensures initialization.
+    await repository.getAllListNames();
+
+    // Clear interactions that happened during repository initialization (_initCache)
+    // so tests can verify exact call counts for their specific operations.
+    clearInteractions(mockRemoteDataSource);
+    clearInteractions(mockLocalDataSource);
+    clearInteractions(mockCache);
   });
 
   const tMediaItem = MediaItem(
@@ -111,6 +128,7 @@ void main() {
     final tMediaItems = [tMediaItem];
 
     test('should return list of media items from remote data source and cache them', () async {
+    test('should return list of media items from remote data source and cache them', () async {
       when(() => mockRemoteDataSource.searchMedia(tQuery))
           .thenAnswer((_) async => tMediaItems);
 
@@ -129,11 +147,22 @@ void main() {
 
       expect(result, isEmpty);
     });
-  });
-
-  group('getMediaDetails', () {
+   group('getMediaDetails', () {
     const tId = 1;
 
+    test('should return media details from cache if available', () async {
+      final tDetails = MediaDetails(item: tMediaItem, cast: [], director: tDirector);
+      when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(true);
+      when(() => mockCache.getDetails(tId, MediaType.movie)).thenReturn(tDetails);
+
+      final result = await repository.getMediaDetails(tId);
+
+      expect(result, equals(tDetails));
+      verifyNever(() => mockRemoteDataSource.getMediaItem(any(), type: any(named: 'type')));
+    });
+
+    test('should fetch and cache media details if not in cache', () async {
+      when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(false);
     test('should return media details from cache if available', () async {
       final tDetails = MediaDetails(item: tMediaItem, cast: [], director: tDirector);
       when(() => mockCache.areDetailsCached(tId, MediaType.movie)).thenReturn(true);

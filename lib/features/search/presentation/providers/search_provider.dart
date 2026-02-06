@@ -2,15 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
+class SearchProvider with ChangeNotifier {
+  final MediaRepository repository;
 class SearchProvider with ChangeNotifier {
   final MediaRepository repository;
 
   SearchProvider(this.repository) {
     _init();
   }
+  SearchProvider(this.repository) {
+    _init();
+  }
 
+  List<MediaItem> _searchResults = [];
   List<MediaItem> _searchResults = [];
   bool _isLoading = false;
   bool _isCacheLoading = false;
@@ -24,7 +32,19 @@ class SearchProvider with ChangeNotifier {
   int _cacheSize = 0;
   int _seenDbSize = 0;
   int _resetCount = 0;
+  bool _isCacheLoading = false;
+  bool _isDbSizeLoading = false;
+  bool _isNotifiedRefreshing = false;
+  String? _error;
+  bool _isOffline = false;
+  List<String> _listNames = ['watchlist'];
+  final Map<String, List<String>> _listEntries = {}; // listName -> ["id:type"]
+  final Map<String, List<MediaItemPreview>> _listPreviews = {};
+  int _cacheSize = 0;
+  int _seenDbSize = 0;
+  int _resetCount = 0;
   int _currentPage = 1;
+  String _currentQuery = '';
   String _currentQuery = '';
   bool _hasMore = true;
 
@@ -35,7 +55,17 @@ class SearchProvider with ChangeNotifier {
   List<NotifiedItem> _notifiedItems = [];
 
   List<MediaItem> get items => _searchResults; // For SearchPage
+  List<MediaItem> get items => _searchResults; // For SearchPage
   bool get isLoading => _isLoading;
+  bool get isCacheLoading => _isCacheLoading;
+  bool get isDbSizeLoading => _isDbSizeLoading;
+  bool get isNotifiedRefreshing => _isNotifiedRefreshing;
+  String? get error => _error;
+  bool get isOffline => _isOffline;
+  List<String> get listNames => _listNames;
+  int get cacheSize => _cacheSize;
+  int get seenDbSize => _seenDbSize;
+  int get resetCount => _resetCount;
   bool get isCacheLoading => _isCacheLoading;
   bool get isDbSizeLoading => _isDbSizeLoading;
   bool get isNotifiedRefreshing => _isNotifiedRefreshing;
@@ -268,10 +298,13 @@ class SearchProvider with ChangeNotifier {
   Future<void> searchMedia(String query) async {
     if (query.isEmpty) {
       clearSearch();
+      clearSearch();
       return;
     }
 
     _isLoading = true;
+    _error = null;
+    _currentQuery = query;
     _error = null;
     _currentQuery = query;
     _currentPage = 1;
@@ -281,11 +314,16 @@ class SearchProvider with ChangeNotifier {
     try {
       _searchResults = await repository.searchMedia(query, page: _currentPage);
       _isOffline = false;
+      _searchResults = await repository.searchMedia(query, page: _currentPage);
+      _isOffline = false;
     } catch (e) {
+      _error = e.toString();
+      _isOffline = true;
       _error = e.toString();
       _isOffline = true;
     } finally {
       _isLoading = false;
+      await updateCacheSize();
       await updateCacheSize();
       notifyListeners();
     }
@@ -293,24 +331,32 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> fetchNextPage() async {
     if (_isLoading || !_hasMore || _currentQuery.isEmpty) return;
+    if (_isLoading || !_hasMore || _currentQuery.isEmpty) return;
 
     _isLoading = true;
+    _isLoading = true;
     notifyListeners();
+  }
 
     try {
       _currentPage++;
       final results = await repository.searchMedia(_currentQuery, page: _currentPage);
       if (results.isEmpty) {
+      final results = await repository.searchMedia(_currentQuery, page: _currentPage);
+      if (results.isEmpty) {
         _hasMore = false;
       } else {
         _searchResults.addAll(results);
+        _searchResults.addAll(results);
       }
+      _isOffline = false;
       _isOffline = false;
     } catch (e) {
       _error = e.toString();
       _isOffline = true;
       _currentPage--;
     } finally {
+      _isLoading = false;
       _isLoading = false;
       notifyListeners();
     }

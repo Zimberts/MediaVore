@@ -28,6 +28,14 @@ void main() {
       releaseDate: '',
       mediaType: MediaType.movie,
     ));
+    registerFallbackValue(const MediaItem(
+      id: 0,
+      title: '',
+      overview: '',
+      posterPath: null,
+      releaseDate: '',
+      mediaType: MediaType.movie,
+    ));
   });
 
   setUp(() {
@@ -38,7 +46,7 @@ void main() {
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
-    
+
     // Default mocks for initialization
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
@@ -106,7 +114,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       await tester.enterText(find.byType(TextField), 'Inception');
-      
+
       // Should not have triggered search immediately due to debounce
       verifyNever(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')));
 
@@ -114,10 +122,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       verify(() => mockMediaRepository.searchMedia('Inception', page: 1)).called(1);
-      
+
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      
+
       expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
     });
 
@@ -153,7 +161,7 @@ void main() {
 
       expect(find.widgetWithText(ListTile, 'Inception'), findsOneWidget);
       expect(find.widgetWithText(ListTile, 'Breaking Bad'), findsOneWidget);
-      expect(find.text('TV'), findsOneWidget); 
+      expect(find.text('TV'), findsOneWidget);
     });
 
     testWidgets('displays favorite icon for liked items', (WidgetTester tester) async {
@@ -176,7 +184,35 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Inception');
       await tester.pump(const Duration(milliseconds: 600));
-      
+
+      // Use standard pump instead of pumpAndSettle to avoid timeout from animations/images
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
+    });
+
+    testWidgets('displays favorite icon for liked items', (WidgetTester tester) async {
+      final results = [
+        const MediaItem(
+          id: 1,
+          title: 'Inception',
+          posterPath: null,
+          releaseDate: '2010-07-16',
+          overview: 'A mind-bending thriller',
+          mediaType: MediaType.movie,
+        ),
+      ];
+      when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
+          .thenAnswer((_) async => results);
+      when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
+
+      await searchProvider.loadLikedStatus(); // Ensure liked status is loaded
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.enterText(find.byType(TextField), 'Inception');
+      await tester.pump(const Duration(milliseconds: 600));
+
       // Use standard pump instead of pumpAndSettle to avoid timeout from animations/images
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -186,7 +222,9 @@ void main() {
 
     testWidgets('shows initial message when search results are empty', (WidgetTester tester) async {
       // Return empty list instead of throwing to test "Search for movies or series!"
+      // Return empty list instead of throwing to test "Search for movies or series!"
       when(() => mockMediaRepository.searchMedia(any(), page: any(named: 'page')))
+          .thenAnswer((_) async => []);
           .thenAnswer((_) async => []);
 
       await tester.pumpWidget(createWidgetUnderTest());
@@ -205,6 +243,7 @@ void main() {
 
     testWidgets('calls addToWatchlist when save button is tapped', (WidgetTester tester) async {
       final item = const MediaItem(
+      final item = const MediaItem(
           id: 1,
           title: 'Inception',
           posterPath: null,
@@ -213,9 +252,15 @@ void main() {
           mediaType: MediaType.movie,
         );
       final items = [item];
-      
+
+        );
+      final items = [item];
+
       when(() => mockMediaRepository.searchMedia('Inception', page: any(named: 'page')))
           .thenAnswer((_) async => items);
+      when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
+      when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
+          .thenAnswer((_) async => []);
       when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
       when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
           .thenAnswer((_) async => []);
@@ -229,10 +274,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       await tester.tap(find.byIcon(Icons.bookmark_border).first);
-      
+
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
+      verify(() => mockMediaRepository.addToList(any(), 'watchlist')).called(1);
       verify(() => mockMediaRepository.addToList(any(), 'watchlist')).called(1);
     });
 

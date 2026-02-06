@@ -15,9 +15,9 @@ void main() {
     registerFallbackValue(MediaType.movie);
     registerFallbackValue(MediaType.tv);
     registerFallbackValue(SeenItem(
-      tmdbId: 1, 
-      type: MediaType.movie, 
-      title: 'T', 
+      tmdbId: 1,
+      type: MediaType.movie,
+      title: 'T',
       seenDate: DateTime(2000),
     ));
     registerFallbackValue(ImportMode.append);
@@ -31,7 +31,7 @@ void main() {
 
   setUp(() async {
     mockRepository = MockMediaRepository();
-    
+
     // Default mocks for SearchProvider init
     when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
@@ -48,7 +48,7 @@ void main() {
         .thenAnswer((_) async => Future.value());
 
     provider = SearchProvider(mockRepository);
-    
+
     await untilCalled(() => mockRepository.getNotifiedItems());
     clearInteractions(mockRepository);
   });
@@ -87,9 +87,9 @@ void main() {
     test('should load all seen items and deduplicate episodes for TV counts', () async {
       final seenItems = [
         SeenItem(tmdbId: 1, type: MediaType.movie, title: 'M', seenDate: DateTime(2023, 1, 1)),
-        SeenItem(tmdbId: 1, type: MediaType.movie, title: 'M', seenDate: DateTime(2023, 1, 2)), 
+        SeenItem(tmdbId: 1, type: MediaType.movie, title: 'M', seenDate: DateTime(2023, 1, 2)),
         SeenItem(tmdbId: 2, type: MediaType.tv, title: 'T', seenDate: DateTime(2023), seasonNumber: 1, episodeNumber: 1),
-        SeenItem(tmdbId: 2, type: MediaType.tv, title: 'T', seenDate: DateTime(2023), seasonNumber: 1, episodeNumber: 1), 
+        SeenItem(tmdbId: 2, type: MediaType.tv, title: 'T', seenDate: DateTime(2023), seasonNumber: 1, episodeNumber: 1),
       ];
 
       when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenItems);

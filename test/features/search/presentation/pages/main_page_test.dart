@@ -32,7 +32,7 @@ void main() {
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
-    
+
     // Default mocks for SearchProvider init
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
@@ -45,13 +45,13 @@ void main() {
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
-    
+
     // Register the mock in GetIt locator because SavedMediaPage uses it directly
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
     locator.registerSingleton<MediaRepository>(mockMediaRepository);
-    
+
     // Default mocks to prevent Null pointer errors during component initialization
     when(() => mockMediaRepository.isInWatchlist(any(), any())).thenAnswer((_) async => false);
     when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
@@ -81,12 +81,12 @@ void main() {
     testWidgets('starts on SavedMediaPage (My Lists)', (WidgetTester tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
-      
+
       expect(find.byType(SavedMediaPage), findsOneWidget);
-      
+
       expect(find.byType(SearchPage, skipOffstage: false), findsOneWidget);
       expect(find.byType(SeenHistoryPage, skipOffstage: false), findsOneWidget);
-      
+
       final indexedStack = tester.widget<IndexedStack>(find.byType(IndexedStack));
       expect(indexedStack.index, 1);
     });
@@ -94,15 +94,15 @@ void main() {
     testWidgets('switches to Search tab', (WidgetTester tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
-      
+
       final searchTab = find.descendant(
         of: find.byType(BottomNavigationBar),
         matching: find.byIcon(Icons.search),
       );
-      
+
       await tester.tap(searchTab);
       await tester.pumpAndSettle();
-      
+
       final indexedStack = tester.widget<IndexedStack>(find.byType(IndexedStack));
       expect(indexedStack.index, 0);
       expect(find.byType(SearchPage), findsOneWidget);
@@ -111,15 +111,15 @@ void main() {
     testWidgets('switches to Seen tab', (WidgetTester tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
-      
+
       final seenTab = find.descendant(
         of: find.byType(BottomNavigationBar),
         matching: find.byIcon(Icons.history),
       );
-      
+
       await tester.tap(seenTab);
       await tester.pumpAndSettle();
-      
+
       final indexedStack = tester.widget<IndexedStack>(find.byType(IndexedStack));
       expect(indexedStack.index, 2);
       expect(find.byType(SeenHistoryPage), findsOneWidget);

@@ -13,7 +13,7 @@ class SeenManager extends StatelessWidget {
   final bool compact;
 
   const SeenManager({
-    super.key, 
+    super.key,
     required this.item,
     this.seasonNumber,
     this.episodeNumber,
@@ -24,16 +24,16 @@ class SeenManager extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
     final colors = context.appColors;
-    
+
     // Determine seen status
     bool isSeen;
     int? count;
-    
+
     if (seasonNumber != null && episodeNumber != null) {
-      final history = provider.seenItems.where((s) => 
-        s.tmdbId == item.id && 
-        s.type == item.mediaType && 
-        s.seasonNumber == seasonNumber && 
+      final history = provider.seenItems.where((s) =>
+        s.tmdbId == item.id &&
+        s.type == item.mediaType &&
+        s.seasonNumber == seasonNumber &&
         s.episodeNumber == episodeNumber
       ).toList();
       isSeen = history.isNotEmpty;
@@ -100,7 +100,7 @@ class SeenManager extends StatelessWidget {
               isSeen ? Icons.add_circle : Icons.check_circle_outline,
               color: isSeen ? colors.success : colors.comments,
             ),
-            onPressed: () => isTv 
+            onPressed: () => isTv
               ? _showAddMultipleDialog(context, provider)
               : provider.markAsSeen(SeenItem(
                   tmdbId: item.id,
@@ -173,13 +173,13 @@ class SeenManager extends StatelessWidget {
   }
 
   void _showSeenHistory(BuildContext context, SearchProvider provider) {
-    final history = provider.seenItems.where((s) => 
-      s.tmdbId == item.id && 
+    final history = provider.seenItems.where((s) =>
+      s.tmdbId == item.id &&
       s.type == item.mediaType &&
       s.seasonNumber == seasonNumber &&
       s.episodeNumber == episodeNumber
     ).toList();
-    
+
     final colors = context.appColors;
 
     showModalBottomSheet(

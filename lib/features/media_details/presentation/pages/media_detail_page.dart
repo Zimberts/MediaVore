@@ -98,7 +98,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _isOffline = e.toString().contains('SocketException') || 
+          _isOffline = e.toString().contains('SocketException') ||
                        e.toString().contains('Network error') ||
                        e.toString().contains('connectionError');
         });
@@ -157,7 +157,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
       tmdbId: widget.item.id,
       type: widget.item.mediaType,
     );
-    
+
     if (data.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -234,10 +234,10 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   Widget build(BuildContext context) {
     final itemToDisplay = _mediaDetails?.item ?? widget.item;
     final colors = context.appColors;
-    
+
     final mediaQuery = MediaQuery.of(context);
     final bool isAndroid = Theme.of(context).platform == TargetPlatform.android;
-    final bool isAndroidButtons = isAndroid && 
+    final bool isAndroidButtons = isAndroid &&
         (mediaQuery.systemGestureInsets.bottom < 8 || mediaQuery.padding.bottom > 30);
 
     final String directorLabel = itemToDisplay.mediaType == MediaType.tv ? 'Creator' : 'Director';
@@ -324,8 +324,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         const SizedBox(height: 8),
                         if (itemToDisplay.mediaType == MediaType.tv && itemToDisplay.numberOfEpisodes != null) ...[
                           LinearProgressIndicator(
-                            value: itemToDisplay.numberOfEpisodes! > 0 
-                                ? uniqueEpisodesSeenTotal / itemToDisplay.numberOfEpisodes! 
+                            value: itemToDisplay.numberOfEpisodes! > 0
+                                ? uniqueEpisodesSeenTotal / itemToDisplay.numberOfEpisodes!
                                 : 0,
                             backgroundColor: colors.placeholder,
                             color: colors.onWatchlist,
@@ -342,7 +342,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           WatchNextButton(
                             item: itemToDisplay,
                           ),
-                        
+
                         if (_isOffline)
                           Container(
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -412,7 +412,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
-                        
+
                         if (itemToDisplay.mediaType == MediaType.tv && itemToDisplay.seasons != null) ...[
                           const SizedBox(height: 24),
                           const Text(
@@ -452,7 +452,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (isComplete) Icon(Icons.check_circle, color: colors.onWatchlist),
-                                        isLoading 
+                                        isLoading
                                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                                           : Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
                                       ],

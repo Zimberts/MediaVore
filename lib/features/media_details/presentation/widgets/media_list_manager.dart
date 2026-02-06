@@ -13,8 +13,8 @@ class MediaListManager extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
     final settings = context.watch<SettingsProvider>();
-    final palette = Theme.of(context).brightness == Brightness.dark 
-        ? settings.darkPalette 
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? settings.darkPalette
         : settings.lightPalette;
 
     final isInWatchlist = provider.isItemInList(item, 'watchlist');
