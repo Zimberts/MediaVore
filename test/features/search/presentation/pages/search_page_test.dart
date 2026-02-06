@@ -38,7 +38,7 @@ void main() {
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
-    
+
     // Default mocks for initialization
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
@@ -54,7 +54,7 @@ void main() {
     when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
     when(() => mockMediaRepository.toggleNotification(any(), autoNotify: any(named: 'autoNotify')))
         .thenAnswer((_) async => Future.value());
-    
+
     // Default discovery mocks
     when(() => mockMediaRepository.discoverMedia(
       page: any(named: 'page'),
@@ -128,7 +128,7 @@ void main() {
         const MediaItem(id: 2, title: 'Search Result', overview: 'O', releaseDate: '2023', mediaType: MediaType.movie),
       ];
       when(() => mockMediaRepository.searchMedia(
-        'test', 
+        'test',
         page: any(named: 'page'),
         genreIds: any(named: 'genreIds'),
         releaseYear: any(named: 'releaseYear'),
@@ -150,7 +150,7 @@ void main() {
 
       // Enter text
       await tester.enterText(find.byType(TextField), 'test');
-      
+
       // Wait for debounce
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
@@ -163,7 +163,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      
+
       // Clear initial discovery calls
       clearInteractions(mockMediaRepository);
 

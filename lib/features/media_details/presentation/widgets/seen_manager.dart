@@ -14,7 +14,7 @@ class SeenManager extends StatefulWidget {
   final bool compact;
 
   const SeenManager({
-    super.key, 
+    super.key,
     required this.item,
     this.seasonNumber,
     this.episodeNumber,
@@ -30,15 +30,15 @@ class _SeenManagerState extends State<SeenManager> {
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
     final colors = context.appColors;
-    
+
     bool isSeen;
     int? count;
-    
+
     if (widget.seasonNumber != null && widget.episodeNumber != null) {
-      final history = provider.seenItems.where((s) => 
-        s.tmdbId == widget.item.id && 
-        s.type == widget.item.mediaType && 
-        s.seasonNumber == widget.seasonNumber && 
+      final history = provider.seenItems.where((s) =>
+        s.tmdbId == widget.item.id &&
+        s.type == widget.item.mediaType &&
+        s.seasonNumber == widget.seasonNumber &&
         s.episodeNumber == widget.episodeNumber
       ).toList();
       isSeen = history.isNotEmpty;
@@ -136,13 +136,13 @@ class _SeenManagerState extends State<SeenManager> {
   }
 
   void _showSeenHistory(BuildContext context, SearchProvider provider) {
-    final history = provider.seenItems.where((s) => 
-      s.tmdbId == widget.item.id && 
+    final history = provider.seenItems.where((s) =>
+      s.tmdbId == widget.item.id &&
       s.type == widget.item.mediaType &&
       s.seasonNumber == widget.seasonNumber &&
       s.episodeNumber == widget.episodeNumber
     ).toList();
-    
+
     final colors = context.appColors;
 
     showModalBottomSheet(
@@ -263,7 +263,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final isMovie = widget.item.mediaType == MediaType.movie;
-    
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SingleChildScrollView(
@@ -386,7 +386,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                         if (_isTextEntry) {
                           _selectedDate = DateFormat('dd/MM/yyyy').parseStrict(_dateController.text);
                         }
-                        
+
                         final result = DateTime(
                           _selectedDate.year,
                           _selectedDate.month,

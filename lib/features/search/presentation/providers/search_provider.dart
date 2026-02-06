@@ -387,6 +387,7 @@ class SearchProvider with ChangeNotifier {
 
     _isLoading = true;
     notifyListeners();
+  }
 
     try {
       _currentPage++;
@@ -439,6 +440,8 @@ class SearchProvider with ChangeNotifier {
       }
       _isOffline = false;
     } catch (e) {
+      _error = e.toString();
+      _isOffline = true;
       _error = e.toString();
       _isOffline = true;
       _currentPage--;
@@ -603,7 +606,128 @@ class SearchProvider with ChangeNotifier {
         } else {
           return null;
         }
+  void notifyNetworkError() {
+    if (!_isOffline) {
+      _isOffline = true;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadLists() => loadListNames();
+
+  Future<List<Map<String, dynamic>>> exportSeenData({
+    DateTime? start,
+    DateTime? end,
+    int? tmdbId,
+    MediaType? type,
+  }) {
+    return repository.exportSeenData(
+      start: start,
+      end: end,
+      tmdbId: tmdbId,
+      type: type,
+    );
+  }
+
+  Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
+    await repository.importSeenData(data, mode: mode);
+    await loadAllSeenStatus();
+    await loadNotifiedItems();
+    await updateCacheSize();
+    await updateSeenDbSize();
+  }
+
+  Future<({int seasonNumber, int episodeNumber})?> getNextEpisode(int tmdbId) async {
+    try {
+      final seen = await repository.getSeenStatus(tmdbId, MediaType.tv);
+
+      int nextS = 1;
+      int nextE = 1;
+
+      if (seen.isNotEmpty) {
+        final episodeSeen = seen.where((s) => s.seasonNumber != null && s.episodeNumber != null).toList();
+        if (episodeSeen.isNotEmpty) {
+          episodeSeen.sort((a, b) {
+            final seasonCompare = b.seasonNumber!.compareTo(a.seasonNumber!);
+            if (seasonCompare != 0) return seasonCompare;
+            return b.episodeNumber!.compareTo(a.episodeNumber!);
+          });
+
+          final latest = episodeSeen.first;
+          final details = await repository.getMediaDetails(tmdbId, type: MediaType.tv);
+
+          final seasons = details.item.seasons;
+          if (seasons == null || seasons.isEmpty) return null;
+
+          final currentSeason = seasons.firstWhere(
+            (s) => s.seasonNumber == latest.seasonNumber,
+            orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
+          );
+
+          if (currentSeason.seasonNumber != -1 && latest.episodeNumber! < currentSeason.episodeCount) {
+            nextS = latest.seasonNumber!;
+            nextE = latest.episodeNumber! + 1;
+          } else {
+            final nextSeason = seasons.firstWhere(
+              (s) => s.seasonNumber == latest.seasonNumber! + 1,
+              orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
+            );
+
+            if (nextSeason.seasonNumber != -1) {
+               nextS = nextSeason.seasonNumber;
+               nextE = 1;
+            } else {
+              return null;
+            }
+          }
+        }
+      }
+
+      final seasonDetails = await repository.getSeasonDetails(tmdbId, nextS);
+      final episodes = seasonDetails['episodes'] as List?;
+      if (episodes == null) return null;
+
+      dynamic epData;
+      try {
+        epData = episodes.firstWhere((e) => e['episode_number'] == nextE);
+      } catch (_) {
+        epData = null;
+      }
+
+      if (epData != null) {
+        final airDateStr = epData['air_date'] as String?;
+        if (airDateStr != null) {
+          final airDate = DateTime.tryParse(airDateStr);
+          if (airDate != null) {
+            final now = DateTime.now();
+            final today = DateTime(now.year, now.month, now.day);
+            if (airDate.isAfter(today)) {
+              return null;
+            }
+          } else {
+            return null;
+          }
+        } else {
+          return null;
+        }
       } else {
+        return null;
+      }
+
+      return (seasonNumber: nextS, episodeNumber: nextE);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> refreshNotifiedItems() async {
+    _isNotifiedRefreshing = true;
+    notifyListeners();
+    try {
+      await repository.refreshNotifiedItems();
+      await loadNotifiedItems();
+    } finally {
+      _isNotifiedRefreshing = false;
         return null;
       }
 

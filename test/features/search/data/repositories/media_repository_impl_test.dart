@@ -128,7 +128,6 @@ void main() {
         type: MediaType.movie,
       )).called(1);
     });
-  });
 
   group('discoverMedia', () {
     final tMediaItems = [tMediaItem];
@@ -178,7 +177,7 @@ void main() {
       expect(result.recommendations, isNotNull);
       expect(result.watchProviders, isNotNull);
       expect(result.videos, isNotNull);
-      
+
       verify(() => mockRemoteDataSource.getSimilarMedia(tId, any())).called(1);
       verify(() => mockRemoteDataSource.getRecommendedMedia(tId, any())).called(1);
       verify(() => mockRemoteDataSource.getWatchProviders(tId, any())).called(1);
@@ -229,9 +228,9 @@ void main() {
   group('Additional Enrichment Methods', () {
     test('getSimilarMedia should call remote and cache items', () async {
       when(() => mockRemoteDataSource.getSimilarMedia(1, MediaType.movie)).thenAnswer((_) async => [tMediaItem]);
-      
+
       final result = await repository.getSimilarMedia(1, MediaType.movie);
-      
+
       expect(result, contains(tMediaItem));
       verify(() => mockCache.cacheItem(tMediaItem)).called(1);
     });
@@ -239,18 +238,18 @@ void main() {
     test('getWatchProviders should return map from remote', () async {
       final tProviders = {'US': {'flatrate': []}};
       when(() => mockRemoteDataSource.getWatchProviders(1, MediaType.movie)).thenAnswer((_) async => tProviders);
-      
+
       final result = await repository.getWatchProviders(1, MediaType.movie);
-      
+
       expect(result, equals(tProviders));
     });
 
     test('getVideos should return list from remote', () async {
       final tVideos = [{'key': 'xyz'}];
       when(() => mockRemoteDataSource.getVideos(1, MediaType.movie)).thenAnswer((_) async => tVideos);
-      
+
       final result = await repository.getVideos(1, MediaType.movie);
-      
+
       expect(result, equals(tVideos));
     });
   });

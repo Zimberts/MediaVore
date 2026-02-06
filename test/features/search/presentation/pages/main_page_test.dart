@@ -76,18 +76,18 @@ void main() {
 
     // Initially on Discover (SearchPage)
     expect(find.text('Discover'), findsWidgets); // Tab bar label and AppBar title
-    
+
     // Tap My Lists
     await tester.tap(find.byIcon(Icons.bookmark));
     await tester.pumpAndSettle();
-    
+
     expect(searchProvider.selectedTab, 1);
     expect(find.text('My Lists'), findsWidgets);
 
     // Tap Seen
     await tester.tap(find.byIcon(Icons.history));
     await tester.pumpAndSettle();
-    
+
     expect(searchProvider.selectedTab, 2);
     expect(find.text('Seen History'), findsOneWidget);
   });

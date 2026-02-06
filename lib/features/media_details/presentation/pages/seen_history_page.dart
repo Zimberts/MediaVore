@@ -285,16 +285,16 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                     final seenItem = item as SeenItem;
                     final isTv = seenItem.type == MediaType.tv;
                     final isLiked = provider.likedIds.contains('${seenItem.tmdbId}:${seenItem.type.name}');
-                    
+
                     String subtitle = '';
                     if (_viewMode == SeenViewMode.history && isTv && seenItem.seasonNumber != null) {
                       subtitle = 'S${seenItem.seasonNumber} E${seenItem.episodeNumber}';
                     } else if (_viewMode == SeenViewMode.library && isTv) {
                       final count = provider.getSeenCount(MediaItem(
-                        id: seenItem.tmdbId, 
-                        title: seenItem.title, 
-                        overview: '', 
-                        releaseDate: '', 
+                        id: seenItem.tmdbId,
+                        title: seenItem.title,
+                        overview: '',
+                        releaseDate: '',
                         mediaType: seenItem.type,
                       ));
                       subtitle = '$count episodes seen';
