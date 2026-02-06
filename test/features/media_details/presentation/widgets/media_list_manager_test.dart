@@ -18,7 +18,9 @@ void main() {
     registerFallbackValue(MediaType.movie);
     registerFallbackValue(FakeSeenItem());
     registerFallbackValue(FakeMediaItem());
-    registerFallbackValue(const MediaItem(id: 1, title: 'T', overview: '', releaseDate: ''));
+    registerFallbackValue(
+      const MediaItem(id: 1, title: 'T', overview: '', releaseDate: ''),
+    );
   });
 
   setUp(() {
@@ -30,24 +32,34 @@ void main() {
 
     settingsProvider = SettingsProvider(mockPrefs);
 
-    when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
-    when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
-    when(() => mockRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist']);
+    when(
+      () => mockRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getListPreviews(any(), limit: any(named: 'limit')),
+    ).thenAnswer((_) async => []);
     when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
     when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
-    when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async => Future.value());
+    when(
+      () => mockRepository.markAsSeen(any()),
+    ).thenAnswer((_) async => Future.value());
 
     searchProvider = SearchProvider(mockRepository);
-    when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getSeenStatus(any(), any()),
+    ).thenAnswer((_) async => []);
   });
 
-  Widget createWidgetUnderTest({
-    required String longListName,
-  }) {
+  Widget createWidgetUnderTest({required String longListName}) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
@@ -63,10 +75,14 @@ void main() {
     );
   }
 
-  testWidgets('does not throw overflow error for very long list names', (WidgetTester tester) async {
+  testWidgets('does not throw overflow error for very long list names', (
+    WidgetTester tester,
+  ) async {
     // Make repository return a very long list name in addition to 'watchlist'
     final longName = List.filled(200, 'A').join();
-    when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist', longName]);
+    when(
+      () => mockRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist', longName]);
 
     // Recreate provider to pick up the mocked names
     searchProvider = SearchProvider(mockRepository);
@@ -76,6 +92,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final exception = tester.takeException();
-    expect(exception, isNull, reason: 'Expected no overflow or layout exceptions when rendering long list names');
+    expect(
+      exception,
+      isNull,
+      reason:
+          'Expected no overflow or layout exceptions when rendering long list names',
+    );
   });
 }

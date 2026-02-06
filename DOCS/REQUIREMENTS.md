@@ -8,6 +8,8 @@ This document is the concise index of functional and system requirements for Med
 - [**Theming & Design System**](requirements/theming.md): Color tokens, multi-theme support, and accessibility contrast targets.
 - [**Home Row & Navigation**](requirements/navigation.md): Persistent navigation, deep-link targets, and global UI rules.
 - [**Discovery & Search**](requirements/discovery.md): Browsing grid, infinite scroll, search with debounce, and filtering semantics.
+- [**Discovery & Search**](requirements/discovery.md): Browsing grid, infinite scroll, search with debounce, and filtering semantics.
+  - UI: Discovery grid overlays (rating, notify, like, watchlist) must adapt to tile size and device width to avoid overlap. When space is constrained these overlays should be hidden or compacted. Tests must cover visibility thresholds.
 - [**Media Details & Actors**](requirements/media_details.md): Detail views, metadata, actions (save, mark seen), and actor pages.
 - [**Saved Media (My Lists)**](requirements/saved_media.md): List creation, ordering, sharing, and offline availability.
 - [**Seen History & Logging**](requirements/seen_history.md): Local seen tracking, timestamps, and purge policies.

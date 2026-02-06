@@ -32,39 +32,171 @@ class MediaDetailPage extends StatefulWidget {
     this.scrollController,
   });
 
+  static final List<PersistentBottomSheetController> _activeSheets =
+      <PersistentBottomSheetController>[];
+  static final List<MediaItem> _activeItems = <MediaItem>[];
+
+  static bool get isSheetOpen => _activeSheets.isNotEmpty;
+
+  static PersistentBottomSheetController? get _topSheet =>
+      _activeSheets.isEmpty ? null : _activeSheets.last;
+
+  static MediaItem? get _topItem =>
+      _activeItems.isEmpty ? null : _activeItems.last;
+
+  static void _onSheetClosed(PersistentBottomSheetController controller) {
+    final index = _activeSheets.indexOf(controller);
+    if (index < 0) return;
+    _activeSheets.removeAt(index);
+    if (index < _activeItems.length) {
+      _activeItems.removeAt(index);
+    }
+    _setSheetOpen(_activeSheets.isNotEmpty);
+  }
+
+  static void _closeTopSheet() {
+    try {
+      _topSheet?.close();
+    } catch (_) {}
+  }
+
+  static void showOnTopOfSheet(BuildContext context, MediaItem item) {
+    try {
+      final scaffold = Scaffold.maybeOf(context);
+      if (scaffold == null) return;
+
+      late final PersistentBottomSheetController controller;
+      controller = scaffold.showBottomSheet(
+        (ctx) => Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (_) {
+                  controller.close();
+                },
+              ),
+            ),
+            WillPopScope(
+              onWillPop: () async {
+                controller.close();
+                return false;
+              },
+              child: DraggableScrollableSheet(
+                initialChildSize: 0.8,
+                minChildSize: 0.5,
+                maxChildSize: 0.95,
+                expand: false,
+                builder: (context, scrollController) => Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom:
+                          kBottomNavigationBarHeight +
+                          MediaQuery.of(context).padding.bottom,
+                    ),
+                    child: MediaDetailPage(
+                      item: item,
+                      isSheet: true,
+                      scrollController: scrollController,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      _activeSheets.add(controller);
+      _activeItems.add(item);
+      _setSheetOpen(true);
+      controller.closed.whenComplete(() {
+        _onSheetClosed(controller);
+      });
+      return;
+    } catch (_) {}
+  }
+
   static void show(BuildContext context, MediaItem item) {
     try {
       final scaffold = Scaffold.maybeOf(context);
       if (scaffold != null) {
-        scaffold.showBottomSheet(
-          (ctx) => DraggableScrollableSheet(
-            initialChildSize: 0.8,
-            minChildSize: 0.5,
-            maxChildSize: 0.95,
-            expand: false,
-            builder: (context, scrollController) => Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
+        // If a persistent sheet is already open:
+        // - tapping the same item toggles (close)
+        // - tapping a different item switches content (close then re-open)
+        if (_topSheet != null) {
+          final active = _topItem;
+          final isSameItem =
+              active != null &&
+              active.id == item.id &&
+              active.mediaType == item.mediaType;
+
+          dismissActiveSheet();
+          if (isSameItem) return;
+        }
+
+        late final PersistentBottomSheetController controller;
+        controller = scaffold.showBottomSheet(
+          (ctx) => Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (_) {
+                    controller.close();
+                  },
                 ),
               ),
-              clipBehavior: Clip.antiAliasWithSaveLayer,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom:
-                      kBottomNavigationBarHeight +
-                      MediaQuery.of(context).padding.bottom,
-                ),
-                child: MediaDetailPage(
-                  item: item,
-                  isSheet: true,
-                  scrollController: scrollController,
+              WillPopScope(
+                onWillPop: () async {
+                  controller.close();
+                  return false;
+                },
+                child: DraggableScrollableSheet(
+                  initialChildSize: 0.8,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.95,
+                  expand: false,
+                  builder: (context, scrollController) => Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom:
+                            kBottomNavigationBarHeight +
+                            MediaQuery.of(context).padding.bottom,
+                      ),
+                      child: MediaDetailPage(
+                        item: item,
+                        isSheet: true,
+                        scrollController: scrollController,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         );
+
+        _activeSheets.add(controller);
+        _activeItems.add(item);
+        _setSheetOpen(true);
+        controller.closed.whenComplete(() {
+          _onSheetClosed(controller);
+        });
         return;
       }
     } catch (_) {}
@@ -74,6 +206,8 @@ class MediaDetailPage extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       useRootNavigator: false,
+      isDismissible: true,
+      enableDrag: true,
       backgroundColor: Colors.transparent,
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.8,
@@ -94,6 +228,19 @@ class MediaDetailPage extends StatefulWidget {
         ),
       ),
     );
+  }
+
+  static void dismissActiveSheet() {
+    // Dismiss the top-most sheet only.
+    _closeTopSheet();
+  }
+
+  /// INTERNAL: Notifies listeners that the persistent sheet open-state changed.
+  /// Used by `MainPage` to show a global tap-to-dismiss barrier.
+  static ValueNotifier<bool> sheetOpenListenable = ValueNotifier<bool>(false);
+
+  static void _setSheetOpen(bool open) {
+    sheetOpenListenable.value = open;
   }
 
   @override
@@ -353,10 +500,29 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             actions: [
               LikeButton(item: itemToDisplay),
               NotifyButton(item: itemToDisplay),
-              IconButton(
-                icon: const Icon(Icons.file_upload_outlined),
-                onPressed: _exportHistory,
-                tooltip: 'Export history for this item',
+              // Watchlist toggle moved to AppBar (replaces previous export action)
+              Builder(
+                builder: (ctx) {
+                  final provider = ctx.watch<SearchProvider>();
+                  final isInWatchlist = provider.isItemInList(
+                    itemToDisplay,
+                    'watchlist',
+                  );
+                  return IconButton(
+                    icon: Icon(
+                      isInWatchlist
+                          ? Icons.bookmark
+                          : Icons.bookmark_add_outlined,
+                    ),
+                    onPressed: () async {
+                      await provider.toggleWatchlist(itemToDisplay);
+                      setState(() {});
+                    },
+                    tooltip: isInWatchlist
+                        ? 'Remove from Watchlist'
+                        : 'Add to Watchlist',
+                  );
+                },
               ),
               if (itemToDisplay.mediaType == MediaType.movie)
                 SeenManager(
@@ -790,6 +956,19 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                     ],
                     const SizedBox(height: 24),
                     MediaListManager(item: itemToDisplay),
+                    const SizedBox(height: 12),
+                    // Export history action moved to bottom of the details content
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: OutlinedButton.icon(
+                        onPressed: _exportHistory,
+                        icon: const Icon(Icons.file_upload_outlined),
+                        label: const Text('Export history'),
+                      ),
+                    ),
                     const SizedBox(height: 40),
                   ],
                 ]),
@@ -930,7 +1109,9 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
               final item = items[index];
               return GestureDetector(
                 onTap: () {
-                  MediaDetailPage.show(context, item);
+                  // From within a sheet, open a new sheet on top with the same UI
+                  // as list/discovery/search taps.
+                  MediaDetailPage.showOnTopOfSheet(context, item);
                 },
                 child: Container(
                   width: 100,

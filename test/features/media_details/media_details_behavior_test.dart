@@ -133,7 +133,11 @@ void main() {
     expect(find.byIcon(Icons.movie), findsOneWidget);
 
     // Tap the export button and expect a snackbar for empty export
-    final exportButton = find.byTooltip('Export history for this item');
+    final exportText = find.text('Export history');
+    // Scroll the CustomScrollView to reveal the bottom export action
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1000));
+    await tester.pumpAndSettle();
+    final exportButton = find.ancestor(of: exportText, matching: find.byType(OutlinedButton));
     expect(exportButton, findsOneWidget);
     await tester.tap(exportButton);
     debugPrint('TEST: after tap export (before pump)');

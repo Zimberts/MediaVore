@@ -1,0 +1,96 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^dart analyze$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter analyze\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test --reporter expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/search/presentation/pages/main_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/discovery/discovery_e2e_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/discovery/discovery_compact_grid_ui_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/discovery/discovery_watchlist_like_notify_ui_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/discovery/discovery_compact_grid_ui_test\\.dart test/features/discovery/discovery_watchlist_like_notify_ui_test\\.dart test/features/discovery/discovery_view_mode_and_metadata_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/discovery/discovery_watchlist_like_notify_ui_test\\.dart test/features/discovery/discovery_view_mode_and_metadata_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/discovery/discovery_watchlist_like_notify_ui_test\\.dart test/features/discovery/discovery_view_mode_and_metadata_test\\.dart test/features/discovery/discovery_compact_grid_ui_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/media_details/presentation/pages/media_detail_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/settings/presentation/providers/settings_provider_test\\.dart test/features/discovery/discovery_grid_and_status_test\\.dart test/features/search/presentation/pages/discovery_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/discovery/discovery_grid_and_status_test\\.dart test/features/search/presentation/pages/discovery_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/tools/hard_coded_colors_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/requirements/implemented_features_test\\.dart test/features/search/presentation/pages/main_page_search_persistence_test\\.dart test/features/search/presentation/pages/main_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/navigation/bottom_nav_visibility_test\\.dart test/features/requirements/implemented_features_test\\.dart test/features/search/presentation/pages/main_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/navigation/bottom_nav_visibility_test\\.dart test/features/search/presentation/pages/main_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/navigation/bottom_nav_visibility_test\\.dart -r expanded --plain-name 'BottomNavigationBar visible when opening media details from My Lists'\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/search/presentation/pages/saved_media_page_test\\.dart test/features/search/presentation/pages/saved_media_requirements_test\\.dart test/features/search/presentation/pages/search_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/search/presentation/pages/saved_media_page_test\\.dart test/features/search/presentation/pages/saved_media_requirements_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/search/presentation/pages/search_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"cd 'D:/gits/MediaVore' ; flutter test test/features/search/presentation/pages/saved_media_page_test\\.dart -r expanded\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

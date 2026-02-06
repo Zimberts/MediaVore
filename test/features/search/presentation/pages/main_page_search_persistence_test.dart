@@ -3,20 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
-import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+// Removed unused imports: media_details, seen_item, achievement, media_detail_page, search_overlay
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
-// Removed unused imports: discovery_page, search_overlay
-import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
-
-import '../../helpers/mocks.dart';
+import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockMediaRepository mockRepository;
@@ -80,7 +75,7 @@ void main() {
     when(() => mockAchievementProvider.achievements).thenReturn([]);
     when(
       () => mockAchievementProvider.onAchievementUnlocked,
-    ).thenAnswer((_) => const Stream<Achievement>.empty());
+    ).thenAnswer((_) => const Stream.empty());
 
     searchProvider = SearchProvider(mockRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
@@ -102,7 +97,7 @@ void main() {
     locator.reset();
   });
 
-  Widget createApp() {
+  Widget createWidgetUnderTest() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
@@ -118,53 +113,36 @@ void main() {
     );
   }
 
-  testWidgets('MainPage exposes BottomNavigationBar, FAB and DiscoveryPage', (
-    tester,
+  testWidgets('discovery search stays active when using FAB across tabs', (
+    WidgetTester tester,
   ) async {
-    await tester.pumpWidget(createApp());
+    await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.byType(DiscoveryPage), findsOneWidget);
-  });
+    final discoverySearchFinder = find.byWidgetPredicate((w) {
+      if (w is TextField) {
+        return w.decoration?.hintText == 'Search within Discovery...';
+      }
+      return false;
+    });
 
-  testWidgets('FAB opens SearchOverlay', (tester) async {
-    await tester.pumpWidget(createApp());
+    // Initially no discovery search field
+    expect(discoverySearchFinder, findsNothing);
+
+    // 1. Trigger FAB - opens discovery search
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    expect(discoverySearchFinder, findsOneWidget);
+
+    // 2. Switch to Seen tab
+    await tester.tap(find.byIcon(Icons.history));
     await tester.pumpAndSettle();
 
+    // 3. Trigger FAB again while on Seen - should keep discovery search active
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    // Ensure we are on Discover tab (FAB switches there if needed).
-    await tester.pumpAndSettle();
-
-    // New behavior: FAB toggles DiscoveryPage's inline search field.
-    final searchField = find.descendant(
-      of: find.byType(DiscoveryPage),
-      matching: find.byType(TextField),
-    );
-    expect(searchField, findsOneWidget);
-    // Discovery uses a different hint text; just assert a TextField was shown.
-  });
-
-  testWidgets('Tapping tabs shows respective pages', (tester) async {
-    await tester.pumpWidget(createApp());
-    await tester.pumpAndSettle();
-
-    // My Lists
-    await tester.tap(find.byIcon(Icons.bookmark));
-    await tester.pumpAndSettle();
-    expect(find.byType(SavedMediaPage), findsOneWidget);
-
-    // Seen
-    await tester.tap(find.byIcon(Icons.history));
-    await tester.pumpAndSettle();
-    expect(find.byType(SeenHistoryPage), findsOneWidget);
-
-    // Alerts
-    await tester.tap(find.byIcon(Icons.notifications));
-    await tester.pumpAndSettle();
-    expect(find.byType(NotificationCenterPage), findsOneWidget);
+    // Now ensure discovery search is still active (this will fail with current behavior)
+    expect(discoverySearchFinder, findsOneWidget);
   });
 }

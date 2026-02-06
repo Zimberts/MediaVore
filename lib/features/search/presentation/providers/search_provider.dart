@@ -42,6 +42,7 @@ class SearchProvider with ChangeNotifier {
   String? _language;
   MediaType? _filterType;
   bool _isDiscoverMode = false;
+  bool _discoverySearchVisible = false;
 
   List<SeenItem> _seenItems = [];
   Map<String, int> _seenCounts = {}; // "id:type" -> count
@@ -79,6 +80,7 @@ class SearchProvider with ChangeNotifier {
   String? get language => _language;
   MediaType? get filterType => _filterType;
   bool get isDiscoverMode => _isDiscoverMode;
+  bool get discoverySearchVisible => _discoverySearchVisible;
   String get currentQuery => _currentQuery;
 
   Future<void> _init() async {
@@ -207,7 +209,9 @@ class SearchProvider with ChangeNotifier {
   }
 
   bool isNotified(MediaItem item) {
-    return _notifiedItems.any((n) => n.tmdbId == item.id && n.type == item.mediaType);
+    return _notifiedItems.any(
+      (n) => n.tmdbId == item.id && n.type == item.mediaType,
+    );
   }
 
   Future<void> toggleLike(MediaItem item) async {
@@ -235,11 +239,11 @@ class SearchProvider with ChangeNotifier {
         await loadNotifiedItems();
       }
     }
-    
+
     // Explicitly refresh both state containers to ensure UI consistency
     _listEntries[listName] = await repository.getListEntries(listName);
     _listPreviews[listName] = await repository.getListPreviews(listName);
-    
+
     _listsVersion++;
     await updateCacheSize();
     notifyListeners();
@@ -273,7 +277,10 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateListOrder(String listName, List<String> orderedEntries) async {
+  Future<void> updateListOrder(
+    String listName,
+    List<String> orderedEntries,
+  ) async {
     await repository.updateListOrder(listName, orderedEntries);
     _listEntries[listName] = orderedEntries;
     _listPreviews[listName] = await repository.getListPreviews(listName);
@@ -304,7 +311,13 @@ class SearchProvider with ChangeNotifier {
       final id = int.tryParse(parts[0]);
       final type = parts[1] == 'tv' ? MediaType.tv : MediaType.movie;
       if (id != null) {
-        final shell = MediaItem(id: id, title: 'Unknown', overview: '', releaseDate: '', mediaType: type);
+        final shell = MediaItem(
+          id: id,
+          title: 'Unknown',
+          overview: '',
+          releaseDate: '',
+          mediaType: type,
+        );
         await repository.addToList(shell, name);
       }
     }
@@ -325,6 +338,19 @@ class SearchProvider with ChangeNotifier {
     _minRating = minRating;
     _language = language;
     _filterType = type;
+    notifyListeners();
+  }
+
+  /// Controls visibility of the inline Discovery search field.
+  void setDiscoverySearch(bool visible) {
+    if (_discoverySearchVisible != visible) {
+      _discoverySearchVisible = visible;
+      notifyListeners();
+    }
+  }
+
+  void toggleDiscoverySearch() {
+    _discoverySearchVisible = !_discoverySearchVisible;
     notifyListeners();
   }
 
@@ -371,7 +397,8 @@ class SearchProvider with ChangeNotifier {
             language: _language,
             type: MediaType.tv,
           );
-          _searchResults = [...movies, ...tv]..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
+          _searchResults = [...movies, ...tv]
+            ..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
         } else {
           _searchResults = await repository.discoverMedia(
             page: _currentPage,
@@ -431,7 +458,8 @@ class SearchProvider with ChangeNotifier {
             language: _language,
             type: MediaType.tv,
           );
-          results = [...movies, ...tv]..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
+          results = [...movies, ...tv]
+            ..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
         } else {
           results = await repository.discoverMedia(
             page: _currentPage,
@@ -486,23 +514,38 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<MediaDetails> getMediaDetails(int id, MediaType type) => repository.getMediaDetails(id, type: type);
-  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) => repository.getSeasonDetails(tvId, seasonNumber);
-  Future<List<SeenItem>> loadSeenStatusForItem(int tmdbId, MediaType type) => repository.getSeenStatus(tmdbId, type);
+  Future<MediaDetails> getMediaDetails(int id, MediaType type) =>
+      repository.getMediaDetails(id, type: type);
+  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) =>
+      repository.getSeasonDetails(tvId, seasonNumber);
+  Future<List<SeenItem>> loadSeenStatusForItem(int tmdbId, MediaType type) =>
+      repository.getSeenStatus(tmdbId, type);
   Future<void> markAsSeen(SeenItem item) async {
     await repository.markAsSeen(item);
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
   }
+
   Future<void> deleteSeenEntry(int id) async {
     await repository.deleteSeenEntry(id);
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
   }
-  Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber}) async {
-    await repository.removeFromSeen(tmdbId, type, seasonNumber: seasonNumber, episodeNumber: episodeNumber);
+
+  Future<void> removeFromSeen(
+    int tmdbId,
+    MediaType type, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
+    await repository.removeFromSeen(
+      tmdbId,
+      type,
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
+    );
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
@@ -548,7 +591,10 @@ class SearchProvider with ChangeNotifier {
     );
   }
 
-  Future<void> importSeenData(List<Map<String, dynamic>> data, {ImportMode mode = ImportMode.append}) async {
+  Future<void> importSeenData(
+    List<Map<String, dynamic>> data, {
+    ImportMode mode = ImportMode.append,
+  }) async {
     _isImporting = true;
     _importProgress = 0.0;
     _importStatus = 'Starting import...';
@@ -556,7 +602,7 @@ class SearchProvider with ChangeNotifier {
 
     try {
       await repository.importSeenData(
-        data, 
+        data,
         mode: mode,
         onProgress: (progress, status) {
           _importProgress = progress;
@@ -564,7 +610,7 @@ class SearchProvider with ChangeNotifier {
           notifyListeners();
         },
       );
-      
+
       _importProgress = 1.0;
       _importStatus = 'Done!';
     } catch (e) {
@@ -574,13 +620,15 @@ class SearchProvider with ChangeNotifier {
       await loadNotifiedItems();
       await updateCacheSize();
       await updateSeenDbSize();
-      
+
       _isImporting = false;
       notifyListeners();
     }
   }
 
-  Future<({int seasonNumber, int episodeNumber})?> getNextEpisode(int tmdbId) async {
+  Future<({int seasonNumber, int episodeNumber})?> getNextEpisode(
+    int tmdbId,
+  ) async {
     try {
       final seen = await repository.getSeenStatus(tmdbId, MediaType.tv);
 
@@ -588,7 +636,9 @@ class SearchProvider with ChangeNotifier {
       int nextE = 1;
 
       if (seen.isNotEmpty) {
-        final episodeSeen = seen.where((s) => s.seasonNumber != null && s.episodeNumber != null).toList();
+        final episodeSeen = seen
+            .where((s) => s.seasonNumber != null && s.episodeNumber != null)
+            .toList();
         if (episodeSeen.isNotEmpty) {
           episodeSeen.sort((a, b) {
             final seasonCompare = b.seasonNumber!.compareTo(a.seasonNumber!);
@@ -597,28 +647,34 @@ class SearchProvider with ChangeNotifier {
           });
 
           final latest = episodeSeen.first;
-          final details = await repository.getMediaDetails(tmdbId, type: MediaType.tv);
+          final details = await repository.getMediaDetails(
+            tmdbId,
+            type: MediaType.tv,
+          );
 
           final seasons = details.item.seasons;
           if (seasons == null || seasons.isEmpty) return null;
 
           final currentSeason = seasons.firstWhere(
             (s) => s.seasonNumber == latest.seasonNumber,
-            orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
+            orElse: () =>
+                const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
           );
 
-          if (currentSeason.seasonNumber != -1 && latest.episodeNumber! < currentSeason.episodeCount) {
+          if (currentSeason.seasonNumber != -1 &&
+              latest.episodeNumber! < currentSeason.episodeCount) {
             nextS = latest.seasonNumber!;
             nextE = latest.episodeNumber! + 1;
           } else {
             final nextSeason = seasons.firstWhere(
               (s) => s.seasonNumber == latest.seasonNumber! + 1,
-              orElse: () => const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
+              orElse: () =>
+                  const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
             );
 
             if (nextSeason.seasonNumber != -1) {
-               nextS = nextSeason.seasonNumber;
-               nextE = 1;
+              nextS = nextSeason.seasonNumber;
+              nextE = 1;
             } else {
               return null;
             }
@@ -675,8 +731,12 @@ class SearchProvider with ChangeNotifier {
     }
   }
 
-  Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) => repository.getSimilarMedia(id, type);
-  Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) => repository.getRecommendedMedia(id, type);
-  Future<Map<String, dynamic>> getWatchProviders(int id, MediaType type) => repository.getWatchProviders(id, type);
-  Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type) => repository.getVideos(id, type);
+  Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) =>
+      repository.getSimilarMedia(id, type);
+  Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) =>
+      repository.getRecommendedMedia(id, type);
+  Future<Map<String, dynamic>> getWatchProviders(int id, MediaType type) =>
+      repository.getWatchProviders(id, type);
+  Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type) =>
+      repository.getVideos(id, type);
 }

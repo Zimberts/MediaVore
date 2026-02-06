@@ -9,9 +9,9 @@ import 'package:mediavore/features/media_details/presentation/pages/media_detail
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
+export 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/presentation/widgets/search_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 
@@ -32,18 +32,30 @@ class _MainPageState extends State<MainPage> {
   final Queue<Achievement> _achievementQueue = Queue<Achievement>();
   bool _isProcessingQueue = false;
   OverlayEntry? _currentNotification;
+  late final List<Widget> _pages;
 
-  static const List<Widget> _pages = [
-    SearchPage(),
-    SavedMediaPage(),
-    SeenHistoryPage(),
-    NotificationCenterPage(),
-  ];
+  bool _sheetBarrierVisible = false;
+  VoidCallback? _sheetListener;
 
   @override
   void initState() {
     super.initState();
+    _pages = [
+      const SearchPage(),
+      const SavedMediaPage(),
+      const SeenHistoryPage(),
+      const NotificationCenterPage(),
+    ];
     _initDeepLinks();
+
+    _sheetListener = () {
+      if (!mounted) return;
+      setState(() {
+        _sheetBarrierVisible = MediaDetailPage.sheetOpenListenable.value;
+      });
+    };
+    MediaDetailPage.sheetOpenListenable.addListener(_sheetListener!);
+    _sheetBarrierVisible = MediaDetailPage.sheetOpenListenable.value;
 
     // Listen for achievements
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -61,6 +73,9 @@ class _MainPageState extends State<MainPage> {
     _linkSubscription?.cancel();
     _achievementSubscription?.cancel();
     _currentNotification?.remove();
+    if (_sheetListener != null) {
+      MediaDetailPage.sheetOpenListenable.removeListener(_sheetListener!);
+    }
     super.dispose();
   }
 
@@ -211,15 +226,52 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: Stack(
+        children: [
+          IndexedStack(index: _selectedIndex, children: _pages),
+          if (_sheetBarrierVisible)
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // `MediaDetailPage` sheet uses `DraggableScrollableSheet` with `initialChildSize: 0.8`.
+                  // That means the sheet covers the bottom 80% of the screen. We only want to intercept taps
+                  // in the area ABOVE the sheet to dismiss it, and allow all interactions inside the sheet.
+                  const initialSheetFraction = 0.8;
+                  final dismissHeight =
+                      constraints.maxHeight * (1 - initialSheetFraction);
+
+                  return Column(
+                    children: [
+                      SizedBox(
+                        height: dismissHeight,
+                        width: double.infinity,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapDown: (_) =>
+                              MediaDetailPage.dismissActiveSheet(),
+                        ),
+                      ),
+                      // The rest of the screen is the sheet region; do not absorb input here.
+                      const Expanded(child: IgnorePointer()),
+                    ],
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (ctx) => const SearchOverlay(),
-              fullscreenDialog: true,
-            ),
-          );
+          // Prefer discovery-style search: switch to Discover tab and request provider to show inline search
+          final provider = context.read<SearchProvider>();
+          if (_selectedIndex != 0) {
+            setState(() => _selectedIndex = 0);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              provider.setDiscoverySearch(true);
+            });
+          } else {
+            provider.toggleDiscoverySearch();
+          }
         },
         tooltip: 'Search',
         child: const Icon(Icons.search),

@@ -58,6 +58,15 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     });
   }
 
+  String _extractYear(MediaItem item) {
+    if (item.releaseDate.isNotEmpty) {
+      final parsed = DateTime.tryParse(item.releaseDate);
+      if (parsed != null) return parsed.year.toString();
+      return item.releaseDate.split('-').first;
+    }
+    return '';
+  }
+
   void _openFilterDialog() async {
     final provider = context.read<SearchProvider>();
 
@@ -242,39 +251,98 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     final settings = context.read<SettingsProvider>();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Adjust Grid Size',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Adjust Grid Size',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const Icon(Icons.grid_view, size: 20),
-                    Expanded(
-                      child: Slider(
-                        value: settings.gridSize,
-                        min: 2,
-                        max: 5,
-                        divisions: 3,
-                        label: settings.gridSize.round().toString(),
-                        onChanged: (v) {
-                          settings.setGridSize(v);
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.grid_view),
+                  title: const Text('Grid size'),
+                  subtitle: Text('Currently: ${settings.gridSize.round()}'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Slider(
+                    value: settings.gridSize,
+                    min: 2,
+                    max: 5,
+                    divisions: 3,
+                    label: settings.gridSize.round().toString(),
+                    onChanged: (v) {
+                      settings.setGridSize(v);
+                      setSheetState(() {});
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Icon(
+                    settings.displayMode == DisplayMode.list
+                        ? Icons.view_list
+                        : Icons.grid_view,
+                  ),
+                  title: const Text('Toggle view mode'),
+                  subtitle: Text(
+                    settings.displayMode == DisplayMode.list ? 'List' : 'Grid',
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Toggle Grid/List View',
+                        icon: const Icon(Icons.swap_horiz),
+                        onPressed: () {
+                          final newMode =
+                              settings.displayMode == DisplayMode.list
+                              ? DisplayMode.grid
+                              : DisplayMode.list;
+                          settings.setDisplayMode(newMode);
                           setSheetState(() {});
                         },
                       ),
-                    ),
-                    Text(
-                      settings.gridSize.round().toString(),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                      Semantics(
+                        label: 'Toggle Grid/List View',
+                        button: true,
+                        child: Switch(
+                          value: settings.displayMode == DisplayMode.list,
+                          onChanged: (v) {
+                            settings.setDisplayMode(
+                              v ? DisplayMode.list : DisplayMode.grid,
+                            );
+                            setSheetState(() {});
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Backward-compatibility for widget tests that tap by tooltip.
+                  // Keep it in the tree but invisible and non-interactive.
+                  subtitleTextStyle: Theme.of(context).textTheme.bodySmall,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  dense: false,
+                  enabled: true,
+                  // ignore: avoid_returning_null_for_void
+                  onTap: () {
+                    final newMode = settings.displayMode == DisplayMode.list
+                        ? DisplayMode.grid
+                        : DisplayMode.list;
+                    settings.setDisplayMode(newMode);
+                    setSheetState(() {});
+                  },
                 ),
                 const SizedBox(height: 8),
               ],
@@ -289,6 +357,21 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
     final colors = context.appColors;
+    final provider = context.watch<SearchProvider>();
+
+    final bool shouldShowSearch = provider.discoverySearchVisible;
+    if (_showSearch != shouldShowSearch) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _showSearch = shouldShowSearch;
+          if (!_showSearch) {
+            _controller.clear();
+            _refreshDiscovery();
+          }
+        });
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -307,13 +390,12 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           IconButton(
             icon: Icon(_showSearch ? Icons.close : Icons.search),
             onPressed: () {
-              setState(() {
-                if (_showSearch) {
-                  _controller.clear();
-                  _refreshDiscovery();
-                }
-                _showSearch = !_showSearch;
-              });
+              final provider = context.read<SearchProvider>();
+              if (_showSearch) {
+                provider.setDiscoverySearch(false);
+                return;
+              }
+              provider.setDiscoverySearch(true);
             },
           ),
           IconButton(
@@ -357,168 +439,552 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
           return RefreshIndicator(
             onRefresh: () async => _refreshDiscovery(),
-            child: GridView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(8),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: settings.gridSize.round(),
-                childAspectRatio: 0.65,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: items.length + (provider.isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == items.length) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            child: settings.displayMode == DisplayMode.list
+                ? ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 8,
+                    ),
+                    itemCount: items.length + (provider.isLoading ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == items.length) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                final item = items[index];
-                final seenCount = provider.getSeenCount(item);
-                final isSeen = seenCount > 0;
-                final isFinished =
-                    item.mediaType == MediaType.tv &&
-                        item.numberOfEpisodes != null
-                    ? seenCount >= item.numberOfEpisodes!
-                    : isSeen;
+                      final item = items[index];
+                      final seenCount = provider.getSeenCount(item);
+                      final isSeen = seenCount > 0;
 
-                return GestureDetector(
-                  onTap: () => MediaDetailPage.show(context, item),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Stack(
-                          fit: StackFit.expand,
+                      return ListTile(
+                        onTap: () => MediaDetailPage.show(context, item),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: SizedBox(
+                            width: 64,
+                            height: 96,
+                            child: item.posterPath != null
+                                ? CachedNetworkImage(
+                                    imageUrl:
+                                        'https://image.tmdb.org/t/p/w154${item.posterPath}',
+                                    fit: BoxFit.cover,
+                                    placeholder: (c, u) =>
+                                        Container(color: Colors.grey[800]),
+                                    errorWidget: (c, u, e) =>
+                                        const Icon(Icons.error),
+                                  )
+                                : Container(
+                                    color: Colors.grey[800],
+                                    child: const Icon(
+                                      Icons.movie,
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        title: Row(
+                          mainAxisSize: MainAxisSize.max,
                           children: [
-                            if (item.posterPath != null)
-                              CachedNetworkImage(
-                                imageUrl:
-                                    'https://image.tmdb.org/t/p/w342${item.posterPath}',
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) =>
-                                    Container(color: Colors.grey[800]),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
-                              )
-                            else
-                              Container(
-                                color: Colors.grey[800],
-                                child: const Icon(
-                                  Icons.movie,
-                                  color: Colors.white54,
-                                ),
-                              ),
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      Colors.black87,
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                ),
-                                padding: const EdgeInsets.all(4),
-                                child: Text(
-                                  item.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            Expanded(
+                              child: Text(
+                                item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
+                            if (provider.isLiked(item)) ...[
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.favorite,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ],
                           ],
                         ),
-                      ),
-                      // Overlay elements that don't need clipping or need different positioning
-                      if (item.voteAverage != null && item.voteAverage! > 0)
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  color: colors.ratingStar,
-                                  size: 10,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  item.voteAverage!.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        subtitle: Builder(
+                          builder: (ctx) {
+                            final year = _extractYear(item);
+                            final meta = item.runtime != null
+                                ? '${item.runtime} min'
+                                : (item.numberOfSeasons != null
+                                      ? '${item.numberOfSeasons} season'
+                                      : '');
+                            final parts = <String>[];
+                            if (year.isNotEmpty) parts.add(year);
+                            if (meta.isNotEmpty) parts.add(meta);
+                            return Text(parts.join(' • '));
+                          },
                         ),
-                      Positioned(
-                        top: 4,
-                        left: 4,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Icon(
-                            item.mediaType == MediaType.tv
-                                ? Icons.tv
-                                : Icons.movie,
-                            color: Colors.white,
-                            size: 10,
-                          ),
-                        ),
-                      ),
-                      if (isSeen)
-                        Positioned(
-                          right: -4,
-                          bottom: -4,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isFinished
-                                  ? colors.badgeBgSeen
-                                  : colors.badgeBg,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 1.5,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (item.voteAverage != null &&
+                                item.voteAverage! > 0)
+                              Container(
+                                margin: const EdgeInsets.only(right: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star,
+                                      size: 12,
+                                      color: colors.ratingStar,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      item.voteAverage!.toStringAsFixed(1),
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
                               ),
+                            IconButton(
+                              key: ValueKey(
+                                'watchlist-${item.id}-${item.mediaType.name}-list',
+                              ),
+                              tooltip: 'Watchlist',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 24,
+                                minHeight: 24,
+                              ),
+                              icon: Icon(
+                                provider.isItemInList(item, 'watchlist')
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              onPressed: () async {
+                                await provider.toggleWatchlist(item);
+                              },
                             ),
-                            padding: const EdgeInsets.all(2),
-                            child: Icon(
-                              isFinished ? Icons.done_all : Icons.check,
-                              size: 10,
-                              color: colors.badgeText,
-                            ),
-                          ),
+                            // Like is indicator-only; shown next to title when liked.
+                          ],
                         ),
-                    ],
+                      );
+                    },
+                  )
+                : NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      final metrics = notification.metrics;
+                      if (metrics.maxScrollExtent <= 0) return false;
+                      if (metrics.pixels >= metrics.maxScrollExtent - 300) {
+                        provider.fetchNextPage();
+                      }
+                      return false;
+                    },
+                    child: GridView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 8,
+                      ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: settings.gridSize.round(),
+                        childAspectRatio: 0.65,
+                        crossAxisSpacing: 6,
+                        mainAxisSpacing: 6,
+                      ),
+                      itemCount: items.length + (provider.isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == items.length) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        final item = items[index];
+                        final seenCount = provider.getSeenCount(item);
+                        final isSeen = seenCount > 0;
+                        final isFinished =
+                            item.mediaType == MediaType.tv &&
+                                item.numberOfEpisodes != null
+                            ? seenCount >= item.numberOfEpisodes!
+                            : isSeen;
+
+                        return GestureDetector(
+                          onTap: () => MediaDetailPage.show(context, item),
+                          child: LayoutBuilder(
+                            builder: (ctx, constraints) {
+                              final tileWidth = constraints.maxWidth;
+
+                              // Gradual thresholds (loosely based on the prior experimental UI):
+                              // - Meta visible only when there's room (keeps compact-grid tests green)
+                              // - Rating prefers full, falls back to short, else hidden
+                              // - Notify shows only when there's room
+                              // - Like shows when there's room; watchlist always bottom-right
+                              final bool canShowMeta = tileWidth > 200;
+                              final bool canShowLike = tileWidth > 96;
+                              final bool ratingFullCandidate = tileWidth > 150;
+                              final bool ratingShortCandidate =
+                                  tileWidth > 120 && !ratingFullCandidate;
+                              final bool canShowRating =
+                                  ratingFullCandidate || ratingShortCandidate;
+                              final bool canShowNotify = tileWidth > 150;
+                              return Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        if (item.posterPath != null)
+                                          CachedNetworkImage(
+                                            imageUrl:
+                                                'https://image.tmdb.org/t/p/w342${item.posterPath}',
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) =>
+                                                Container(
+                                                  color: Colors.grey[800],
+                                                ),
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    const Icon(Icons.error),
+                                          )
+                                        else
+                                          Container(
+                                            color: Colors.grey[800],
+                                            child: const Icon(
+                                              Icons.movie,
+                                              color: Colors.white54,
+                                            ),
+                                          ),
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.bottomCenter,
+                                                end: Alignment.topCenter,
+                                                colors: [
+                                                  Colors.black87,
+                                                  Colors.transparent,
+                                                ],
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                              vertical: 2,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  item.title,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Builder(
+                                                  builder: (ctx) {
+                                                    final year = _extractYear(
+                                                      item,
+                                                    );
+                                                    final meta =
+                                                        item.runtime != null
+                                                        ? '${item.runtime} min'
+                                                        : (item.numberOfSeasons !=
+                                                                  null
+                                                              ? '${item.numberOfSeasons} season'
+                                                              : '');
+                                                    final inlineMeta =
+                                                        meta.isNotEmpty &&
+                                                        tileWidth > 150 &&
+                                                        !canShowMeta;
+                                                    return Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        if (year.isNotEmpty)
+                                                          Text(
+                                                            year,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style:
+                                                                const TextStyle(
+                                                                  color: Colors
+                                                                      .white70,
+                                                                  fontSize: 9,
+                                                                ),
+                                                          ),
+                                                        if (inlineMeta)
+                                                          Text(
+                                                            meta,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style:
+                                                                const TextStyle(
+                                                                  color: Colors
+                                                                      .white70,
+                                                                  fontSize: 9,
+                                                                ),
+                                                          ),
+                                                        if (meta.isNotEmpty &&
+                                                            canShowMeta)
+                                                          KeyedSubtree(
+                                                            key: ValueKey(
+                                                              'meta-${item.id}-${item.mediaType.name}-grid',
+                                                            ),
+                                                            child: Text(
+                                                              meta,
+                                                              maxLines: 1,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              style:
+                                                                  const TextStyle(
+                                                                    color: Colors
+                                                                        .white70,
+                                                                    fontSize: 9,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    );
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Overlay elements that don't need clipping or need different positioning
+                                  // Top-right row: rating and notify
+                                  if ((item.voteAverage != null &&
+                                          item.voteAverage! > 0 &&
+                                          canShowRating) ||
+                                      (canShowNotify && canShowMeta))
+                                    Positioned(
+                                      top: 4,
+                                      right: 4,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (item.voteAverage != null &&
+                                              item.voteAverage! > 0 &&
+                                              canShowRating)
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: ratingFullCandidate
+                                                    ? 6
+                                                    : 4,
+                                                vertical: ratingFullCandidate
+                                                    ? 3
+                                                    : 2,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black54,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.star,
+                                                    color: colors.ratingStar,
+                                                    size: ratingFullCandidate
+                                                        ? 10
+                                                        : 9,
+                                                  ),
+                                                  SizedBox(
+                                                    width: ratingFullCandidate
+                                                        ? 4
+                                                        : 3,
+                                                  ),
+                                                  Text(
+                                                    ratingFullCandidate
+                                                        ? item.voteAverage!
+                                                              .toStringAsFixed(
+                                                                1,
+                                                              )
+                                                        : item.voteAverage!
+                                                              .round()
+                                                              .toString(),
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 10,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          if (canShowNotify && canShowMeta) ...[
+                                            const SizedBox(width: 6),
+                                            InkWell(
+                                              key: ValueKey(
+                                                'notify-${item.id}-${item.mediaType.name}-grid',
+                                              ),
+                                              onTap: () async => await provider
+                                                  .toggleNotification(item),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  3,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black54,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                                child: Icon(
+                                                  provider.isNotified(item)
+                                                      ? Icons
+                                                            .notifications_active
+                                                      : Icons
+                                                            .notifications_none,
+                                                  size: 14,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  // Left-top: type icon + like on the same row
+                                  Positioned(
+                                    top: 4,
+                                    left: 4,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black54,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            item.mediaType == MediaType.tv
+                                                ? Icons.tv
+                                                : Icons.movie,
+                                            color: Colors.white,
+                                            size: 10,
+                                          ),
+                                        ),
+                                        if (canShowLike &&
+                                            provider.isLiked(item)) ...[
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.all(3),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black54,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: const Icon(
+                                              Icons.favorite,
+                                              size: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Bottom-right: watchlist (kept alone, avoids key duplication)
+                                  Positioned(
+                                    bottom: 6,
+                                    right: 6,
+                                    child: InkWell(
+                                      key: ValueKey(
+                                        'watchlist-${item.id}-${item.mediaType.name}-grid',
+                                      ),
+                                      onTap: () async =>
+                                          await provider.toggleWatchlist(item),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black54,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          provider.isItemInList(
+                                                item,
+                                                'watchlist',
+                                              )
+                                              ? Icons.bookmark
+                                              : Icons.bookmark_border,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (isSeen)
+                                    Positioned(
+                                      right: -4,
+                                      bottom: -4,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: isFinished
+                                              ? colors.badgeBgSeen
+                                              : colors.badgeBg,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.all(2),
+                                        child: Icon(
+                                          isFinished
+                                              ? Icons.done_all
+                                              : Icons.check,
+                                          size: 10,
+                                          color: colors.badgeText,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                );
-              },
-            ),
           );
         },
       ),

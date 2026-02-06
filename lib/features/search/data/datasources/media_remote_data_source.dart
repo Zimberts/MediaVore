@@ -25,47 +25,30 @@ class MediaRemoteDataSource {
 
   MediaRemoteDataSource._internal({required this.dio, required this.apiToken});
 
-  /// Searches for movies and series on the TMDB API, supporting optional filters.
-  Future<List<MediaItem>> searchMedia(String query, {
-    int page = 1,
-    List<int>? genreIds,
-    int? releaseYear,
-    double? minRating,
-    String? language,
-    MediaType? type,
-  }) async {
-    final path = (type == MediaType.tv) ? 'tv' : 'movie';
+  /// Searches for movies and series on the TMDB API.
+  Future<List<MediaItem>> searchMedia(String query, {int page = 1}) async {
     try {
-      final params = <String, dynamic>{'query': query, 'page': page};
-      if (genreIds != null && genreIds.isNotEmpty) params['with_genres'] = genreIds.join(',');
-      if (releaseYear != null) {
-        if (type == MediaType.movie) {
-          params['primary_release_year'] = releaseYear;
-        } else {
-          params['first_air_date_year'] = releaseYear;
-        }
-      }
-      if (minRating != null) params['vote_average.gte'] = minRating;
-      if (language != null) params['language'] = language;
-
       final response = await dio.get(
-        'https://api.themoviedb.org/3/search/$path',
-        queryParameters: params,
+        'https://api.themoviedb.org/3/search/multi',
+        queryParameters: {
+          'query': query,
+          'page': page,
+        },
         options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
       );
-
       final List results = response.data['results'];
-      final mediaItems = results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).toList();
+      final mediaItems = results
+          .map((m) => MediaItem.fromJson(m))
+          .where((m) => m.mediaType == MediaType.movie || m.mediaType == MediaType.tv)
+          .toList();
 
       // Enrich items with full details to get number of seasons or runtime
       final enrichedItems = await Future.wait(mediaItems.map((item) async {
         try {
+          // We fetch the full details for each item to get extra info (runtime, seasons).
           return await getMediaItem(item.id, type: item.mediaType);
-        } catch (_) {
+        } catch (e) {
+          // If enrichment fails, we return the basic item from search.
           return item;
         }
       }));
@@ -200,15 +183,7 @@ class MediaRemoteDataSource {
 
   /// Discover movies or TV using TMDb discover endpoint.
   /// [mediaType] should be 'movie' or 'tv'.
-  Future<List<MediaItem>> discover({
-    required String mediaType,
-    String? sortBy,
-    int page = 1,
-    int? year,
-    String? withGenres,
-    double? minRating,
-    String? language,
-  }) async {
+  Future<List<MediaItem>> discover({required String mediaType, String? sortBy, int page = 1, int? year, int? withGenre}) async {
     final path = mediaType == 'tv' ? 'tv' : 'movie';
     try {
       final params = <String, dynamic>{'page': page};
@@ -220,9 +195,7 @@ class MediaRemoteDataSource {
           params['first_air_date_year'] = year;
         }
       }
-      if (withGenres != null) params['with_genres'] = withGenres;
-      if (minRating != null) params['vote_average.gte'] = minRating;
-      if (language != null) params['language'] = language;
+      if (withGenre != null) params['with_genres'] = withGenre;
 
       final response = await dio.get(
         'https://api.themoviedb.org/3/discover/$path',
@@ -231,11 +204,7 @@ class MediaRemoteDataSource {
       );
 
       final List results = response.data['results'];
-      final mediaItems = results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).where((m) => m.mediaType == MediaType.movie || m.mediaType == MediaType.tv).toList();
+      final mediaItems = results.map((m) => MediaItem.fromJson(m)).where((m) => m.mediaType == MediaType.movie || m.mediaType == MediaType.tv).toList();
 
       // Try to enrich items similarly to searchMedia
       final enriched = await Future.wait(mediaItems.map((item) async {
@@ -291,93 +260,6 @@ class MediaRemoteDataSource {
       }
     } catch (e) {
       throw ParsingException('Failed to parse actor movie credits response', e);
-    }
-  }
-
-
-
-  /// Backwards-compatible wrapper for discover with filter naming used elsewhere.
-  Future<List<MediaItem>> discoverMedia({
-    int page = 1,
-    List<int>? genreIds,
-    int? releaseYear,
-    double? minRating,
-    String? language,
-    MediaType type = MediaType.movie,
-    String sortBy = 'popularity.desc',
-  }) async {
-    final mediaType = type == MediaType.tv ? 'tv' : 'movie';
-    return await discover(
-      mediaType: mediaType,
-      sortBy: sortBy,
-      page: page,
-      year: releaseYear,
-      withGenres: genreIds != null && genreIds.isNotEmpty ? genreIds.join(',') : null,
-      minRating: minRating,
-      language: language,
-    );
-  }
-
-  Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) async {
-    final path = type == MediaType.tv ? 'tv' : 'movie';
-    try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/$path/$id/similar',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
-      );
-      final List results = response.data['results'];
-      return results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).toList();
-    } catch (e) {
-      throw ParsingException('Failed to fetch similar media', e);
-    }
-  }
-
-  Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) async {
-    final path = type == MediaType.tv ? 'tv' : 'movie';
-    try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/$path/$id/recommendations',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
-      );
-      final List results = response.data['results'];
-      return results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).toList();
-    } catch (e) {
-      throw ParsingException('Failed to fetch recommendations', e);
-    }
-  }
-
-  Future<Map<String, dynamic>> getWatchProviders(int id, MediaType type) async {
-    final path = type == MediaType.tv ? 'tv' : 'movie';
-    try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/$path/$id/watch/providers',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
-      );
-      return response.data['results'] as Map<String, dynamic>;
-    } catch (e) {
-      throw ParsingException('Failed to fetch watch providers', e);
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type) async {
-    final path = type == MediaType.tv ? 'tv' : 'movie';
-    try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/$path/$id/videos',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
-      );
-      final List results = response.data['results'];
-      return results.cast<Map<String, dynamic>>();
-    } catch (e) {
-      throw ParsingException('Failed to fetch videos', e);
     }
   }
 }

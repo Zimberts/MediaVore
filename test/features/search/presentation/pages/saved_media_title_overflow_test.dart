@@ -3,13 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 
 void main() {
-  testWidgets('AppBar title Row overflows for very long text at small width', (WidgetTester tester) async {
-    final binding = TestWidgetsFlutterBinding.ensureInitialized() as TestWidgetsFlutterBinding;
-    binding.window.physicalSizeTestValue = const Size(360, 800);
-    binding.window.devicePixelRatioTestValue = 1.0;
+  testWidgets('AppBar title Row overflows for very long text at small width', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
-      binding.window.clearPhysicalSizeTestValue();
-      binding.window.clearDevicePixelRatioTestValue();
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
     });
 
     final longName = List.filled(200, 'A').join();
@@ -20,9 +21,8 @@ void main() {
         home: Scaffold(
           appBar: AppBar(
             title: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(longName),
+                Expanded(child: Text(longName)),
                 const Icon(Icons.arrow_drop_down),
               ],
             ),
@@ -47,7 +47,11 @@ void main() {
 
     // Assert that the text width fits within the AppBar title Row width (no overflow).
     // This assertion should fail on the unpatched layout and pass after we apply the fix.
-    expect(textSize.width <= rowSize.width, isTrue,
-        reason: 'Expected title text to fit within AppBar title width (no overflow)');
+    expect(
+      textSize.width <= rowSize.width,
+      isTrue,
+      reason:
+          'Expected title text to fit within AppBar title width (no overflow)',
+    );
   });
 }

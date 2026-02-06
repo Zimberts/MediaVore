@@ -11,7 +11,7 @@ class SettingsProvider with ChangeNotifier {
     _loadSettings();
   }
 
-  DisplayMode _displayMode = DisplayMode.list;
+  DisplayMode _displayMode = DisplayMode.grid;
   double _gridSize = 3.0;
   bool _hideNonReleased = false;
 
@@ -31,12 +31,13 @@ class SettingsProvider with ChangeNotifier {
   AppPalette get darkPalette => darkThemes[_darkAppThemeIndex].palette;
 
   void _loadSettings() {
-    int displayModeIndex = _prefs.getInt('displayMode') ?? 0;
+    int displayModeIndex =
+        _prefs.getInt('displayMode') ?? DisplayMode.grid.index;
     if (displayModeIndex < 0 || displayModeIndex >= DisplayMode.values.length) {
-      displayModeIndex = 0;
+      displayModeIndex = DisplayMode.grid.index;
     }
     _displayMode = DisplayMode.values[displayModeIndex];
-    
+
     _gridSize = _prefs.getDouble('gridSize') ?? 3.0;
     _hideNonReleased = _prefs.getBool('hideNonReleased') ?? false;
 
@@ -44,7 +45,7 @@ class SettingsProvider with ChangeNotifier {
     if (_lightAppThemeIndex < 0 || _lightAppThemeIndex >= lightThemes.length) {
       _lightAppThemeIndex = 0;
     }
-    
+
     _darkAppThemeIndex = _prefs.getInt('darkAppTheme') ?? 0;
     if (_darkAppThemeIndex < 0 || _darkAppThemeIndex >= darkThemes.length) {
       _darkAppThemeIndex = 0;
@@ -55,13 +56,16 @@ class SettingsProvider with ChangeNotifier {
       themeModeIndex = 0;
     }
     _themeMode = ThemeMode.values[themeModeIndex];
-    
+
     notifyListeners();
   }
 
   Future<void> setDisplayMode(DisplayMode mode) async {
     _displayMode = mode;
-    await _prefs.setInt('displayMode', mode.index);
+    // Don't await here to be resilient to test mocks that may return null.
+    try {
+      _prefs.setInt('displayMode', mode.index);
+    } catch (_) {}
     notifyListeners();
   }
 

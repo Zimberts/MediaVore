@@ -34,7 +34,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -72,7 +72,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
             itemBuilder: (context, index) {
               final item = items[index];
               final isInWatchlist = provider.isItemInList(item, 'watchlist');
-              
+
               return ListTile(
                 leading: item.posterPath != null
                     ? Image.network(
@@ -86,12 +86,19 @@ class _SearchOverlayState extends State<SearchOverlay> {
                 title: Text(item.title),
                 subtitle: Text(item.releaseDate),
                 trailing: IconButton(
+                  key: ValueKey(
+                    'watchlist-${item.id}-${item.mediaType.name}-search',
+                  ),
                   icon: Icon(
-                    isInWatchlist ? Icons.bookmark : Icons.bookmark_add_outlined,
+                    isInWatchlist
+                        ? Icons.bookmark
+                        : Icons.bookmark_add_outlined,
                     color: isInWatchlist ? colors.onWatchlist : null,
                   ),
                   onPressed: () => provider.toggleWatchlist(item),
-                  tooltip: isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist',
+                  tooltip: isInWatchlist
+                      ? 'Remove from Watchlist'
+                      : 'Add to Watchlist',
                 ),
                 onTap: () {
                   MediaDetailPage.show(context, item);
