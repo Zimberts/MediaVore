@@ -23,7 +23,7 @@ class SearchProvider with ChangeNotifier {
   int _currentPage = 1;
   String _currentQuery = '';
   bool _hasMore = true;
-  
+
   Map<String, int> _seenCounts = {}; // "id:type" -> count
   List<String> _watchlistIds = []; // Simplified IDs for quick checks
 
@@ -114,7 +114,7 @@ class SearchProvider with ChangeNotifier {
   Future<void> toggleInList(MediaItem item, String listName) async {
     final entry = '${item.id}:${item.mediaType.name}';
     final currentEntries = _listEntries[listName] ?? [];
-    
+
     if (currentEntries.contains(entry)) {
       await repository.removeFromList(item.id, item.mediaType, listName);
       _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
@@ -181,6 +181,10 @@ class SearchProvider with ChangeNotifier {
 
     _isLoading = true;
     notifyListeners();
+    _cacheSize = await repository.getCacheSize();
+    _isCacheLoading = false;
+    notifyListeners();
+  }
 
     try {
       _currentPage++;
@@ -199,6 +203,12 @@ class SearchProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+    notifyListeners();
+  }
+
+  Future<void> loadListNames() async {
+    _listNames = await repository.getAllListNames();
+    notifyListeners();
   }
 
   void clearSearch() {
