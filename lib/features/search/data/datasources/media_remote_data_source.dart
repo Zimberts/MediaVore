@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
@@ -48,6 +49,7 @@ class MediaRemoteDataSource {
       if (minRating != null) params['vote_average.gte'] = minRating;
       if (language != null) params['language'] = language;
 
+      debugPrint('[Remote] searchMedia -> /search/$path params=$params');
       final response = await dio.get(
         'https://api.themoviedb.org/3/search/$path',
         queryParameters: params,

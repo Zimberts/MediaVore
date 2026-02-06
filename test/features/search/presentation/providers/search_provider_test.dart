@@ -96,7 +96,15 @@ void main() {
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
-            type: any(named: 'type'),
+            type: MediaType.movie,
+          )).called(1);
+      verify(() => mockRepository.searchMedia(
+            'Inception',
+            page: 1,
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            type: MediaType.tv,
           )).called(1);
       expect(provider.isDiscoverMode, isFalse);
     });

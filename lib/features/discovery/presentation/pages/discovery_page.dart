@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -10,7 +11,9 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class DiscoveryPage extends StatefulWidget {
-  const DiscoveryPage({super.key});
+  final ValueListenable<int>? searchTrigger;
+
+  const DiscoveryPage({super.key, this.searchTrigger});
 
   @override
   State<DiscoveryPage> createState() => _DiscoveryPageState();
@@ -19,6 +22,7 @@ class DiscoveryPage extends StatefulWidget {
 class _DiscoveryPageState extends State<DiscoveryPage> {
   bool _showSearch = false;
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounce;
   final ScrollController _scrollController = ScrollController();
 
@@ -26,16 +30,28 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    widget.searchTrigger?.addListener(_handleSearchTrigger);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshDiscovery();
     });
   }
 
   @override
+  void didUpdateWidget(covariant DiscoveryPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchTrigger != widget.searchTrigger) {
+      oldWidget.searchTrigger?.removeListener(_handleSearchTrigger);
+      widget.searchTrigger?.addListener(_handleSearchTrigger);
+    }
+  }
+
+  @override
   void dispose() {
     _debounce?.cancel();
     _controller.dispose();
+    _searchFocusNode.dispose();
     _scrollController.dispose();
+    widget.searchTrigger?.removeListener(_handleSearchTrigger);
     super.dispose();
   }
 
@@ -45,15 +61,29 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     }
   }
 
-  void _refreshDiscovery() {
+  void _refreshDiscovery([String? query]) {
     final provider = context.read<SearchProvider>();
-    provider.searchMedia(_controller.text);
+    provider.searchMedia(query ?? _controller.text);
   }
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      _refreshDiscovery();
+      _refreshDiscovery(value);
+    });
+  }
+
+  void _handleSearchTrigger() {
+    if (!mounted) return;
+    if (!_showSearch) {
+      setState(() {
+        _showSearch = true;
+      });
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _searchFocusNode.requestFocus();
+      }
     });
   }
 
@@ -260,6 +290,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
             ? TextField(
                 controller: _controller,
                 autofocus: true,
+                focusNode: _searchFocusNode,
                 decoration: const InputDecoration(
                   hintText: 'Search within Discovery...',
                   border: InputBorder.none,

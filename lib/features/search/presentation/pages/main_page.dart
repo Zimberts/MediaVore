@@ -11,7 +11,6 @@ import 'package:mediavore/features/media_details/presentation/pages/seen_history
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/presentation/widgets/search_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 
@@ -27,17 +26,18 @@ class _MainPageState extends State<MainPage> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   StreamSubscription? _achievementSubscription;
+  final ValueNotifier<int> _discoverSearchTrigger = ValueNotifier<int>(0);
 
   // Achievement queue logic
   final Queue<Achievement> _achievementQueue = Queue<Achievement>();
   bool _isProcessingQueue = false;
   OverlayEntry? _currentNotification;
 
-  static const List<Widget> _pages = [
-    SearchPage(),
-    SavedMediaPage(),
-    SeenHistoryPage(),
-    NotificationCenterPage(),
+  late final List<Widget> _pages = [
+    SearchPage(searchTrigger: _discoverSearchTrigger),
+    const SavedMediaPage(),
+    const SeenHistoryPage(),
+    const NotificationCenterPage(),
   ];
 
   @override
@@ -59,6 +59,7 @@ class _MainPageState extends State<MainPage> {
     _linkSubscription?.cancel();
     _achievementSubscription?.cancel();
     _currentNotification?.remove();
+    _discoverSearchTrigger.dispose();
     super.dispose();
   }
 
@@ -206,10 +207,8 @@ class _MainPageState extends State<MainPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (ctx) => const SearchOverlay(),
-            fullscreenDialog: true,
-          ));
+          _onItemTapped(0);
+          _discoverSearchTrigger.value += 1;
         },
         tooltip: 'Search',
         child: const Icon(Icons.search),

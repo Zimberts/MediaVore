@@ -105,4 +105,28 @@ void main() {
     expect(searchProvider.selectedTab, 2);
     expect(find.text('Seen History'), findsOneWidget);
   });
+
+  testWidgets('FAB opens discovery search bar and switches to Discover', (WidgetTester tester) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.bookmark));
+    await tester.pumpAndSettle();
+
+    expect(searchProvider.selectedTab, 1);
+    expect(find.text('My Lists'), findsWidgets);
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(searchProvider.selectedTab, 0);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.hintText == 'Search within Discovery...',
+      ),
+      findsOneWidget,
+    );
+  });
 }

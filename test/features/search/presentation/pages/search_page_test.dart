@@ -15,6 +15,7 @@ void main() {
   late MockSharedPreferences mockSharedPreferences;
   late SearchProvider searchProvider;
   late SettingsProvider settingsProvider;
+  late ValueNotifier<int> searchTrigger;
 
   setUpAll(() {
     registerFallbackValue(Uri());
@@ -68,7 +69,12 @@ void main() {
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
+    searchTrigger = ValueNotifier<int>(0);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
+  });
+
+  tearDown(() {
+    searchTrigger.dispose();
   });
 
   Widget createWidgetUnderTest() {
@@ -79,7 +85,7 @@ void main() {
       ],
       child: MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
-        home: const SearchPage(),
+        home: SearchPage(searchTrigger: searchTrigger),
       ),
     );
   }
@@ -124,8 +130,11 @@ void main() {
     });
 
     testWidgets('toggles search bar and triggers auto-search', (WidgetTester tester) async {
-      final searchItems = [
-        const MediaItem(id: 2, title: 'Search Result', overview: 'O', releaseDate: '2023', mediaType: MediaType.movie),
+      final movieItems = [
+        const MediaItem(id: 2, title: 'Search Movie', overview: 'O', releaseDate: '2023', mediaType: MediaType.movie),
+      ];
+      final tvItems = [
+        const MediaItem(id: 3, title: 'Search TV', overview: 'O', releaseDate: '2023', mediaType: MediaType.tv),
       ];
       when(() => mockMediaRepository.searchMedia(
         'test', 
@@ -134,8 +143,17 @@ void main() {
         releaseYear: any(named: 'releaseYear'),
         minRating: any(named: 'minRating'),
         language: any(named: 'language'),
-        type: any(named: 'type'),
-      )).thenAnswer((_) async => searchItems);
+        type: MediaType.movie,
+      )).thenAnswer((_) async => movieItems);
+      when(() => mockMediaRepository.searchMedia(
+        'test', 
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        type: MediaType.tv,
+      )).thenAnswer((_) async => tvItems);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -156,7 +174,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Search Result'), findsOneWidget);
+      expect(find.text('Search Movie'), findsOneWidget);
+      expect(find.text('Search TV'), findsOneWidget);
     });
 
     testWidgets('opens filter dialog and applies changes', (WidgetTester tester) async {

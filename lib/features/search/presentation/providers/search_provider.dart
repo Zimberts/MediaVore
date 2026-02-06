@@ -79,6 +79,31 @@ class SearchProvider with ChangeNotifier {
   bool get isDiscoverMode => _isDiscoverMode;
   String get currentQuery => _currentQuery;
 
+  int _titleSimilarityScore(String query, String title) {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) return 0;
+    final normalizedTitle = title.trim().toLowerCase();
+    if (normalizedTitle == normalizedQuery) return 4;
+    if (normalizedTitle.startsWith(normalizedQuery)) return 3;
+    if (normalizedTitle.contains(normalizedQuery)) return 2;
+    final queryWords = normalizedQuery.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toSet();
+    if (queryWords.isEmpty) return 0;
+    final titleWords = normalizedTitle.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toSet();
+    final overlap = queryWords.intersection(titleWords).length;
+    return overlap > 0 ? 1 : 0;
+  }
+
+  void _sortByRelevance(List<MediaItem> items) {
+    items.sort((a, b) {
+      final scoreA = _titleSimilarityScore(_currentQuery, a.title);
+      final scoreB = _titleSimilarityScore(_currentQuery, b.title);
+      if (scoreA != scoreB) return scoreB.compareTo(scoreA);
+      final ratingA = a.voteAverage ?? 0;
+      final ratingB = b.voteAverage ?? 0;
+      return ratingB.compareTo(ratingA);
+    });
+  }
+
   Future<void> _init() async {
     await loadListNames();
     await _loadAllListEntries();
@@ -325,10 +350,11 @@ class SearchProvider with ChangeNotifier {
   }
 
   Future<void> searchMedia(String query) async {
-    _currentQuery = query;
-    if (query.isEmpty && !_isDiscoverMode) {
+    final normalizedQuery = query.trim();
+    _currentQuery = normalizedQuery;
+    if (normalizedQuery.isEmpty && !_isDiscoverMode) {
       _isDiscoverMode = true;
-    } else if (query.isNotEmpty) {
+    } else if (normalizedQuery.isNotEmpty) {
       _isDiscoverMode = false;
     }
 
@@ -358,7 +384,8 @@ class SearchProvider with ChangeNotifier {
             language: _language,
             type: MediaType.tv,
           );
-          _searchResults = [...movies, ...tv]..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
+          _searchResults = [...movies, ...tv];
+          _sortByRelevance(_searchResults);
         } else {
           _searchResults = await repository.discoverMedia(
             page: _currentPage,
@@ -370,15 +397,41 @@ class SearchProvider with ChangeNotifier {
           );
         }
       } else {
-        _searchResults = await repository.searchMedia(
-          _currentQuery,
-          page: _currentPage,
-          genreIds: _genreIds,
-          releaseYear: _releaseYear,
-          minRating: _minRating,
-          language: _language,
-          type: _filterType,
-        );
+        if (_filterType == null) {
+          final movies = await repository.searchMedia(
+            _currentQuery,
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.movie,
+          );
+          final tv = await repository.searchMedia(
+            _currentQuery,
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.tv,
+          );
+          _searchResults = [...movies, ...tv];
+          _sortByRelevance(_searchResults);
+        } else {
+          _searchResults = await repository.searchMedia(
+            _currentQuery,
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: _filterType,
+          );
+          if (_currentQuery.isNotEmpty) {
+            _sortByRelevance(_searchResults);
+          }
+        }
       }
       _isOffline = false;
     } catch (e) {
@@ -430,15 +483,43 @@ class SearchProvider with ChangeNotifier {
           );
         }
       } else {
-        results = await repository.searchMedia(
-          _currentQuery,
-          page: _currentPage,
-          genreIds: _genreIds,
-          releaseYear: _releaseYear,
-          minRating: _minRating,
-          language: _language,
-          type: _filterType,
-        );
+        if (_filterType == null) {
+          final movies = await repository.searchMedia(
+            _currentQuery,
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.movie,
+          );
+          final tv = await repository.searchMedia(
+            _currentQuery,
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: MediaType.tv,
+          );
+          results = [...movies, ...tv];
+          if (_currentQuery.isNotEmpty) {
+            _sortByRelevance(results);
+          }
+        } else {
+          results = await repository.searchMedia(
+            _currentQuery,
+            page: _currentPage,
+            genreIds: _genreIds,
+            releaseYear: _releaseYear,
+            minRating: _minRating,
+            language: _language,
+            type: _filterType,
+          );
+          if (_currentQuery.isNotEmpty) {
+            _sortByRelevance(results);
+          }
+        }
       }
 
       if (results.isEmpty) {
