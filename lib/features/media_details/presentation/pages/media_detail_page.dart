@@ -138,6 +138,88 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
           _episodesBySeason[seasonNumber] = data['episodes'] ?? [];
           _loadingSeasons[seasonNumber] = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot load season details while offline.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportHistory() async {
+    final provider = context.read<SearchProvider>();
+    final data = await provider.exportSeenData(
+      tmdbId: widget.item.id,
+      type: widget.item.mediaType,
+    );
+    
+    if (data.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No history to export for this item.')),
+        );
+      }
+      return;
+    }
+
+    final jsonString = jsonEncode(data);
+    final fileName = 'mediavore_${widget.item.title.replaceAll(' ', '_')}_history.json';
+
+    if (mounted) {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.save_alt),
+                title: const Text('Save to device'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _saveFileToDevice(context, jsonString, fileName);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.share),
+                title: const Text('Share via System'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final tempDir = await getTemporaryDirectory();
+                  final tempFile = File('${tempDir.path}/$fileName');
+                  await tempFile.writeAsString(jsonString);
+                  await Share.shareXFiles(
+                    [XFile(tempFile.path, mimeType: 'application/json')],
+                    text: 'Seen history for ${widget.item.title}',
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveFileToDevice(BuildContext context, String jsonString, String fileName) async {
+    try {
+      final bytes = utf8.encode(jsonString);
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save History',
+        fileName: fileName,
+        initialDirectory: '/storage/emulated/0/Download/MediaVore',
+        bytes: bytes,
+      );
+
+      if (result != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('File saved successfully')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Save failed: $e')),
+        );
       }
     } catch (e) {
       if (mounted) {
