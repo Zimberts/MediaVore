@@ -17,6 +17,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   late final MediaRepository _mediaRepository;
   String _selectedList = 'watchlist';
   Future<List<MediaItem>>? _savedMediaFuture;
+  Set<int>? _lastWatchlistIds;
 
   @override
   void initState() {
