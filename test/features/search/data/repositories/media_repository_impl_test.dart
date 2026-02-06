@@ -96,9 +96,7 @@ void main() {
       verify(() => mockRemoteDataSource.searchMedia(tQuery)).called(1);
       verify(() => mockCache.cacheItem(tMediaItem)).called(1);
     });
-  });
-
-  group('getMediaDetails', () {
+   group('getMediaDetails', () {
     const tId = 1;
 
     test('should return media details from cache if available', () async {
@@ -165,6 +163,19 @@ void main() {
     });
   });
 
+  group('getSeasonDetails', () {
+    test('should call remote data source for season details', () async {
+      final tData = {'episodes': []};
+      when(() => mockRemoteDataSource.getSeasonDetails(any(), any()))
+          .thenAnswer((_) async => tData);
+
+      final result = await repository.getSeasonDetails(1, 1);
+
+      expect(result, tData);
+      verify(() => mockRemoteDataSource.getSeasonDetails(1, 1)).called(1);
+    });
+  });
+
   group('getActorDetails', () {
     const tActorId = 1;
     const tActorDetails = ActorDetails(
@@ -211,7 +222,6 @@ void main() {
       await repository.removeFromSeen(1, MediaType.movie);
       verify(() => mockLocalDataSource.removeFromSeen(1, 'movie')).called(1);
     });
-  });
 
   group('Watchlist & Lists', () {
     test('addToWatchlist should call local data source and cache full details', () async {
@@ -272,4 +282,5 @@ void main() {
       verify(() => mockLocalDataSource.getAllListNames()).called(2);
     });
   });
+});
 }

@@ -176,6 +176,23 @@ class SearchProvider with ChangeNotifier {
     }
   }
 
+  int getSeenCount(MediaItem item) {
+    return _seenStatus['${item.id}:${item.mediaType.name}'] ?? 0;
+  }
+
+  void clearSearch() {
+    _searchQuery = '';
+    _items = [];
+    _isLoading = false;
+    _hasMore = false;
+    notifyListeners();
+  }
+
+  void requestReset() {
+    _resetCount++;
+    notifyListeners();
+  }
+
   Future<void> fetchNextPage() async {
     if (_isLoading || !_hasMore || _currentQuery.isEmpty) return;
 

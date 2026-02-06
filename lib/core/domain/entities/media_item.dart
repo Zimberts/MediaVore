@@ -95,6 +95,13 @@ class MediaItem extends Equatable {
       }
     }
 
+    List<TVSeason>? seasonsList;
+    if (json['seasons'] != null) {
+      seasonsList = (json['seasons'] as List)
+          .map((s) => TVSeason.fromJson(s))
+          .toList();
+    }
+
     return MediaItem(
       id: json['id'] ?? 0,
       title: json['title'] ?? json['name'] ?? '',
