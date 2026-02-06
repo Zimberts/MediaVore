@@ -10,6 +10,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 
+class FakeMediaItem extends Fake implements MediaItem {}
+
 void main() {
   late MockMediaRepository mockMediaRepository;
   late SearchProvider searchProvider;
@@ -79,6 +81,8 @@ void main() {
     await searchProvider.loadLikedStatus();
 
     await tester.pumpWidget(createWidgetUnderTest());
+    // Crucial: Update provider's internal list state
+    await searchProvider.loadWatchlist();
     await tester.pumpAndSettle();
 
     expect(find.text('Inception'), findsOneWidget);
