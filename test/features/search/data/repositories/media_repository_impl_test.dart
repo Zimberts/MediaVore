@@ -98,9 +98,7 @@ void main() {
       verify(() => mockRemoteDataSource.searchMedia(tQuery)).called(1);
       verify(() => mockCache.cacheItem(tMediaItem)).called(1);
     });
-  });
-
-  group('getMediaDetails', () {
+   group('getMediaDetails', () {
     const tId = 1;
 
     test('should return media details from cache if available', () async {
@@ -313,4 +311,5 @@ void main() {
       verify(() => mockLocalDataSource.getAllListNames()).called(2);
     });
   });
+});
 }

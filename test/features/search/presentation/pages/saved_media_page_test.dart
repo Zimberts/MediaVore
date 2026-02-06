@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
 import 'package:mediavore/core/di/injection.dart';
 
+class FakeMediaItem extends Fake implements MediaItem {}
+
 void main() {
   late MockMediaRepository mockMediaRepository;
   late SearchProvider searchProvider;
