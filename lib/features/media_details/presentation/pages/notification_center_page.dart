@@ -118,12 +118,12 @@ class _ReleasesTabState extends State<_ReleasesTab> {
         final now = DateTime.now();
         final startOfDay = DateTime(now.year, now.month, now.day);
         final oneMonthAgo = startOfDay.subtract(const Duration(days: 30));
-        
+
         final releases = provider.notifiedItems.where((item) {
           if (item.releaseDate == null) {
             return false;
           }
-          
+
           final releaseDate = item.releaseDate!;
           final releaseDay = DateTime(releaseDate.year, releaseDate.month, releaseDate.day);
 
@@ -134,14 +134,14 @@ class _ReleasesTabState extends State<_ReleasesTab> {
               return false;
             }
           }
-          
+
           if (item.type == MediaType.tv) {
             // FIX: Use season and episode number for precise filtering
             if (item.seasonNumber != null && item.episodeNumber != null) {
-              final isEpSeen = provider.seenItems.any((s) => 
-                s.tmdbId == item.tmdbId && 
+              final isEpSeen = provider.seenItems.any((s) =>
+                s.tmdbId == item.tmdbId &&
                 s.type == MediaType.tv &&
-                s.seasonNumber == item.seasonNumber && 
+                s.seasonNumber == item.seasonNumber &&
                 s.episodeNumber == item.episodeNumber
               );
               if (isEpSeen) {
@@ -149,10 +149,10 @@ class _ReleasesTabState extends State<_ReleasesTab> {
               }
             } else {
               // Fallback to date-based logic ONLY if episode info is missing
-              final alreadySeenRecent = provider.seenItems.any((s) => 
-                s.tmdbId == item.tmdbId && 
+              final alreadySeenRecent = provider.seenItems.any((s) =>
+                s.tmdbId == item.tmdbId &&
                 s.type == MediaType.tv &&
-                (s.seenDate.isAfter(releaseDay) || 
+                (s.seenDate.isAfter(releaseDay) ||
                  DateUtils.isSameDay(s.seenDate, releaseDay))
               );
               if (alreadySeenRecent) {
@@ -183,14 +183,14 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                   itemBuilder: (context, index) {
                     final item = releases[index];
                     final isReleased = !item.releaseDate!.isAfter(now);
-                    
+
                     String title = item.title;
                     if (item.type == MediaType.tv && item.seasonNumber != null) {
                       title += ' (S${item.seasonNumber} E${item.episodeNumber})';
                     }
 
                     return ListTile(
-                      leading: item.posterPath != null 
+                      leading: item.posterPath != null
                         ? Image.network('https://image.tmdb.org/t/p/w92${item.posterPath}')
                         : const Icon(Icons.movie),
                       title: Text(title),
@@ -226,11 +226,11 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                                     episodeNumber: item.episodeNumber,
                                   ));
                                 }
-                                
+
                                 // Refresh to find the NEXT episode milestone
                                 await provider.getMediaDetails(item.tmdbId, item.type);
                                 await provider.loadNotifiedItems();
-                                
+
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text('Marked ${item.title} as seen')),
@@ -292,7 +292,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
   Future<void> loadNextEpisodes() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    
+
     final provider = context.read<SearchProvider>();
     final seenSeries = provider.seenItems
         .where((s) => s.type == MediaType.tv)
@@ -337,12 +337,12 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                     final entry = seriesToDisplay[index];
                     final tmdbId = entry.key;
                     final nextEp = entry.value!;
-                    
+
                     final title = provider.seenItems.firstWhere((s) => s.tmdbId == tmdbId).title;
                     final posterPath = provider.seenItems.firstWhere((s) => s.tmdbId == tmdbId).posterPath;
 
                     return ListTile(
-                      leading: posterPath != null 
+                      leading: posterPath != null
                         ? Image.network('https://image.tmdb.org/t/p/w92$posterPath')
                         : const Icon(Icons.tv),
                       title: Text(title),

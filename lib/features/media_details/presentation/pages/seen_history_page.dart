@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/media_stats_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -244,15 +243,6 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bar_chart),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const MediaStatsPage()),
-              );
-            },
-            tooltip: 'Statistics',
-          ),
-          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => provider.loadAllSeenStatus(),
             tooltip: 'Refresh',
@@ -295,16 +285,16 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                     final seenItem = item as SeenItem;
                     final isTv = seenItem.type == MediaType.tv;
                     final isLiked = provider.likedIds.contains('${seenItem.tmdbId}:${seenItem.type.name}');
-                    
+
                     String subtitle = '';
                     if (_viewMode == SeenViewMode.history && isTv && seenItem.seasonNumber != null) {
                       subtitle = 'S${seenItem.seasonNumber} E${seenItem.episodeNumber}';
                     } else if (_viewMode == SeenViewMode.library && isTv) {
                       final count = provider.getSeenCount(MediaItem(
-                        id: seenItem.tmdbId, 
-                        title: seenItem.title, 
-                        overview: '', 
-                        releaseDate: '', 
+                        id: seenItem.tmdbId,
+                        title: seenItem.title,
+                        overview: '',
+                        releaseDate: '',
                         mediaType: seenItem.type,
                       ));
                       subtitle = '$count episodes seen';

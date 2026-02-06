@@ -25,7 +25,7 @@ void main() {
   setUp(() {
     mockMediaRepository = MockMediaRepository();
     mockSharedPreferences = MockSharedPreferences();
-    
+
     // Default mocks for SharedPreferences (used by SettingsProvider)
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
@@ -45,12 +45,12 @@ void main() {
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
-    
+
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
     locator.registerSingleton<MediaRepository>(mockMediaRepository);
-    
+
     when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
   });
 
@@ -87,7 +87,7 @@ void main() {
 
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => seenItems);
     when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
-    
+
     // Manually trigger reload to update Provider's state before building
     await searchProvider.loadAllSeenStatus();
     await searchProvider.loadLikedStatus();

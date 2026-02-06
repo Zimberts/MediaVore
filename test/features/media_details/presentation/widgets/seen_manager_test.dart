@@ -21,7 +21,7 @@ void main() {
 
   setUp(() {
     mockRepository = MockMediaRepository();
-    
+
     // Default mocks for SearchProvider init
     when(() => mockRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
@@ -36,7 +36,7 @@ void main() {
     when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async => Future.value());
 
     searchProvider = SearchProvider(mockRepository);
-    
+
     // Default mocks for UI components
     when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
   });
@@ -112,9 +112,9 @@ void main() {
       ];
       when(() => mockRepository.getSeenItems()).thenAnswer((_) async => viewings);
       await searchProvider.loadAllSeenStatus();
-      
-      when(() => mockRepository.removeFromSeen(any(), any(), 
-          seasonNumber: any(named: 'seasonNumber'), 
+
+      when(() => mockRepository.removeFromSeen(any(), any(),
+          seasonNumber: any(named: 'seasonNumber'),
           episodeNumber: any(named: 'episodeNumber'))).thenAnswer((_) async => {});
 
       await tester.pumpWidget(createWidgetUnderTest());

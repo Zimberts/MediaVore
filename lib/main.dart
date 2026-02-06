@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/di/injection.config.dart';
-import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'features/search/presentation/pages/main_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/search/presentation/pages/main_page.dart';
 
 Future<void> main() async {
   debugPrint('--- App Starting ---');
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     try {
       await dotenv.load(fileName: ".env");
@@ -62,9 +64,23 @@ class MediaVoreApp extends StatelessWidget {
           },
         ),
         ChangeNotifierProvider(
-          create: (context) => locator<AchievementProvider>(),
+          create: (context) {
+            final prefs = locator<SharedPreferences>();
+            return SettingsProvider(prefs);
+          },
         ),
       ],
+      builder: (context, child) {
+        final settings = context.watch<SettingsProvider>();
+        return MaterialApp(
+          title: 'MediaVore',
+          theme: settings.lightPalette.toThemeData(),
+          darkTheme: settings.darkPalette.toThemeData(),
+          themeMode: settings.themeMode,
+          home: const MainPage(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
       builder: (context, child) {
         final settings = context.watch<SettingsProvider>();
         return MaterialApp(

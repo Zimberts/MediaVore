@@ -10,8 +10,6 @@ class SeenItem extends Equatable {
   final DateTime seenDate;
   final int? seasonNumber;
   final int? episodeNumber;
-  final int? runtime;
-  final List<String>? genres;
 
   const SeenItem({
     this.id,
@@ -22,16 +20,12 @@ class SeenItem extends Equatable {
     required this.seenDate,
     this.seasonNumber,
     this.episodeNumber,
-    this.runtime,
-    this.genres,
   });
 
   SeenItem copyWith({
     DateTime? seenDate,
     int? seasonNumber,
     int? episodeNumber,
-    int? runtime,
-    List<String>? genres,
   }) {
     return SeenItem(
       id: id,
@@ -42,8 +36,6 @@ class SeenItem extends Equatable {
       seenDate: seenDate ?? this.seenDate,
       seasonNumber: seasonNumber ?? this.seasonNumber,
       episodeNumber: episodeNumber ?? this.episodeNumber,
-      runtime: runtime ?? this.runtime,
-      genres: genres ?? this.genres,
     );
   }
 
@@ -57,7 +49,5 @@ class SeenItem extends Equatable {
         seenDate,
         seasonNumber,
         episodeNumber,
-        runtime,
-        genres,
       ];
 }

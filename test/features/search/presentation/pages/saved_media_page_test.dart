@@ -36,7 +36,7 @@ void main() {
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
-    
+
     // Default mocks for SearchProvider init
     when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
@@ -51,7 +51,7 @@ void main() {
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
-    
+
     if (!locator.isRegistered<SearchProvider>()) {
       locator.registerSingleton<SearchProvider>(searchProvider);
     }
@@ -85,7 +85,7 @@ void main() {
       releaseDate: '2010',
       mediaType: MediaType.movie,
     );
-    
+
     when(() => mockMediaRepository.getListEntries('watchlist')).thenAnswer((_) async => ['1:movie']);
     when(() => mockMediaRepository.getMediaDetails(1, type: MediaType.movie))
         .thenAnswer((_) async => MediaDetails(item: item, cast: []));
