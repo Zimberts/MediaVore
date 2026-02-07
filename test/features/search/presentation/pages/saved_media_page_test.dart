@@ -20,12 +20,9 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
-    registerFallbackValue(const MediaItem(
-      id: 0,
-      title: '',
-      overview: '',
-      releaseDate: '',
-    ));
+    registerFallbackValue(
+      const MediaItem(id: 0, title: '', overview: '', releaseDate: ''),
+    );
   });
 
   setUp(() {
@@ -36,22 +33,36 @@ void main() {
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
-    
+
     // Default mocks for SearchProvider init
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist']);
+    when(
+      () => mockMediaRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
-        .thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getLikedEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getNotifiedItems(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListPreviews(
+        any(),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
-    
+
     if (!locator.isRegistered<SearchProvider>()) {
       locator.registerSingleton<SearchProvider>(searchProvider);
     }
@@ -77,7 +88,9 @@ void main() {
     );
   }
 
-  testWidgets('displays saved items and liked status', (WidgetTester tester) async {
+  testWidgets('displays saved items and liked status', (
+    WidgetTester tester,
+  ) async {
     final item = const MediaItem(
       id: 1,
       title: 'Inception',
@@ -85,11 +98,16 @@ void main() {
       releaseDate: '2010',
       mediaType: MediaType.movie,
     );
-    
-    when(() => mockMediaRepository.getListEntries('watchlist')).thenAnswer((_) async => ['1:movie']);
-    when(() => mockMediaRepository.getMediaDetails(1, type: MediaType.movie))
-        .thenAnswer((_) async => MediaDetails(item: item, cast: []));
-    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
+
+    when(
+      () => mockMediaRepository.getListEntries('watchlist'),
+    ).thenAnswer((_) async => ['1:movie']);
+    when(
+      () => mockMediaRepository.getMediaDetails(1, type: MediaType.movie),
+    ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
+    when(
+      () => mockMediaRepository.getLikedEntries(),
+    ).thenAnswer((_) async => ['1:movie']);
 
     // Ensure provider has the updated liked status before building
     await searchProvider.loadLikedStatus();

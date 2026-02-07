@@ -25,14 +25,14 @@ class Achievement extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        description,
-        iconPath,
-        isUnlocked,
-        isPersisted,
-        unlockedAt,
-        progress,
-        progressLabel,
-      ];
+    id,
+    title,
+    description,
+    iconPath,
+    isUnlocked,
+    isPersisted,
+    unlockedAt,
+    progress,
+    progressLabel,
+  ];
 }

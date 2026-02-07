@@ -44,11 +44,13 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _initDeepLinks();
-    
+
     // Listen for achievements
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<AchievementProvider>();
-      _achievementSubscription = provider.onAchievementUnlocked.listen((achievement) {
+      _achievementSubscription = provider.onAchievementUnlocked.listen((
+        achievement,
+      ) {
         _queueAchievementNotification(achievement);
       });
     });
@@ -78,9 +80,9 @@ class _MainPageState extends State<MainPage> {
 
     _isProcessingQueue = true;
     final achievement = _achievementQueue.removeFirst();
-    
+
     await _showTopNotification(achievement);
-    
+
     if (mounted) {
       await Future.delayed(const Duration(milliseconds: 300));
       _processAchievementQueue();
@@ -138,7 +140,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _handleLink(Uri uri) {
-    if (uri.path == '/share' || (uri.scheme == 'mediavore' && uri.host == 'share')) {
+    if (uri.path == '/share' ||
+        (uri.scheme == 'mediavore' && uri.host == 'share')) {
       final name = uri.queryParameters['name'];
       final itemsStr = uri.queryParameters['items'];
 
@@ -159,16 +162,24 @@ class _MainPageState extends State<MainPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('You are about to import a list with ${entries.length} items.'),
+            Text(
+              'You are about to import a list with ${entries.length} items.',
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(labelText: 'List Name', hintText: 'Enter name'),
+              decoration: const InputDecoration(
+                labelText: 'List Name',
+                hintText: 'Enter name',
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () async {
               final provider = context.read<SearchProvider>();
@@ -201,10 +212,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _onItemTapped(0);
@@ -218,9 +226,15 @@ class _MainPageState extends State<MainPage> {
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'My Lists'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark),
+            label: 'My Lists',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Seen'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Alerts',
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
@@ -246,7 +260,8 @@ class _AchievementTopBanner extends StatefulWidget {
   State<_AchievementTopBanner> createState() => _AchievementTopBannerState();
 }
 
-class _AchievementTopBannerState extends State<_AchievementTopBanner> with SingleTickerProviderStateMixin {
+class _AchievementTopBannerState extends State<_AchievementTopBanner>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
 
@@ -260,10 +275,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner> with Singl
     _offsetAnimation = Tween<Offset>(
       begin: const Offset(0.0, -1.0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     _controller.forward();
   }
@@ -288,19 +300,21 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner> with Singl
     // Determine current route context
     final route = ModalRoute.of(widget.mainPageContext);
     final isMainPageCurrent = route?.isCurrent ?? true;
-    
+
     // Check if we are on MediaDetailPage.
     // MediaDetailPage uses Scaffold, so it has its own AppBar.
     // We can check the route name if defined, but usually checking the widget type in the route settings works.
-    final bool isMediaDetails = route?.settings.name == '/media_details' || 
-                                (route is MaterialPageRoute && route.builder(context) is MediaDetailPage);
+    final bool isMediaDetails =
+        route?.settings.name == '/media_details' ||
+        (route is MaterialPageRoute &&
+            route.builder(context) is MediaDetailPage);
 
     double topOffset = statusBarHeight + appBarHeight + 8;
-    
+
     if (isMainPageCurrent) {
       if (widget.selectedIndex == 2) {
         // Seen History search bar
-        topOffset += 60; 
+        topOffset += 60;
       } else if (widget.selectedIndex == 3) {
         // Notification Center TabBar
         topOffset += 48;
@@ -308,7 +322,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner> with Singl
     } else if (isMediaDetails) {
       // MediaDetailPage has a pinned SliverAppBar that expands.
       // We'll give it a bit more clearance so it doesn't cover the title when pinned.
-      topOffset += 8; 
+      topOffset += 8;
     }
 
     return Positioned(
@@ -324,7 +338,9 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner> with Singl
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AchievementsPage(initialAchievementId: widget.achievement.id),
+                  builder: (context) => AchievementsPage(
+                    initialAchievementId: widget.achievement.id,
+                  ),
                 ),
               );
               _handleDismiss();
@@ -375,7 +391,11 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner> with Singl
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
                     onPressed: _handleDismiss,
                   ),
                 ],

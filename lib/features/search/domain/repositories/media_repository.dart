@@ -30,7 +30,10 @@ abstract class MediaRepository {
   });
 
   /// Gets the details for a specific media item.
-  Future<MediaDetails> getMediaDetails(int id, {MediaType type = MediaType.movie});
+  Future<MediaDetails> getMediaDetails(
+    int id, {
+    MediaType type = MediaType.movie,
+  });
 
   /// Gets the details for a specific actor.
   Future<ActorDetails> getActorDetails(int actorId);
@@ -63,22 +66,32 @@ abstract class MediaRepository {
   Future<void> addToWatchlist(MediaItem item) => addToList(item, 'watchlist');
 
   /// Removes a media item from the user's watchlist.
-  Future<void> removeFromWatchlist(int id, MediaType type) => removeFromList(id, type, 'watchlist');
+  Future<void> removeFromWatchlist(int id, MediaType type) =>
+      removeFromList(id, type, 'watchlist');
 
   /// Gets the entries of all items in the user's watchlist (format "id:type").
   Future<List<String>> getWatchlistEntries() => getListEntries('watchlist');
 
   /// Checks if an item is in the user's watchlist.
-  Future<bool> isInWatchlist(int id, MediaType type) => isInList(id, type, 'watchlist');
-  
+  Future<bool> isInWatchlist(int id, MediaType type) =>
+      isInList(id, type, 'watchlist');
+
   /// Gets a few items from a list for preview purposes.
-  Future<List<MediaItemPreview>> getListPreviews(String listName, {int limit = 4});
+  Future<List<MediaItemPreview>> getListPreviews(
+    String listName, {
+    int limit = 4,
+  });
 
   /// Marks a media item (movie or episode) as seen.
   Future<void> markAsSeen(SeenItem item);
 
   /// Removes all seen entries for a specific media item (optionally filtered by season/episode).
-  Future<void> removeFromSeen(int tmdbId, MediaType type, {int? seasonNumber, int? episodeNumber});
+  Future<void> removeFromSeen(
+    int tmdbId,
+    MediaType type, {
+    int? seasonNumber,
+    int? episodeNumber,
+  });
 
   /// Deletes a specific viewing entry by its local ID.
   Future<void> deleteSeenEntry(int id);
@@ -182,5 +195,10 @@ class MediaItemPreview {
   final String? posterPath;
   final String type;
 
-  MediaItemPreview({required this.id, required this.title, this.posterPath, required this.type});
+  MediaItemPreview({
+    required this.id,
+    required this.title,
+    this.posterPath,
+    required this.type,
+  });
 }

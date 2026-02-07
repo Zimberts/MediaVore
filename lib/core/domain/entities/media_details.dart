@@ -37,16 +37,22 @@ class MediaDetails {
     return MediaDetails(
       item: MediaItem.fromJson(json['item']),
       cast: (json['cast'] as List).map((c) => CastMember.fromJson(c)).toList(),
-      director: json['director'] != null ? CrewMember.fromJson(json['director']) : null,
-      similar: json['similar'] != null 
-          ? (json['similar'] as List).map((i) => MediaItem.fromJson(i)).toList() 
+      director: json['director'] != null
+          ? CrewMember.fromJson(json['director'])
           : null,
-      recommendations: json['recommendations'] != null 
-          ? (json['recommendations'] as List).map((i) => MediaItem.fromJson(i)).toList() 
+      similar: json['similar'] != null
+          ? (json['similar'] as List).map((i) => MediaItem.fromJson(i)).toList()
+          : null,
+      recommendations: json['recommendations'] != null
+          ? (json['recommendations'] as List)
+                .map((i) => MediaItem.fromJson(i))
+                .toList()
           : null,
       watchProviders: json['watch_providers'],
-      videos: json['videos'] != null 
-          ? (json['videos'] as List).map((v) => Map<String, dynamic>.from(v)).toList() 
+      videos: json['videos'] != null
+          ? (json['videos'] as List)
+                .map((v) => Map<String, dynamic>.from(v))
+                .toList()
           : null,
     );
   }

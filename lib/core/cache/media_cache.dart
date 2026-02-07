@@ -13,14 +13,14 @@ class MediaCache {
   final Map<String, MediaItem> _itemCache = {};
   final Map<int, String?> _actorProfileCache = {};
   final Map<String, Map<String, dynamic>> _seasonCache = {};
-  
+
   Completer<void>? _initCompleter;
 
   MediaCache(this._isar);
 
   Future<void> init() async {
     if (_initCompleter != null) return _initCompleter!.future;
-    
+
     _initCompleter = Completer<void>();
     try {
       await _loadFromDb();
@@ -37,13 +37,17 @@ class MediaCache {
     for (final cached in cachedMedias) {
       final type = cached.type == 'movie' ? MediaType.movie : MediaType.tv;
       final key = _getKey(cached.tmdbId, type);
-      
+
       try {
         if (cached.mediaItemJson != null) {
-          _itemCache[key] = MediaItem.fromJson(jsonDecode(cached.mediaItemJson!));
+          _itemCache[key] = MediaItem.fromJson(
+            jsonDecode(cached.mediaItemJson!),
+          );
         }
         if (cached.mediaDetailsJson != null) {
-          _detailsCache[key] = MediaDetails.fromJson(jsonDecode(cached.mediaDetailsJson!));
+          _detailsCache[key] = MediaDetails.fromJson(
+            jsonDecode(cached.mediaDetailsJson!),
+          );
         }
       } catch (e) {
         // Skip corrupted entries
@@ -57,7 +61,8 @@ class MediaCache {
 
     final cachedSeasons = await _isar.cachedSeasons.where().findAll();
     for (final season in cachedSeasons) {
-      _seasonCache[_getSeasonKey(season.tvId, season.seasonNumber)] = jsonDecode(season.json);
+      _seasonCache[_getSeasonKey(season.tvId, season.seasonNumber)] =
+          jsonDecode(season.json);
     }
   }
 
@@ -65,7 +70,7 @@ class MediaCache {
     final key = _getKey(details.item.id, details.item.mediaType);
     _detailsCache[key] = details;
     _itemCache[key] = details.item;
-    
+
     for (final cast in details.cast) {
       if (cast.profilePath != null) {
         _actorProfileCache[cast.id] = cast.profilePath;
@@ -78,7 +83,7 @@ class MediaCache {
           .tmdbIdEqualTo(details.item.id)
           .typeEqualTo(details.item.mediaType.name)
           .findFirst();
-      
+
       final updated = CachedMedia(
         tmdbId: details.item.id,
         type: details.item.mediaType.name,
@@ -90,18 +95,18 @@ class MediaCache {
       await _isar.cachedMedias.put(updated);
 
       for (final cast in details.cast) {
-         final existingActor = await _isar.cachedActorProfiles
+        final existingActor = await _isar.cachedActorProfiles
             .filter()
             .actorIdEqualTo(cast.id)
             .findFirst();
-         
-         final actorUpdate = CachedActorProfile(
-            actorId: cast.id,
-            profilePath: cast.profilePath,
-            updatedAt: DateTime.now(),
-         );
-         if (existingActor != null) actorUpdate.isarId = existingActor.isarId;
-         await _isar.cachedActorProfiles.put(actorUpdate);
+
+        final actorUpdate = CachedActorProfile(
+          actorId: cast.id,
+          profilePath: cast.profilePath,
+          updatedAt: DateTime.now(),
+        );
+        if (existingActor != null) actorUpdate.isarId = existingActor.isarId;
+        await _isar.cachedActorProfiles.put(actorUpdate);
       }
     });
   }
@@ -116,7 +121,7 @@ class MediaCache {
           .tmdbIdEqualTo(item.id)
           .typeEqualTo(item.mediaType.name)
           .findFirst();
-      
+
       final updated = CachedMedia(
         tmdbId: item.id,
         type: item.mediaType.name,
@@ -129,7 +134,11 @@ class MediaCache {
     });
   }
 
-  Future<void> cacheSeason(int tvId, int seasonNumber, Map<String, dynamic> seasonData) async {
+  Future<void> cacheSeason(
+    int tvId,
+    int seasonNumber,
+    Map<String, dynamic> seasonData,
+  ) async {
     final key = _getSeasonKey(tvId, seasonNumber);
     _seasonCache[key] = seasonData;
 
@@ -151,13 +160,15 @@ class MediaCache {
     });
   }
 
-  MediaDetails? getDetails(int id, MediaType type) => _detailsCache[_getKey(id, type)];
-  
+  MediaDetails? getDetails(int id, MediaType type) =>
+      _detailsCache[_getKey(id, type)];
+
   MediaItem? getItem(int id, MediaType type) => _itemCache[_getKey(id, type)];
-  
+
   String? getActorProfile(int actorId) => _actorProfileCache[actorId];
 
-  Map<String, dynamic>? getSeason(int tvId, int seasonNumber) => _seasonCache[_getSeasonKey(tvId, seasonNumber)];
+  Map<String, dynamic>? getSeason(int tvId, int seasonNumber) =>
+      _seasonCache[_getSeasonKey(tvId, seasonNumber)];
 
   Future<void> cacheActorProfile(int actorId, String? profilePath) async {
     _actorProfileCache[actorId] = profilePath;
@@ -166,7 +177,7 @@ class MediaCache {
           .filter()
           .actorIdEqualTo(actorId)
           .findFirst();
-      
+
       final update = CachedActorProfile(
         actorId: actorId,
         profilePath: profilePath,
@@ -191,9 +202,16 @@ class MediaCache {
           .filter()
           .updatedAtLessThan(threshold)
           .findAll();
-      
+
       final actualMediaToDeleteIds = mediaToDelete
-          .where((m) => !keepKeys.contains(_getKey(m.tmdbId, m.type == 'movie' ? MediaType.movie : MediaType.tv)))
+          .where(
+            (m) => !keepKeys.contains(
+              _getKey(
+                m.tmdbId,
+                m.type == 'movie' ? MediaType.movie : MediaType.tv,
+              ),
+            ),
+          )
           .map((m) => m.isarId!)
           .toList();
 
@@ -204,7 +222,7 @@ class MediaCache {
           .filter()
           .updatedAtLessThan(threshold)
           .findAll();
-      
+
       final actualSeasonToDeleteIds = seasonsToDelete
           .where((s) => !keepKeys.contains(_getKey(s.tvId, MediaType.tv)))
           .map((s) => s.isarId!)
@@ -245,8 +263,11 @@ class MediaCache {
 
   String _getKey(int id, MediaType type) => '${type.name}:$id';
   String _getSeasonKey(int tvId, int seasonNumber) => '$tvId:$seasonNumber';
-  
-  bool isItemCached(int id, MediaType type) => _itemCache.containsKey(_getKey(id, type));
-  bool areDetailsCached(int id, MediaType type) => _detailsCache.containsKey(_getKey(id, type));
-  bool isSeasonCached(int tvId, int seasonNumber) => _seasonCache.containsKey(_getSeasonKey(tvId, seasonNumber));
+
+  bool isItemCached(int id, MediaType type) =>
+      _itemCache.containsKey(_getKey(id, type));
+  bool areDetailsCached(int id, MediaType type) =>
+      _detailsCache.containsKey(_getKey(id, type));
+  bool isSeasonCached(int tvId, int seasonNumber) =>
+      _seasonCache.containsKey(_getSeasonKey(tvId, seasonNumber));
 }

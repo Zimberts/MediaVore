@@ -42,13 +42,13 @@ class _AchievementsPageState extends State<AchievementsPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<AchievementProvider>();
 
-    final unlockedCount = provider.achievements.where((a) => a.isUnlocked).length;
+    final unlockedCount = provider.achievements
+        .where((a) => a.isUnlocked)
+        .length;
     final totalCount = provider.achievements.length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Achievements'),
-      ),
+      appBar: AppBar(title: const Text('Achievements')),
       body: provider.achievements.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -66,7 +66,8 @@ class _AchievementsPageState extends State<AchievementsPage> {
                       final achievement = provider.achievements[index];
                       return _AchievementCard(
                         achievement: achievement,
-                        isHighlighted: achievement.id == widget.initialAchievementId,
+                        isHighlighted:
+                            achievement.id == widget.initialAchievementId,
                       );
                     },
                   ),
@@ -113,23 +114,23 @@ class _AchievementsSummary extends StatelessWidget {
                   Text(
                     'Overall Progress',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     'You\'ve unlocked $unlockedCount out of $totalCount badges',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.comments,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: colors.comments),
                   ),
                 ],
               ),
               Text(
                 '${(percentage * 100).toInt()}%',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: colors.logicFlow,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: colors.logicFlow,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -168,9 +169,9 @@ class _AchievementCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: isHighlighted 
-          ? Border.all(color: colors.logicFlow, width: 2)
-          : null,
+        border: isHighlighted
+            ? Border.all(color: colors.logicFlow, width: 2)
+            : null,
       ),
       child: Card(
         margin: EdgeInsets.zero,
@@ -215,8 +216,12 @@ class _AchievementCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
                         value: achievement.progress,
-                        backgroundColor: colors.logicFlow.withValues(alpha: 0.1),
-                        valueColor: AlwaysStoppedAnimation<Color>(colors.logicFlow),
+                        backgroundColor: colors.logicFlow.withValues(
+                          alpha: 0.1,
+                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colors.logicFlow,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(

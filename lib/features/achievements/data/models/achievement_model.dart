@@ -11,8 +11,5 @@ class AchievementModel {
 
   final DateTime unlockedAt;
 
-  AchievementModel({
-    required this.achievementId,
-    required this.unlockedAt,
-  });
+  AchievementModel({required this.achievementId, required this.unlockedAt});
 }

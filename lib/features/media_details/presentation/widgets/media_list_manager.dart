@@ -36,7 +36,7 @@ class MediaListManager extends StatelessWidget {
               ),
               onTap: () => provider.toggleInList(item, name),
             );
-          }).toList(),
+          }),
         ],
       ],
     );

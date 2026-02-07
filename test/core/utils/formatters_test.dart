@@ -19,8 +19,11 @@ void main() {
       expect(Formatters.formatRuntime(120), '2h');
     });
 
-    test('should return hours and minutes when more than 60 and not a multiple', () {
-      expect(Formatters.formatRuntime(135), '2h 15m');
-    });
+    test(
+      'should return hours and minutes when more than 60 and not a multiple',
+      () {
+        expect(Formatters.formatRuntime(135), '2h 15m');
+      },
+    );
   });
 }

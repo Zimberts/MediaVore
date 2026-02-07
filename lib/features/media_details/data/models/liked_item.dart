@@ -13,9 +13,5 @@ class LikedItem {
 
   final String title;
 
-  LikedItem({
-    required this.tmdbId,
-    required this.type,
-    required this.title,
-  });
+  LikedItem({required this.tmdbId, required this.type, required this.title});
 }

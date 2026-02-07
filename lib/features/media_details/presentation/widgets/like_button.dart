@@ -8,11 +8,7 @@ class LikeButton extends StatelessWidget {
   final MediaItem item;
   final double? iconSize;
 
-  const LikeButton({
-    super.key,
-    required this.item,
-    this.iconSize,
-  });
+  const LikeButton({super.key, required this.item, this.iconSize});
 
   @override
   Widget build(BuildContext context) {

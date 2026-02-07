@@ -13,7 +13,7 @@ class NotifyButton extends StatelessWidget {
     return Consumer<SearchProvider>(
       builder: (context, provider, child) {
         final isNotified = provider.isNotified(item);
-        
+
         // Only show if not released or if it's a TV show (could have new episodes)
         bool shouldShow = false;
         if (item.mediaType == MediaType.tv) {
@@ -39,7 +39,9 @@ class NotifyButton extends StatelessWidget {
             color: isNotified ? Colors.orange : null,
           ),
           onPressed: () => provider.toggleNotification(item),
-          tooltip: isNotified ? 'Disable notifications' : 'Notify me on release',
+          tooltip: isNotified
+              ? 'Disable notifications'
+              : 'Notify me on release',
         );
       },
     );

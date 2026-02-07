@@ -110,7 +110,8 @@ class MediaItem extends Equatable {
     String? nextAirDate;
     int? nextEpNum;
     int? nextSeasNum;
-    if (json['next_episode_to_air'] != null && json['next_episode_to_air'] is Map) {
+    if (json['next_episode_to_air'] != null &&
+        json['next_episode_to_air'] is Map) {
       nextAirDate = json['next_episode_to_air']['air_date'] as String?;
       nextEpNum = json['next_episode_to_air']['episode_number'] as int?;
       nextSeasNum = json['next_episode_to_air']['season_number'] as int?;
@@ -119,7 +120,8 @@ class MediaItem extends Equatable {
     String? lastAirDate;
     int? lastEpNum;
     int? lastSeasNum;
-    if (json['last_episode_to_air'] != null && json['last_episode_to_air'] is Map) {
+    if (json['last_episode_to_air'] != null &&
+        json['last_episode_to_air'] is Map) {
       lastAirDate = json['last_episode_to_air']['air_date'] as String?;
       lastEpNum = json['last_episode_to_air']['episode_number'] as int?;
       lastSeasNum = json['last_episode_to_air']['season_number'] as int?;
@@ -176,16 +178,20 @@ class MediaItem extends Equatable {
       'vote_average': voteAverage,
       'runtime': runtime,
       'seasons': seasons?.map((s) => s.toJson()).toList(),
-      'next_episode_to_air': nextEpisodeAirDate != null ? {
-        'air_date': nextEpisodeAirDate,
-        'episode_number': nextEpisodeNumber,
-        'season_number': nextSeasonNumber,
-      } : null,
-      'last_episode_to_air': lastEpisodeAirDate != null ? {
-        'air_date': lastEpisodeAirDate,
-        'episode_number': lastEpisodeNumber,
-        'season_number': lastSeasonNumber,
-      } : null,
+      'next_episode_to_air': nextEpisodeAirDate != null
+          ? {
+              'air_date': nextEpisodeAirDate,
+              'episode_number': nextEpisodeNumber,
+              'season_number': nextSeasonNumber,
+            }
+          : null,
+      'last_episode_to_air': lastEpisodeAirDate != null
+          ? {
+              'air_date': lastEpisodeAirDate,
+              'episode_number': lastEpisodeNumber,
+              'season_number': lastSeasonNumber,
+            }
+          : null,
     };
   }
 
@@ -235,24 +241,24 @@ class MediaItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        posterPath,
-        overview,
-        releaseDate,
-        mediaType,
-        numberOfSeasons,
-        numberOfEpisodes,
-        status,
-        genres,
-        voteAverage,
-        runtime,
-        seasons,
-        nextEpisodeAirDate,
-        nextEpisodeNumber,
-        nextSeasonNumber,
-        lastEpisodeAirDate,
-        lastEpisodeNumber,
-        lastSeasonNumber,
-      ];
+    id,
+    title,
+    posterPath,
+    overview,
+    releaseDate,
+    mediaType,
+    numberOfSeasons,
+    numberOfEpisodes,
+    status,
+    genres,
+    voteAverage,
+    runtime,
+    seasons,
+    nextEpisodeAirDate,
+    nextEpisodeNumber,
+    nextSeasonNumber,
+    lastEpisodeAirDate,
+    lastEpisodeNumber,
+    lastSeasonNumber,
+  ];
 }

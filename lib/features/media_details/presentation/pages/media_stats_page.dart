@@ -7,6 +7,7 @@ import 'package:mediavore/features/search/presentation/providers/search_provider
 import 'package:provider/provider.dart';
 
 enum StatsMetric { entries, runtime }
+
 enum StatsScope { allTime, specificYear, specificMonth }
 
 class MediaStatsPage extends StatefulWidget {
@@ -43,7 +44,9 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
 
     final availableYears = _getAvailableYears(allSeenItems);
     if (_selectedYear == null || !availableYears.contains(_selectedYear)) {
-      _selectedYear = availableYears.isNotEmpty ? availableYears.first : DateTime.now().year.toString();
+      _selectedYear = availableYears.isNotEmpty
+          ? availableYears.first
+          : DateTime.now().year.toString();
     }
 
     final filteredItems = _filterItems(allSeenItems);
@@ -56,11 +59,17 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
           elevation: 0,
           actions: [
             IconButton(
-              icon: Icon(_selectedMetric == StatsMetric.entries ? Icons.history : Icons.timer_outlined),
+              icon: Icon(
+                _selectedMetric == StatsMetric.entries
+                    ? Icons.history
+                    : Icons.timer_outlined,
+              ),
               tooltip: 'Toggle Metric (Logs/Time)',
               onPressed: () {
                 setState(() {
-                  _selectedMetric = _selectedMetric == StatsMetric.entries ? StatsMetric.runtime : StatsMetric.entries;
+                  _selectedMetric = _selectedMetric == StatsMetric.entries
+                      ? StatsMetric.runtime
+                      : StatsMetric.entries;
                 });
               },
             ),
@@ -69,7 +78,9 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
         body: Column(
           children: [
             Material(
-              color: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor,
+              color:
+                  Theme.of(context).appBarTheme.backgroundColor ??
+                  Theme.of(context).primaryColor,
               child: Column(
                 children: [
                   Padding(
@@ -77,7 +88,9 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -85,16 +98,24 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                           _ScopeButton(
                             label: 'All Time',
                             isSelected: _selectedScope == StatsScope.allTime,
-                            onTap: () => setState(() => _selectedScope = StatsScope.allTime),
+                            onTap: () => setState(
+                              () => _selectedScope = StatsScope.allTime,
+                            ),
                           ),
                           _ScopeButton(
-                            label: _selectedScope == StatsScope.allTime ? 'Year' : _selectedYear!,
-                            isSelected: _selectedScope == StatsScope.specificYear,
+                            label: _selectedScope == StatsScope.allTime
+                                ? 'Year'
+                                : _selectedYear!,
+                            isSelected:
+                                _selectedScope == StatsScope.specificYear,
                             onTap: () => _pickYear(availableYears),
                           ),
                           _ScopeButton(
-                            label: _selectedScope != StatsScope.specificMonth ? 'Month' : '$_selectedMonth $_selectedYear',
-                            isSelected: _selectedScope == StatsScope.specificMonth,
+                            label: _selectedScope != StatsScope.specificMonth
+                                ? 'Month'
+                                : '$_selectedMonth $_selectedYear',
+                            isSelected:
+                                _selectedScope == StatsScope.specificMonth,
                             onTap: () => _pickMonth(availableYears),
                           ),
                         ],
@@ -104,8 +125,14 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                   const TabBar(
                     indicatorSize: TabBarIndicatorSize.label,
                     tabs: [
-                      Tab(text: 'Overview', icon: Icon(Icons.analytics_outlined, size: 20)),
-                      Tab(text: 'Distribution', icon: Icon(Icons.pie_chart_outline, size: 20)),
+                      Tab(
+                        text: 'Overview',
+                        icon: Icon(Icons.analytics_outlined, size: 20),
+                      ),
+                      Tab(
+                        text: 'Distribution',
+                        icon: Icon(Icons.pie_chart_outline, size: 20),
+                      ),
                     ],
                   ),
                 ],
@@ -115,13 +142,16 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
               child: TabBarView(
                 children: [
                   _OverviewTab(
-                    items: filteredItems, 
-                    metric: _selectedMetric, 
+                    items: filteredItems,
+                    metric: _selectedMetric,
                     scope: _selectedScope,
-                    year: _selectedYear ?? 'All', 
+                    year: _selectedYear ?? 'All',
                     month: _selectedMonth ?? 'All',
                   ),
-                  _DistributionTab(items: filteredItems, metric: _selectedMetric),
+                  _DistributionTab(
+                    items: filteredItems,
+                    metric: _selectedMetric,
+                  ),
                 ],
               ),
             ),
@@ -140,22 +170,31 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Select Year', style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                'Select Year',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             Flexible(
               child: ListView(
                 shrinkWrap: true,
-                children: availableYears.map((y) => ListTile(
-                  title: Text(y, textAlign: TextAlign.center),
-                  selected: _selectedYear == y && _selectedScope == StatsScope.specificYear,
-                  onTap: () {
-                    setState(() {
-                      _selectedYear = y;
-                      _selectedScope = StatsScope.specificYear;
-                    });
-                    Navigator.pop(context);
-                  },
-                )).toList(),
+                children: availableYears
+                    .map(
+                      (y) => ListTile(
+                        title: Text(y, textAlign: TextAlign.center),
+                        selected:
+                            _selectedYear == y &&
+                            _selectedScope == StatsScope.specificYear,
+                        onTap: () {
+                          setState(() {
+                            _selectedYear = y;
+                            _selectedScope = StatsScope.specificYear;
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ],
@@ -165,12 +204,28 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
   }
 
   void _pickMonth(List<String> availableYears) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
     // Sort available years to ensure consistent swiping (newest to oldest or oldest to newest)
-    final sortedYears = List<String>.from(availableYears)..sort((a, b) => a.compareTo(b));
+    final sortedYears = List<String>.from(availableYears)
+      ..sort((a, b) => a.compareTo(b));
     final initialPage = sortedYears.indexOf(_selectedYear ?? '');
-    final pageController = PageController(initialPage: initialPage >= 0 ? initialPage : 0);
+    final pageController = PageController(
+      initialPage: initialPage >= 0 ? initialPage : 0,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -187,14 +242,23 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                     IconButton(
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () {
-                        pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
                       },
                     ),
-                    Text('Select Period', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Select Period',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
                       onPressed: () {
-                        pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
                       },
                     ),
                   ],
@@ -220,7 +284,13 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(year, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          child: Text(
+                            year,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
                         ),
                         Expanded(
                           child: GridView.count(
@@ -229,28 +299,43 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                             crossAxisCount: 3,
                             childAspectRatio: 2,
                             padding: const EdgeInsets.symmetric(horizontal: 8),
-                            children: months.map((m) => InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _selectedMonth = m;
-                                  _selectedYear = year;
-                                  _selectedScope = StatsScope.specificMonth;
-                                });
-                                Navigator.pop(context);
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: _selectedMonth == m && _selectedYear == year && _selectedScope == StatsScope.specificMonth 
-                                      ? Theme.of(context).colorScheme.primaryContainer 
-                                      : null,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(m),
-                              ),
-                            )).toList(),
+                            children: months
+                                .map(
+                                  (m) => InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedMonth = m;
+                                        _selectedYear = year;
+                                        _selectedScope =
+                                            StatsScope.specificMonth;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            _selectedMonth == m &&
+                                                _selectedYear == year &&
+                                                _selectedScope ==
+                                                    StatsScope.specificMonth
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.primaryContainer
+                                            : null,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Theme.of(
+                                            context,
+                                          ).dividerColor.withValues(alpha: 0.1),
+                                        ),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(m),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                           ),
                         ),
                       ],
@@ -274,10 +359,10 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
   List<SeenItem> _filterItems(List<SeenItem> items) {
     return items.where((i) {
       if (_selectedScope == StatsScope.allTime) return true;
-      
+
       final yearMatch = i.seenDate.year.toString() == _selectedYear;
       if (_selectedScope == StatsScope.specificYear) return yearMatch;
-      
+
       final monthMatch = DateFormat('MMM').format(i.seenDate) == _selectedMonth;
       return yearMatch && monthMatch;
     }).toList();
@@ -289,7 +374,11 @@ class _ScopeButton extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _ScopeButton({required this.label, required this.isSelected, required this.onTap});
+  const _ScopeButton({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +396,9 @@ class _ScopeButton extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface.withValues(alpha: 0.7),
+              color: isSelected
+                  ? colorScheme.onPrimary
+                  : colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 13,
             ),
@@ -326,16 +417,19 @@ class _OverviewTab extends StatelessWidget {
   final String month;
 
   const _OverviewTab({
-    required this.items, 
-    required this.metric, 
+    required this.items,
+    required this.metric,
     required this.scope,
-    required this.year, 
-    required this.month
+    required this.year,
+    required this.month,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalRuntime = items.fold<int>(0, (sum, item) => sum + (item.runtime ?? 0));
+    final totalRuntime = items.fold<int>(
+      0,
+      (sum, item) => sum + (item.runtime ?? 0),
+    );
     final hours = totalRuntime ~/ 60;
     final minutes = totalRuntime % 60;
     final days = hours ~/ 24;
@@ -347,21 +441,36 @@ class _OverviewTab extends StatelessWidget {
     // Most seen calculations
     final Map<int, (String title, int count, int runtime)> movieCounts = {};
     final Map<int, (String title, int count, int runtime)> tvCounts = {};
-    final Map<String, (String title, int count, int runtime)> episodeCounts = {};
+    final Map<String, (String title, int count, int runtime)> episodeCounts =
+        {};
 
     for (final item in items) {
       if (item.type == MediaType.movie) {
         final existing = movieCounts[item.tmdbId] ?? (item.title, 0, 0);
-        movieCounts[item.tmdbId] = (existing.$1, existing.$2 + 1, existing.$3 + (item.runtime ?? 0));
+        movieCounts[item.tmdbId] = (
+          existing.$1,
+          existing.$2 + 1,
+          existing.$3 + (item.runtime ?? 0),
+        );
       } else {
         final existing = tvCounts[item.tmdbId] ?? (item.title, 0, 0);
-        tvCounts[item.tmdbId] = (existing.$1, existing.$2 + 1, existing.$3 + (item.runtime ?? 0));
+        tvCounts[item.tmdbId] = (
+          existing.$1,
+          existing.$2 + 1,
+          existing.$3 + (item.runtime ?? 0),
+        );
 
         if (item.seasonNumber != null && item.episodeNumber != null) {
-          final epKey = '${item.tmdbId}_${item.seasonNumber}_${item.episodeNumber}';
-          final epTitle = '${item.title} S${item.seasonNumber}E${item.episodeNumber}';
+          final epKey =
+              '${item.tmdbId}_${item.seasonNumber}_${item.episodeNumber}';
+          final epTitle =
+              '${item.title} S${item.seasonNumber}E${item.episodeNumber}';
           final existingEp = episodeCounts[epKey] ?? (epTitle, 0, 0);
-          episodeCounts[epKey] = (existingEp.$1, existingEp.$2 + 1, existingEp.$3 + (item.runtime ?? 0));
+          episodeCounts[epKey] = (
+            existingEp.$1,
+            existingEp.$2 + 1,
+            existingEp.$3 + (item.runtime ?? 0),
+          );
         }
       }
     }
@@ -388,9 +497,17 @@ class _OverviewTab extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _SummaryMiniCard(label: 'Movies', value: '$movieCount', icon: Icons.movie),
+                  _SummaryMiniCard(
+                    label: 'Movies',
+                    value: '$movieCount',
+                    icon: Icons.movie,
+                  ),
                   const SizedBox(width: 16),
-                  _SummaryMiniCard(label: 'Episodes', value: '$tvCount', icon: Icons.tv),
+                  _SummaryMiniCard(
+                    label: 'Episodes',
+                    value: '$tvCount',
+                    icon: Icons.tv,
+                  ),
                 ],
               ),
             ],
@@ -401,24 +518,47 @@ class _OverviewTab extends StatelessWidget {
           title: 'Hall of Fame (${metric.name})',
           child: Column(
             children: [
-              _HallOfFameItem(label: 'Most Watched Movie', data: topMovie, metric: metric),
+              _HallOfFameItem(
+                label: 'Most Watched Movie',
+                data: topMovie,
+                metric: metric,
+              ),
               const Divider(),
-              _HallOfFameItem(label: 'Most Watched Series', data: topTV, metric: metric),
+              _HallOfFameItem(
+                label: 'Most Watched Series',
+                data: topTV,
+                metric: metric,
+              ),
               const Divider(),
-              _HallOfFameItem(label: 'Most Watched Episode', data: topEp, metric: metric),
+              _HallOfFameItem(
+                label: 'Most Watched Episode',
+                data: topEp,
+                metric: metric,
+              ),
             ],
           ),
         ),
         const SizedBox(height: 16),
         _StatCard(
-          title: metric == StatsMetric.entries ? 'Viewing Activity (logs)' : 'Viewing Activity (minutes)',
-          child: _ActivityChart(items: items, metric: metric, scope: scope, year: year, month: month),
+          title: metric == StatsMetric.entries
+              ? 'Viewing Activity (logs)'
+              : 'Viewing Activity (minutes)',
+          child: _ActivityChart(
+            items: items,
+            metric: metric,
+            scope: scope,
+            year: year,
+            month: month,
+          ),
         ),
       ],
     );
   }
 
-  (String, int, int)? _getTop(Map<int, (String, int, int)> counts, StatsMetric metric) {
+  (String, int, int)? _getTop(
+    Map<int, (String, int, int)> counts,
+    StatsMetric metric,
+  ) {
     if (counts.isEmpty) return null;
     final entries = counts.values.toList();
     if (metric == StatsMetric.entries) {
@@ -429,7 +569,10 @@ class _OverviewTab extends StatelessWidget {
     return entries.first;
   }
 
-  (String, int, int)? _getTopEp(Map<String, (String, int, int)> counts, StatsMetric metric) {
+  (String, int, int)? _getTopEp(
+    Map<String, (String, int, int)> counts,
+    StatsMetric metric,
+  ) {
     if (counts.isEmpty) return null;
     final entries = counts.values.toList();
     if (metric == StatsMetric.entries) {
@@ -451,9 +594,9 @@ class _HallOfFameItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data == null) return const SizedBox();
-    
-    final valueDisplay = metric == StatsMetric.entries 
-        ? '${data!.$2} logs' 
+
+    final valueDisplay = metric == StatsMetric.entries
+        ? '${data!.$2} logs'
         : '${(data!.$3 / 60).toStringAsFixed(1)}h';
 
     return Padding(
@@ -465,8 +608,20 @@ class _HallOfFameItem extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text(data!.$1, style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-              Text(valueDisplay, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+              Expanded(
+                child: Text(
+                  data!.$1,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                valueDisplay,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],
@@ -483,11 +638,11 @@ class _ActivityChart extends StatelessWidget {
   final String month;
 
   const _ActivityChart({
-    required this.items, 
-    required this.metric, 
+    required this.items,
+    required this.metric,
     required this.scope,
-    required this.year, 
-    required this.month
+    required this.year,
+    required this.month,
   });
 
   @override
@@ -510,14 +665,21 @@ class _ActivityChart extends StatelessWidget {
 
     for (final item in items) {
       final key = DateFormat(dateFormat).format(item.seenDate);
-      final value = metric == StatsMetric.entries ? 1.0 : (item.runtime?.toDouble() ?? 0.0);
+      final value = metric == StatsMetric.entries
+          ? 1.0
+          : (item.runtime?.toDouble() ?? 0.0);
       activityData[key] = (activityData[key] ?? 0) + value;
     }
 
     final sortedKeys = activityData.keys.toList();
     _sortKeys(sortedKeys, dateFormat);
 
-    if (sortedKeys.isEmpty) return const SizedBox(height: 200, child: Center(child: Text('No activity data')));
+    if (sortedKeys.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text('No activity data')),
+      );
+    }
 
     return SizedBox(
       height: 200,
@@ -537,23 +699,34 @@ class _ActivityChart extends StatelessWidget {
             );
           }).toList(),
           titlesData: FlTitlesData(
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 30,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
-                  if (index < 0 || index >= sortedKeys.length) return const SizedBox();
-                  
+                  if (index < 0 || index >= sortedKeys.length) {
+                    return const SizedBox();
+                  }
+
                   int skip = 1;
-                  if (sortedKeys.length > 20){ skip = 5;}
-                  else if (sortedKeys.length > 10) {skip = 2;}
-                  
+                  if (sortedKeys.length > 20) {
+                    skip = 5;
+                  } else if (sortedKeys.length > 10) {
+                    skip = 2;
+                  }
+
                   if (index % skip != 0 && index != sortedKeys.length - 1) {
-                     return const SizedBox();
+                    return const SizedBox();
                   }
 
                   return Padding(
@@ -574,7 +747,10 @@ class _ActivityChart extends StatelessWidget {
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
                   '${sortedKeys[groupIndex]}\n${rod.toY.toInt()} ${metric == StatsMetric.entries ? 'logs' : 'min'}',
-                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 );
               },
             ),
@@ -589,10 +765,27 @@ class _ActivityChart extends StatelessWidget {
       if (dateFormat == 'dd') {
         keys.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
       } else if (dateFormat == 'MMM') {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
         keys.sort((a, b) => months.indexOf(a).compareTo(months.indexOf(b)));
       } else {
-        keys.sort((a, b) => DateFormat(dateFormat).parse(a).compareTo(DateFormat(dateFormat).parse(b)));
+        keys.sort(
+          (a, b) => DateFormat(
+            dateFormat,
+          ).parse(a).compareTo(DateFormat(dateFormat).parse(b)),
+        );
       }
     } catch (_) {
       keys.sort();
@@ -612,9 +805,11 @@ class _DistributionTab extends StatelessWidget {
     double totalValue = 0;
 
     for (final item in items) {
-      final value = metric == StatsMetric.entries ? 1.0 : (item.runtime?.toDouble() ?? 0.0);
+      final value = metric == StatsMetric.entries
+          ? 1.0
+          : (item.runtime?.toDouble() ?? 0.0);
       totalValue += value;
-      
+
       typeData[item.type] = (typeData[item.type] ?? 0) + value;
       if (item.genres != null) {
         for (final genre in item.genres!) {
@@ -623,7 +818,8 @@ class _DistributionTab extends StatelessWidget {
       }
     }
 
-    final sortedGenres = genreData.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sortedGenres = genreData.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     final topGenres = sortedGenres.take(8).toList();
 
     return ListView(
@@ -638,14 +834,22 @@ class _DistributionTab extends StatelessWidget {
                 sectionsSpace: 2,
                 centerSpaceRadius: 40,
                 sections: typeData.entries.map((e) {
-                  final color = e.key == MediaType.movie ? Colors.blue : Colors.orange;
-                  final percentage = totalValue > 0 ? (e.value / totalValue * 100).toStringAsFixed(1) : '0';
+                  final color = e.key == MediaType.movie
+                      ? Colors.blue
+                      : Colors.orange;
+                  final percentage = totalValue > 0
+                      ? (e.value / totalValue * 100).toStringAsFixed(1)
+                      : '0';
                   return PieChartSectionData(
                     color: color,
                     value: e.value,
                     title: '${e.key.name}\n$percentage%',
                     radius: 70,
-                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                    titleStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   );
                 }).toList(),
               ),
@@ -657,8 +861,12 @@ class _DistributionTab extends StatelessWidget {
           title: 'Top Genres (by ${metric.name})',
           child: Column(
             children: topGenres.map((e) {
-              final percentage = totalValue > 0 ? (e.value / totalValue * 100).toStringAsFixed(1) : '0';
-              final displayValue = metric == StatsMetric.entries ? e.value.toInt().toString() : '${(e.value / 60).toStringAsFixed(1)}h';
+              final percentage = totalValue > 0
+                  ? (e.value / totalValue * 100).toStringAsFixed(1)
+                  : '0';
+              final displayValue = metric == StatsMetric.entries
+                  ? e.value.toInt().toString()
+                  : '${(e.value / 60).toStringAsFixed(1)}h';
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Column(
@@ -668,13 +876,20 @@ class _DistributionTab extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(e.key),
-                        Text('$displayValue ($percentage%)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(
+                          '$displayValue ($percentage%)',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
-                      value: sortedGenres.isNotEmpty ? e.value / sortedGenres.first.value : 0,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      value: sortedGenres.isNotEmpty
+                          ? e.value / sortedGenres.first.value
+                          : 0,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ],
@@ -693,7 +908,11 @@ class _SummaryMiniCard extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _SummaryMiniCard({required this.label, required this.value, required this.icon});
+  const _SummaryMiniCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -701,7 +920,10 @@ class _SummaryMiniCard extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: Theme.of(context).colorScheme.secondary),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         Text(label, style: Theme.of(context).textTheme.labelSmall),
       ],
     );
@@ -722,7 +944,12 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             child,
           ],

@@ -16,11 +16,11 @@ class NotifiedItemModel {
   final String? posterPath;
 
   final DateTime? releaseDate;
-  
+
   final int? seasonNumber;
-  
+
   final int? episodeNumber;
-  
+
   final bool autoNotify; // If it was added automatically via watchlist
 
   NotifiedItemModel({

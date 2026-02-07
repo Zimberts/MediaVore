@@ -42,7 +42,7 @@ void main() {
         overview: 'A mind-bending thriller',
         releaseDate: '2010-07-16',
         posterPath: '/poster.jpg',
-        mediaType: MediaType.movie
+        mediaType: MediaType.movie,
       ),
     ],
   );
@@ -50,16 +50,16 @@ void main() {
   Widget createWidgetUnderTest() {
     return MaterialApp(
       theme: DefaultLightPalette().toThemeData(),
-      home: const ActorDetailPage(
-        actorId: tActorId,
-        actorName: tActorName,
-      ),
+      home: const ActorDetailPage(actorId: tActorId, actorName: tActorName),
     );
   }
 
-  testWidgets('displays loading indicator initially', (WidgetTester tester) async {
-    when(() => mockMediaRepository.getActorDetails(tActorId))
-        .thenAnswer((_) async => tActorDetails);
+  testWidgets('displays loading indicator initially', (
+    WidgetTester tester,
+  ) async {
+    when(
+      () => mockMediaRepository.getActorDetails(tActorId),
+    ).thenAnswer((_) async => tActorDetails);
 
     await tester.pumpWidget(createWidgetUnderTest());
 
@@ -67,9 +67,12 @@ void main() {
     expect(find.text(tActorName), findsAtLeastNWidgets(1));
   });
 
-  testWidgets('displays actor details when loading is successful', (WidgetTester tester) async {
-    when(() => mockMediaRepository.getActorDetails(tActorId))
-        .thenAnswer((_) async => tActorDetails);
+  testWidgets('displays actor details when loading is successful', (
+    WidgetTester tester,
+  ) async {
+    when(
+      () => mockMediaRepository.getActorDetails(tActorId),
+    ).thenAnswer((_) async => tActorDetails);
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump();
@@ -81,17 +84,20 @@ void main() {
     expect(find.text('Los Angeles, California, USA'), findsOneWidget);
     expect(find.text('A talented actor.'), findsOneWidget);
     expect(find.text('Known For'), findsOneWidget);
-    
+
     // Ensure the known for list is scrolled into view or rendered
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
     await tester.pumpAndSettle();
-    
+
     expect(find.text('Inception'), findsOneWidget);
   });
 
-  testWidgets('displays error message when loading fails', (WidgetTester tester) async {
-    when(() => mockMediaRepository.getActorDetails(tActorId))
-        .thenThrow(Exception('Network error'));
+  testWidgets('displays error message when loading fails', (
+    WidgetTester tester,
+  ) async {
+    when(
+      () => mockMediaRepository.getActorDetails(tActorId),
+    ).thenThrow(Exception('Network error'));
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump();

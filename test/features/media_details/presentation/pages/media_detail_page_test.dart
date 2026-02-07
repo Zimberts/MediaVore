@@ -30,43 +30,64 @@ void main() {
   setUp(() {
     mockMediaRepository = MockMediaRepository();
     mockSharedPreferences = MockSharedPreferences();
-    
+
     // Default mocks for SharedPreferences (used by SettingsProvider)
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
 
     // Default mocks for SearchProvider init
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist']);
+    when(
+      () => mockMediaRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getLikedEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getNotifiedItems(),
+    ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
     dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-    
+
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
-    
+
     // Default mocks for UI components
-    when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListPreviews(any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
-    
+    when(
+      () => mockMediaRepository.getSeenStatus(any(), any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListPreviews(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListPreviews(
+        any(),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => []);
+
     // Default mock for exportSeenData to avoid Null check error
-    when(() => mockMediaRepository.exportSeenData(
-      start: any(named: 'start'),
-      end: any(named: 'end'),
-      tmdbId: any(named: 'tmdbId'),
-      type: any(named: 'type'),
-    )).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.exportSeenData(
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+        tmdbId: any(named: 'tmdbId'),
+        type: any(named: 'type'),
+      ),
+    ).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -83,7 +104,12 @@ void main() {
   );
 
   final tCast = [
-    const CastMember(id: 1, name: 'Leonardo DiCaprio', character: 'Cobb', profilePath: '/leo.jpg'),
+    const CastMember(
+      id: 1,
+      name: 'Leonardo DiCaprio',
+      character: 'Cobb',
+      profilePath: '/leo.jpg',
+    ),
   ];
 
   const tDirector = CrewMember(name: 'Christopher Nolan', job: 'Director');
@@ -108,15 +134,21 @@ void main() {
   }
 
   group('MediaDetailPage', () {
-    testWidgets('displays media details when loading is successful', (WidgetTester tester) async {
-      when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
-          .thenAnswer((_) async => tMediaDetails);
+    testWidgets('displays media details when loading is successful', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockMediaRepository.getMediaDetails(
+          tItem.id,
+          type: any(named: 'type'),
+        ),
+      ).thenAnswer((_) async => tMediaDetails);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump(); // Run post-frame callbacks
       await tester.pumpAndSettle(); // Finish loading
 
-      expect(find.text('Inception'), findsAtLeast(1)); 
+      expect(find.text('Inception'), findsAtLeast(1));
       expect(find.text('2010-07-16'), findsOneWidget);
       expect(find.text('Director: Christopher Nolan'), findsOneWidget);
       expect(find.text('A mind-bending thriller'), findsOneWidget);
@@ -130,43 +162,69 @@ void main() {
       expect(find.text('Cast'), findsOneWidget);
     });
 
-    testWidgets('counts unique episodes seen even if an episode is logged multiple times', (WidgetTester tester) async {
-      final tTvItem = MediaItem(
-        id: 2,
-        title: 'Breaking Bad',
-        mediaType: MediaType.tv,
-        overview: '...',
-        releaseDate: '2008-01-20',
-        numberOfEpisodes: 8,
-      );
+    testWidgets(
+      'counts unique episodes seen even if an episode is logged multiple times',
+      (WidgetTester tester) async {
+        final tTvItem = MediaItem(
+          id: 2,
+          title: 'Breaking Bad',
+          mediaType: MediaType.tv,
+          overview: '...',
+          releaseDate: '2008-01-20',
+          numberOfEpisodes: 8,
+        );
 
-      final tTvDetails = MediaDetails(
-        item: tTvItem,
-        cast: [],
-        director: const CrewMember(name: 'Vince Gilligan', job: 'Director'),
-      );
+        final tTvDetails = MediaDetails(
+          item: tTvItem,
+          cast: [],
+          director: const CrewMember(name: 'Vince Gilligan', job: 'Director'),
+        );
 
-      final seenStatus = [
-        SeenItem(id: 1, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 1), seasonNumber: 1, episodeNumber: 1),
-        SeenItem(id: 2, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 2), seasonNumber: 1, episodeNumber: 1),
-      ];
+        final seenStatus = [
+          SeenItem(
+            id: 1,
+            tmdbId: 2,
+            type: MediaType.tv,
+            title: 'Breaking Bad',
+            seenDate: DateTime(2023, 1, 1),
+            seasonNumber: 1,
+            episodeNumber: 1,
+          ),
+          SeenItem(
+            id: 2,
+            tmdbId: 2,
+            type: MediaType.tv,
+            title: 'Breaking Bad',
+            seenDate: DateTime(2023, 1, 2),
+            seasonNumber: 1,
+            episodeNumber: 1,
+          ),
+        ];
 
-      when(() => mockMediaRepository.getMediaDetails(2, type: any(named: 'type')))
-          .thenAnswer((_) async => tTvDetails);
-      when(() => mockMediaRepository.getSeenStatus(2, any()))
-          .thenAnswer((_) async => seenStatus);
+        when(
+          () =>
+              mockMediaRepository.getMediaDetails(2, type: any(named: 'type')),
+        ).thenAnswer((_) async => tTvDetails);
+        when(
+          () => mockMediaRepository.getSeenStatus(2, any()),
+        ).thenAnswer((_) async => seenStatus);
 
-      await tester.pumpWidget(createWidgetUnderTest(item: tTvItem));
-      await tester.pump(); 
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(createWidgetUnderTest(item: tTvItem));
+        await tester.pump();
+        await tester.pumpAndSettle();
 
-      expect(find.text('Progress: 1 / 8 episodes seen'), findsOneWidget);
-      
-      final progressIndicator = tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
-      expect(progressIndicator.value, 1 / 8);
-    });
+        expect(find.text('Progress: 1 / 8 episodes seen'), findsOneWidget);
 
-    testWidgets('counts unique episodes for per-season progress', (WidgetTester tester) async {
+        final progressIndicator = tester.widget<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+        expect(progressIndicator.value, 1 / 8);
+      },
+    );
+
+    testWidgets('counts unique episodes for per-season progress', (
+      WidgetTester tester,
+    ) async {
       final tTvItem = MediaItem(
         id: 2,
         title: 'Breaking Bad',
@@ -187,17 +245,35 @@ void main() {
 
       // S1 E1 seen twice
       final seenStatus = [
-        SeenItem(id: 1, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 1), seasonNumber: 1, episodeNumber: 1),
-        SeenItem(id: 2, tmdbId: 2, type: MediaType.tv, title: 'Breaking Bad', seenDate: DateTime(2023, 1, 2), seasonNumber: 1, episodeNumber: 1),
+        SeenItem(
+          id: 1,
+          tmdbId: 2,
+          type: MediaType.tv,
+          title: 'Breaking Bad',
+          seenDate: DateTime(2023, 1, 1),
+          seasonNumber: 1,
+          episodeNumber: 1,
+        ),
+        SeenItem(
+          id: 2,
+          tmdbId: 2,
+          type: MediaType.tv,
+          title: 'Breaking Bad',
+          seenDate: DateTime(2023, 1, 2),
+          seasonNumber: 1,
+          episodeNumber: 1,
+        ),
       ];
 
-      when(() => mockMediaRepository.getMediaDetails(2, type: any(named: 'type')))
-          .thenAnswer((_) async => tTvDetails);
-      when(() => mockMediaRepository.getSeenStatus(2, any()))
-          .thenAnswer((_) async => seenStatus);
+      when(
+        () => mockMediaRepository.getMediaDetails(2, type: any(named: 'type')),
+      ).thenAnswer((_) async => tTvDetails);
+      when(
+        () => mockMediaRepository.getSeenStatus(2, any()),
+      ).thenAnswer((_) async => seenStatus);
 
       await tester.pumpWidget(createWidgetUnderTest(item: tTvItem));
-      await tester.pump(); 
+      await tester.pump();
       await tester.pumpAndSettle();
 
       // Scroll to ensure sliver children (Seasons list) are built, then assert.
@@ -209,56 +285,88 @@ void main() {
     });
 
     group('Export Feature', () {
-      testWidgets('tapping export button shows bottom sheet with options if data exists', (WidgetTester tester) async {
-        when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
-            .thenAnswer((_) async => tMediaDetails);
-        
-        // Mock data to exist so export sheet opens
-        when(() => mockMediaRepository.exportSeenData(
-          tmdbId: any(named: 'tmdbId'),
-          type: any(named: 'type'),
-        )).thenAnswer((_) async => [{'tmdbId': 1}]);
+      testWidgets(
+        'tapping export button shows bottom sheet with options if data exists',
+        (WidgetTester tester) async {
+          when(
+            () => mockMediaRepository.getMediaDetails(
+              tItem.id,
+              type: any(named: 'type'),
+            ),
+          ).thenAnswer((_) async => tMediaDetails);
 
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump();
-        await tester.pumpAndSettle();
+          // Mock data to exist so export sheet opens
+          when(
+            () => mockMediaRepository.exportSeenData(
+              tmdbId: any(named: 'tmdbId'),
+              type: any(named: 'type'),
+            ),
+          ).thenAnswer(
+            (_) async => [
+              {'tmdbId': 1},
+            ],
+          );
 
-        // Scroll until the export button is visible.
-        await tester.scrollUntilVisible(find.text('Export history'), 500.0, scrollable: find.byType(Scrollable));
-        await tester.pumpAndSettle();
+          await tester.pumpWidget(createWidgetUnderTest());
+          await tester.pump();
+          await tester.pumpAndSettle();
 
-        final exportButtonText = find.text('Export history');
-        expect(exportButtonText, findsOneWidget);
+          // Scroll until the export button is visible.
+          await tester.scrollUntilVisible(
+            find.text('Export history'),
+            500.0,
+            scrollable: find.byType(Scrollable),
+          );
+          await tester.pumpAndSettle();
 
-        await tester.tap(exportButtonText);
-        await tester.pumpAndSettle();
+          final exportButtonText = find.text('Export history');
+          expect(exportButtonText, findsOneWidget);
 
-        expect(find.text('Save to device'), findsOneWidget);
-        expect(find.text('Share via System'), findsOneWidget);
-      });
+          await tester.tap(exportButtonText);
+          await tester.pumpAndSettle();
 
-      testWidgets('tapping export button shows snackbar if no data exists', (WidgetTester tester) async {
-        when(() => mockMediaRepository.getMediaDetails(tItem.id, type: any(named: 'type')))
-            .thenAnswer((_) async => tMediaDetails);
-        
+          expect(find.text('Save to device'), findsOneWidget);
+          expect(find.text('Share via System'), findsOneWidget);
+        },
+      );
+
+      testWidgets('tapping export button shows snackbar if no data exists', (
+        WidgetTester tester,
+      ) async {
+        when(
+          () => mockMediaRepository.getMediaDetails(
+            tItem.id,
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => tMediaDetails);
+
         // Mock no data
-        when(() => mockMediaRepository.exportSeenData(
-          tmdbId: any(named: 'tmdbId'),
-          type: any(named: 'type'),
-        )).thenAnswer((_) async => []);
+        when(
+          () => mockMediaRepository.exportSeenData(
+            tmdbId: any(named: 'tmdbId'),
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => []);
 
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pump();
         await tester.pumpAndSettle();
 
         // Scroll until the export button is visible.
-        await tester.scrollUntilVisible(find.text('Export history'), 500.0, scrollable: find.byType(Scrollable));
+        await tester.scrollUntilVisible(
+          find.text('Export history'),
+          500.0,
+          scrollable: find.byType(Scrollable),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Export history'));
         await tester.pumpAndSettle();
 
-        expect(find.text('No history to export for this item.'), findsOneWidget);
+        expect(
+          find.text('No history to export for this item.'),
+          findsOneWidget,
+        );
       });
     });
   });

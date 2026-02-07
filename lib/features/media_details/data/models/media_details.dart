@@ -7,9 +7,5 @@ class MediaDetails {
   final List<CastMember> cast;
   final CrewMember? director;
 
-  MediaDetails({
-    required this.item,
-    required this.cast,
-    this.director,
-  });
+  MediaDetails({required this.item, required this.cast, this.director});
 }

@@ -20,7 +20,10 @@ class ActorDetails extends Equatable {
     this.items = const [],
   });
 
-  factory ActorDetails.fromJson(Map<String, dynamic> json, {List<MediaItem> items = const []}) {
+  factory ActorDetails.fromJson(
+    Map<String, dynamic> json, {
+    List<MediaItem> items = const [],
+  }) {
     return ActorDetails(
       id: json['id'],
       name: json['name'],
@@ -33,5 +36,13 @@ class ActorDetails extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, name, biography, birthday, placeOfBirth, profilePath, items];
+  List<Object?> get props => [
+    id,
+    name,
+    biography,
+    birthday,
+    placeOfBirth,
+    profilePath,
+    items,
+  ];
 }

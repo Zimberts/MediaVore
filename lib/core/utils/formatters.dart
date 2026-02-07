@@ -13,7 +13,10 @@ class Formatters {
 
 class DateTextFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     final String oldText = oldValue.text;
     final String newText = newValue.text;
 
@@ -26,10 +29,15 @@ class DateTextFormatter extends TextInputFormatter {
           // User hit backspace on a slash.
           // We want to delete the digit BEFORE the slash.
           String digits = oldText.replaceAll('/', '');
-          int digitsBeforeCaret = oldText.substring(0, selectionEnd - 1).replaceAll('/', '').length;
-          
+          int digitsBeforeCaret = oldText
+              .substring(0, selectionEnd - 1)
+              .replaceAll('/', '')
+              .length;
+
           if (digitsBeforeCaret > 0) {
-            String updatedDigits = digits.substring(0, digitsBeforeCaret - 1) + digits.substring(digitsBeforeCaret);
+            String updatedDigits =
+                digits.substring(0, digitsBeforeCaret - 1) +
+                digits.substring(digitsBeforeCaret);
             return _rebuildValue(updatedDigits, digitsBeforeCaret - 1);
           } else {
             // Nothing left to delete
@@ -43,7 +51,10 @@ class DateTextFormatter extends TextInputFormatter {
     String digits = newText.replaceAll(RegExp(r'[^0-9]'), '');
     if (digits.length > 8) digits = digits.substring(0, 8);
 
-    int caretPositionInDigits = _calculateDigitsBefore(newText, newValue.selection.end);
+    int caretPositionInDigits = _calculateDigitsBefore(
+      newText,
+      newValue.selection.end,
+    );
 
     return _rebuildValue(digits, caretPositionInDigits);
   }
@@ -75,7 +86,9 @@ class DateTextFormatter extends TextInputFormatter {
 
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: newCaret.clamp(0, formatted.length)),
+      selection: TextSelection.collapsed(
+        offset: newCaret.clamp(0, formatted.length),
+      ),
     );
   }
 }

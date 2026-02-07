@@ -27,7 +27,8 @@ class MediaRemoteDataSource {
   MediaRemoteDataSource._internal({required this.dio, required this.apiToken});
 
   /// Searches for movies and series on the TMDB API, supporting optional filters.
-  Future<List<MediaItem>> searchMedia(String query, {
+  Future<List<MediaItem>> searchMedia(
+    String query, {
     int page = 1,
     List<int>? genreIds,
     int? releaseYear,
@@ -38,7 +39,9 @@ class MediaRemoteDataSource {
     final path = (type == MediaType.tv) ? 'tv' : 'movie';
     try {
       final params = <String, dynamic>{'query': query, 'page': page};
-      if (genreIds != null && genreIds.isNotEmpty) params['with_genres'] = genreIds.join(',');
+      if (genreIds != null && genreIds.isNotEmpty) {
+        params['with_genres'] = genreIds.join(',');
+      }
       if (releaseYear != null) {
         if (type == MediaType.movie) {
           params['primary_release_year'] = releaseYear;
@@ -64,13 +67,15 @@ class MediaRemoteDataSource {
       }).toList();
 
       // Enrich items with full details to get number of seasons or runtime
-      final enrichedItems = await Future.wait(mediaItems.map((item) async {
-        try {
-          return await getMediaItem(item.id, type: item.mediaType);
-        } catch (_) {
-          return item;
-        }
-      }));
+      final enrichedItems = await Future.wait(
+        mediaItems.map((item) async {
+          try {
+            return await getMediaItem(item.id, type: item.mediaType);
+          } catch (_) {
+            return item;
+          }
+        }),
+      );
 
       return enrichedItems;
     } on DioException catch (e) {
@@ -95,7 +100,10 @@ class MediaRemoteDataSource {
   }
 
   /// Fetches the details for a single media item from the TMDB API.
-  Future<MediaItem> getMediaItem(int id, {MediaType type = MediaType.movie}) async {
+  Future<MediaItem> getMediaItem(
+    int id, {
+    MediaType type = MediaType.movie,
+  }) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
       final response = await dio.get(
@@ -127,7 +135,10 @@ class MediaRemoteDataSource {
   }
 
   /// Fetches the details for a TV season from the TMDB API.
-  Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) async {
+  Future<Map<String, dynamic>> getSeasonDetails(
+    int tvId,
+    int seasonNumber,
+  ) async {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/tv/$tvId/season/$seasonNumber',
@@ -135,14 +146,21 @@ class MediaRemoteDataSource {
       );
       return response.data;
     } on DioException catch (e) {
-       throw ServerException('Failed to load season details', e.response?.statusCode, e);
+      throw ServerException(
+        'Failed to load season details',
+        e.response?.statusCode,
+        e,
+      );
     } catch (e) {
       throw ParsingException('Failed to parse season details', e);
     }
   }
 
   /// Fetches the credits for a single media item from the TMDB API.
-  Future<Map<String, dynamic>> getMediaCredits(int id, {MediaType type = MediaType.movie}) async {
+  Future<Map<String, dynamic>> getMediaCredits(
+    int id, {
+    MediaType type = MediaType.movie,
+  }) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
       final response = await dio.get(
@@ -185,7 +203,10 @@ class MediaRemoteDataSource {
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
         case DioExceptionType.connectionError:
-          throw NetworkException('Network error while fetching actor details', e);
+          throw NetworkException(
+            'Network error while fetching actor details',
+            e,
+          );
         case DioExceptionType.badResponse:
           throw ServerException(
             'Server error while fetching actor details',
@@ -233,20 +254,28 @@ class MediaRemoteDataSource {
       );
 
       final List results = response.data['results'];
-      final mediaItems = results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).where((m) => m.mediaType == MediaType.movie || m.mediaType == MediaType.tv).toList();
+      final mediaItems = results
+          .map((m) {
+            final data = Map<String, dynamic>.from(m);
+            if (data['media_type'] == null) data['media_type'] = path;
+            return MediaItem.fromJson(data);
+          })
+          .where(
+            (m) =>
+                m.mediaType == MediaType.movie || m.mediaType == MediaType.tv,
+          )
+          .toList();
 
       // Try to enrich items similarly to searchMedia
-      final enriched = await Future.wait(mediaItems.map((item) async {
-        try {
-          return await getMediaItem(item.id, type: item.mediaType);
-        } catch (_) {
-          return item;
-        }
-      }));
+      final enriched = await Future.wait(
+        mediaItems.map((item) async {
+          try {
+            return await getMediaItem(item.id, type: item.mediaType);
+          } catch (_) {
+            return item;
+          }
+        }),
+      );
 
       return enriched;
     } on DioException catch (e) {
@@ -257,7 +286,11 @@ class MediaRemoteDataSource {
         case DioExceptionType.connectionError:
           throw NetworkException('Network error while discovering', e);
         case DioExceptionType.badResponse:
-          throw ServerException('Server error while discovering', e.response?.statusCode, e);
+          throw ServerException(
+            'Server error while discovering',
+            e.response?.statusCode,
+            e,
+          );
         default:
           throw ServerException('Failed to discover', null, e);
       }
@@ -281,7 +314,10 @@ class MediaRemoteDataSource {
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
         case DioExceptionType.connectionError:
-          throw NetworkException('Network error while fetching actor movie credits', e);
+          throw NetworkException(
+            'Network error while fetching actor movie credits',
+            e,
+          );
         case DioExceptionType.badResponse:
           throw ServerException(
             'Server error while fetching actor movie credits',
@@ -295,8 +331,6 @@ class MediaRemoteDataSource {
       throw ParsingException('Failed to parse actor movie credits response', e);
     }
   }
-
-
 
   /// Backwards-compatible wrapper for discover with filter naming used elsewhere.
   Future<List<MediaItem>> discoverMedia({
@@ -314,7 +348,9 @@ class MediaRemoteDataSource {
       sortBy: sortBy,
       page: page,
       year: releaseYear,
-      withGenres: genreIds != null && genreIds.isNotEmpty ? genreIds.join(',') : null,
+      withGenres: genreIds != null && genreIds.isNotEmpty
+          ? genreIds.join(',')
+          : null,
       minRating: minRating,
       language: language,
     );

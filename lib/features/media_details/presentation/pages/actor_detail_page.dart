@@ -36,7 +36,9 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
 
   Future<void> _fetchActorDetails() async {
     try {
-      final actorDetails = await _mediaRepository.getActorDetails(widget.actorId);
+      final actorDetails = await _mediaRepository.getActorDetails(
+        widget.actorId,
+      );
       if (mounted) {
         setState(() {
           _actorDetails = actorDetails;
@@ -71,20 +73,33 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
             pinned: true,
             title: Text(_actorDetails?.name ?? widget.actorName),
             flexibleSpace: FlexibleSpaceBar(
-              background: _actorDetails?.profilePath != null && !Platform.environment.containsKey('FLUTTER_TEST')
+              background:
+                  _actorDetails?.profilePath != null &&
+                      !Platform.environment.containsKey('FLUTTER_TEST')
                   ? CachedNetworkImage(
-                      imageUrl: 'https://image.tmdb.org/t/p/w500${_actorDetails!.profilePath}',
+                      imageUrl:
+                          'https://image.tmdb.org/t/p/w500${_actorDetails!.profilePath}',
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorWidget: (context, url, error) => Container(
                         color: colors.placeholder,
-                        child: Center(child: Icon(Icons.broken_image, size: 64, color: colors.comments)),
+                        child: Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 64,
+                            color: colors.comments,
+                          ),
+                        ),
                       ),
                     )
                   : Container(
                       color: colors.placeholder,
                       child: Center(
-                        child: Icon(Icons.person, size: 100, color: colors.comments),
+                        child: Icon(
+                          Icons.person,
+                          size: 100,
+                          color: colors.comments,
+                        ),
                       ),
                     ),
             ),
@@ -96,7 +111,12 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   if (_isLoading)
-                    const Center(child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator()))
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
                   else ...[
                     Text(
                       _actorDetails?.name ?? widget.actorName,
@@ -108,16 +128,26 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                       runSpacing: 8,
                       children: [
                         if (_actorDetails?.birthday != null)
-                          _ActorIconText(icon: Icons.cake, text: _actorDetails!.birthday!),
+                          _ActorIconText(
+                            icon: Icons.cake,
+                            text: _actorDetails!.birthday!,
+                          ),
                         if (_actorDetails?.placeOfBirth != null)
-                          _ActorIconText(icon: Icons.location_on, text: _actorDetails!.placeOfBirth!),
+                          _ActorIconText(
+                            icon: Icons.location_on,
+                            text: _actorDetails!.placeOfBirth!,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    if (_actorDetails?.biography != null && _actorDetails!.biography!.isNotEmpty) ...[
+                    if (_actorDetails?.biography != null &&
+                        _actorDetails!.biography!.isNotEmpty) ...[
                       const Text(
                         'Biography',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -126,10 +156,14 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    if (_actorDetails != null && _actorDetails!.items.isNotEmpty) ...[
+                    if (_actorDetails != null &&
+                        _actorDetails!.items.isNotEmpty) ...[
                       const Text(
                         'Known For',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       _buildKnownForList(_actorDetails!.items),
@@ -166,17 +200,31 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: item.posterPath != null && !Platform.environment.containsKey('FLUTTER_TEST')
+                      child:
+                          item.posterPath != null &&
+                              !Platform.environment.containsKey('FLUTTER_TEST')
                           ? CachedNetworkImage(
-                              imageUrl: 'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                              imageUrl:
+                                  'https://image.tmdb.org/t/p/w185${item.posterPath}',
                               fit: BoxFit.cover,
                               width: 120,
-                              placeholder: (context, url) => Container(color: Colors.grey[200]),
-                              errorWidget: (context, url, error) => Icon(item.mediaType == MediaType.tv ? Icons.tv : Icons.movie),
+                              placeholder: (context, url) =>
+                                  Container(color: Colors.grey[200]),
+                              errorWidget: (context, url, error) => Icon(
+                                item.mediaType == MediaType.tv
+                                    ? Icons.tv
+                                    : Icons.movie,
+                              ),
                             )
                           : Container(
                               color: Colors.grey[300],
-                              child: Center(child: Icon(item.mediaType == MediaType.tv ? Icons.tv : Icons.movie)),
+                              child: Center(
+                                child: Icon(
+                                  item.mediaType == MediaType.tv
+                                      ? Icons.tv
+                                      : Icons.movie,
+                                ),
+                              ),
                             ),
                     ),
                   ),
@@ -186,8 +234,8 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),

@@ -25,33 +25,49 @@ void main() {
   setUp(() {
     mockMediaRepository = MockMediaRepository();
     mockSharedPreferences = MockSharedPreferences();
-    
+
     // Default mocks for SharedPreferences (used by SettingsProvider)
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
 
     // Default mocks for SearchProvider init
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
-        .thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist']);
+    when(
+      () => mockMediaRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListPreviews(
+        any(),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getLikedEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getNotifiedItems(),
+    ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
-    
+
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
     locator.registerSingleton<MediaRepository>(mockMediaRepository);
-    
-    when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
+
+    when(
+      () => mockMediaRepository.getSeenStatus(any(), any()),
+    ).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -71,23 +87,45 @@ void main() {
     );
   }
 
-  testWidgets('displays empty message when no items seen', (WidgetTester tester) async {
+  testWidgets('displays empty message when no items seen', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
     expect(find.text('No items seen yet.'), findsOneWidget);
   });
 
-  testWidgets('displays grouped list of seen items and liked status', (WidgetTester tester) async {
+  testWidgets('displays grouped list of seen items and liked status', (
+    WidgetTester tester,
+  ) async {
     final seenDate = DateTime(2023, 10, 1);
     final seenItems = [
-      SeenItem(id: 1, tmdbId: 1, type: MediaType.movie, title: 'Movie A', seenDate: seenDate),
-      SeenItem(id: 2, tmdbId: 2, type: MediaType.tv, title: 'Show B', seenDate: seenDate, seasonNumber: 1, episodeNumber: 1),
+      SeenItem(
+        id: 1,
+        tmdbId: 1,
+        type: MediaType.movie,
+        title: 'Movie A',
+        seenDate: seenDate,
+      ),
+      SeenItem(
+        id: 2,
+        tmdbId: 2,
+        type: MediaType.tv,
+        title: 'Show B',
+        seenDate: seenDate,
+        seasonNumber: 1,
+        episodeNumber: 1,
+      ),
     ];
 
-    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => seenItems);
-    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => ['1:movie']);
-    
+    when(
+      () => mockMediaRepository.getSeenItems(),
+    ).thenAnswer((_) async => seenItems);
+    when(
+      () => mockMediaRepository.getLikedEntries(),
+    ).thenAnswer((_) async => ['1:movie']);
+
     // Manually trigger reload to update Provider's state before building
     await searchProvider.loadAllSeenStatus();
     await searchProvider.loadLikedStatus();
@@ -102,15 +140,27 @@ void main() {
     expect(find.textContaining('October 1, 2023'), findsOneWidget);
   });
 
-  testWidgets('swiping to delete shows confirmation and calls delete', (WidgetTester tester) async {
+  testWidgets('swiping to delete shows confirmation and calls delete', (
+    WidgetTester tester,
+  ) async {
     final seenDate = DateTime(2023, 10, 1);
     final seenItems = [
-      SeenItem(id: 1, tmdbId: 1, type: MediaType.movie, title: 'Movie A', seenDate: seenDate),
+      SeenItem(
+        id: 1,
+        tmdbId: 1,
+        type: MediaType.movie,
+        title: 'Movie A',
+        seenDate: seenDate,
+      ),
     ];
 
     // Initial state: 1 item
-    when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => seenItems);
-    when(() => mockMediaRepository.deleteSeenEntry(any())).thenAnswer((_) async {});
+    when(
+      () => mockMediaRepository.getSeenItems(),
+    ).thenAnswer((_) async => seenItems);
+    when(
+      () => mockMediaRepository.deleteSeenEntry(any()),
+    ).thenAnswer((_) async {});
 
     await searchProvider.loadAllSeenStatus();
 

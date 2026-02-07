@@ -580,18 +580,15 @@ class SearchProvider with ChangeNotifier {
       repository.getSeenStatus(tmdbId, type);
   Future<void> markAsSeen(SeenItem item) async {
     await repository.markAsSeen(item);
-    debugPrint('markAsSeen called for ${item.tmdbId} ${item.type}');
 
     // After marking as seen, remove from watchlist when appropriate so
     // that all entry points (SeenManager, Notification center, WatchNext)
     // exhibit the same behaviour.
     try {
       final inWatchlist = _watchlistIds.contains(item.tmdbId.toString());
-      debugPrint('Might be removing a media from watchlist: $inWatchlist');
 
       if (inWatchlist) {
         if (item.type == MediaType.movie) {
-          debugPrint('Might be removing a movie');
           final mediaShell = MediaItem(
             id: item.tmdbId,
             title: item.title,
@@ -601,7 +598,6 @@ class SearchProvider with ChangeNotifier {
           );
           await toggleInList(mediaShell, 'watchlist');
         } else if (item.type == MediaType.tv) {
-          debugPrint('Might be removing a series');
           // Fetch details to determine status/last episode info
           try {
             final details = await repository.getMediaDetails(
@@ -609,9 +605,6 @@ class SearchProvider with ChangeNotifier {
               type: MediaType.tv,
             );
             final mediaItem = details.item;
-            debugPrint(
-              'Might be removing a series discontinued ${mediaItem.status}',
-            );
             final discontinued =
                 mediaItem.status != null &&
                 {'ended', 'canceled'}.contains(mediaItem.status!.toLowerCase());
@@ -629,7 +622,6 @@ class SearchProvider with ChangeNotifier {
               final next = await getNextEpisode(item.tmdbId);
               if (next == null) noNext = true;
             } catch (_) {}
-            debugPrint('Might be removing a series without next${noNext}');
 
             if ((isLastEpisode || noNext) && discontinued) {
               await toggleInList(mediaItem, 'watchlist');

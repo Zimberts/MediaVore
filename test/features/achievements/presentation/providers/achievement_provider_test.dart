@@ -11,9 +11,11 @@ void main() {
   setUp(() {
     mockRepository = MockAchievementRepository();
     // Default mock behavior for constructor init
-    when(() => mockRepository.watchAchievements()).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockRepository.watchAchievements(),
+    ).thenAnswer((_) => const Stream.empty());
     when(() => mockRepository.getAchievements()).thenAnswer((_) async => []);
-    
+
     provider = AchievementProvider(mockRepository);
   });
 
@@ -22,7 +24,9 @@ void main() {
       final achievements = [
         const Achievement(id: '1', title: 'T', description: 'D', iconPath: 'I'),
       ];
-      when(() => mockRepository.getAchievements()).thenAnswer((_) async => achievements);
+      when(
+        () => mockRepository.getAchievements(),
+      ).thenAnswer((_) async => achievements);
 
       await provider.refresh();
 
@@ -30,28 +34,40 @@ void main() {
       verify(() => mockRepository.getAchievements()).called(greaterThan(0));
     });
 
-    test('should auto-unlock achievements that meet criteria but are not persisted', () async {
-      final unlockedAt = DateTime(2023, 1, 1);
-      final achievements = [
-        Achievement(
-          id: 'unlocked_but_not_saved',
-          title: 'T',
-          description: 'D',
-          iconPath: 'I',
-          isUnlocked: true,
-          isPersisted: false,
-          unlockedAt: unlockedAt,
-          progress: 1.0,
-        ),
-      ];
+    test(
+      'should auto-unlock achievements that meet criteria but are not persisted',
+      () async {
+        final unlockedAt = DateTime(2023, 1, 1);
+        final achievements = [
+          Achievement(
+            id: 'unlocked_but_not_saved',
+            title: 'T',
+            description: 'D',
+            iconPath: 'I',
+            isUnlocked: true,
+            isPersisted: false,
+            unlockedAt: unlockedAt,
+            progress: 1.0,
+          ),
+        ];
 
-      when(() => mockRepository.getAchievements()).thenAnswer((_) async => achievements);
-      when(() => mockRepository.unlockAchievement(any(), any())).thenAnswer((_) async {});
+        when(
+          () => mockRepository.getAchievements(),
+        ).thenAnswer((_) async => achievements);
+        when(
+          () => mockRepository.unlockAchievement(any(), any()),
+        ).thenAnswer((_) async {});
 
-      await provider.refresh();
+        await provider.refresh();
 
-      verify(() => mockRepository.unlockAchievement('unlocked_but_not_saved', unlockedAt)).called(1);
-    });
+        verify(
+          () => mockRepository.unlockAchievement(
+            'unlocked_but_not_saved',
+            unlockedAt,
+          ),
+        ).called(1);
+      },
+    );
 
     test('should not double-notify for already notified achievements', () async {
       final unlockedAt = DateTime(2023, 1, 1);
@@ -66,8 +82,12 @@ void main() {
         progress: 1.0,
       );
 
-      when(() => mockRepository.getAchievements()).thenAnswer((_) async => [achievement]);
-      when(() => mockRepository.unlockAchievement(any(), any())).thenAnswer((_) async {});
+      when(
+        () => mockRepository.getAchievements(),
+      ).thenAnswer((_) async => [achievement]);
+      when(
+        () => mockRepository.unlockAchievement(any(), any()),
+      ).thenAnswer((_) async {});
 
       // First time
       await provider.refresh();
@@ -78,13 +98,18 @@ void main() {
       verifyNever(() => mockRepository.unlockAchievement('1', unlockedAt));
     });
 
-    test('clearAchievements should reset notified set and call repository', () async {
-      when(() => mockRepository.clearAchievements()).thenAnswer((_) async {});
-      when(() => mockRepository.getAchievements()).thenAnswer((_) async => []);
+    test(
+      'clearAchievements should reset notified set and call repository',
+      () async {
+        when(() => mockRepository.clearAchievements()).thenAnswer((_) async {});
+        when(
+          () => mockRepository.getAchievements(),
+        ).thenAnswer((_) async => []);
 
-      await provider.clearAchievements();
+        await provider.clearAchievements();
 
-      verify(() => mockRepository.clearAchievements()).called(1);
-    });
+        verify(() => mockRepository.clearAchievements()).called(1);
+      },
+    );
   });
 }

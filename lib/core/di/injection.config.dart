@@ -37,11 +37,7 @@ Future<_i1.GetIt> init(
   String? environment,
   _i2.EnvironmentFilter? environmentFilter,
 }) async {
-  final gh = _i2.GetItHelper(
-    getIt,
-    environment,
-    environmentFilter,
-  );
+  final gh = _i2.GetItHelper(getIt, environment, environmentFilter);
   final registerModule = _$RegisterModule();
   final databaseModule = _$DatabaseModule();
   gh.singleton<_i3.Dio>(() => registerModule.dio);
@@ -51,28 +47,32 @@ Future<_i1.GetIt> init(
   );
   gh.lazySingleton<_i5.MediaCache>(() => _i5.MediaCache(gh<_i4.Isar>()));
   gh.lazySingleton<_i6.MediaListLocalDataSource>(
-      () => _i6.MediaListLocalDataSource(gh<_i4.Isar>()));
-  gh.lazySingleton<_i7.MediaRemoteDataSource>(() => _i7.MediaRemoteDataSource(
-        dio: gh<_i3.Dio>(),
-        apiToken: gh<String>(),
-      ));
-  gh.lazySingleton<_i8.MediaRepository>(() => _i9.MediaRepositoryImpl(
-        remoteDataSource: gh<_i7.MediaRemoteDataSource>(),
-        localDataSource: gh<_i6.MediaListLocalDataSource>(),
-        cache: gh<_i5.MediaCache>(),
-      ));
+    () => _i6.MediaListLocalDataSource(gh<_i4.Isar>()),
+  );
+  gh.lazySingleton<_i7.MediaRemoteDataSource>(
+    () => _i7.MediaRemoteDataSource(dio: gh<_i3.Dio>(), apiToken: gh<String>()),
+  );
+  gh.lazySingleton<_i8.MediaRepository>(
+    () => _i9.MediaRepositoryImpl(
+      remoteDataSource: gh<_i7.MediaRemoteDataSource>(),
+      localDataSource: gh<_i6.MediaListLocalDataSource>(),
+      cache: gh<_i5.MediaCache>(),
+    ),
+  );
   await gh.factoryAsync<_i10.SharedPreferences>(
     () => registerModule.sharedPreferences,
     preResolve: true,
   );
   gh.singleton<String>(() => registerModule.apiToken);
   gh.lazySingleton<_i11.AchievementRepository>(
-      () => _i12.AchievementRepositoryImpl(
-            gh<_i4.Isar>(),
-            gh<_i6.MediaListLocalDataSource>(),
-          ));
+    () => _i12.AchievementRepositoryImpl(
+      gh<_i4.Isar>(),
+      gh<_i6.MediaListLocalDataSource>(),
+    ),
+  );
   gh.lazySingleton<_i13.AchievementProvider>(
-      () => _i13.AchievementProvider(gh<_i11.AchievementRepository>()));
+    () => _i13.AchievementProvider(gh<_i11.AchievementRepository>()),
+  );
   return getIt;
 }
 

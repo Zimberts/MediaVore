@@ -6,7 +6,8 @@ abstract class AppException implements Exception {
   const AppException(this.message, [this.cause]);
 
   @override
-  String toString() => '$runtimeType: $message${cause != null ? ' (cause: $cause)' : ''}';
+  String toString() =>
+      '$runtimeType: $message${cause != null ? ' (cause: $cause)' : ''}';
 }
 
 /// Exception thrown when there's a server error (4xx or 5xx status codes).

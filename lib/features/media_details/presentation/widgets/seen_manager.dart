@@ -252,8 +252,9 @@ class _SeenManagerState extends State<SeenManager> {
                           icon: Icon(Icons.delete_outline, color: colors.error),
                           onPressed: () {
                             provider.deleteSeenEntry(seenEntry.id!);
-                            if (history.length <= 1)
+                            if (history.length <= 1) {
                               Navigator.pop(sheetContext);
+                            }
                           },
                         ),
                       );

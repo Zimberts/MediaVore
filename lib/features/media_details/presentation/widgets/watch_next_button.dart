@@ -26,11 +26,11 @@ class _WatchNextButtonState extends State<WatchNextButton> {
 
   Future<void> _loadNextEpisode() async {
     if (widget.item.mediaType != MediaType.tv) return;
-    
+
     setState(() => _isLoading = true);
     final provider = context.read<SearchProvider>();
     final next = await provider.getNextEpisode(widget.item.id);
-    
+
     if (mounted) {
       setState(() {
         _nextEpisode = next;
@@ -43,15 +43,17 @@ class _WatchNextButtonState extends State<WatchNextButton> {
     if (_nextEpisode == null) return;
 
     final provider = context.read<SearchProvider>();
-    await provider.markAsSeen(SeenItem(
-      tmdbId: widget.item.id,
-      type: MediaType.tv,
-      title: widget.item.title,
-      posterPath: widget.item.posterPath,
-      seenDate: DateTime.now(),
-      seasonNumber: _nextEpisode!.seasonNumber,
-      episodeNumber: _nextEpisode!.episodeNumber,
-    ));
+    await provider.markAsSeen(
+      SeenItem(
+        tmdbId: widget.item.id,
+        type: MediaType.tv,
+        title: widget.item.title,
+        posterPath: widget.item.posterPath,
+        seenDate: DateTime.now(),
+        seasonNumber: _nextEpisode!.seasonNumber,
+        episodeNumber: _nextEpisode!.episodeNumber,
+      ),
+    );
 
     widget.onSeenChanged?.call();
     _loadNextEpisode();
@@ -60,7 +62,13 @@ class _WatchNextButtonState extends State<WatchNextButton> {
   @override
   Widget build(BuildContext context) {
     if (widget.item.mediaType != MediaType.tv) return const SizedBox.shrink();
-    if (_isLoading) return const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2));
+    if (_isLoading) {
+      return const SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
     if (_nextEpisode == null) return const SizedBox.shrink();
 
     return Padding(
@@ -68,7 +76,9 @@ class _WatchNextButtonState extends State<WatchNextButton> {
       child: ElevatedButton.icon(
         onPressed: _markNextAsSeen,
         icon: const Icon(Icons.play_arrow),
-        label: Text('Watch Next: S${_nextEpisode!.seasonNumber} E${_nextEpisode!.episodeNumber}'),
+        label: Text(
+          'Watch Next: S${_nextEpisode!.seasonNumber} E${_nextEpisode!.episodeNumber}',
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,

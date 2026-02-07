@@ -94,7 +94,7 @@ void main() {
     );
   }
 
-  Future<void> _markAsSeenViaUi(WidgetTester tester) async {
+  Future<void> markAsSeenViaUi(WidgetTester tester) async {
     await tester.tap(find.byIcon(Icons.check_circle_outline));
     await tester.pumpAndSettle();
     // Press the LOG VIEWING button in the dialog
@@ -236,7 +236,7 @@ void main() {
           () => mockRepository.removeFromList(any(), any(), any()),
         ).thenAnswer((_) async => {});
 
-        await _markAsSeenViaUi(tester);
+        await markAsSeenViaUi(tester);
 
         verifyNever(() => mockRepository.removeFromList(any(), any(), any()));
       });
@@ -256,7 +256,7 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pump();
 
-        await _markAsSeenViaUi(tester);
+        await markAsSeenViaUi(tester);
 
         verify(
           () => mockRepository.removeFromList(1, MediaType.movie, 'watchlist'),
@@ -361,7 +361,7 @@ void main() {
         );
         await tester.pump();
 
-        await _markAsSeenViaUi(tester);
+        await markAsSeenViaUi(tester);
 
         verifyNever(
           () => mockRepository.removeFromList(2, MediaType.tv, 'watchlist'),
@@ -407,7 +407,7 @@ void main() {
         );
         await tester.pump();
 
-        await _markAsSeenViaUi(tester);
+        await markAsSeenViaUi(tester);
 
         verify(
           () => mockRepository.removeFromList(3, MediaType.tv, 'watchlist'),
@@ -453,7 +453,7 @@ void main() {
           () => mockRepository.removeFromList(any(), any(), any()),
         ).thenAnswer((_) async => {});
 
-        await _markAsSeenViaUi(tester);
+        await markAsSeenViaUi(tester);
 
         verifyNever(() => mockRepository.removeFromList(any(), any(), any()));
       });
@@ -497,7 +497,7 @@ void main() {
           () => mockRepository.removeFromList(any(), any(), any()),
         ).thenAnswer((_) async => {});
 
-        await _markAsSeenViaUi(tester);
+        await markAsSeenViaUi(tester);
 
         verifyNever(() => mockRepository.removeFromList(any(), any(), any()));
       });

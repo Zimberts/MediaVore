@@ -49,15 +49,15 @@ class SeenItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        tmdbId,
-        type,
-        title,
-        posterPath,
-        seenDate,
-        seasonNumber,
-        episodeNumber,
-        runtime,
-        genres,
-      ];
+    id,
+    tmdbId,
+    type,
+    title,
+    posterPath,
+    seenDate,
+    seasonNumber,
+    episodeNumber,
+    runtime,
+    genres,
+  ];
 }

@@ -19,9 +19,7 @@ class SettingsPage extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
           const _SectionHeader(title: 'Appearance'),
@@ -73,12 +71,16 @@ class SettingsPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 elevation: 3,
                 onChanged: settings.themeMode != ThemeMode.dark
-                    ? (themeIndex) => themeIndex != null ? settings.setLightAppTheme(themeIndex) : null
+                    ? (themeIndex) => themeIndex != null
+                          ? settings.setLightAppTheme(themeIndex)
+                          : null
                     : null,
                 style: dropdownStyle,
                 alignment: Alignment.centerRight,
                 icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                disabledHint: Text(lightThemes[settings.lightAppThemeIndex].name),
+                disabledHint: Text(
+                  lightThemes[settings.lightAppThemeIndex].name,
+                ),
                 items: lightThemes.asMap().entries.map((entry) {
                   return DropdownMenuItem(
                     value: entry.key,
@@ -99,7 +101,9 @@ class SettingsPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 elevation: 3,
                 onChanged: settings.themeMode != ThemeMode.light
-                    ? (themeIndex) => themeIndex != null ? settings.setDarkAppTheme(themeIndex) : null
+                    ? (themeIndex) => themeIndex != null
+                          ? settings.setDarkAppTheme(themeIndex)
+                          : null
                     : null,
                 style: dropdownStyle,
                 alignment: Alignment.centerRight,
@@ -119,12 +123,16 @@ class SettingsPage extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.emoji_events_outlined),
             title: const Text('Achievements'),
-            subtitle: const Text('View your collection of badges and progress.'),
+            subtitle: const Text(
+              'View your collection of badges and progress.',
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AchievementsPage()),
+                MaterialPageRoute(
+                  builder: (context) => const AchievementsPage(),
+                ),
               );
             },
           ),
@@ -132,7 +140,9 @@ class SettingsPage extends StatelessWidget {
           const _SectionHeader(title: 'Lists Display'),
           SwitchListTile(
             title: const Text('Hide Non-Released Media'),
-            subtitle: const Text('Only show movies and episodes that have already aired.'),
+            subtitle: const Text(
+              'Only show movies and episodes that have already aired.',
+            ),
             value: settings.hideNonReleased,
             onChanged: (val) => settings.setHideNonReleased(val),
           ),
@@ -141,12 +151,16 @@ class SettingsPage extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.storage),
             title: const Text('Storage & Data'),
-            subtitle: const Text('Manage cache, exports, and viewing history database.'),
+            subtitle: const Text(
+              'Manage cache, exports, and viewing history database.',
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const DataCacheSettingsPage()),
+                MaterialPageRoute(
+                  builder: (context) => const DataCacheSettingsPage(),
+                ),
               );
             },
           ),
@@ -156,9 +170,7 @@ class SettingsPage extends StatelessWidget {
             icon: Icon(Icons.info_outline),
             applicationName: 'MediaVore',
             applicationVersion: '1.0.0',
-            aboutBoxChildren: [
-              Text('A simple media tracking app using TMDB.'),
-            ],
+            aboutBoxChildren: [Text('A simple media tracking app using TMDB.')],
           ),
         ],
       ),
@@ -167,17 +179,23 @@ class SettingsPage extends StatelessWidget {
 
   String _getThemeModeName(ThemeMode mode) {
     switch (mode) {
-      case ThemeMode.system: return 'System';
-      case ThemeMode.light: return 'Light';
-      case ThemeMode.dark: return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
     }
   }
 
   IconData _getThemeModeIcon(ThemeMode mode) {
     switch (mode) {
-      case ThemeMode.system: return Icons.brightness_auto;
-      case ThemeMode.light: return Icons.light_mode;
-      case ThemeMode.dark: return Icons.dark_mode;
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
     }
   }
 }

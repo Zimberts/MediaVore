@@ -19,7 +19,8 @@ class MockSharedPreferences extends Mock implements SharedPreferences {}
 
 class MockMediaRemoteDataSource extends Mock implements MediaRemoteDataSource {}
 
-class MockMediaListLocalDataSource extends Mock implements MediaListLocalDataSource {}
+class MockMediaListLocalDataSource extends Mock
+    implements MediaListLocalDataSource {}
 
 class MockIsar extends Mock implements Isar {}
 
@@ -30,4 +31,5 @@ class MockAchievementRepository extends Mock implements AchievementRepository {}
 class MockAchievementProvider extends Mock implements AchievementProvider {}
 
 class FakeSeenItem extends Fake implements SeenItem {}
+
 class FakeMediaItem extends Fake implements MediaItem {}

@@ -6,13 +6,16 @@ part 'media_list_item.g.dart';
 class MediaListItem {
   Id? isarId;
 
-  @Index(composite: [CompositeIndex('type'), CompositeIndex('listName')], unique: true)
+  @Index(
+    composite: [CompositeIndex('type'), CompositeIndex('listName')],
+    unique: true,
+  )
   final int id;
 
   final String type;
 
   final String listName;
-  
+
   final String title;
 
   int position;

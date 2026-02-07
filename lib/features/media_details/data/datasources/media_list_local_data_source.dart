@@ -32,7 +32,7 @@ class MediaListLocalDataSource {
             .filter()
             .listNameEqualTo(listName)
             .count();
-            
+
         final item = MediaListItem(
           id: id,
           type: type,
@@ -69,20 +69,23 @@ class MediaListLocalDataSource {
     return items.map((item) => '${item.id}:${item.type}').toList();
   }
 
-  Future<void> updateListOrder(String listName, List<String> orderedEntries) async {
+  Future<void> updateListOrder(
+    String listName,
+    List<String> orderedEntries,
+  ) async {
     await _isar.writeTxn(() async {
       for (int i = 0; i < orderedEntries.length; i++) {
         final parts = orderedEntries[i].split(':');
         final id = int.parse(parts[0]);
         final type = parts[1];
-        
+
         final item = await _isar.mediaListItems
             .filter()
             .idEqualTo(id)
             .typeEqualTo(type)
             .listNameEqualTo(listName)
             .findFirst();
-            
+
         if (item != null) {
           item.position = i;
           await _isar.mediaListItems.put(item);
@@ -102,7 +105,10 @@ class MediaListLocalDataSource {
 
   Future<void> createList(String name) async {
     await _isar.writeTxn(() async {
-      final existing = await _isar.userLists.filter().nameEqualTo(name).findFirst();
+      final existing = await _isar.userLists
+          .filter()
+          .nameEqualTo(name)
+          .findFirst();
       if (existing == null) {
         await _isar.userLists.put(UserList(name: name));
       }
@@ -124,7 +130,12 @@ class MediaListLocalDataSource {
     });
   }
 
-  Future<void> removeFromSeen(int tmdbId, String type, {int? seasonNumber, int? episodeNumber}) async {
+  Future<void> removeFromSeen(
+    int tmdbId,
+    String type, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
     await _isar.writeTxn(() async {
       await _isar.seenItemModels
           .filter()
@@ -152,7 +163,7 @@ class MediaListLocalDataSource {
         .typeEqualTo(type)
         .findAll();
   }
-  
+
   Future<void> deleteSeenEntry(int isarId) async {
     await _isar.writeTxn(() async {
       await _isar.seenItemModels.delete(isarId);
@@ -163,14 +174,18 @@ class MediaListLocalDataSource {
     return await _isar.seenItemModels.get(isarId);
   }
 
-  Future<void> updatePosterPath(int tmdbId, String type, String posterPath) async {
+  Future<void> updatePosterPath(
+    int tmdbId,
+    String type,
+    String posterPath,
+  ) async {
     await _isar.writeTxn(() async {
       final items = await _isar.seenItemModels
           .filter()
           .tmdbIdEqualTo(tmdbId)
           .typeEqualTo(type, caseSensitive: false)
           .findAll();
-      
+
       for (final item in items) {
         if (item.posterPath == null || item.posterPath!.isEmpty) {
           final updated = SeenItemModel(
@@ -200,10 +215,11 @@ class MediaListLocalDataSource {
     }
 
     var query = _isar.seenItemModels.filter().isarIdIsNotNull();
-    
+
     if (start != null) {
       query = query.and().seenDateGreaterThan(start, include: true);
-    } if (end != null) {
+    }
+    if (end != null) {
       query = query.and().seenDateLessThan(end, include: true);
     }
     if (tmdbId != null) {
@@ -216,7 +232,10 @@ class MediaListLocalDataSource {
     return await query.findAll();
   }
 
-  Future<void> importSeenItems(List<SeenItemModel> items, {required ImportMode mode}) async {
+  Future<void> importSeenItems(
+    List<SeenItemModel> items, {
+    required ImportMode mode,
+  }) async {
     if (mode == ImportMode.replace) {
       await _isar.writeTxn(() async {
         await _isar.seenItemModels.clear();
@@ -235,11 +254,11 @@ class MediaListLocalDataSource {
               .seasonNumberEqualTo(item.seasonNumber)
               .episodeNumberEqualTo(item.episodeNumber)
               .seenDateBetween(
-                item.seenDate.subtract(const Duration(seconds: 1)), 
-                item.seenDate.add(const Duration(seconds: 1))
+                item.seenDate.subtract(const Duration(seconds: 1)),
+                item.seenDate.add(const Duration(seconds: 1)),
               )
               .findFirst();
-          
+
           if (existing == null) {
             await _isar.seenItemModels.put(item);
           }
@@ -268,11 +287,9 @@ class MediaListLocalDataSource {
       if (existing != null) {
         await _isar.likedItems.delete(existing.isarId!);
       } else {
-        await _isar.likedItems.put(LikedItem(
-          tmdbId: tmdbId,
-          type: type,
-          title: title,
-        ));
+        await _isar.likedItems.put(
+          LikedItem(tmdbId: tmdbId, type: type, title: title),
+        );
       }
     });
   }
@@ -326,33 +343,36 @@ class MediaListLocalDataSource {
           await _isar.notifiedItemModels.put(updated);
         }
       } else {
-        await _isar.notifiedItemModels.put(NotifiedItemModel(
-          tmdbId: tmdbId,
-          type: type,
-          title: title,
-          posterPath: posterPath,
-          releaseDate: releaseDate,
-          seasonNumber: seasonNumber,
-          episodeNumber: episodeNumber,
-          autoNotify: autoNotify,
-        ));
+        await _isar.notifiedItemModels.put(
+          NotifiedItemModel(
+            tmdbId: tmdbId,
+            type: type,
+            title: title,
+            posterPath: posterPath,
+            releaseDate: releaseDate,
+            seasonNumber: seasonNumber,
+            episodeNumber: episodeNumber,
+            autoNotify: autoNotify,
+          ),
+        );
       }
     });
   }
 
   Future<void> updateNotificationDate(
-    int tmdbId, 
-    String type, 
-    DateTime date, 
-    {int? seasonNumber, int? episodeNumber}
-  ) async {
+    int tmdbId,
+    String type,
+    DateTime date, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
     await _isar.writeTxn(() async {
       final existing = await _isar.notifiedItemModels
           .filter()
           .tmdbIdEqualTo(tmdbId)
           .typeEqualTo(type)
           .findFirst();
-      
+
       if (existing != null) {
         final updated = NotifiedItemModel(
           tmdbId: existing.tmdbId,

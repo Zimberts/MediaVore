@@ -81,13 +81,15 @@ class AchievementRepositoryImpl implements AchievementRepository {
       ..sort((a, b) => a.seenDate.compareTo(b.seenDate));
 
     final unlockedModels = await _isar.achievementModels.where().findAll();
-    final unlockedMap = {for (var m in unlockedModels) m.achievementId: m.unlockedAt};
+    final unlockedMap = {
+      for (var m in unlockedModels) m.achievementId: m.unlockedAt,
+    };
 
     return _definitions.map((def) {
       final progressData = _calculateProgress(def.id, chronologicalItems);
       final persistedUnlockDate = unlockedMap[def.id];
       final calculatedUnlockDate = progressData.milestoneReachedAt;
-      
+
       return Achievement(
         id: def.id,
         title: def.title,
@@ -103,18 +105,23 @@ class AchievementRepositoryImpl implements AchievementRepository {
   }
 
   @override
-  Future<void> unlockAchievement(String achievementId, DateTime unlockedAt) async {
+  Future<void> unlockAchievement(
+    String achievementId,
+    DateTime unlockedAt,
+  ) async {
     await _isar.writeTxn(() async {
       final existing = await _isar.achievementModels
           .filter()
           .achievementIdEqualTo(achievementId)
           .findFirst();
-      
+
       if (existing == null) {
-        await _isar.achievementModels.put(AchievementModel(
-          achievementId: achievementId,
-          unlockedAt: unlockedAt,
-        ));
+        await _isar.achievementModels.put(
+          AchievementModel(
+            achievementId: achievementId,
+            unlockedAt: unlockedAt,
+          ),
+        );
       }
     });
   }
@@ -212,17 +219,28 @@ class AchievementRepositoryImpl implements AchievementRepository {
     );
   }
 
-  _ProgressData _genreMilestone(List<SeenItemModel> items, String genre, int target) {
-    final filtered = items.where((i) => i.genres?.contains(genre) ?? false).toList();
+  _ProgressData _genreMilestone(
+    List<SeenItemModel> items,
+    String genre,
+    int target,
+  ) {
+    final filtered = items
+        .where((i) => i.genres?.contains(genre) ?? false)
+        .toList();
     final count = filtered.length;
     return _ProgressData(
       (count / target).clamp(0.0, 1.0),
       '$count/$target',
-      milestoneReachedAt: count >= target ? filtered[target - 1].seenDate : null,
+      milestoneReachedAt: count >= target
+          ? filtered[target - 1].seenDate
+          : null,
     );
   }
 
-  _ProgressData _runtimeMilestone(List<SeenItemModel> items, int targetMinutes) {
+  _ProgressData _runtimeMilestone(
+    List<SeenItemModel> items,
+    int targetMinutes,
+  ) {
     int total = 0;
     DateTime? reachedAt;
     for (final item in items) {
@@ -238,13 +256,19 @@ class AchievementRepositoryImpl implements AchievementRepository {
     );
   }
 
-  _ProgressData _rewatchMilestone(List<SeenItemModel> items, int target, {bool isTv = false}) {
+  _ProgressData _rewatchMilestone(
+    List<SeenItemModel> items,
+    int target, {
+    bool isTv = false,
+  }) {
     final counts = <String, int>{};
     int maxCount = 0;
     DateTime? reachedAt;
 
     for (final item in items) {
-      final key = isTv ? '${item.tmdbId}_${item.seasonNumber}_${item.episodeNumber}' : '${item.tmdbId}';
+      final key = isTv
+          ? '${item.tmdbId}_${item.seasonNumber}_${item.episodeNumber}'
+          : '${item.tmdbId}';
       counts[key] = (counts[key] ?? 0) + 1;
       if (counts[key]! >= target && reachedAt == null) {
         reachedAt = item.seenDate;
@@ -281,9 +305,16 @@ class AchievementRepositoryImpl implements AchievementRepository {
 
   _ProgressData _streakMilestone(List<SeenItemModel> items, int target) {
     if (items.isEmpty) return const _ProgressData(0.0, '0/0');
-    
-    final dates = items.map((i) => DateTime(i.seenDate.year, i.seenDate.month, i.seenDate.day)).toSet().toList()
-      ..sort();
+
+    final dates =
+        items
+            .map(
+              (i) =>
+                  DateTime(i.seenDate.year, i.seenDate.month, i.seenDate.day),
+            )
+            .toSet()
+            .toList()
+          ..sort();
 
     int currentStreak = 1;
     int maxStreak = 1;

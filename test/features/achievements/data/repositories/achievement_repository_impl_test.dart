@@ -38,9 +38,16 @@ void main() {
   group('AchievementRepositoryImpl', () {
     test('should calculate Movie Starter progress correctly', () async {
       final seenItems = [
-        SeenItemModel(tmdbId: 1, type: 'movie', title: 'M1', seenDate: DateTime(2023, 1, 1)),
+        SeenItemModel(
+          tmdbId: 1,
+          type: 'movie',
+          title: 'M1',
+          seenDate: DateTime(2023, 1, 1),
+        ),
       ];
-      when(() => mockDataSource.getAllSeenItems()).thenAnswer((_) async => seenItems);
+      when(
+        () => mockDataSource.getAllSeenItems(),
+      ).thenAnswer((_) async => seenItems);
 
       final achievements = await repository.getAchievements();
       final starter = achievements.firstWhere((a) => a.id == 'movie_1');
@@ -52,15 +59,18 @@ void main() {
 
     test('should calculate Night Owl progress correctly', () async {
       // 1 AM is a Night Owl hour
-      final seenItems = List.generate(10, (index) => 
-        SeenItemModel(
-          tmdbId: index, 
-          type: 'movie', 
-          title: 'M', 
+      final seenItems = List.generate(
+        10,
+        (index) => SeenItemModel(
+          tmdbId: index,
+          type: 'movie',
+          title: 'M',
           seenDate: DateTime(2023, 1, 1, 1),
-        )
+        ),
       );
-      when(() => mockDataSource.getAllSeenItems()).thenAnswer((_) async => seenItems);
+      when(
+        () => mockDataSource.getAllSeenItems(),
+      ).thenAnswer((_) async => seenItems);
 
       final achievements = await repository.getAchievements();
       final nightOwl = achievements.firstWhere((a) => a.id == 'night_owl');
@@ -80,7 +90,9 @@ void main() {
 
     test('clearAchievements should remove all from DB', () async {
       await isar.writeTxn(() async {
-        await isar.achievementModels.put(AchievementModel(achievementId: '1', unlockedAt: DateTime.now()));
+        await isar.achievementModels.put(
+          AchievementModel(achievementId: '1', unlockedAt: DateTime.now()),
+        );
       });
 
       await repository.clearAchievements();

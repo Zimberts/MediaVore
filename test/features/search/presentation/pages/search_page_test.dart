@@ -21,14 +21,16 @@ void main() {
     registerFallbackValue(Uri());
     registerFallbackValue(FakeMediaItem());
     registerFallbackValue(MediaType.movie);
-    registerFallbackValue(const MediaItem(
-      id: 0,
-      title: '',
-      overview: '',
-      posterPath: null,
-      releaseDate: '',
-      mediaType: MediaType.movie,
-    ));
+    registerFallbackValue(
+      const MediaItem(
+        id: 0,
+        title: '',
+        overview: '',
+        posterPath: null,
+        releaseDate: '',
+        mediaType: MediaType.movie,
+      ),
+    );
   });
 
   setUp(() {
@@ -39,33 +41,57 @@ void main() {
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
-    
+
     // Default mocks for initialization
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist']);
+    when(
+      () => mockMediaRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
     when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit')))
-        .thenAnswer((_) async => []);
-    when(() => mockMediaRepository.addToList(any(), any())).thenAnswer((_) async => Future.value());
-    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.toggleNotification(any(), autoNotify: any(named: 'autoNotify')))
-        .thenAnswer((_) async => Future.value());
-    
+    when(
+      () => mockMediaRepository.getSeenStatus(any(), any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListPreviews(
+        any(),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.addToList(any(), any()),
+    ).thenAnswer((_) async => Future.value());
+    when(
+      () => mockMediaRepository.getLikedEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getNotifiedItems(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.toggleNotification(
+        any(),
+        autoNotify: any(named: 'autoNotify'),
+      ),
+    ).thenAnswer((_) async => Future.value());
+
     // Default discovery mocks
-    when(() => mockMediaRepository.discoverMedia(
-      page: any(named: 'page'),
-      genreIds: any(named: 'genreIds'),
-      releaseYear: any(named: 'releaseYear'),
-      minRating: any(named: 'minRating'),
-      language: any(named: 'language'),
-      type: any(named: 'type'),
-      sortBy: any(named: 'sortBy'),
-    )).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.discoverMedia(
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        type: any(named: 'type'),
+        sortBy: any(named: 'sortBy'),
+      ),
+    ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
@@ -91,33 +117,51 @@ void main() {
   }
 
   group('SearchPage (DiscoveryPage)', () {
-    testWidgets('shows discovery results initially', (WidgetTester tester) async {
+    testWidgets('shows discovery results initially', (
+      WidgetTester tester,
+    ) async {
       final movieItems = [
-        const MediaItem(id: 1, title: 'Trending Movie', overview: 'O', releaseDate: '2023', mediaType: MediaType.movie),
+        const MediaItem(
+          id: 1,
+          title: 'Trending Movie',
+          overview: 'O',
+          releaseDate: '2023',
+          mediaType: MediaType.movie,
+        ),
       ];
       final tvItems = [
-        const MediaItem(id: 2, title: 'Trending TV', overview: 'O', releaseDate: '2023', mediaType: MediaType.tv),
+        const MediaItem(
+          id: 2,
+          title: 'Trending TV',
+          overview: 'O',
+          releaseDate: '2023',
+          mediaType: MediaType.tv,
+        ),
       ];
 
-      when(() => mockMediaRepository.discoverMedia(
-        type: MediaType.movie,
-        page: any(named: 'page'),
-        genreIds: any(named: 'genreIds'),
-        releaseYear: any(named: 'releaseYear'),
-        minRating: any(named: 'minRating'),
-        language: any(named: 'language'),
-        sortBy: any(named: 'sortBy'),
-      )).thenAnswer((_) async => movieItems);
+      when(
+        () => mockMediaRepository.discoverMedia(
+          type: MediaType.movie,
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          language: any(named: 'language'),
+          sortBy: any(named: 'sortBy'),
+        ),
+      ).thenAnswer((_) async => movieItems);
 
-      when(() => mockMediaRepository.discoverMedia(
-        type: MediaType.tv,
-        page: any(named: 'page'),
-        genreIds: any(named: 'genreIds'),
-        releaseYear: any(named: 'releaseYear'),
-        minRating: any(named: 'minRating'),
-        language: any(named: 'language'),
-        sortBy: any(named: 'sortBy'),
-      )).thenAnswer((_) async => tvItems);
+      when(
+        () => mockMediaRepository.discoverMedia(
+          type: MediaType.tv,
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          language: any(named: 'language'),
+          sortBy: any(named: 'sortBy'),
+        ),
+      ).thenAnswer((_) async => tvItems);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -129,31 +173,49 @@ void main() {
       expect(find.text('Discover'), findsOneWidget);
     });
 
-    testWidgets('toggles search bar and triggers auto-search', (WidgetTester tester) async {
+    testWidgets('toggles search bar and triggers auto-search', (
+      WidgetTester tester,
+    ) async {
       final movieItems = [
-        const MediaItem(id: 2, title: 'Search Movie', overview: 'O', releaseDate: '2023', mediaType: MediaType.movie),
+        const MediaItem(
+          id: 2,
+          title: 'Search Movie',
+          overview: 'O',
+          releaseDate: '2023',
+          mediaType: MediaType.movie,
+        ),
       ];
       final tvItems = [
-        const MediaItem(id: 3, title: 'Search TV', overview: 'O', releaseDate: '2023', mediaType: MediaType.tv),
+        const MediaItem(
+          id: 3,
+          title: 'Search TV',
+          overview: 'O',
+          releaseDate: '2023',
+          mediaType: MediaType.tv,
+        ),
       ];
-      when(() => mockMediaRepository.searchMedia(
-        'test', 
-        page: any(named: 'page'),
-        genreIds: any(named: 'genreIds'),
-        releaseYear: any(named: 'releaseYear'),
-        minRating: any(named: 'minRating'),
-        language: any(named: 'language'),
-        type: MediaType.movie,
-      )).thenAnswer((_) async => movieItems);
-      when(() => mockMediaRepository.searchMedia(
-        'test', 
-        page: any(named: 'page'),
-        genreIds: any(named: 'genreIds'),
-        releaseYear: any(named: 'releaseYear'),
-        minRating: any(named: 'minRating'),
-        language: any(named: 'language'),
-        type: MediaType.tv,
-      )).thenAnswer((_) async => tvItems);
+      when(
+        () => mockMediaRepository.searchMedia(
+          'test',
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          language: any(named: 'language'),
+          type: MediaType.movie,
+        ),
+      ).thenAnswer((_) async => movieItems);
+      when(
+        () => mockMediaRepository.searchMedia(
+          'test',
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          language: any(named: 'language'),
+          type: MediaType.tv,
+        ),
+      ).thenAnswer((_) async => tvItems);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -168,7 +230,7 @@ void main() {
 
       // Enter text
       await tester.enterText(find.byType(TextField), 'test');
-      
+
       // Wait for debounce
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
@@ -178,11 +240,13 @@ void main() {
       expect(find.text('Search TV'), findsOneWidget);
     });
 
-    testWidgets('opens filter dialog and applies changes', (WidgetTester tester) async {
+    testWidgets('opens filter dialog and applies changes', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      
+
       // Clear initial discovery calls
       clearInteractions(mockMediaRepository);
 
@@ -203,15 +267,17 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      verify(() => mockMediaRepository.discoverMedia(
-        page: 1,
-        type: MediaType.tv,
-        genreIds: any(named: 'genreIds'),
-        releaseYear: any(named: 'releaseYear'),
-        minRating: any(named: 'minRating'),
-        language: any(named: 'language'),
-        sortBy: any(named: 'sortBy'),
-      )).called(1);
+      verify(
+        () => mockMediaRepository.discoverMedia(
+          page: 1,
+          type: MediaType.tv,
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          language: any(named: 'language'),
+          sortBy: any(named: 'sortBy'),
+        ),
+      ).called(1);
     });
   });
 }

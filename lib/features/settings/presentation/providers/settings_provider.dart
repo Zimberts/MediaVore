@@ -36,7 +36,7 @@ class SettingsProvider with ChangeNotifier {
       displayModeIndex = 0;
     }
     _displayMode = DisplayMode.values[displayModeIndex];
-    
+
     _gridSize = _prefs.getDouble('gridSize') ?? 3.0;
     _hideNonReleased = _prefs.getBool('hideNonReleased') ?? false;
 
@@ -44,7 +44,7 @@ class SettingsProvider with ChangeNotifier {
     if (_lightAppThemeIndex < 0 || _lightAppThemeIndex >= lightThemes.length) {
       _lightAppThemeIndex = 0;
     }
-    
+
     _darkAppThemeIndex = _prefs.getInt('darkAppTheme') ?? 0;
     if (_darkAppThemeIndex < 0 || _darkAppThemeIndex >= darkThemes.length) {
       _darkAppThemeIndex = 0;
@@ -55,7 +55,7 @@ class SettingsProvider with ChangeNotifier {
       themeModeIndex = 0;
     }
     _themeMode = ThemeMode.values[themeModeIndex];
-    
+
     notifyListeners();
   }
 

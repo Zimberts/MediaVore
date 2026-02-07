@@ -15,19 +15,16 @@ abstract class DatabaseModule {
   @singleton
   Future<Isar> get isar async {
     final dir = await getApplicationDocumentsDirectory();
-    return await Isar.open(
-      [
-        UserListSchema,
-        MediaListItemSchema,
-        SeenItemModelSchema,
-        LikedItemSchema,
-        NotifiedItemModelSchema,
-        CachedMediaSchema,
-        CachedActorProfileSchema,
-        CachedSeasonSchema,
-        AchievementModelSchema,
-      ],
-      directory: dir.path,
-    );
+    return await Isar.open([
+      UserListSchema,
+      MediaListItemSchema,
+      SeenItemModelSchema,
+      LikedItemSchema,
+      NotifiedItemModelSchema,
+      CachedMediaSchema,
+      CachedActorProfileSchema,
+      CachedSeasonSchema,
+      AchievementModelSchema,
+    ], directory: dir.path);
   }
 }

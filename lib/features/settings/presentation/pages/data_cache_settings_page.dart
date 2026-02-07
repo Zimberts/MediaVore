@@ -26,9 +26,7 @@ class DataCacheSettingsPage extends StatelessWidget {
     final colors = context.appColors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Storage & Data'),
-      ),
+      appBar: AppBar(title: const Text('Storage & Data')),
       body: Stack(
         children: [
           ListView(
@@ -37,42 +35,55 @@ class DataCacheSettingsPage extends StatelessWidget {
               ListTile(
                 title: const Text('Cache Size'),
                 subtitle: Text(_formatBytes(provider.cacheSize)),
-                trailing: isCacheLoading 
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                  : IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: () => provider.updateCacheSize(),
-                    ),
+                trailing: isCacheLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () => provider.updateCacheSize(),
+                      ),
               ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.cleaning_services),
                 title: const Text('Cleanup Cache'),
-                subtitle: const Text('Remove old, unused search results and details.'),
+                subtitle: const Text(
+                  'Remove old, unused search results and details.',
+                ),
                 enabled: !isCacheLoading,
                 onTap: () => _confirmAction(
                   context,
                   title: 'Cleanup Cache',
-                  message: 'This will remove search results and details older than 60 days that are not in your lists.',
+                  message:
+                      'This will remove search results and details older than 60 days that are not in your lists.',
                   action: () => provider.clearCache(complete: false),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.download),
                 title: const Text('Fill Cache'),
-                subtitle: const Text('Pre-cache all items in your lists and recent history for offline use.'),
+                subtitle: const Text(
+                  'Pre-cache all items in your lists and recent history for offline use.',
+                ),
                 enabled: !isCacheLoading,
                 onTap: () => provider.fillCache(),
               ),
               ListTile(
                 leading: Icon(Icons.delete_forever, color: colors.error),
-                title: Text('Wipe All Cache', style: TextStyle(color: colors.error)),
+                title: Text(
+                  'Wipe All Cache',
+                  style: TextStyle(color: colors.error),
+                ),
                 subtitle: const Text('Delete everything from cache.'),
                 enabled: !isCacheLoading,
                 onTap: () => _confirmAction(
                   context,
                   title: 'Wipe All Cache',
-                  message: 'This will delete ALL cached posters and details. You will need internet to see them again.',
+                  message:
+                      'This will delete ALL cached posters and details. You will need internet to see them again.',
                   action: () => provider.clearCache(complete: true),
                 ),
               ),
@@ -81,25 +92,35 @@ class DataCacheSettingsPage extends StatelessWidget {
               ListTile(
                 title: const Text('Seen Database Size'),
                 subtitle: Text(_formatBytes(provider.seenDbSize)),
-                trailing: isDbSizeLoading 
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                  : IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: () => provider.updateSeenDbSize(),
-                    ),
+                trailing: isDbSizeLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () => provider.updateSeenDbSize(),
+                      ),
               ),
               ListTile(
                 leading: const Icon(Icons.update),
                 title: const Text('Refetch Media Runtimes'),
-                subtitle: const Text('Fetch missing runtimes and genres for your history.'),
+                subtitle: const Text(
+                  'Fetch missing runtimes and genres for your history.',
+                ),
                 enabled: !isImporting,
                 onTap: () => _confirmAction(
                   context,
                   title: 'Refetch Data',
-                  message: 'This will check your seen history and fetch any missing runtimes or genres from TMDb. This might take a while.',
+                  message:
+                      'This will check your seen history and fetch any missing runtimes or genres from TMDb. This might take a while.',
                   action: () async {
                     final data = await provider.exportSeenData();
-                    await provider.importSeenData(data, mode: ImportMode.replace);
+                    await provider.importSeenData(
+                      data,
+                      mode: ImportMode.replace,
+                    );
                   },
                 ),
               ),
@@ -112,25 +133,35 @@ class DataCacheSettingsPage extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.download_for_offline),
                 title: const Text('Import Seen History'),
-                subtitle: const Text('Import viewing history from a JSON file.'),
+                subtitle: const Text(
+                  'Import viewing history from a JSON file.',
+                ),
                 onTap: () => _importSeenData(context, provider),
               ),
               const Divider(),
               const _SectionHeader(title: 'Achievement Data'),
               ListTile(
                 leading: Icon(Icons.stars_outlined, color: colors.error),
-                title: Text('Clear Achievement Database', style: TextStyle(color: colors.error)),
-                subtitle: const Text('Remove all persisted achievement milestones.'),
+                title: Text(
+                  'Clear Achievement Database',
+                  style: TextStyle(color: colors.error),
+                ),
+                subtitle: const Text(
+                  'Remove all persisted achievement milestones.',
+                ),
                 onTap: () => _confirmAction(
                   context,
                   title: 'Clear Achievements?',
-                  message: 'This will remove all persisted achievement dates from the database. '
-                           'Achievements calculated from your watch history will reappear automatically.',
+                  message:
+                      'This will remove all persisted achievement dates from the database. '
+                      'Achievements calculated from your watch history will reappear automatically.',
                   action: () async {
                     await achievementProvider.clearAchievements();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Achievement database cleared.')),
+                        const SnackBar(
+                          content: Text('Achievement database cleared.'),
+                        ),
                       );
                     }
                   },
@@ -148,17 +179,21 @@ class DataCacheSettingsPage extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(value: isImporting ? provider.importProgress : null),
+                        CircularProgressIndicator(
+                          value: isImporting ? provider.importProgress : null,
+                        ),
                         const SizedBox(height: 16),
                         Text(
-                          isImporting ? provider.importStatus : 'Processing...', 
+                          isImporting ? provider.importStatus : 'Processing...',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
                         if (isImporting)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: Text('${(provider.importProgress * 100).toInt()}%'),
+                            child: Text(
+                              '${(provider.importProgress * 100).toInt()}%',
+                            ),
                           ),
                       ],
                     ),
@@ -180,7 +215,10 @@ class DataCacheSettingsPage extends StatelessWidget {
 
   String get _defaultPath => '/storage/emulated/0/Download/MediaVore';
 
-  Future<void> _showExportOptions(BuildContext context, SearchProvider provider) async {
+  Future<void> _showExportOptions(
+    BuildContext context,
+    SearchProvider provider,
+  ) async {
     showModalBottomSheet(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -206,7 +244,12 @@ class DataCacheSettingsPage extends StatelessWidget {
                   lastDate: DateTime.now().add(const Duration(days: 1)),
                 );
                 if (picked != null && context.mounted) {
-                  _exportSeenData(context, provider, start: picked.start, end: picked.end);
+                  _exportSeenData(
+                    context,
+                    provider,
+                    start: picked.start,
+                    end: picked.end,
+                  );
                 }
               },
             ),
@@ -217,31 +260,35 @@ class DataCacheSettingsPage extends StatelessWidget {
   }
 
   Future<void> _exportSeenData(
-    BuildContext context, 
+    BuildContext context,
     SearchProvider provider, {
-    DateTime? start, 
+    DateTime? start,
     DateTime? end,
   }) async {
     try {
       final data = await provider.exportSeenData(start: start, end: end);
-      
+
       if (!context.mounted) return;
 
       if (data.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No history found for the selected criteria.')),
+          const SnackBar(
+            content: Text('No history found for the selected criteria.'),
+          ),
         );
         return;
       }
 
       final jsonString = jsonEncode(data);
-      
+
       final tempDir = await getTemporaryDirectory();
       String suffix = '';
       if (start != null && end != null) {
-        suffix = '_${DateFormat('yyyyMMdd').format(start)}_to_${DateFormat('yyyyMMdd').format(end)}';
+        suffix =
+            '_${DateFormat('yyyyMMdd').format(start)}_to_${DateFormat('yyyyMMdd').format(end)}';
       }
-      final fileName = 'mediavore_seen_history${suffix}_${DateTime.now().millisecondsSinceEpoch}.json';
+      final fileName =
+          'mediavore_seen_history${suffix}_${DateTime.now().millisecondsSinceEpoch}.json';
       final tempFile = File('${tempDir.path}/$fileName');
       await tempFile.writeAsString(jsonString);
 
@@ -255,7 +302,9 @@ class DataCacheSettingsPage extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.save_alt),
                   title: const Text('Save to device'),
-                  subtitle: const Text('Choose location (defaults to Download)'),
+                  subtitle: const Text(
+                    'Choose location (defaults to Download)',
+                  ),
                   onTap: () async {
                     Navigator.pop(saveSheetContext);
                     await _saveFileToDevice(context, jsonString, fileName);
@@ -267,10 +316,9 @@ class DataCacheSettingsPage extends StatelessWidget {
                   subtitle: const Text('Use the system share sheet'),
                   onTap: () async {
                     Navigator.pop(saveSheetContext);
-                    await Share.shareXFiles(
-                      [XFile(tempFile.path, mimeType: 'application/json')], 
-                      text: 'My MediaVore Seen History'
-                    );
+                    await Share.shareXFiles([
+                      XFile(tempFile.path, mimeType: 'application/json'),
+                    ], text: 'My MediaVore Seen History');
                   },
                 ),
               ],
@@ -280,17 +328,21 @@ class DataCacheSettingsPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
       }
     }
   }
 
-  Future<void> _saveFileToDevice(BuildContext context, String jsonString, String fileName) async {
+  Future<void> _saveFileToDevice(
+    BuildContext context,
+    String jsonString,
+    String fileName,
+  ) async {
     try {
       final bytes = utf8.encode(jsonString);
-      
+
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Save Seen History',
         fileName: fileName,
@@ -306,13 +358,18 @@ class DataCacheSettingsPage extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Save failed: $e. Try using "Share" instead.')),
+          SnackBar(
+            content: Text('Save failed: $e. Try using "Share" instead.'),
+          ),
         );
       }
     }
   }
 
-  Future<void> _importSeenData(BuildContext context, SearchProvider provider) async {
+  Future<void> _importSeenData(
+    BuildContext context,
+    SearchProvider provider,
+  ) async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
@@ -324,20 +381,23 @@ class DataCacheSettingsPage extends StatelessWidget {
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
       final content = await file.readAsString();
-      
+
       if (!context.mounted) return;
       final colors = context.appColors;
-      
+
       try {
         final List<dynamic> data = jsonDecode(content);
-        final List<Map<String, dynamic>> seenData = data.cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> seenData = data
+            .cast<Map<String, dynamic>>();
 
         if (context.mounted) {
           showDialog(
             context: context,
             builder: (dialogContext) => AlertDialog(
               title: const Text('Import Seen History'),
-              content: Text('You are about to import ${seenData.length} entries. Choose how to handle your current history:'),
+              content: Text(
+                'You are about to import ${seenData.length} entries. Choose how to handle your current history:',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
@@ -346,10 +406,15 @@ class DataCacheSettingsPage extends StatelessWidget {
                 TextButton(
                   onPressed: () async {
                     Navigator.pop(dialogContext);
-                    await provider.importSeenData(seenData, mode: ImportMode.append);
+                    await provider.importSeenData(
+                      seenData,
+                      mode: ImportMode.append,
+                    );
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Imported successfully (Appended)')),
+                        const SnackBar(
+                          content: Text('Imported successfully (Appended)'),
+                        ),
                       );
                     }
                   },
@@ -358,10 +423,15 @@ class DataCacheSettingsPage extends StatelessWidget {
                 TextButton(
                   onPressed: () async {
                     Navigator.pop(dialogContext);
-                    await provider.importSeenData(seenData, mode: ImportMode.merge);
+                    await provider.importSeenData(
+                      seenData,
+                      mode: ImportMode.merge,
+                    );
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Imported successfully (Merged)')),
+                        const SnackBar(
+                          content: Text('Imported successfully (Merged)'),
+                        ),
                       );
                     }
                   },
@@ -372,10 +442,15 @@ class DataCacheSettingsPage extends StatelessWidget {
                     Navigator.pop(dialogContext);
                     final confirmed = await _confirmReplace(context);
                     if (confirmed && context.mounted) {
-                      await provider.importSeenData(seenData, mode: ImportMode.replace);
+                      await provider.importSeenData(
+                        seenData,
+                        mode: ImportMode.replace,
+                      );
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Imported successfully (Replaced)')),
+                          const SnackBar(
+                            content: Text('Imported successfully (Replaced)'),
+                          ),
                         );
                       }
                     }
@@ -399,22 +474,28 @@ class DataCacheSettingsPage extends StatelessWidget {
   Future<bool> _confirmReplace(BuildContext context) async {
     final colors = context.appColors;
     return await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('DANGER: Replace History'),
-        content: const Text('This will delete all your current seen history and replace it with the data from the file. This action cannot be undone. Are you absolutely sure?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('DANGER: Replace History'),
+            content: const Text(
+              'This will delete all your current seen history and replace it with the data from the file. This action cannot be undone. Are you absolutely sure?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(
+                  'Yes, Replace Everything',
+                  style: TextStyle(color: colors.error),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Yes, Replace Everything', style: TextStyle(color: colors.error)),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   void _confirmAction(
@@ -435,7 +516,7 @@ class DataCacheSettingsPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(dialogContext); 
+              Navigator.pop(dialogContext);
               await action();
             },
             child: const Text('Proceed'),
