@@ -14,7 +14,7 @@ class SeenManager extends StatefulWidget {
   final bool compact;
 
   const SeenManager({
-    super.key, 
+    super.key,
     required this.item,
     this.seasonNumber,
     this.episodeNumber,
@@ -30,17 +30,20 @@ class _SeenManagerState extends State<SeenManager> {
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
     final colors = context.appColors;
-    
+
     bool isSeen;
     int? count;
-    
+
     if (widget.seasonNumber != null && widget.episodeNumber != null) {
-      final history = provider.seenItems.where((s) => 
-        s.tmdbId == widget.item.id && 
-        s.type == widget.item.mediaType && 
-        s.seasonNumber == widget.seasonNumber && 
-        s.episodeNumber == widget.episodeNumber
-      ).toList();
+      final history = provider.seenItems
+          .where(
+            (s) =>
+                s.tmdbId == widget.item.id &&
+                s.type == widget.item.mediaType &&
+                s.seasonNumber == widget.seasonNumber &&
+                s.episodeNumber == widget.episodeNumber,
+          )
+          .toList();
       isSeen = history.isNotEmpty;
       count = history.length;
     } else {
@@ -51,7 +54,8 @@ class _SeenManagerState extends State<SeenManager> {
     final isTv = widget.item.mediaType == MediaType.tv;
 
     // Use a single smart button for compact/episode views to avoid duplication
-    if (widget.compact || (widget.seasonNumber != null && widget.episodeNumber != null)) {
+    if (widget.compact ||
+        (widget.seasonNumber != null && widget.episodeNumber != null)) {
       return IconButton(
         icon: Icon(
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
@@ -88,29 +92,70 @@ class _SeenManagerState extends State<SeenManager> {
     );
   }
 
-  Future<void> _markAsSeenWithFlow(BuildContext context, SearchProvider provider) async {
+  Future<void> _markAsSeenWithFlow(
+    BuildContext context,
+    SearchProvider provider,
+  ) async {
     final item = widget.item;
     final seasonNumber = widget.seasonNumber;
     final episodeNumber = widget.episodeNumber;
 
     final DateTime? finalDateTime = await showDialog<DateTime>(
       context: context,
-      builder: (dialogContext) => _SeenDateTimePickerDialog(
-        item: item,
-        initialDate: DateTime.now(),
-      ),
+      builder: (dialogContext) =>
+          _SeenDateTimePickerDialog(item: item, initialDate: DateTime.now()),
     );
 
     if (finalDateTime != null) {
-      await provider.markAsSeen(SeenItem(
-        tmdbId: item.id,
-        type: item.mediaType,
-        title: item.title,
-        posterPath: item.posterPath,
-        seasonNumber: seasonNumber,
-        episodeNumber: episodeNumber,
-        seenDate: finalDateTime,
-      ));
+      await provider.markAsSeen(
+        SeenItem(
+          tmdbId: item.id,
+          type: item.mediaType,
+          title: item.title,
+          posterPath: item.posterPath,
+          seasonNumber: seasonNumber,
+          episodeNumber: episodeNumber,
+          seenDate: finalDateTime,
+        ),
+      );
+
+      // If this was a movie or the last episode / no next episode of a
+      // discontinued TV series, remove it from the watchlist if present.
+      try {
+        final inWatchlist = provider.isItemInList(item, 'watchlist');
+
+        if (item.mediaType == MediaType.movie) {
+          if (inWatchlist) await provider.toggleInList(item, 'watchlist');
+        } else if (item.mediaType == MediaType.tv &&
+            seasonNumber != null &&
+            episodeNumber != null) {
+          final isLastEpisode =
+              item.lastSeasonNumber != null &&
+              item.lastEpisodeNumber != null &&
+              item.lastSeasonNumber == seasonNumber &&
+              item.lastEpisodeNumber == episodeNumber;
+
+          // Treat multiple discontinued variants
+          final discontinued =
+              item.status != null &&
+              {'ended', 'canceled'}.contains(item.status!.toLowerCase());
+
+          // Also check for no next episode according to provider (covers
+          // cases where lastEpisodeNumber may not match or all episodes
+          // already seen).
+          bool noNext = false;
+          try {
+            final next = await provider.getNextEpisode(item.id);
+            if (next == null) noNext = true;
+          } catch (_) {
+            noNext = false;
+          }
+
+          if ((isLastEpisode || noNext) && discontinued && inWatchlist) {
+            await provider.toggleInList(item, 'watchlist');
+          }
+        }
+      } catch (_) {}
     }
   }
 
@@ -120,9 +165,14 @@ class _SeenManagerState extends State<SeenManager> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Clear History'),
-        content: Text('Are you sure you want to clear all viewing history for "${widget.item.title}"?'),
+        content: Text(
+          'Are you sure you want to clear all viewing history for "${widget.item.title}"?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               provider.removeFromSeen(widget.item.id, widget.item.mediaType);
@@ -136,13 +186,16 @@ class _SeenManagerState extends State<SeenManager> {
   }
 
   void _showSeenHistory(BuildContext context, SearchProvider provider) {
-    final history = provider.seenItems.where((s) => 
-      s.tmdbId == widget.item.id && 
-      s.type == widget.item.mediaType &&
-      s.seasonNumber == widget.seasonNumber &&
-      s.episodeNumber == widget.episodeNumber
-    ).toList();
-    
+    final history = provider.seenItems
+        .where(
+          (s) =>
+              s.tmdbId == widget.item.id &&
+              s.type == widget.item.mediaType &&
+              s.seasonNumber == widget.seasonNumber &&
+              s.episodeNumber == widget.episodeNumber,
+        )
+        .toList();
+
     final colors = context.appColors;
 
     showModalBottomSheet(
@@ -150,18 +203,26 @@ class _SeenManagerState extends State<SeenManager> {
       isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text('Viewing History', style: Theme.of(sheetContext).textTheme.titleLarge),
+                child: Text(
+                  'Viewing History',
+                  style: Theme.of(sheetContext).textTheme.titleLarge,
+                ),
               ),
               const Divider(),
               ListTile(
                 leading: Icon(Icons.add_circle_outline, color: colors.success),
-                title: const Text('Add New Viewing', style: TextStyle(fontWeight: FontWeight.bold)),
+                title: const Text(
+                  'Add New Viewing',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _markAsSeenWithFlow(context, provider);
@@ -182,12 +243,17 @@ class _SeenManagerState extends State<SeenManager> {
                       final seenEntry = history[index];
                       return ListTile(
                         leading: Icon(Icons.event, color: colors.comments),
-                        title: Text(DateFormat('MMM dd, yyyy - HH:mm').format(seenEntry.seenDate)),
+                        title: Text(
+                          DateFormat(
+                            'MMM dd, yyyy - HH:mm',
+                          ).format(seenEntry.seenDate),
+                        ),
                         trailing: IconButton(
                           icon: Icon(Icons.delete_outline, color: colors.error),
                           onPressed: () {
                             provider.deleteSeenEntry(seenEntry.id!);
-                            if (history.length <= 1) Navigator.pop(sheetContext);
+                            if (history.length <= 1)
+                              Navigator.pop(sheetContext);
                           },
                         ),
                       );
@@ -224,7 +290,8 @@ class _SeenDateTimePickerDialog extends StatefulWidget {
   });
 
   @override
-  State<_SeenDateTimePickerDialog> createState() => _SeenDateTimePickerDialogState();
+  State<_SeenDateTimePickerDialog> createState() =>
+      _SeenDateTimePickerDialogState();
 }
 
 class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
@@ -238,7 +305,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
     super.initState();
     _selectedDate = widget.initialDate;
     _selectedTime = TimeOfDay.fromDateTime(widget.initialDate);
-    _dateController = TextEditingController(text: DateFormat('dd/MM/yyyy').format(_selectedDate));
+    _dateController = TextEditingController(
+      text: DateFormat('dd/MM/yyyy').format(_selectedDate),
+    );
   }
 
   @override
@@ -263,7 +332,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final isMovie = widget.item.mediaType == MediaType.movie;
-    
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SingleChildScrollView(
@@ -275,7 +344,11 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
             children: [
               Row(
                 children: [
-                  Icon(isMovie ? Icons.movie : Icons.tv, color: colors.logicFlow, size: 24),
+                  Icon(
+                    isMovie ? Icons.movie : Icons.tv,
+                    color: colors.logicFlow,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -283,11 +356,13 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       children: [
                         Text(
                           'Mark as seen',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(color: colors.comments),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(color: colors.comments),
                         ),
                         Text(
                           widget.item.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -295,8 +370,11 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(_isTextEntry ? Icons.calendar_month : Icons.keyboard),
-                    onPressed: () => setState(() => _isTextEntry = !_isTextEntry),
+                    icon: Icon(
+                      _isTextEntry ? Icons.calendar_month : Icons.keyboard,
+                    ),
+                    onPressed: () =>
+                        setState(() => _isTextEntry = !_isTextEntry),
                     tooltip: _isTextEntry ? 'Use Calendar' : 'Type Date',
                     color: colors.logicFlow,
                   ),
@@ -306,7 +384,8 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
               if (!_isTextEntry)
                 Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: CalendarDatePicker(
@@ -316,7 +395,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     onDateChanged: (date) {
                       setState(() {
                         _selectedDate = date;
-                        _dateController.text = DateFormat('dd/MM/yyyy').format(date);
+                        _dateController.text = DateFormat(
+                          'dd/MM/yyyy',
+                        ).format(date);
                       });
                     },
                   ),
@@ -327,7 +408,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   autofocus: true,
                   decoration: InputDecoration(
                     labelText: 'Date (DD/MM/YYYY)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     prefixIcon: const Icon(Icons.event),
                     hintText: '31/12/2023',
                   ),
@@ -347,9 +430,14 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                 onTap: _pickTime,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
-                    border: Border.all(color: colors.logicFlow.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: colors.logicFlow.withValues(alpha: 0.5),
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -359,7 +447,10 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       const SizedBox(width: 12),
                       Text(
                         'Time: ${DateFormat('HH:mm').format(DateTime(0, 0, 0, _selectedTime.hour, _selectedTime.minute))}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -378,15 +469,22 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.logicFlow,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
                     onPressed: () {
                       try {
                         if (_isTextEntry) {
-                          _selectedDate = DateFormat('dd/MM/yyyy').parseStrict(_dateController.text);
+                          _selectedDate = DateFormat(
+                            'dd/MM/yyyy',
+                          ).parseStrict(_dateController.text);
                         }
-                        
+
                         final result = DateTime(
                           _selectedDate.year,
                           _selectedDate.month,
@@ -397,7 +495,11 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                         Navigator.pop(context, result);
                       } catch (_) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter a valid date (DD/MM/YYYY)')),
+                          const SnackBar(
+                            content: Text(
+                              'Please enter a valid date (DD/MM/YYYY)',
+                            ),
+                          ),
                         );
                       }
                     },
