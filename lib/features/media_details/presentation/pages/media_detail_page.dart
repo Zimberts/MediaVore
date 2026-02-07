@@ -14,6 +14,7 @@ import 'package:mediavore/features/media_details/presentation/widgets/seen_manag
 import 'package:mediavore/features/media_details/presentation/widgets/like_button.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/notify_button.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watch_next_button.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -298,11 +299,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             actions: [
               LikeButton(item: itemToDisplay),
               NotifyButton(item: itemToDisplay),
-              IconButton(
-                icon: const Icon(Icons.file_upload_outlined),
-                onPressed: _exportHistory,
-                tooltip: 'Export history for this item',
-              ),
+              WatchlistIconButton(item: itemToDisplay),
               if (itemToDisplay.mediaType == MediaType.movie)
                 SeenManager(
                   key: ValueKey('seen_movie_${itemToDisplay.id}'),
@@ -623,6 +620,15 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                     const SizedBox(height: 24),
                     MediaListManager(
                       item: itemToDisplay,
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: ElevatedButton.icon(
+                        onPressed: _exportHistory,
+                        icon: const Icon(Icons.file_upload_outlined),
+                        label: const Text('Export history'),
+                      ),
                     ),
                     const SizedBox(height: 40),
                   ],

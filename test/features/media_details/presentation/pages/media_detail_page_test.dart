@@ -223,10 +223,14 @@ void main() {
         await tester.pump();
         await tester.pumpAndSettle();
 
-        final exportButton = find.byIcon(Icons.file_upload_outlined);
-        expect(exportButton, findsOneWidget);
+        // Scroll until the export button is visible.
+        await tester.scrollUntilVisible(find.text('Export history'), 500.0, scrollable: find.byType(Scrollable));
+        await tester.pumpAndSettle();
 
-        await tester.tap(exportButton);
+        final exportButtonText = find.text('Export history');
+        expect(exportButtonText, findsOneWidget);
+
+        await tester.tap(exportButtonText);
         await tester.pumpAndSettle();
 
         expect(find.text('Save to device'), findsOneWidget);
@@ -247,7 +251,11 @@ void main() {
         await tester.pump();
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byIcon(Icons.file_upload_outlined));
+        // Scroll until the export button is visible.
+        await tester.scrollUntilVisible(find.text('Export history'), 500.0, scrollable: find.byType(Scrollable));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Export history'));
         await tester.pumpAndSettle();
 
         expect(find.text('No history to export for this item.'), findsOneWidget);
