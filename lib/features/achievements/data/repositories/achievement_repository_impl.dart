@@ -5,74 +5,25 @@ import 'package:mediavore/features/achievements/domain/entities/achievement.dart
 import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'dart:convert';
+
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:rxdart/rxdart.dart';
 
 @LazySingleton(as: AchievementRepository)
 class AchievementRepositoryImpl implements AchievementRepository {
   final Isar _isar;
   final MediaListLocalDataSource _localDataSource;
+  final Future<List<Map<String, dynamic>>> Function()? definitionsLoader;
 
-  AchievementRepositoryImpl(this._isar, this._localDataSource);
+  AchievementRepositoryImpl(
+    this._isar,
+    this._localDataSource, {
+    this.definitionsLoader,
+  });
 
-  static final List<Achievement> _definitions = [
-    // --- Movies ---
-    const Achievement(id: 'movie_1', title: 'Movie Starter', description: 'Watch your first movie', iconPath: 'assets/achievements/movie_1.png'),
-    const Achievement(id: 'movie_10', title: 'Movie Enthusiast', description: 'Watch 10 movies', iconPath: 'assets/achievements/movie_10.png'),
-    const Achievement(id: 'movie_50', title: 'Film Fanatic', description: 'Watch 50 movies', iconPath: 'assets/achievements/movie_50.png'),
-    const Achievement(id: 'movie_100', title: 'Cinema Buff', description: 'Watch 100 movies', iconPath: 'assets/achievements/movie_100.png'),
-    const Achievement(id: 'movie_500', title: 'Cinema Legend', description: 'Watch 500 movies', iconPath: 'assets/achievements/movie_500.png'),
-    const Achievement(id: 'movie_1000', title: 'Cinematic Guru', description: 'Watch 1000 movies', iconPath: 'assets/achievements/movie_1000.png'),
-
-    // --- TV Shows ---
-    const Achievement(id: 'tv_1', title: 'Series Starter', description: 'Watch your first episode', iconPath: 'assets/achievements/tv_1.png'),
-    const Achievement(id: 'tv_50', title: 'TV Regular', description: 'Watch 50 episodes', iconPath: 'assets/achievements/tv_50.png'),
-    const Achievement(id: 'tv_250', title: 'Binge Watcher', description: 'Watch 250 episodes', iconPath: 'assets/achievements/tv_250.png'),
-    const Achievement(id: 'tv_1000', title: 'TV Master', description: 'Watch 1000 episodes', iconPath: 'assets/achievements/tv_1000.png'),
-    const Achievement(id: 'tv_5000', title: 'TV Addict', description: 'Watch 5000 episodes', iconPath: 'assets/achievements/tv_5000.png'),
-
-    // --- Repeat Viewing ---
-    const Achievement(id: 'rewatch_movie_2', title: 'Encore!', description: 'Watch the same movie twice', iconPath: 'assets/achievements/rewatch_movie_2.png'),
-    const Achievement(id: 'rewatch_movie_5', title: 'Obsessed', description: 'Watch the same movie 5 times', iconPath: 'assets/achievements/rewatch_movie_5.png'),
-    const Achievement(id: 'rewatch_movie_10', title: 'Cult Follower', description: 'Watch the same movie 10 times', iconPath: 'assets/achievements/rewatch_movie_10.png'),
-    const Achievement(id: 'rewatch_ep_2', title: 'Double Take', description: 'Watch the same episode twice', iconPath: 'assets/achievements/rewatch_ep_2.png'),
-    const Achievement(id: 'rewatch_ep_5', title: 'Déjà Vu', description: 'Watch the same episode 5 times', iconPath: 'assets/achievements/rewatch_ep_5.png'),
-
-    // --- Loyalists ---
-    const Achievement(id: 'loyalist_100', title: 'Super Fan', description: 'Watch 100 episodes of the same show', iconPath: 'assets/achievements/loyalist_100.png'),
-    const Achievement(id: 'loyalist_500', title: 'Ultimate Stalker', description: 'Watch 500 episodes of the same show', iconPath: 'assets/achievements/loyalist_500.png'),
-
-    // --- Genres ---
-    const Achievement(id: 'genre_horror', title: 'Scream Queen/King', description: 'Watch 10 horror movies', iconPath: 'assets/achievements/horror.png'),
-    const Achievement(id: 'genre_horror_50', title: 'Horror Harvester', description: 'Watch 50 horror movies', iconPath: 'assets/achievements/horror_50.png'),
-    const Achievement(id: 'genre_comedy', title: 'Laugh Riot', description: 'Watch 20 comedy movies', iconPath: 'assets/achievements/comedy.png'),
-    const Achievement(id: 'genre_comedy_100', title: 'King of Comedy', description: 'Watch 100 comedy movies', iconPath: 'assets/achievements/comedy_100.png'),
-    const Achievement(id: 'genre_action', title: 'Adrenaline Junkie', description: 'Watch 20 action movies', iconPath: 'assets/achievements/action.png'),
-    const Achievement(id: 'genre_action_100', title: 'Action Hero', description: 'Watch 100 action movies', iconPath: 'assets/achievements/action_100.png'),
-    const Achievement(id: 'genre_scifi', title: 'Future Explorer', description: 'Watch 20 sci-fi movies', iconPath: 'assets/achievements/scifi.png'),
-    const Achievement(id: 'genre_scifi_100', title: 'Galactic Traveler', description: 'Watch 100 sci-fi movies', iconPath: 'assets/achievements/scifi_100.png'),
-    const Achievement(id: 'genre_doc', title: 'Scholar', description: 'Watch 10 documentaries', iconPath: 'assets/achievements/doc.png'),
-    const Achievement(id: 'genre_doc_50', title: 'Professor', description: 'Watch 50 documentaries', iconPath: 'assets/achievements/doc_50.png'),
-    const Achievement(id: 'genre_romance', title: 'Hopeless Romantic', description: 'Watch 15 romance movies', iconPath: 'assets/achievements/romance.png'),
-
-    // --- Time/Behavioral ---
-    const Achievement(id: 'night_owl', title: 'Night Owl', description: 'Watch 10 items between 12 AM and 4 AM', iconPath: 'assets/achievements/night_owl.png'),
-    const Achievement(id: 'night_owl_100', title: 'Creature of the Night', description: 'Watch 100 items between 12 AM and 4 AM', iconPath: 'assets/achievements/night_owl_100.png'),
-    const Achievement(id: 'weekend_warrior', title: 'Weekend Warrior', description: 'Watch 15 items in a single weekend', iconPath: 'assets/achievements/weekend.png'),
-    const Achievement(id: 'marathon', title: 'Marathon Runner', description: 'Watch 10 episodes of the same show in one day', iconPath: 'assets/achievements/marathon.png'),
-    const Achievement(id: 'marathon_pro', title: 'Marathon Pro', description: 'Watch 20 episodes of the same show in one day', iconPath: 'assets/achievements/marathon_pro.png'),
-    const Achievement(id: 'streak_7', title: 'Consistent', description: 'Watch something every day for a week', iconPath: 'assets/achievements/streak_7.png'),
-    const Achievement(id: 'streak_30', title: 'Dedicated', description: 'Watch something every day for a month', iconPath: 'assets/achievements/streak_30.png'),
-    const Achievement(id: 'streak_365', title: 'Unstoppable', description: 'Watch something every day for a year', iconPath: 'assets/achievements/streak_365.png'),
-    
-    // --- Total Runtime ---
-    const Achievement(id: 'runtime_1000', title: '1000 Minutes Club', description: 'Spend 1000 minutes watching media', iconPath: 'assets/achievements/time_1000.png'),
-    const Achievement(id: 'runtime_hour_100', title: 'Seasoned Viewer', description: 'Watch for 100 hours total', iconPath: 'assets/achievements/time_100h.png'),
-    const Achievement(id: 'runtime_10000', title: '10,000 Minutes Club', description: 'Spend 10,000 minutes watching media', iconPath: 'assets/achievements/time_10000.png'),
-    const Achievement(id: 'runtime_day_10', title: 'Ten Day Marathon', description: 'Watch for 10 full days total', iconPath: 'assets/achievements/time_10d.png'),
-    const Achievement(id: 'runtime_hour_1000', title: 'The Millennial', description: 'Watch for 1,000 hours total', iconPath: 'assets/achievements/time_1000h.png'),
-    const Achievement(id: 'runtime_100000', title: '100,000 Minutes Club', description: 'Spend 100,000 minutes watching media', iconPath: 'assets/achievements/time_100000.png'),
-    const Achievement(id: 'runtime_year_1', title: 'Double Life', description: 'Watch for 1 full year total', iconPath: 'assets/achievements/time_1y.png'),
-  ];
+  // Definitions moved to `assets/achievements/definitions.json`.
+  // The file is the single source of truth; tests should inject a loader.
 
   @override
   Future<List<Achievement>> getAchievements() async {
@@ -85,18 +36,21 @@ class AchievementRepositoryImpl implements AchievementRepository {
       for (var m in unlockedModels) m.achievementId: m.unlockedAt,
     };
 
-    return _definitions.map((def) {
-      final progressData = _calculateProgress(def.id, chronologicalItems);
-      final persistedUnlockDate = unlockedMap[def.id];
+    final defMaps = await _loadDefinitionMaps();
+
+    return defMaps.map((def) {
+      final id = def['id'] as String;
+      final progressData = _calculateProgressFromDef(def, chronologicalItems);
+      final persistedUnlockDate = unlockedMap[id];
       final calculatedUnlockDate = progressData.milestoneReachedAt;
 
       return Achievement(
-        id: def.id,
-        title: def.title,
-        description: def.description,
-        iconPath: def.iconPath,
-        isUnlocked: calculatedUnlockDate != null, // Reached in history
-        isPersisted: persistedUnlockDate != null, // Saved in DB
+        id: id,
+        title: def['title'] as String,
+        description: def['description'] as String,
+        iconPath: def['iconPath'] as String,
+        isUnlocked: calculatedUnlockDate != null,
+        isPersisted: persistedUnlockDate != null,
         unlockedAt: persistedUnlockDate ?? calculatedUnlockDate,
         progress: progressData.progress,
         progressLabel: progressData.label,
@@ -141,70 +95,196 @@ class AchievementRepositoryImpl implements AchievementRepository {
     ]).asyncMap((_) => getAchievements());
   }
 
+  static const _definitionsAssetPath = 'assets/achievements/definitions.json';
+
+  Future<List<Map<String, dynamic>>> _loadDefinitionMaps() async {
+    // If a loader was injected (tests or alternative runtime), use it first.
+    if (definitionsLoader != null) {
+      try {
+        return await definitionsLoader!();
+      } catch (_) {
+        // fall through to asset loader
+      }
+    }
+
+    final jsonStr = await rootBundle.loadString(_definitionsAssetPath);
+    final list = jsonDecode(jsonStr) as List<dynamic>;
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  _ProgressData _calculateProgressFromDef(
+    Map<String, dynamic> def,
+    List<SeenItemModel> seenItems,
+  ) {
+    if (def.containsKey('type')) {
+      final type = def['type'] as String;
+      final params = (def['params'] as Map?)?.cast<String, dynamic>() ?? {};
+
+      switch (type) {
+        case 'count':
+          final mediaType = params['mediaType'] as String? ?? 'movie';
+          final target =
+              params['target'] as int? ??
+              int.tryParse((def['id'] as String).split('_').last) ??
+              0;
+          final items = mediaType == 'tv'
+              ? seenItems.where((i) => i.type == 'tv').toList()
+              : seenItems.where((i) => i.type == 'movie').toList();
+          return _countMilestone(items, target);
+        case 'genre':
+          final genre = params['genre'] as String? ?? '';
+          final targetG = params['target'] as int? ?? 0;
+          final movies = seenItems.where((i) => i.type == 'movie').toList();
+          return _genreMilestone(movies, genre, targetG);
+        case 'rewatch':
+          final isTv = params['isTv'] == true;
+          final targetR = params['target'] as int? ?? 0;
+          final itemsR = isTv
+              ? seenItems.where((i) => i.type == 'tv').toList()
+              : seenItems.where((i) => i.type == 'movie').toList();
+          return _rewatchMilestone(itemsR, targetR, isTv: isTv);
+        case 'loyalist':
+          final targetL = params['target'] as int? ?? 0;
+          final episodes = seenItems.where((i) => i.type == 'tv').toList();
+          return _loyalistMilestone(episodes, targetL);
+        case 'behavioral':
+          final subtype = params['subtype'] as String? ?? '';
+            if (subtype == 'night_owl') {
+              final nightItems = seenItems
+                  .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
+                  .toList();
+              final targetB = params['target'] as int? ?? 0;
+              return _countMilestone(nightItems, targetB);
+            }
+            if (subtype == 'weekend') {
+              final targetB = params['target'] as int? ?? 0;
+              // Sliding 72-hour window
+              return _windowMilestone(seenItems, const Duration(hours: 72), targetB);
+            }
+          break;
+        case 'streak':
+          final targetS = params['target'] as int? ?? 0;
+          return _streakMilestone(seenItems, targetS);
+        case 'runtime':
+          final targetMin = params['targetMinutes'] as int? ?? 0;
+          return _runtimeMilestone(seenItems, targetMin);
+        case 'marathon':
+            final targetM = params['target'] as int? ?? 0;
+            return _marathonMilestone(seenItems.where((i) => i.type == 'tv').toList(), targetM);
+      }
+    }
+
+    // Fallback to legacy id-based implementation
+    return _calculateProgress(def['id'] as String, seenItems);
+  }
+
   _ProgressData _calculateProgress(String id, List<SeenItemModel> seenItems) {
     final movies = seenItems.where((i) => i.type == 'movie').toList();
     final episodes = seenItems.where((i) => i.type == 'tv').toList();
 
     switch (id) {
       // --- Movies ---
-      case 'movie_1': return _countMilestone(movies, 1);
-      case 'movie_10': return _countMilestone(movies, 10);
-      case 'movie_50': return _countMilestone(movies, 50);
-      case 'movie_100': return _countMilestone(movies, 100);
-      case 'movie_500': return _countMilestone(movies, 500);
-      case 'movie_1000': return _countMilestone(movies, 1000);
+      case 'movie_1':
+        return _countMilestone(movies, 1);
+      case 'movie_10':
+        return _countMilestone(movies, 10);
+      case 'movie_50':
+        return _countMilestone(movies, 50);
+      case 'movie_100':
+        return _countMilestone(movies, 100);
+      case 'movie_500':
+        return _countMilestone(movies, 500);
+      case 'movie_1000':
+        return _countMilestone(movies, 1000);
 
       // --- TV ---
-      case 'tv_1': return _countMilestone(episodes, 1);
-      case 'tv_50': return _countMilestone(episodes, 50);
-      case 'tv_250': return _countMilestone(episodes, 250);
-      case 'tv_1000': return _countMilestone(episodes, 1000);
-      case 'tv_5000': return _countMilestone(episodes, 5000);
+      case 'tv_1':
+        return _countMilestone(episodes, 1);
+      case 'tv_50':
+        return _countMilestone(episodes, 50);
+      case 'tv_250':
+        return _countMilestone(episodes, 250);
+      case 'tv_1000':
+        return _countMilestone(episodes, 1000);
+      case 'tv_5000':
+        return _countMilestone(episodes, 5000);
 
       // --- Rewatches ---
-      case 'rewatch_movie_2': return _rewatchMilestone(movies, 2);
-      case 'rewatch_movie_5': return _rewatchMilestone(movies, 5);
-      case 'rewatch_movie_10': return _rewatchMilestone(movies, 10);
-      case 'rewatch_ep_2': return _rewatchMilestone(episodes, 2, isTv: true);
-      case 'rewatch_ep_5': return _rewatchMilestone(episodes, 5, isTv: true);
+      case 'rewatch_movie_2':
+        return _rewatchMilestone(movies, 2);
+      case 'rewatch_movie_5':
+        return _rewatchMilestone(movies, 5);
+      case 'rewatch_movie_10':
+        return _rewatchMilestone(movies, 10);
+      case 'rewatch_ep_2':
+        return _rewatchMilestone(episodes, 2, isTv: true);
+      case 'rewatch_ep_5':
+        return _rewatchMilestone(episodes, 5, isTv: true);
 
       // --- Loyalists ---
-      case 'loyalist_100': return _loyalistMilestone(episodes, 100);
-      case 'loyalist_500': return _loyalistMilestone(episodes, 500);
+      case 'loyalist_100':
+        return _loyalistMilestone(episodes, 100);
+      case 'loyalist_500':
+        return _loyalistMilestone(episodes, 500);
 
       // --- Genres ---
-      case 'genre_horror': return _genreMilestone(movies, 'Horror', 10);
-      case 'genre_horror_50': return _genreMilestone(movies, 'Horror', 50);
-      case 'genre_comedy': return _genreMilestone(movies, 'Comedy', 20);
-      case 'genre_comedy_100': return _genreMilestone(movies, 'Comedy', 100);
-      case 'genre_action': return _genreMilestone(movies, 'Action', 20);
-      case 'genre_action_100': return _genreMilestone(movies, 'Action', 100);
-      case 'genre_scifi': return _genreMilestone(movies, 'Science Fiction', 20);
-      case 'genre_scifi_100': return _genreMilestone(movies, 'Science Fiction', 100);
-      case 'genre_doc': return _genreMilestone(movies, 'Documentary', 10);
-      case 'genre_doc_50': return _genreMilestone(movies, 'Documentary', 50);
-      case 'genre_romance': return _genreMilestone(movies, 'Romance', 15);
+      case 'genre_horror':
+        return _genreMilestone(movies, 'Horror', 10);
+      case 'genre_horror_50':
+        return _genreMilestone(movies, 'Horror', 50);
+      case 'genre_comedy':
+        return _genreMilestone(movies, 'Comedy', 20);
+      case 'genre_comedy_100':
+        return _genreMilestone(movies, 'Comedy', 100);
+      case 'genre_action':
+        return _genreMilestone(movies, 'Action', 20);
+      case 'genre_action_100':
+        return _genreMilestone(movies, 'Action', 100);
+      case 'genre_scifi':
+        return _genreMilestone(movies, 'Science Fiction', 20);
+      case 'genre_scifi_100':
+        return _genreMilestone(movies, 'Science Fiction', 100);
+      case 'genre_doc':
+        return _genreMilestone(movies, 'Documentary', 10);
+      case 'genre_doc_50':
+        return _genreMilestone(movies, 'Documentary', 50);
+      case 'genre_romance':
+        return _genreMilestone(movies, 'Romance', 15);
 
       // --- Behavioral ---
       case 'night_owl':
-        final nightItems = seenItems.where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4).toList();
+        final nightItems = seenItems
+            .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
+            .toList();
         return _countMilestone(nightItems, 10);
       case 'night_owl_100':
-        final nightItems = seenItems.where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4).toList();
+        final nightItems = seenItems
+            .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
+            .toList();
         return _countMilestone(nightItems, 100);
-      case 'streak_7': return _streakMilestone(seenItems, 7);
-      case 'streak_30': return _streakMilestone(seenItems, 30);
-      case 'streak_365': return _streakMilestone(seenItems, 365);
+      case 'streak_7':
+        return _streakMilestone(seenItems, 7);
+      case 'streak_30':
+        return _streakMilestone(seenItems, 30);
+      case 'streak_365':
+        return _streakMilestone(seenItems, 365);
 
       // --- Runtime ---
-      case 'runtime_1000': return _runtimeMilestone(seenItems, 1000);
-      case 'runtime_hour_100': return _runtimeMilestone(seenItems, 100 * 60);
-      case 'runtime_10000': return _runtimeMilestone(seenItems, 10000);
-      case 'runtime_day_10': return _runtimeMilestone(seenItems, 10 * 24 * 60);
-      case 'runtime_hour_1000': return _runtimeMilestone(seenItems, 1000 * 60);
-      case 'runtime_100000': return _runtimeMilestone(seenItems, 100000);
-      case 'runtime_year_1': return _runtimeMilestone(seenItems, 365 * 24 * 60);
-      
+      case 'runtime_1000':
+        return _runtimeMilestone(seenItems, 1000);
+      case 'runtime_hour_100':
+        return _runtimeMilestone(seenItems, 100 * 60);
+      case 'runtime_10000':
+        return _runtimeMilestone(seenItems, 10000);
+      case 'runtime_day_10':
+        return _runtimeMilestone(seenItems, 10 * 24 * 60);
+      case 'runtime_hour_1000':
+        return _runtimeMilestone(seenItems, 1000 * 60);
+      case 'runtime_100000':
+        return _runtimeMilestone(seenItems, 100000);
+      case 'runtime_year_1':
+        return _runtimeMilestone(seenItems, 365 * 24 * 60);
+
       default:
         return const _ProgressData(0.0, '0/0');
     }
@@ -335,6 +415,53 @@ class AchievementRepositoryImpl implements AchievementRepository {
     return _ProgressData(
       (maxStreak / target).clamp(0.0, 1.0),
       '$maxStreak/$target days',
+      milestoneReachedAt: reachedAt,
+    );
+  }
+
+  _ProgressData _windowMilestone(List<SeenItemModel> items, Duration window, int target) {
+    if (items.isEmpty) return const _ProgressData(0.0, '0/0');
+    final dates = items.map((i) => i.seenDate).toList()..sort();
+
+    int maxCount = 0;
+    DateTime? reachedAt;
+
+    int start = 0;
+    for (int end = 0; end < dates.length; end++) {
+      while (dates[end].difference(dates[start]) > window) {
+        start++;
+      }
+      final count = end - start + 1;
+      if (count >= target && reachedAt == null) {
+        reachedAt = dates[end];
+      }
+      if (count > maxCount) maxCount = count;
+    }
+
+    return _ProgressData(
+      (maxCount / target).clamp(0.0, 1.0),
+      '$maxCount/$target',
+      milestoneReachedAt: reachedAt,
+    );
+  }
+
+  _ProgressData _marathonMilestone(List<SeenItemModel> episodes, int target) {
+    final counts = <String, int>{};
+    DateTime? reachedAt;
+
+    for (final item in episodes) {
+      final dateKey = '${item.tmdbId}_${item.seenDate.year}-${item.seenDate.month}-${item.seenDate.day}';
+      counts[dateKey] = (counts[dateKey] ?? 0) + 1;
+      if (counts[dateKey]! >= target && reachedAt == null) {
+        reachedAt = item.seenDate;
+      }
+    }
+
+    final maxCount = counts.values.isEmpty ? 0 : counts.values.reduce((a, b) => a > b ? a : b);
+
+    return _ProgressData(
+      (maxCount / target).clamp(0.0, 1.0),
+      '$maxCount/$target',
       milestoneReachedAt: reachedAt,
     );
   }

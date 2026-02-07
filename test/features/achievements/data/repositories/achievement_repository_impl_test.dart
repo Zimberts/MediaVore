@@ -4,6 +4,7 @@ import 'package:mediavore/features/achievements/data/models/achievement_model.da
 import 'package:mediavore/features/achievements/data/repositories/achievement_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mocktail/mocktail.dart';
+import 'dart:convert';
 import 'dart:io';
 import '../../../../helpers/mocks.dart';
 
@@ -28,7 +29,16 @@ void main() {
       name: 'test_achievements_db',
     );
     mockDataSource = MockMediaListLocalDataSource();
-    repository = AchievementRepositoryImpl(isar, mockDataSource);
+    // loader that reads the JSON definitions file from disk for tests
+    final assetPath =
+        '${Directory.current.path.replaceAll('\\', '/')}/assets/achievements/definitions.json';
+    final loader = () async {
+      final content = await File(assetPath).readAsString();
+      final list = jsonDecode(content) as List<dynamic>;
+      return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    };
+
+    repository = AchievementRepositoryImpl(isar, mockDataSource, definitionsLoader: loader);
   });
 
   tearDown(() async {
@@ -86,6 +96,35 @@ void main() {
       final persisted = await isar.achievementModels.where().findAll();
       expect(persisted.length, 1);
       expect(persisted.first.achievementId, 'test_id');
+    });
+
+    test('should load definitions via injected loader reading JSON file', () async {
+      // create a loader that reads the repo asset file directly from disk
+      final assetPath =
+          '${Directory.current.path.replaceAll('\\', '/')}/assets/achievements/definitions.json';
+      final loader = () async {
+        final content = await File(assetPath).readAsString();
+        final list = jsonDecode(content) as List<dynamic>;
+        return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      };
+
+      // New repository instance using injected loader to exercise JSON path
+      final repoWithLoader = AchievementRepositoryImpl(
+        isar,
+        mockDataSource,
+        definitionsLoader: loader,
+      );
+
+      // No seen items required for existence check — call getAchievements()
+      when(
+        () => mockDataSource.getAllSeenItems(),
+      ).thenAnswer((_) async => <SeenItemModel>[]);
+
+      final achievements = await repoWithLoader.getAchievements();
+
+      // Basic sanity: ensure a known id from the JSON is present and has expected title
+      final movieStarter = achievements.firstWhere((a) => a.id == 'movie_1');
+      expect(movieStarter.title, 'Movie Starter');
     });
 
     test('clearAchievements should remove all from DB', () async {
