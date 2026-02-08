@@ -1,8 +1,15 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+kotlin {
+    // Use Kotlin JVM toolchain targeting Java 17
+    jvmToolchain(17)
 }
 
 android {
@@ -13,10 +20,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        // Enable core library desugaring required by some plugins
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -28,6 +33,8 @@ android {
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Enable multidex for plugins requiring core library desugaring
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -42,3 +49,11 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Required for core library desugaring (e.g., flutter_local_notifications)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+    implementation("androidx.multidex:multidex:2.0.1")
+}
+
+// Kotlin JVM toolchain set to 17 and Java compile target set to 17 above.

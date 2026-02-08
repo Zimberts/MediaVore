@@ -13,6 +13,7 @@ import 'package:mediavore/features/search/presentation/pages/saved_media_page.da
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
+import 'package:flutter/services.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -27,6 +28,7 @@ class _MainPageState extends State<MainPage> {
   StreamSubscription<Uri>? _linkSubscription;
   StreamSubscription? _achievementSubscription;
   final ValueNotifier<int> _discoverSearchTrigger = ValueNotifier<int>(0);
+  static const MethodChannel _notificationsChannel = MethodChannel('mediavore/notifications');
 
   // Achievement queue logic
   final Queue<Achievement> _achievementQueue = Queue<Achievement>();
@@ -213,13 +215,57 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _onItemTapped(0);
-          _discoverSearchTrigger.value += 1;
-        },
-        tooltip: 'Search',
-        child: const Icon(Icons.search),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'test_notification_fab',
+            onPressed: () async {
+              // Request runtime notification permission (Android 13+)
+              bool granted = true;
+              try {
+                final res = await _notificationsChannel.invokeMethod('requestPermission');
+                if (res is bool) granted = res;
+              } catch (_) {
+                granted = false;
+              }
+
+              if (!granted) {
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification permission not granted')));
+                return;
+              }
+
+              final id = 9999;
+              final title = 'Test Notification';
+              final body = 'Notification triggered for testing';
+              final timeEpochMillis = DateTime.now().toUtc().add(const Duration(seconds: 10)).millisecondsSinceEpoch;
+              try {
+                await _notificationsChannel.invokeMethod('schedule', {
+                  'notificationId': id,
+                  'title': title,
+                  'body': body,
+                  'timeEpochMillis': timeEpochMillis,
+                });
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scheduled test notification (10s)')));
+              } catch (e) {
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to schedule: $e')));
+              }
+            },
+            tooltip: 'Trigger test notification',
+            child: const Icon(Icons.notification_add),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton(
+            heroTag: 'search_fab',
+            onPressed: () {
+              _onItemTapped(0);
+              _discoverSearchTrigger.value += 1;
+            },
+            tooltip: 'Search',
+            child: const Icon(Icons.search),
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBar(
