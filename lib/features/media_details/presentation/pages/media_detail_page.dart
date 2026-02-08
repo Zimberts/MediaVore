@@ -33,8 +33,8 @@ class MediaDetailPage extends StatefulWidget {
     this.scrollController,
   });
 
-  static void show(BuildContext context, MediaItem item) {
-    showModalBottomSheet(
+  static Future<void> show(BuildContext context, MediaItem item) {
+    return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useRootNavigator: false,

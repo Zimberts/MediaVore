@@ -294,12 +294,9 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                           item.type,
                         );
                         if (context.mounted) {
-                          Navigator.push(
+                          await MediaDetailPage.show(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  MediaDetailPage(item: details.item),
-                            ),
+                            details.item,
                           );
                         }
                       },
@@ -421,12 +418,9 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                           MediaType.tv,
                         );
                         if (context.mounted) {
-                          Navigator.push(
+                          await MediaDetailPage.show(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  MediaDetailPage(item: details.item),
-                            ),
+                            details.item,
                           );
                         }
                       },

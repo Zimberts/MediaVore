@@ -1534,7 +1534,7 @@ class _MediaSwipeItem extends StatelessWidget {
                 children: [
                   const SizedBox(width: 56), // Balances the larger LikeButton
                   Expanded(
-                    child: InkWell(
+                      child: InkWell(
                       onTap: () => MediaDetailPage.show(context, item),
                       child: Text(
                         item.title,
