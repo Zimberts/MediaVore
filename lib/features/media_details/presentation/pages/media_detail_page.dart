@@ -289,6 +289,15 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   Widget build(BuildContext context) {
     final itemToDisplay = _mediaDetails?.item ?? widget.item;
     final colors = context.appColors;
+    final brightness = Theme.of(context).brightness;
+    final baseBgColor = brightness == Brightness.dark
+        ? Colors.black
+        : Theme.of(context).scaffoldBackgroundColor;
+    final overlayHeight =
+        MediaQuery.of(context).padding.top + (widget.isSheet ? 96.0 : 120.0);
+    final overlayStartColor = brightness == Brightness.dark
+        ? baseBgColor.withValues(alpha: 0.75)
+        : baseBgColor.withValues(alpha: 0.95);
 
     final String directorLabel = itemToDisplay.mediaType == MediaType.tv
         ? 'Creator'
@@ -326,34 +335,57 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                 ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background:
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
                   itemToDisplay.posterPath != null &&
-                      !Platform.environment.containsKey('FLUTTER_TEST')
-                  ? Image.network(
-                      'https://image.tmdb.org/t/p/w500${itemToDisplay.posterPath}',
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: colors.placeholder,
-                        child: Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            size: 64,
-                            color: colors.comments,
+                          !Platform.environment.containsKey('FLUTTER_TEST')
+                      ? Image.network(
+                          'https://image.tmdb.org/t/p/w500${itemToDisplay.posterPath}',
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: colors.placeholder,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 64,
+                                    color: colors.comments,
+                                  ),
+                                ),
+                              ),
+                        )
+                      : Container(
+                          color: colors.placeholder,
+                          child: Center(
+                            child: Icon(
+                              Icons.movie,
+                              size: 100,
+                              color: colors.comments,
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  : Container(
-                      color: colors.placeholder,
-                      child: Center(
-                        child: Icon(
-                          Icons.movie,
-                          size: 100,
-                          color: colors.comments,
+
+                  // Top gradient overlay to improve contrast for title/actions
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      height: overlayHeight,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            overlayStartColor,
+                            overlayStartColor.withValues(alpha: 0.0),
+                          ],
                         ),
                       ),
                     ),
+                  ),
+                ],
+              ),
             ),
           ),
           if (widget.isSheet)
