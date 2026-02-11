@@ -5,6 +5,8 @@ import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_opt_out_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 @lazySingleton
@@ -396,6 +398,121 @@ class MediaListLocalDataSource {
         .tmdbIdEqualTo(tmdbId)
         .typeEqualTo(type)
         .count();
+    return count > 0;
+  }
+
+  // QuickAdd methods
+  Future<List<QuickAddItemModel>> getQuickAddItems() async {
+    return await _isar.quickAddItemModels.where().sortByInsertedAtDesc().findAll();
+  }
+
+  Future<void> addQuickAddItem(QuickAddItemModel item) async {
+    await _isar.writeTxn(() async {
+      // avoid duplicates for same tmdb/season/episode
+      final existingCount = await _isar.quickAddItemModels
+          .filter()
+          .tmdbIdEqualTo(item.tmdbId)
+          .seasonNumberEqualTo(item.seasonNumber)
+          .episodeNumberEqualTo(item.episodeNumber)
+          .count();
+      if (existingCount == 0) {
+        await _isar.quickAddItemModels.put(item);
+      }
+    });
+  }
+
+  Future<void> removeQuickAddItemById(int isarId) async {
+    await _isar.writeTxn(() async {
+      await _isar.quickAddItemModels.delete(isarId);
+    });
+  }
+
+  Future<void> removeQuickAddItemsByTmdb(int tmdbId) async {
+    await _isar.writeTxn(() async {
+      await _isar.quickAddItemModels.filter().tmdbIdEqualTo(tmdbId).deleteAll();
+    });
+  }
+
+  Future<void> clearQuickAddItems() async {
+    await _isar.writeTxn(() async {
+      await _isar.quickAddItemModels.clear();
+    });
+  }
+
+  Future<void> removeQuickAddItemByTmdbSeasonEpisode(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
+    await _isar.writeTxn(() async {
+      var query = _isar.quickAddItemModels.filter().tmdbIdEqualTo(tmdbId);
+      if (seasonNumber != null) {
+        query = query.seasonNumberEqualTo(seasonNumber);
+      }
+      if (episodeNumber != null) {
+        query = query.episodeNumberEqualTo(episodeNumber);
+      }
+      await query.deleteAll();
+    });
+  }
+
+  // Opt-out methods
+  Future<void> addOptOut(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
+    await _isar.writeTxn(() async {
+      final existingQuery = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(tmdbId);
+      final existing = await (seasonNumber != null && episodeNumber != null
+              ? existingQuery
+                  .and()
+                  .seasonNumberEqualTo(seasonNumber)
+                  .episodeNumberEqualTo(episodeNumber)
+                  .findFirst()
+              : existingQuery.findFirst());
+
+      if (existing == null) {
+        await _isar.quickAddOptOutModels.put(
+          QuickAddOptOutModel(
+            tmdbId: tmdbId,
+            seasonNumber: seasonNumber,
+            episodeNumber: episodeNumber,
+            optedOutAt: DateTime.now(),
+          ),
+        );
+      }
+
+      // remove only quick-add entries matching this streak (if provided) or the tmdbId+nulls
+      var q = _isar.quickAddItemModels.filter().tmdbIdEqualTo(tmdbId);
+      if (seasonNumber != null) q = q.seasonNumberEqualTo(seasonNumber);
+      if (episodeNumber != null) q = q.episodeNumberEqualTo(episodeNumber);
+      await q.deleteAll();
+    });
+  }
+
+  Future<void> removeOptOut(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
+    await _isar.writeTxn(() async {
+      var q = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(tmdbId);
+      if (seasonNumber != null) q = q.and().seasonNumberEqualTo(seasonNumber);
+      if (episodeNumber != null) q = q.and().episodeNumberEqualTo(episodeNumber);
+      await q.deleteAll();
+    });
+  }
+
+  Future<bool> isOptedOut(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
+    var q = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(tmdbId);
+    if (seasonNumber != null) q = q.and().seasonNumberEqualTo(seasonNumber);
+    if (episodeNumber != null) q = q.and().episodeNumberEqualTo(episodeNumber);
+    final count = await q.count();
     return count > 0;
   }
 

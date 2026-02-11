@@ -6,6 +6,8 @@ import 'package:mediavore/features/media_details/data/models/media_list_item.dar
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_opt_out_model.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
 
@@ -21,6 +23,8 @@ abstract class DatabaseModule {
       SeenItemModelSchema,
       LikedItemSchema,
       NotifiedItemModelSchema,
+      QuickAddItemModelSchema,
+      QuickAddOptOutModelSchema,
       CachedMediaSchema,
       CachedActorProfileSchema,
       CachedSeasonSchema,

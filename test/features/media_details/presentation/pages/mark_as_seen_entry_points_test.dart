@@ -290,7 +290,24 @@ void main() {
 
       // We need to build the QuickAddTab which is private; reuse the _QuickAddTab via NotificationCenterPage's _QuickAddTab
       // Refresh provider state so QuickAddTab sees the seen items
+      // Ensure repository returns a QuickAdd entry so the QuickAdd tab renders
+      when(() => mockRepository.getQuickAddItems()).thenAnswer((_) async => [
+            QuickAddItem(
+              isarId: null,
+              tmdbId: 30,
+              type: MediaType.tv,
+              seasonNumber: 1,
+              episodeNumber: 2,
+              insertedAt: DateTime.now(),
+              airDate: DateTime.now().subtract(const Duration(days: 1)),
+              title: 'Series30',
+              posterPath: null,
+            )
+          ]);
+
       await provider.loadAllSeenStatus();
+      // Ensure quick-add items are loaded from repository stub
+      await provider.loadQuickAddItems();
       await provider.loadWatchlist();
       await provider.loadNotifiedItems();
 

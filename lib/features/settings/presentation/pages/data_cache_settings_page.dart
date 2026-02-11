@@ -138,6 +138,33 @@ class DataCacheSettingsPage extends StatelessWidget {
                 ),
                 onTap: () => _importSeenData(context, provider),
               ),
+              ListTile(
+                leading: const Icon(Icons.playlist_add),
+                title: const Text('Populate Quick Add from Seen History'),
+                subtitle: const Text(
+                  'Compute next episodes from your seen history and save them to Quick Add.',
+                ),
+                enabled: !isImporting,
+                onTap: () => _confirmAction(
+                  context,
+                  title: 'Populate Quick Add',
+                  message:
+                      'This will compute next unseen episodes for your TV shows and add them to Quick Add. Proceed?',
+                  action: () async {
+                    // Clear existing quick-add entries so the populate action
+                    // fully reflects current seen history.
+                    await provider.clearQuickAddItems();
+                    await provider.populateQuickAddFromSeenHistory();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Quick Add populated from history.'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
               const Divider(),
               const _SectionHeader(title: 'Achievement Data'),
               ListTile(

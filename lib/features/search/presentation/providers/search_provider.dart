@@ -47,6 +47,7 @@ class SearchProvider with ChangeNotifier {
   List<String> _watchlistIds = []; // Simplified IDs for quick checks
   List<String> _likedIds = []; // "id:type"
   List<NotifiedItem> _notifiedItems = [];
+  List<QuickAddItem> _quickAddItems = [];
 
   List<MediaItem> get items => _searchResults; // For SearchPage
   bool get isLoading => _isLoading;
@@ -64,6 +65,7 @@ class SearchProvider with ChangeNotifier {
   List<SeenItem> get seenItems => _seenItems;
   List<String> get likedIds => _likedIds;
   List<NotifiedItem> get notifiedItems => _notifiedItems;
+  List<QuickAddItem> get quickAddItems => _quickAddItems;
   int get selectedTab => _selectedTab;
 
   double get importProgress => _importProgress;
@@ -119,6 +121,7 @@ class SearchProvider with ChangeNotifier {
     await loadWatchlist();
     await loadLikedStatus();
     await loadNotifiedItems();
+    await loadQuickAddItems();
   }
 
   void setSelectedTab(int index) {
@@ -213,11 +216,24 @@ class SearchProvider with ChangeNotifier {
 
     _seenCounts = counts;
     notifyListeners();
+    await loadQuickAddItems();
   }
 
   Future<void> loadNotifiedItems() async {
     _notifiedItems = await repository.getNotifiedItems();
     notifyListeners();
+  }
+
+  Future<void> loadQuickAddItems() async {
+    final repoItems = await repository.getQuickAddItems();
+    // Use repository-provided quick-add entries only (no compatibility fallback)
+    _quickAddItems = repoItems;
+    notifyListeners();
+  }
+
+  Future<void> clearQuickAddItems() async {
+    await repository.clearQuickAddItems();
+    await loadQuickAddItems();
   }
 
   int getSeenCount(MediaItem item) {
@@ -641,6 +657,7 @@ class SearchProvider with ChangeNotifier {
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
+    await loadQuickAddItems();
   }
 
   Future<void> removeFromSeen(
@@ -658,6 +675,7 @@ class SearchProvider with ChangeNotifier {
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
+    await loadQuickAddItems();
   }
 
   List<MediaItemPreview> getPreviewsForList(String name) {
@@ -726,9 +744,58 @@ class SearchProvider with ChangeNotifier {
       await updateCacheSize();
       await updateSeenDbSize();
 
+      // After importing seen history, populate quick-add based on the new data
+      try {
+        await repository.populateQuickAddFromSeenHistory();
+      } catch (_) {}
+
       _isImporting = false;
       notifyListeners();
     }
+  }
+
+  Future<void> optOutSeries(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
+    await repository.optOutSeries(
+      tmdbId,
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
+    );
+    await loadQuickAddItems();
+  }
+
+  Future<void> clearOptOutSeries(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) async {
+    await repository.clearOptOutSeries(
+      tmdbId,
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
+    );
+    await loadQuickAddItems();
+  }
+
+  Future<void> populateQuickAddFromSeenHistory({
+    int? tmdbId,
+    int? tailSeason,
+    int? tailEpisode,
+  }) async {
+    await repository.populateQuickAddFromSeenHistory(
+      tmdbId: tmdbId,
+      tailSeason: tailSeason,
+      tailEpisode: tailEpisode,
+    );
+    await loadQuickAddItems();
+  }
+
+  Future<void> addQuickAddItem(QuickAddItem item) async {
+    await repository.addQuickAddItem(item);
+    await loadQuickAddItems();
   }
 
   Future<({int seasonNumber, int episodeNumber})?> getNextEpisode(

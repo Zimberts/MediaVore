@@ -21,6 +21,9 @@ Future<void> main() async {
       debugPrint('Warning: .env file not found or failed to load: $e');
     }
 
+    // DefinitionsLoader should be provided by generated DI (injection.config.dart).
+    // Avoid manual registration here; run codegen to ensure it's registered.
+
     await init(locator);
     runApp(const MediaVoreApp());
   } catch (e, stackTrace) {

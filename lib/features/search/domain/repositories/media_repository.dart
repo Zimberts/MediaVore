@@ -165,6 +165,44 @@ abstract class MediaRepository {
 
   /// Gets videos (trailers, etc.) for a media item.
   Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type);
+
+  /// QuickAdd: returns current quick-add entries (next episodes the user can quickly mark seen)
+  Future<List<QuickAddItem>> getQuickAddItems();
+
+  /// Removes a quick-add entry by its isar id.
+  Future<void> removeQuickAddItemById(int isarId);
+
+  /// User opts out of automatic quick-add for a specific streak.
+  /// If `seasonNumber`/`episodeNumber` are omitted, behavior defaults to opt-out for the series.
+  Future<void> optOutSeries(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  });
+
+  /// Clears opt-out for a specific streak so quick-add resumes.
+  Future<void> clearOptOutSeries(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  });
+
+  /// Populate quick-add collection from existing seen history.
+  /// If [tmdbId] is provided, only compute quick-add for that show.
+  /// If [tailSeason]/[tailEpisode] are provided, only compute for that specific tail.
+  /// This will compute next unseen episodes for TV shows (that have aired)
+  /// and persist quick-add entries where appropriate.
+  Future<void> populateQuickAddFromSeenHistory({
+    int? tmdbId,
+    int? tailSeason,
+    int? tailEpisode,
+  });
+
+  /// Clear all entries from the Quick Add collection.
+  Future<void> clearQuickAddItems();
+
+  /// Add a specific quick-add entry directly (used for Undo of a dismiss).
+  Future<void> addQuickAddItem(QuickAddItem item);
 }
 
 class NotifiedItem {
@@ -200,5 +238,29 @@ class MediaItemPreview {
     required this.title,
     this.posterPath,
     required this.type,
+  });
+}
+
+class QuickAddItem {
+  final int? isarId;
+  final int tmdbId;
+  final MediaType type;
+  final int? seasonNumber;
+  final int? episodeNumber;
+  final DateTime insertedAt;
+  final DateTime? airDate;
+  final String? title;
+  final String? posterPath;
+
+  QuickAddItem({
+    this.isarId,
+    required this.tmdbId,
+    required this.type,
+    this.seasonNumber,
+    this.episodeNumber,
+    required this.insertedAt,
+    this.airDate,
+    this.title,
+    this.posterPath,
   });
 }

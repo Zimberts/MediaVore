@@ -8,13 +8,14 @@ import 'package:mediavore/features/media_details/data/models/seen_item_model.dar
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:mediavore/core/di/definitions_loader.dart';
 import 'package:rxdart/rxdart.dart';
 
 @LazySingleton(as: AchievementRepository)
 class AchievementRepositoryImpl implements AchievementRepository {
   final Isar _isar;
   final MediaListLocalDataSource _localDataSource;
-  final Future<List<Map<String, dynamic>>> Function()? definitionsLoader;
+  final DefinitionsLoader? definitionsLoader;
 
   AchievementRepositoryImpl(
     this._isar,
@@ -101,7 +102,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
     // If a loader was injected (tests or alternative runtime), use it first.
     if (definitionsLoader != null) {
       try {
-        return await definitionsLoader!();
+        return await definitionsLoader!.load();
       } catch (_) {
         // fall through to asset loader
       }

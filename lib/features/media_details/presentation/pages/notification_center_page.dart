@@ -39,7 +39,7 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
     await provider.refreshNotifiedItems(); // Refresh dates from network
     await provider.loadNotifiedItems();
     await provider.loadAllSeenStatus();
-    _quickAddKey.currentState?.loadNextEpisodes();
+    await provider.loadQuickAddItems();
   }
 
   @override
@@ -294,10 +294,7 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                           item.type,
                         );
                         if (context.mounted) {
-                          await MediaDetailPage.show(
-                            context,
-                            details.item,
-                          );
+                          await MediaDetailPage.show(context, details.item);
                         }
                       },
                     );
@@ -318,50 +315,15 @@ class _QuickAddTab extends StatefulWidget {
 }
 
 class _QuickAddTabState extends State<_QuickAddTab> {
-  final Map<int, ({int seasonNumber, int episodeNumber})?> _nextEpisodes = {};
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    loadNextEpisodes();
-  }
-
-  Future<void> loadNextEpisodes() async {
-    if (!mounted) return;
-    setState(() => _isLoading = true);
-
-    final provider = context.read<SearchProvider>();
-    final seenSeries = provider.seenItems
-        .where((s) => s.type == MediaType.tv)
-        .map((s) => s.tmdbId)
-        .toSet();
-
-    for (final id in seenSeries) {
-      final next = await provider.getNextEpisode(id);
-      _nextEpisodes[id] = next;
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
-
     return Consumer<SearchProvider>(
       builder: (context, provider, child) {
-        final seriesToDisplay = _nextEpisodes.entries
-            .where((e) => e.value != null)
-            .toList();
+        final items = provider.quickAddItems;
 
         return RefreshIndicator(
           onRefresh: widget.onRefresh,
-          child: seriesToDisplay.isEmpty
+          child: items.isEmpty
               ? ListView(
                   children: const [
                     SizedBox(height: 100),
@@ -370,60 +332,113 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                 )
               : ListView.builder(
                   padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: seriesToDisplay.length,
+                  itemCount: items.length,
                   itemBuilder: (context, index) {
-                    final entry = seriesToDisplay[index];
-                    final tmdbId = entry.key;
-                    final nextEp = entry.value!;
+                    final qa = items[index];
+                    final tmdbId = qa.tmdbId;
+                    final title = qa.title ?? 'Unknown';
+                    final posterPath = qa.posterPath;
 
-                    final title = provider.seenItems
-                        .firstWhere((s) => s.tmdbId == tmdbId)
-                        .title;
-                    final posterPath = provider.seenItems
-                        .firstWhere((s) => s.tmdbId == tmdbId)
-                        .posterPath;
+                    String subtitle = '';
+                    if (qa.seasonNumber != null && qa.episodeNumber != null) {
+                      subtitle =
+                          'Next: Season ${qa.seasonNumber}, Episode ${qa.episodeNumber}';
+                    }
 
-                    return ListTile(
-                      leading: posterPath != null
-                          ? Image.network(
-                              'https://image.tmdb.org/t/p/w92$posterPath',
-                            )
-                          : const Icon(Icons.tv),
-                      title: Text(title),
-                      subtitle: Text(
-                        'Next: Season ${nextEp.seasonNumber}, Episode ${nextEp.episodeNumber}',
+                    final dismissKey =
+                        '${qa.tmdbId}-${qa.seasonNumber ?? 0}-${qa.episodeNumber ?? 0}-${qa.insertedAt.millisecondsSinceEpoch}';
+
+                    return Dismissible(
+                      key: ValueKey(dismissKey),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.redAccent,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: const Icon(Icons.block, color: Colors.white),
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.check_circle_outline,
-                          color: Colors.green,
-                        ),
-                        onPressed: () async {
-                          final seenItem = provider.seenItems.firstWhere(
-                            (s) => s.tmdbId == tmdbId,
-                          );
-                          await provider.markAsSeen(
-                            seenItem.copyWith(
-                              seenDate: DateTime.now(),
-                              seasonNumber: nextEp.seasonNumber,
-                              episodeNumber: nextEp.episodeNumber,
-                            ),
-                          );
-                          loadNextEpisodes();
-                        },
-                      ),
-                      onTap: () async {
-                        final details = await provider.getMediaDetails(
-                          tmdbId,
-                          MediaType.tv,
-                        );
-                        if (context.mounted) {
-                          await MediaDetailPage.show(
-                            context,
-                            details.item,
-                          );
-                        }
+                      confirmDismiss: (direction) async {
+                        return true; // allow swipe; perform opt-out in onDismissed to show Undo
                       },
+                      onDismissed: (direction) async {
+                        try {
+                          await provider.optOutSeries(
+                            tmdbId,
+                            seasonNumber: qa.seasonNumber,
+                            episodeNumber: qa.episodeNumber,
+                          );
+                          await provider.loadQuickAddItems();
+                          if (context.mounted) {
+                            final messenger = ScaffoldMessenger.of(context);
+                            // Remove any existing SnackBar immediately so the new one appears
+                            messenger.removeCurrentSnackBar();
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: const Text('Streak opted out of Quick Add'),
+                                duration: const Duration(seconds: 4),
+                                action: SnackBarAction(
+                                  label: 'Undo',
+                                  onPressed: () async {
+                                    try {
+                                      await provider.clearOptOutSeries(
+                                        tmdbId,
+                                        seasonNumber: qa.seasonNumber,
+                                        episodeNumber: qa.episodeNumber,
+                                      );
+                                      // Restore the exact dismissed quick-add entry directly
+                                      await provider.addQuickAddItem(qa);
+                                    } catch (_) {}
+                                  },
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (_) {}
+                      },
+                      child: ListTile(
+                        leading: posterPath != null
+                            ? Image.network(
+                                'https://image.tmdb.org/t/p/w92$posterPath',
+                              )
+                            : const Icon(Icons.tv),
+                        title: Text(title),
+                        subtitle: Text(subtitle),
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.green,
+                          ),
+                          onPressed: () async {
+                            await provider.markAsSeen(
+                              SeenItem(
+                                tmdbId: qa.tmdbId,
+                                type: qa.type,
+                                title: qa.title ?? '',
+                                posterPath: qa.posterPath,
+                                seenDate: DateTime.now(),
+                                seasonNumber: qa.seasonNumber,
+                                episodeNumber: qa.episodeNumber,
+                              ),
+                            );
+                            await provider.loadQuickAddItems();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Marked ${qa.title ?? 'episode'} as seen')),
+                              );
+                            }
+                          },
+                        ),
+                        onTap: () async {
+                          final details = await provider.getMediaDetails(
+                            qa.tmdbId,
+                            qa.type,
+                          );
+                          if (context.mounted) {
+                            await MediaDetailPage.show(context, details.item);
+                          }
+                        },
+                        // Long-press removed; swipe-to-dismiss handles opt-out.
+                      ),
                     );
                   },
                 ),

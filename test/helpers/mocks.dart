@@ -13,7 +13,109 @@ import 'package:mediavore/core/cache/media_cache.dart';
 
 class MockDio extends Mock implements Dio {}
 
-class MockMediaRepository extends Mock implements MediaRepository {}
+class MockMediaRepository extends Mock implements MediaRepository {
+  @override
+  Future<List<QuickAddItem>> getQuickAddItems() {
+    try {
+      return super.noSuchMethod(Invocation.method(#getQuickAddItems, []))
+          as Future<List<QuickAddItem>>;
+    } catch (_) {
+      return Future.value(<QuickAddItem>[]);
+    }
+  }
+
+  @override
+  Future<void> removeQuickAddItemById(int isarId) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#removeQuickAddItemById, [isarId]),
+          )
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<void> optOutSeries(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(
+              #optOutSeries,
+              [tmdbId],
+              {#seasonNumber: seasonNumber, #episodeNumber: episodeNumber},
+            ),
+          )
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<void> clearOptOutSeries(
+    int tmdbId, {
+    int? seasonNumber,
+    int? episodeNumber,
+  }) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(
+              #clearOptOutSeries,
+              [tmdbId],
+              {#seasonNumber: seasonNumber, #episodeNumber: episodeNumber},
+            ),
+          )
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<void> populateQuickAddFromSeenHistory({
+    int? tmdbId,
+    int? tailSeason,
+    int? tailEpisode,
+  }) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#populateQuickAddFromSeenHistory, [], {
+              #tmdbId: tmdbId,
+              #tailSeason: tailSeason,
+              #tailEpisode: tailEpisode,
+            }),
+          )
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<void> importSeenData(
+    List<Map<String, dynamic>> data, {
+    ImportMode mode = ImportMode.append,
+    Function(double, String)? onProgress,
+  }) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(
+              #importSeenData,
+              [data],
+              {#mode: mode, #onProgress: onProgress},
+            ),
+          )
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+}
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}
 
@@ -33,3 +135,5 @@ class MockAchievementProvider extends Mock implements AchievementProvider {}
 class FakeSeenItem extends Fake implements SeenItem {}
 
 class FakeMediaItem extends Fake implements MediaItem {}
+ 
+class FakeQuickAddItem extends Fake implements QuickAddItem {}

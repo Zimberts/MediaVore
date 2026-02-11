@@ -6,7 +6,16 @@ import 'package:mediavore/features/media_details/data/models/seen_item_model.dar
 import 'package:mocktail/mocktail.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:mediavore/core/di/definitions_loader.dart';
 import '../../../../helpers/mocks.dart';
+
+// Simple test helper that implements the runtime `DefinitionsLoader`.
+class _TestDefinitionsLoader implements DefinitionsLoader {
+  final Future<List<Map<String, dynamic>>> Function() _loader;
+  _TestDefinitionsLoader(this._loader);
+  @override
+  Future<List<Map<String, dynamic>>> load() => _loader();
+}
 
 void main() {
   late AchievementRepositoryImpl repository;
@@ -38,7 +47,11 @@ void main() {
       return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     };
 
-    repository = AchievementRepositoryImpl(isar, mockDataSource, definitionsLoader: loader);
+    repository = AchievementRepositoryImpl(
+      isar,
+      mockDataSource,
+      definitionsLoader: _TestDefinitionsLoader(loader),
+    );
   });
 
   tearDown(() async {
@@ -112,7 +125,7 @@ void main() {
       final repoWithLoader = AchievementRepositoryImpl(
         isar,
         mockDataSource,
-        definitionsLoader: loader,
+        definitionsLoader: _TestDefinitionsLoader(loader),
       );
 
       // No seen items required for existence check — call getAchievements()
