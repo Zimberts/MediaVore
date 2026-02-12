@@ -9,6 +9,8 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/core/services/notification_scheduler.dart';
+import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
@@ -42,6 +44,8 @@ class MediaRepositoryImpl implements MediaRepository {
     try {
       debugPrint('[Repo] Starting Cache Init...');
       await cache.init();
+      // Initialize notification scheduler (permissions, timezone)
+      unawaited(NotificationScheduler.instance.initialize());
       debugPrint('[Repo] Cache Init Done.');
     } catch (e) {
       debugPrint('[Repo] Cache Init Error: $e');
@@ -977,19 +981,33 @@ class MediaRepositoryImpl implements MediaRepository {
     bool autoNotify = false,
   }) async {
     await _ensureInitialized();
-
     final isNotified = await localDataSource.isNotified(
       item.id,
       item.mediaType.name,
     );
 
+    // get existing notified model (if any) to support canceling
+    NotifiedItemModel? existingModel;
+    final existingList = await localDataSource.getNotifiedItems();
+    for (final m in existingList) {
+      if (m.tmdbId == item.id && m.type == item.mediaType.name) {
+        existingModel = m;
+        break;
+      }
+    }
+
     if (isNotified && !autoNotify) {
+      // User is disabling notifications for this item
       await localDataSource.toggleNotification(
         tmdbId: item.id,
         type: item.mediaType.name,
         title: item.title,
       );
+      if (existingModel != null) {
+        await NotificationScheduler.instance.cancelForNotifiedItem(existingModel);
+      }
     } else {
+      // Enabling notification (user or auto)
       await localDataSource.toggleNotification(
         tmdbId: item.id,
         type: item.mediaType.name,
@@ -998,6 +1016,19 @@ class MediaRepositoryImpl implements MediaRepository {
         autoNotify: autoNotify,
       );
       await _refreshNotificationDate(item);
+
+      // Fetch updated model and schedule notification if date available
+      final updatedList = await localDataSource.getNotifiedItems();
+      NotifiedItemModel? updatedModel;
+      for (final m in updatedList) {
+        if (m.tmdbId == item.id && m.type == item.mediaType.name) {
+          updatedModel = m;
+          break;
+        }
+      }
+      if (updatedModel != null) {
+        await NotificationScheduler.instance.scheduleForNotifiedItem(updatedModel);
+      }
     }
 
     await cache.cacheItem(item);
@@ -1073,6 +1104,10 @@ class MediaRepositoryImpl implements MediaRepository {
         await _refreshNotificationDate(item);
       } catch (_) {}
     }
+
+    // Reschedule all notifications based on updated local data
+    final latest = await localDataSource.getNotifiedItems();
+    await NotificationScheduler.instance.rescheduleAll(latest);
   }
 
   @override

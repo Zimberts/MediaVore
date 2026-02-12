@@ -1,9 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mediavore">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Required on Android 13+ to post notifications; also requested at runtime in MainActivity -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Required to schedule exact alarms on Android 12+/13+ when used; user may need to grant in settings -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <application
         android:label="MediaVore"
-        android:name="${applicationName}"
+        android:name=".Application"
         android:icon="@mipmap/launcher_icon">
         <activity
             android:exported="true"
@@ -39,6 +44,8 @@
                 <data android:scheme="mediavore" android:host="share" />
             </intent-filter>
         </activity>
+        <receiver android:name="com.example.mediavore.AlarmReceiver" android:exported="true" />
+        <!-- Optional: Receive boot completed to reschedule alarms if you implement persistence -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
