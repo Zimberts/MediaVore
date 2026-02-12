@@ -709,14 +709,10 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                             final member = _mediaDetails!.cast[index];
                             return GestureDetector(
                               onTap: () {
-                                Navigator.push(
+                                ActorDetailPage.show(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ActorDetailPage(
-                                      actorId: member.id,
-                                      actorName: member.name,
-                                    ),
-                                  ),
+                                  actorId: member.id,
+                                  actorName: member.name,
                                 );
                               },
                               child: Container(

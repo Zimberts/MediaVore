@@ -11,12 +11,48 @@ import 'package:cached_network_image/cached_network_image.dart';
 class ActorDetailPage extends StatefulWidget {
   final int actorId;
   final String actorName;
+  final bool isSheet;
+  final ScrollController? scrollController;
 
   const ActorDetailPage({
     super.key,
     required this.actorId,
     required this.actorName,
+    this.isSheet = false,
+    this.scrollController,
   });
+
+  static Future<void> show(
+    BuildContext context, {
+    required int actorId,
+    required String actorName,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: false,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          clipBehavior: Clip.antiAliasWithSaveLayer,
+          child: ActorDetailPage(
+            actorId: actorId,
+            actorName: actorName,
+            isSheet: true,
+            scrollController: scrollController,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   State<ActorDetailPage> createState() => _ActorDetailPageState();
@@ -64,44 +100,75 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final brightness = Theme.of(context).brightness;
+    final baseBgColor = brightness == Brightness.dark
+        ? Colors.black
+        : Theme.of(context).scaffoldBackgroundColor;
+    final overlayHeight = MediaQuery.of(context).padding.top + 120.0;
+    final overlayStartColor = brightness == Brightness.dark
+        ? baseBgColor.withValues(alpha: 0.75)
+        : baseBgColor.withValues(alpha: 0.95);
 
     return Scaffold(
+      backgroundColor: widget.isSheet ? Colors.transparent : null,
       body: CustomScrollView(
+        controller: widget.scrollController,
         slivers: [
           SliverAppBar(
             expandedHeight: 400,
             pinned: true,
             title: Text(_actorDetails?.name ?? widget.actorName),
             flexibleSpace: FlexibleSpaceBar(
-              background:
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
                   _actorDetails?.profilePath != null &&
-                      !Platform.environment.containsKey('FLUTTER_TEST')
-                  ? CachedNetworkImage(
-                      imageUrl:
-                          'https://image.tmdb.org/t/p/w500${_actorDetails!.profilePath}',
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => Container(
-                        color: colors.placeholder,
-                        child: Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            size: 64,
-                            color: colors.comments,
+                          !Platform.environment.containsKey('FLUTTER_TEST')
+                      ? CachedNetworkImage(
+                          imageUrl:
+                              'https://image.tmdb.org/t/p/w500${_actorDetails!.profilePath}',
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => Container(
+                            color: colors.placeholder,
+                            child: Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 64,
+                                color: colors.comments,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: colors.placeholder,
+                          child: Center(
+                            child: Icon(
+                              Icons.person,
+                              size: 100,
+                              color: colors.comments,
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  : Container(
-                      color: colors.placeholder,
-                      child: Center(
-                        child: Icon(
-                          Icons.person,
-                          size: 100,
-                          color: colors.comments,
+
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      height: overlayHeight,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            overlayStartColor,
+                            overlayStartColor.withValues(alpha: 0.0),
+                          ],
                         ),
                       ),
                     ),
+                  ),
+                ],
+              ),
             ),
           ),
           SliverSafeArea(
@@ -180,62 +247,55 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
   }
 
   Widget _buildKnownForList(List<MediaItem> items) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
     return SizedBox(
-      height: 200,
+      height: 150,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
           return GestureDetector(
-            onTap: () {
-              MediaDetailPage.show(context, item);
-            },
+            onTap: () => MediaDetailPage.show(context, item),
             child: Container(
-              width: 120,
+              width: 100,
               margin: const EdgeInsets.only(right: 12),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child:
-                          item.posterPath != null &&
-                              !Platform.environment.containsKey('FLUTTER_TEST')
-                          ? CachedNetworkImage(
-                              imageUrl:
-                                  'https://image.tmdb.org/t/p/w185${item.posterPath}',
-                              fit: BoxFit.cover,
-                              width: 120,
-                              placeholder: (context, url) =>
-                                  Container(color: Colors.grey[200]),
-                              errorWidget: (context, url, error) => Icon(
-                                item.mediaType == MediaType.tv
-                                    ? Icons.tv
-                                    : Icons.movie,
-                              ),
-                            )
-                          : Container(
-                              color: Colors.grey[300],
-                              child: Center(
-                                child: Icon(
-                                  item.mediaType == MediaType.tv
-                                      ? Icons.tv
-                                      : Icons.movie,
-                                ),
-                              ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: item.posterPath != null &&
+                            !Platform.environment.containsKey('FLUTTER_TEST')
+                        ? CachedNetworkImage(
+                            imageUrl:
+                                'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                            height: 120,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                Container(color: Colors.grey[200]),
+                            errorWidget: (context, url, error) => Icon(
+                              item.mediaType == MediaType.tv
+                                  ? Icons.tv
+                                  : Icons.movie,
                             ),
-                    ),
+                          )
+                        : Container(
+                            height: 120,
+                            color: Colors.grey[300],
+                            child: Icon(
+                              item.mediaType == MediaType.tv
+                                  ? Icons.tv
+                                  : Icons.movie,
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     item.title,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
               ),
