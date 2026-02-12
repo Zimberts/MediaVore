@@ -246,12 +246,23 @@ class MediaRepositoryImpl implements MediaRepository {
     final Map<String, dynamic> watchProviders = await watchProvidersFuture;
     final List<Map<String, dynamic>> videos = await videosFuture;
 
+    // If this item belongs to a collection, fetch collection parts (saga)
+    List<MediaItem>? collectionParts;
+    if (item.collectionId != null) {
+      try {
+        collectionParts = await remoteDataSource.getCollectionParts(item.collectionId!);
+      } catch (_) {
+        collectionParts = null;
+      }
+    }
+
     final details = MediaDetails(
       item: item,
       cast: cast,
       director: director,
       similar: similar,
       recommendations: recommendations,
+      collection: collectionParts,
       watchProviders: watchProviders,
       videos: videos,
     );

@@ -21,6 +21,9 @@ abstract class RegisterModule {
   @singleton
   String get apiToken => dotenv.env['TMDB_API_TOKEN'] ?? '';
 
+  @singleton
+  bool get autoInit => true;
+
   @preResolve
   Future<SharedPreferences> get sharedPreferences =>
       SharedPreferences.getInstance();

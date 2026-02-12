@@ -12,12 +12,12 @@ import 'package:dio/dio.dart' as _i5;
 import 'package:get_it/get_it.dart' as _i1;
 import 'package:injectable/injectable.dart' as _i2;
 import 'package:isar/isar.dart' as _i6;
-import 'package:shared_preferences/shared_preferences.dart' as _i12;
+import 'package:shared_preferences/shared_preferences.dart' as _i10;
 
 import '../../features/achievements/data/repositories/achievement_repository_impl.dart'
-    as _i14;
+    as _i12;
 import '../../features/achievements/domain/repositories/achievement_repository.dart'
-    as _i13;
+    as _i11;
 import '../../features/achievements/presentation/providers/achievement_provider.dart'
     as _i15;
 import '../../features/media_details/data/datasources/media_list_local_data_source.dart'
@@ -25,9 +25,9 @@ import '../../features/media_details/data/datasources/media_list_local_data_sour
 import '../../features/search/data/datasources/media_remote_data_source.dart'
     as _i9;
 import '../../features/search/data/repositories/media_repository_impl.dart'
-    as _i11;
+    as _i14;
 import '../../features/search/domain/repositories/media_repository.dart'
-    as _i10;
+    as _i13;
 import '../cache/media_cache.dart' as _i7;
 import '../database/app_database.dart' as _i17;
 import 'asset_definitions_loader.dart' as _i4;
@@ -60,24 +60,26 @@ Future<_i1.GetIt> init(
         dio: gh<_i5.Dio>(),
         apiToken: gh<String>(),
       ));
-  gh.lazySingleton<_i10.MediaRepository>(() => _i11.MediaRepositoryImpl(
-        remoteDataSource: gh<_i9.MediaRemoteDataSource>(),
-        localDataSource: gh<_i8.MediaListLocalDataSource>(),
-        cache: gh<_i7.MediaCache>(),
-      ));
-  await gh.factoryAsync<_i12.SharedPreferences>(
+  await gh.factoryAsync<_i10.SharedPreferences>(
     () => registerModule.sharedPreferences,
     preResolve: true,
   );
   gh.singleton<String>(() => registerModule.apiToken);
-  gh.lazySingleton<_i13.AchievementRepository>(
-      () => _i14.AchievementRepositoryImpl(
+  gh.singleton<bool>(() => registerModule.autoInit);
+  gh.lazySingleton<_i11.AchievementRepository>(
+      () => _i12.AchievementRepositoryImpl(
             gh<_i6.Isar>(),
             gh<_i8.MediaListLocalDataSource>(),
             definitionsLoader: gh<_i3.DefinitionsLoader>(),
           ));
+  gh.lazySingleton<_i13.MediaRepository>(() => _i14.MediaRepositoryImpl(
+        remoteDataSource: gh<_i9.MediaRemoteDataSource>(),
+        localDataSource: gh<_i8.MediaListLocalDataSource>(),
+        cache: gh<_i7.MediaCache>(),
+        autoInit: gh<bool>(),
+      ));
   gh.lazySingleton<_i15.AchievementProvider>(
-      () => _i15.AchievementProvider(gh<_i13.AchievementRepository>()));
+      () => _i15.AchievementProvider(gh<_i11.AchievementRepository>()));
   return getIt;
 }
 

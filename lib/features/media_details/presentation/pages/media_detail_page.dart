@@ -17,6 +17,7 @@ import 'package:mediavore/features/media_details/presentation/widgets/watch_next
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:mediavore/core/utils/saga_sort.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -536,8 +537,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                               itemToDisplay.numberOfEpisodes != null)
                             _SearchIconText(
                               icon: Icons.subscriptions,
-                              text:
-                                  '${itemToDisplay.numberOfEpisodes} Episodes',
+                              text: '${itemToDisplay.numberOfEpisodes} Episodes',
                             ),
                         ],
                       ),
@@ -630,12 +630,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                 subtitle: Text(
                                   '$episodesSeenInSeason / ${season.episodeCount} episodes seen',
                                   style: TextStyle(
-                                    color: isComplete
-                                        ? colors.onWatchlist
-                                        : null,
-                                    fontWeight: isComplete
-                                        ? FontWeight.bold
-                                        : null,
+                                    color: isComplete ? colors.onWatchlist : null,
+                                    fontWeight: isComplete ? FontWeight.bold : null,
                                   ),
                                 ),
                                 trailing: Row(
@@ -655,16 +651,13 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                             ),
                                           )
                                         : Icon(
-                                            isExpanded
-                                                ? Icons.expand_less
-                                                : Icons.expand_more,
+                                            isExpanded ? Icons.expand_less : Icons.expand_more,
                                           ),
                                   ],
                                 ),
                                 onTap: () => _fetchSeasonDetails(seasonNumber),
                               ),
-                              if (isExpanded &&
-                                  _episodesBySeason.containsKey(seasonNumber))
+                              if (isExpanded && _episodesBySeason.containsKey(seasonNumber))
                                 Padding(
                                   padding: const EdgeInsets.only(left: 16.0),
                                   child: Column(
@@ -684,9 +677,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                               ),
                                               item: itemToDisplay,
                                               seasonNumber: seasonNumber,
-                                              episodeNumber:
-                                                  episode['episode_number']
-                                                      as int,
+                                              episodeNumber: episode['episode_number'] as int,
                                             ),
                                           );
                                         })
@@ -778,6 +769,14 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         ),
                       ),
 
+                      // Saga section goes first if available
+                      if (_mediaDetails!.collection != null &&
+                          _mediaDetails!.collection!.isNotEmpty)
+                        _buildSagaList(
+                          'Saga',
+                          _mediaDetails!.collection!,
+                          itemToDisplay.id,
+                        ),
                       _buildHorizontalList('Similar', _mediaDetails!.similar),
                       _buildHorizontalList(
                         'Recommendations',
@@ -933,6 +932,87 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
+              return GestureDetector(
+                onTap: () {
+                  MediaDetailPage.show(context, item);
+                },
+                child: Container(
+                  width: 100,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: item.posterPath != null
+                            ? CachedNetworkImage(
+                                imageUrl:
+                                    'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                                height: 120,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    Container(color: Colors.grey[200]),
+                                errorWidget: (context, url, error) => Icon(
+                                  item.mediaType == MediaType.tv
+                                      ? Icons.tv
+                                      : Icons.movie,
+                                ),
+                              )
+                            : Container(
+                                height: 120,
+                                color: Colors.grey[300],
+                                child: Icon(
+                                  item.mediaType == MediaType.tv
+                                      ? Icons.tv
+                                      : Icons.movie,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds a saga/collection horizontal list.
+  ///
+  /// `items` are first sorted chronologically (movies by `releaseDate`,
+  /// TV by `lastEpisodeAirDate`) and then rotated so elements after
+  /// `currentId` appear first. The current item is omitted.
+  Widget _buildSagaList(String title, List<MediaItem>? items, int currentId) {
+    if (items == null || items.isEmpty) return const SizedBox.shrink();
+
+    final rotated = rotateSagaElements(items, currentId);
+
+    if (rotated.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 150,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: rotated.length,
+            itemBuilder: (context, index) {
+              final item = rotated[index];
               return GestureDetector(
                 onTap: () {
                   MediaDetailPage.show(context, item);

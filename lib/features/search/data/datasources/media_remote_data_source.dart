@@ -374,6 +374,24 @@ class MediaRemoteDataSource {
     }
   }
 
+  /// Fetches the parts of a collection (saga) by collection id.
+  Future<List<MediaItem>> getCollectionParts(int collectionId) async {
+    try {
+      final response = await dio.get(
+        'https://api.themoviedb.org/3/collection/$collectionId',
+        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+      );
+      final List results = response.data['parts'] ?? [];
+      return results.map((m) {
+        final data = Map<String, dynamic>.from(m);
+        if (data['media_type'] == null) data['media_type'] = 'movie';
+        return MediaItem.fromJson(data);
+      }).toList();
+    } catch (e) {
+      throw ParsingException('Failed to fetch collection parts', e);
+    }
+  }
+
   Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {

@@ -57,6 +57,8 @@ class MediaItem extends Equatable {
   final String? lastEpisodeAirDate;
   final int? lastEpisodeNumber;
   final int? lastSeasonNumber;
+  final int? collectionId;
+  final String? collectionName;
 
   const MediaItem({
     required this.id,
@@ -78,6 +80,8 @@ class MediaItem extends Equatable {
     this.lastEpisodeAirDate,
     this.lastEpisodeNumber,
     this.lastSeasonNumber,
+    this.collectionId,
+    this.collectionName,
   });
 
   factory MediaItem.fromJson(Map<String, dynamic> json) {
@@ -147,6 +151,12 @@ class MediaItem extends Equatable {
       lastEpisodeAirDate: lastAirDate,
       lastEpisodeNumber: lastEpNum,
       lastSeasonNumber: lastSeasNum,
+      collectionId: json['belongs_to_collection'] is Map
+          ? (json['belongs_to_collection']['id'] as int?)
+          : null,
+      collectionName: json['belongs_to_collection'] is Map
+          ? (json['belongs_to_collection']['name'] as String?)
+          : null,
     );
   }
 
@@ -215,6 +225,8 @@ class MediaItem extends Equatable {
     String? lastEpisodeAirDate,
     int? lastEpisodeNumber,
     int? lastSeasonNumber,
+    int? collectionId,
+    String? collectionName,
   }) {
     return MediaItem(
       id: id ?? this.id,
@@ -236,6 +248,8 @@ class MediaItem extends Equatable {
       lastEpisodeAirDate: lastEpisodeAirDate ?? this.lastEpisodeAirDate,
       lastEpisodeNumber: lastEpisodeNumber ?? this.lastEpisodeNumber,
       lastSeasonNumber: lastSeasonNumber ?? this.lastSeasonNumber,
+      collectionId: collectionId ?? this.collectionId,
+      collectionName: collectionName ?? this.collectionName,
     );
   }
 
@@ -260,5 +274,7 @@ class MediaItem extends Equatable {
     lastEpisodeAirDate,
     lastEpisodeNumber,
     lastSeasonNumber,
+    collectionId,
+    collectionName,
   ];
 }

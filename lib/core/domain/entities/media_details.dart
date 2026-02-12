@@ -8,6 +8,7 @@ class MediaDetails {
   final CrewMember? director;
   final List<MediaItem>? similar;
   final List<MediaItem>? recommendations;
+  final List<MediaItem>? collection;
   final Map<String, dynamic>? watchProviders;
   final List<Map<String, dynamic>>? videos;
 
@@ -16,6 +17,7 @@ class MediaDetails {
     required this.cast,
     this.director,
     this.similar,
+    this.collection,
     this.recommendations,
     this.watchProviders,
     this.videos,
@@ -27,6 +29,7 @@ class MediaDetails {
       'cast': cast.map((c) => c.toJson()).toList(),
       'director': director?.toJson(),
       'similar': similar?.map((i) => i.toJson()).toList(),
+      'collection': collection?.map((i) => i.toJson()).toList(),
       'recommendations': recommendations?.map((i) => i.toJson()).toList(),
       'watch_providers': watchProviders,
       'videos': videos,
@@ -47,6 +50,11 @@ class MediaDetails {
           ? (json['recommendations'] as List)
                 .map((i) => MediaItem.fromJson(i))
                 .toList()
+          : null,
+      collection: json['collection'] != null
+          ? (json['collection'] as List)
+            .map((i) => MediaItem.fromJson(i))
+            .toList()
           : null,
       watchProviders: json['watch_providers'],
       videos: json['videos'] != null
