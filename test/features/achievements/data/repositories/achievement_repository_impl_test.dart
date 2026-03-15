@@ -41,11 +41,11 @@ void main() {
     // loader that reads the JSON definitions file from disk for tests
     final assetPath =
         '${Directory.current.path.replaceAll('\\', '/')}/assets/achievements/definitions.json';
-    final loader = () async {
+    Future<List<Map<String, dynamic>>> loader() async {
       final content = await File(assetPath).readAsString();
       final list = jsonDecode(content) as List<dynamic>;
       return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-    };
+    }
 
     repository = AchievementRepositoryImpl(
       isar,
@@ -115,11 +115,11 @@ void main() {
       // create a loader that reads the repo asset file directly from disk
       final assetPath =
           '${Directory.current.path.replaceAll('\\', '/')}/assets/achievements/definitions.json';
-      final loader = () async {
+      Future<List<Map<String, dynamic>>> loader() async {
         final content = await File(assetPath).readAsString();
         final list = jsonDecode(content) as List<dynamic>;
         return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-      };
+      }
 
       // New repository instance using injected loader to exercise JSON path
       final repoWithLoader = AchievementRepositoryImpl(

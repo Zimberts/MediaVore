@@ -97,19 +97,9 @@ class MockMediaRepository extends Mock implements MediaRepository {
   }
 
   @override
-  Future<void> importSeenData(
-    List<Map<String, dynamic>> data, {
-    ImportMode mode = ImportMode.append,
-    Function(double, String)? onProgress,
-  }) {
+  Future<void> updateSeenEntry(SeenItem item) {
     try {
-      return super.noSuchMethod(
-            Invocation.method(
-              #importSeenData,
-              [data],
-              {#mode: mode, #onProgress: onProgress},
-            ),
-          )
+      return super.noSuchMethod(Invocation.method(#updateSeenEntry, [item]))
           as Future<void>;
     } catch (_) {
       return Future.value();
@@ -135,5 +125,5 @@ class MockAchievementProvider extends Mock implements AchievementProvider {}
 class FakeSeenItem extends Fake implements SeenItem {}
 
 class FakeMediaItem extends Fake implements MediaItem {}
- 
+
 class FakeQuickAddItem extends Fake implements QuickAddItem {}

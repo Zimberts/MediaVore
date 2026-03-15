@@ -700,36 +700,26 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> loadLists() => loadListNames();
 
-  Future<List<Map<String, dynamic>>> exportSeenData({
-    DateTime? start,
-    DateTime? end,
-    int? tmdbId,
-    MediaType? type,
-  }) {
-    return repository.exportSeenData(
-      start: start,
-      end: end,
-      tmdbId: tmdbId,
-      type: type,
-    );
+  Future<List<int>> exportAllData() {
+    return repository.exportAllData();
   }
 
-  Future<void> importSeenData(
-    List<Map<String, dynamic>> data, {
+  Future<void> importAllData(
+    List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
   }) async {
     _isImporting = true;
     _importProgress = 0.0;
-    _importStatus = 'Starting import...';
+    _importStatus = 'Importing all data...';
     notifyListeners();
 
     try {
-      await repository.importSeenData(
-        data,
+      await repository.importAllData(
+        zipBytes,
         mode: mode,
-        onProgress: (progress, status) {
-          _importProgress = progress;
-          _importStatus = status;
+        onProgress: (p, s) {
+          _importProgress = p;
+          _importStatus = s;
           notifyListeners();
         },
       );
@@ -740,15 +730,84 @@ class SearchProvider with ChangeNotifier {
       _importStatus = 'Error: $e';
     } finally {
       await loadAllSeenStatus();
+      await loadLikedStatus();
       await loadNotifiedItems();
+      await loadListNames();
+      await _loadAllListEntries();
       await updateCacheSize();
       await updateSeenDbSize();
+      _isImporting = false;
+      notifyListeners();
+    }
+  }
 
-      // After importing seen history, populate quick-add based on the new data
-      try {
-        await repository.populateQuickAddFromSeenHistory();
-      } catch (_) {}
+  Future<void> refetchMissingData() async {
+    _isImporting = true;
+    _importProgress = 0.0;
+    _importStatus = 'Refetching missing runtimes...';
+    notifyListeners();
 
+    try {
+      final seenItems = await repository.getSeenItems();
+      final itemsToUpdate = seenItems.where((i) => i.id != null && (i.runtime == null || i.runtime == 0)).toList();
+
+      int processed = 0;
+      for (final item in itemsToUpdate) {
+        _importProgress = processed / itemsToUpdate.length;
+        _importStatus = 'Refetching ${item.title}...';
+        notifyListeners();
+
+        try {
+          final details = await repository.getMediaDetails(item.tmdbId, type: item.type);
+
+          List<String>? newGenres = item.genres;
+          if (newGenres == null || newGenres.isEmpty) {
+            newGenres = details.item.genres;
+          }
+          int? newRuntime = item.runtime;
+
+          if (item.type == MediaType.movie) {
+            newRuntime = details.item.runtime;
+          } else if (item.seasonNumber != null && item.episodeNumber != null) {
+            // For TV episodes, runtime comes from season/episode
+            final seasonDetails = await repository.getSeasonDetails(
+              item.tmdbId,
+              item.seasonNumber!,
+            );
+            final episodes = seasonDetails['episodes'] as List?;
+            final episode = episodes?.firstWhere(
+              (e) => e['episode_number'] == item.episodeNumber,
+              orElse: () => null,
+            );
+            if (episode != null && episode['runtime'] != null) {
+              newRuntime = episode['runtime'] as int;
+            } else {
+              // fallback to tv show runtime
+              newRuntime = details.item.runtime;
+            }
+          }
+
+          if ((newRuntime != null && newRuntime > 0) || (newGenres != null && newGenres.isNotEmpty)) {
+            final updatedItem = item.copyWith(
+              runtime: newRuntime,
+              genres: newGenres,
+            );
+            await repository.updateSeenEntry(updatedItem);
+          }
+        } catch (e) {
+          // Ignore individual failures to not interrupt the whole batch
+        }
+
+        processed++;
+      }
+
+      _importProgress = 1.0;
+      _importStatus = 'Done refetching data!';
+    } catch (e) {
+      _importStatus = 'Error: $e';
+    } finally {
+      await loadAllSeenStatus();
+      await updateSeenDbSize();
       _isImporting = false;
       notifyListeners();
     }

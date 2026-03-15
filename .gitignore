@@ -54,3 +54,9 @@ app.*.map.json
 /android/app/release
 
 .env
+
+
+# Windows specific
+*.lnk
+
+.vscode/

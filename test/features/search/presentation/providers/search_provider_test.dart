@@ -279,41 +279,5 @@ void main() {
         expect(provider.getSeenCount(tvItem), 1);
       },
     );
-
-    test('importSeenData triggers quick-add population', () async {
-      when(
-        () => mockRepository.importSeenData(
-          any(),
-          mode: any(named: 'mode'),
-          onProgress: any(named: 'onProgress'),
-        ),
-      ).thenAnswer((_) async {});
-
-      when(
-        () => mockRepository.populateQuickAddFromSeenHistory(),
-      ).thenAnswer((_) async {});
-
-      final seenData = [
-        {
-          'tmdbId': 1,
-          'type': 'tv',
-          'seasonNumber': 1,
-          'episodeNumber': 1,
-          'seenDate': DateTime(2020, 1, 1).toIso8601String(),
-        }
-      ];
-
-      await provider.importSeenData(seenData, mode: ImportMode.append);
-
-      verify(
-        () => mockRepository.importSeenData(
-          any(),
-          mode: any(named: 'mode'),
-          onProgress: any(named: 'onProgress'),
-        ),
-      ).called(1);
-
-      verify(() => mockRepository.populateQuickAddFromSeenHistory()).called(1);
-    });
   });
 }

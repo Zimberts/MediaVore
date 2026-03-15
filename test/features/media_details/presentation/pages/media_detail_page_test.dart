@@ -78,16 +78,6 @@ void main() {
         limit: any(named: 'limit'),
       ),
     ).thenAnswer((_) async => []);
-
-    // Default mock for exportSeenData to avoid Null check error
-    when(
-      () => mockMediaRepository.exportSeenData(
-        start: any(named: 'start'),
-        end: any(named: 'end'),
-        tmdbId: any(named: 'tmdbId'),
-        type: any(named: 'type'),
-      ),
-    ).thenAnswer((_) async => []);
   });
 
   tearDown(() {
@@ -282,92 +272,6 @@ void main() {
 
       // Check the season list tile subtitle
       expect(find.text('1 / 7 episodes seen'), findsOneWidget);
-    });
-
-    group('Export Feature', () {
-      testWidgets(
-        'tapping export button shows bottom sheet with options if data exists',
-        (WidgetTester tester) async {
-          when(
-            () => mockMediaRepository.getMediaDetails(
-              tItem.id,
-              type: any(named: 'type'),
-            ),
-          ).thenAnswer((_) async => tMediaDetails);
-
-          // Mock data to exist so export sheet opens
-          when(
-            () => mockMediaRepository.exportSeenData(
-              tmdbId: any(named: 'tmdbId'),
-              type: any(named: 'type'),
-            ),
-          ).thenAnswer(
-            (_) async => [
-              {'tmdbId': 1},
-            ],
-          );
-
-          await tester.pumpWidget(createWidgetUnderTest());
-          await tester.pump();
-          await tester.pumpAndSettle();
-
-          // Scroll until the export button is visible.
-          await tester.scrollUntilVisible(
-            find.text('Export history'),
-            500.0,
-            scrollable: find.byType(Scrollable),
-          );
-          await tester.pumpAndSettle();
-
-          final exportButtonText = find.text('Export history');
-          expect(exportButtonText, findsOneWidget);
-
-          await tester.tap(exportButtonText);
-          await tester.pumpAndSettle();
-
-          expect(find.text('Save to device'), findsOneWidget);
-          expect(find.text('Share via System'), findsOneWidget);
-        },
-      );
-
-      testWidgets('tapping export button shows snackbar if no data exists', (
-        WidgetTester tester,
-      ) async {
-        when(
-          () => mockMediaRepository.getMediaDetails(
-            tItem.id,
-            type: any(named: 'type'),
-          ),
-        ).thenAnswer((_) async => tMediaDetails);
-
-        // Mock no data
-        when(
-          () => mockMediaRepository.exportSeenData(
-            tmdbId: any(named: 'tmdbId'),
-            type: any(named: 'type'),
-          ),
-        ).thenAnswer((_) async => []);
-
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump();
-        await tester.pumpAndSettle();
-
-        // Scroll until the export button is visible.
-        await tester.scrollUntilVisible(
-          find.text('Export history'),
-          500.0,
-          scrollable: find.byType(Scrollable),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Export history'));
-        await tester.pumpAndSettle();
-
-        expect(
-          find.text('No history to export for this item.'),
-          findsOneWidget,
-        );
-      });
     });
   });
 }

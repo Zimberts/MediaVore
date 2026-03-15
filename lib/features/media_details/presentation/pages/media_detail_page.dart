@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -16,11 +14,10 @@ import 'package:mediavore/features/media_details/presentation/widgets/notify_but
 import 'package:mediavore/features/media_details/presentation/widgets/watch_next_button.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:mediavore/core/utils/saga_sort.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MediaDetailPage extends StatefulWidget {
   final MediaItem item;
@@ -182,89 +179,6 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             content: Text('Cannot load season details while offline.'),
           ),
         );
-      }
-    }
-  }
-
-  Future<void> _exportHistory() async {
-    final provider = context.read<SearchProvider>();
-    final data = await provider.exportSeenData(
-      tmdbId: widget.item.id,
-      type: widget.item.mediaType,
-    );
-
-    if (data.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No history to export for this item.')),
-        );
-      }
-      return;
-    }
-
-    final jsonString = jsonEncode(data);
-    final fileName =
-        'mediavore_${widget.item.title.replaceAll(' ', '_')}_history.json';
-
-    if (mounted) {
-      showModalBottomSheet(
-        context: context,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.save_alt),
-                title: const Text('Save to device'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _saveFileToDevice(context, jsonString, fileName);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.share),
-                title: const Text('Share via System'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final tempDir = await getTemporaryDirectory();
-                  final tempFile = File('${tempDir.path}/$fileName');
-                  await tempFile.writeAsString(jsonString);
-                  await Share.shareXFiles([
-                    XFile(tempFile.path, mimeType: 'application/json'),
-                  ], text: 'Seen history for ${widget.item.title}');
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _saveFileToDevice(
-    BuildContext context,
-    String jsonString,
-    String fileName,
-  ) async {
-    try {
-      final bytes = utf8.encode(jsonString);
-      final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save History',
-        fileName: fileName,
-        initialDirectory: '/storage/emulated/0/Download/MediaVore',
-        bytes: bytes,
-      );
-
-      if (result != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File saved successfully')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
       }
     }
   }
@@ -537,7 +451,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                               itemToDisplay.numberOfEpisodes != null)
                             _SearchIconText(
                               icon: Icons.subscriptions,
-                              text: '${itemToDisplay.numberOfEpisodes} Episodes',
+                              text:
+                                  '${itemToDisplay.numberOfEpisodes} Episodes',
                             ),
                         ],
                       ),
@@ -630,8 +545,12 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                 subtitle: Text(
                                   '$episodesSeenInSeason / ${season.episodeCount} episodes seen',
                                   style: TextStyle(
-                                    color: isComplete ? colors.onWatchlist : null,
-                                    fontWeight: isComplete ? FontWeight.bold : null,
+                                    color: isComplete
+                                        ? colors.onWatchlist
+                                        : null,
+                                    fontWeight: isComplete
+                                        ? FontWeight.bold
+                                        : null,
                                   ),
                                 ),
                                 trailing: Row(
@@ -651,13 +570,16 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                             ),
                                           )
                                         : Icon(
-                                            isExpanded ? Icons.expand_less : Icons.expand_more,
+                                            isExpanded
+                                                ? Icons.expand_less
+                                                : Icons.expand_more,
                                           ),
                                   ],
                                 ),
                                 onTap: () => _fetchSeasonDetails(seasonNumber),
                               ),
-                              if (isExpanded && _episodesBySeason.containsKey(seasonNumber))
+                              if (isExpanded &&
+                                  _episodesBySeason.containsKey(seasonNumber))
                                 Padding(
                                   padding: const EdgeInsets.only(left: 16.0),
                                   child: Column(
@@ -677,7 +599,9 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                               ),
                                               item: itemToDisplay,
                                               seasonNumber: seasonNumber,
-                                              episodeNumber: episode['episode_number'] as int,
+                                              episodeNumber:
+                                                  episode['episode_number']
+                                                      as int,
                                             ),
                                           );
                                         })
@@ -781,15 +705,6 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                     ],
                     const SizedBox(height: 24),
                     MediaListManager(item: itemToDisplay),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: ElevatedButton.icon(
-                        onPressed: _exportHistory,
-                        icon: const Icon(Icons.file_upload_outlined),
-                        label: const Text('Export history'),
-                      ),
-                    ),
                     const SizedBox(height: 40),
                   ],
                 ]),

@@ -403,7 +403,10 @@ class MediaListLocalDataSource {
 
   // QuickAdd methods
   Future<List<QuickAddItemModel>> getQuickAddItems() async {
-    return await _isar.quickAddItemModels.where().sortByInsertedAtDesc().findAll();
+    return await _isar.quickAddItemModels
+        .where()
+        .sortByInsertedAtDesc()
+        .findAll();
   }
 
   Future<void> addQuickAddItem(QuickAddItemModel item) async {
@@ -463,14 +466,16 @@ class MediaListLocalDataSource {
     int? episodeNumber,
   }) async {
     await _isar.writeTxn(() async {
-      final existingQuery = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(tmdbId);
+      final existingQuery = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(
+        tmdbId,
+      );
       final existing = await (seasonNumber != null && episodeNumber != null
-              ? existingQuery
-                  .and()
-                  .seasonNumberEqualTo(seasonNumber)
-                  .episodeNumberEqualTo(episodeNumber)
-                  .findFirst()
-              : existingQuery.findFirst());
+          ? existingQuery
+                .and()
+                .seasonNumberEqualTo(seasonNumber)
+                .episodeNumberEqualTo(episodeNumber)
+                .findFirst()
+          : existingQuery.findFirst());
 
       if (existing == null) {
         await _isar.quickAddOptOutModels.put(
@@ -499,7 +504,9 @@ class MediaListLocalDataSource {
     await _isar.writeTxn(() async {
       var q = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(tmdbId);
       if (seasonNumber != null) q = q.and().seasonNumberEqualTo(seasonNumber);
-      if (episodeNumber != null) q = q.and().episodeNumberEqualTo(episodeNumber);
+      if (episodeNumber != null) {
+        q = q.and().episodeNumberEqualTo(episodeNumber);
+      }
       await q.deleteAll();
     });
   }
@@ -518,5 +525,126 @@ class MediaListLocalDataSource {
 
   Future<List<NotifiedItemModel>> getNotifiedItems() async {
     return await _isar.notifiedItemModels.where().findAll();
+  }
+
+  Future<void> importLikedItems(
+    List<LikedItem> items, {
+    required ImportMode mode,
+    Function(double progress, String status)? onProgress,
+  }) async {
+    final total = items.length;
+
+    if (mode == ImportMode.replace) {
+      await _isar.writeTxn(() async {
+        await _isar.likedItems.clear();
+      });
+    }
+
+    if (mode == ImportMode.replace || mode == ImportMode.append) {
+      for (int i = 0; i < items.length; i++) {
+        if (onProgress != null) onProgress(i / total, 'Importing likes...');
+      }
+
+      await _isar.writeTxn(() async {
+        await _isar.likedItems.putAll(items);
+      });
+    } else if (mode == ImportMode.merge) {
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        if (onProgress != null) {
+          onProgress(i / total, 'Processing like ${i + 1}');
+        }
+        final existing = await _isar.likedItems
+            .filter()
+            .tmdbIdEqualTo(item.tmdbId)
+            .typeEqualTo(item.type)
+            .findFirst();
+        if (existing == null) {
+          await _isar.writeTxn(() async {
+            await _isar.likedItems.put(item);
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> importNotifiedItems(
+    List<NotifiedItemModel> items, {
+    required ImportMode mode,
+    Function(double progress, String status)? onProgress,
+  }) async {
+    final total = items.length;
+
+    if (mode == ImportMode.replace) {
+      await _isar.writeTxn(() async {
+        await _isar.notifiedItemModels.clear();
+      });
+    }
+
+    if (mode == ImportMode.replace || mode == ImportMode.append) {
+      for (int i = 0; i < items.length; i++) {
+        if (onProgress != null) {
+          onProgress(i / total, 'Importing notifications...');
+        }
+      }
+
+      await _isar.writeTxn(() async {
+        await _isar.notifiedItemModels.putAll(items);
+      });
+    } else if (mode == ImportMode.merge) {
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        if (onProgress != null) {
+          onProgress(i / total, 'Processing notification ${i + 1}');
+        }
+        final existing = await _isar.notifiedItemModels
+            .filter()
+            .tmdbIdEqualTo(item.tmdbId)
+            .typeEqualTo(item.type)
+            .findFirst();
+        if (existing == null) {
+          await _isar.writeTxn(() async {
+            await _isar.notifiedItemModels.put(item);
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> importListsData(
+    Map<String, List<MediaListItem>> lists, {
+    required ImportMode mode,
+    Function(double progress, String status)? onProgress,
+  }) async {
+    final total = lists.length;
+
+    if (mode == ImportMode.replace) {
+      // delete all user-created lists except watchlist
+      await _isar.writeTxn(() async {
+        await _isar.mediaListItems.where().deleteAll();
+        await _isar.userLists.where().deleteAll();
+      });
+    }
+
+    int i = 0;
+    for (final entry in lists.entries) {
+      if (onProgress != null) onProgress(i / total, 'Importing list ${i + 1}');
+      final name = entry.key;
+      final items = entry.value;
+
+      // ensure list exists
+      await createList(name);
+
+      for (final item in items) {
+        // addToList avoids duplicates
+        await addToList(
+          id: item.id,
+          type: item.type,
+          listName: name,
+          title: item.title,
+        );
+      }
+      i++;
+    }
   }
 }

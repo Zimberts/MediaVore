@@ -32,6 +32,8 @@ dependencies:
   fl_chart: ^0.70.0
   scrollable_positioned_list: ^0.3.8
   rxdart: ^0.27.7
+  archive: ^4.0.9
+  csv: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -42,7 +44,6 @@ dev_dependencies:
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.8
   flutter_launcher_icons: ^0.13.1
-
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true

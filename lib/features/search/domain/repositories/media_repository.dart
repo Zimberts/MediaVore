@@ -93,6 +93,9 @@ abstract class MediaRepository {
     int? episodeNumber,
   });
 
+  /// Updates an existing seen entry.
+  Future<void> updateSeenEntry(SeenItem item);
+
   /// Deletes a specific viewing entry by its local ID.
   Future<void> deleteSeenEntry(int id);
 
@@ -118,17 +121,12 @@ abstract class MediaRepository {
   /// Manually triggers a full cache fill (pre-caching lists and recent seen).
   Future<void> fillCache();
 
-  /// Exports seen data as a list of maps.
-  Future<List<Map<String, dynamic>>> exportSeenData({
-    DateTime? start,
-    DateTime? end,
-    int? tmdbId,
-    MediaType? type,
-  });
+  /// Exports all user data (seen, likes, notifications, lists) as a single zip archive byte list.
+  Future<List<int>> exportAllData();
 
-  /// Imports seen data.
-  Future<void> importSeenData(
-    List<Map<String, dynamic>> data, {
+  /// Imports an export archive produced by `exportAllData`.
+  Future<void> importAllData(
+    List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
     Function(double progress, String status)? onProgress,
   });

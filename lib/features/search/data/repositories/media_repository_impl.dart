@@ -11,8 +11,10 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/core/utils/export_import_serializer.dart';
 
 /// Implementation of the [MediaRepository] that uses a remote and a local data source.
 @LazySingleton(as: MediaRepository)
@@ -250,7 +252,9 @@ class MediaRepositoryImpl implements MediaRepository {
     List<MediaItem>? collectionParts;
     if (item.collectionId != null) {
       try {
-        collectionParts = await remoteDataSource.getCollectionParts(item.collectionId!);
+        collectionParts = await remoteDataSource.getCollectionParts(
+          item.collectionId!,
+        );
       } catch (_) {
         collectionParts = null;
       }
@@ -600,7 +604,10 @@ class MediaRepositoryImpl implements MediaRepository {
             final ep = s.episodeNumber!;
             final mapForSeason = lastSeenMap.putIfAbsent(season, () => {});
             final prevSeen = mapForSeason[ep];
-            mapForSeason[ep] = (prevSeen == null || prevSeen.isBefore(s.seenDate)) ? s.seenDate : prevSeen;
+            mapForSeason[ep] =
+                (prevSeen == null || prevSeen.isBefore(s.seenDate))
+                ? s.seenDate
+                : prevSeen;
           }
 
           final sortedSeasons = List<TVSeason>.from(detailsItem!.seasons!)
@@ -625,15 +632,16 @@ class MediaRepositoryImpl implements MediaRepository {
               for (final ep in episodes ?? []) {
                 final epNum = ep['episode_number'] as int;
 
-                if (season.seasonNumber == startSeason && epNum < startEpisode) {
+                if (season.seasonNumber == startSeason &&
+                    epNum < startEpisode) {
                   continue;
                 }
 
                 final lastSeenForEp = lastSeenMap[season.seasonNumber]?[epNum];
                 final isEpSeenAfterMark =
-                  lastSeenForEp != null &&
-                  // Treat equal timestamps as "after" for tail grouping
-                  !lastSeenForEp.isBefore(item.seenDate);
+                    lastSeenForEp != null &&
+                    // Treat equal timestamps as "after" for tail grouping
+                    !lastSeenForEp.isBefore(item.seenDate);
                 if (isEpSeenAfterMark) {
                   continue;
                 }
@@ -713,6 +721,24 @@ class MediaRepositoryImpl implements MediaRepository {
       episodeNumber: episodeNumber,
     );
     unawaited(_refreshNotificationDateByTmdbId(tmdbId, type));
+  }
+
+  @override
+  Future<void> updateSeenEntry(SeenItem item) async {
+    await _ensureInitialized();
+    final model = SeenItemModel(
+      tmdbId: item.tmdbId,
+      type: item.type.name,
+      title: item.title,
+      posterPath: item.posterPath,
+      seenDate: item.seenDate,
+      seasonNumber: item.seasonNumber,
+      episodeNumber: item.episodeNumber,
+      runtime: item.runtime,
+      genres: item.genres,
+    );
+    model.isarId = item.id;
+    await localDataSource.markAsSeen(model);
   }
 
   @override
@@ -848,41 +874,8 @@ class MediaRepositoryImpl implements MediaRepository {
     await _initCache();
   }
 
-  @override
-  Future<List<Map<String, dynamic>>> exportSeenData({
-    DateTime? start,
-    DateTime? end,
-    int? tmdbId,
-    MediaType? type,
-  }) async {
-    await _ensureInitialized();
-    final items = await localDataSource.getExportData(
-      start: start,
-      end: end,
-      tmdbId: tmdbId,
-      type: type?.name,
-    );
-
-    return items
-        .map(
-          (item) => {
-            'tmdbId': item.tmdbId,
-            'type': item.type,
-            'title': item.title,
-            'posterPath': item.posterPath,
-            'seenDate': item.seenDate.toIso8601String(),
-            'seasonNumber': item.seasonNumber,
-            'episodeNumber': item.episodeNumber,
-            'runtime': item.runtime,
-            'genres': item.genres,
-          },
-        )
-        .toList();
-  }
-
-  @override
-  Future<void> importSeenData(
-    List<Map<String, dynamic>> data, {
+  Future<void> _importSeenData(
+    List<SeenItemModel> data, {
     ImportMode mode = ImportMode.append,
     Function(double progress, String status)? onProgress,
   }) async {
@@ -892,15 +885,15 @@ class MediaRepositoryImpl implements MediaRepository {
     final total = data.length;
 
     for (int i = 0; i < total; i++) {
-      final json = data[i];
-      int? runtime = json['runtime'] as int?;
-      List<String>? genres = (json['genres'] as List?)?.cast<String>();
-      final tmdbId = json['tmdbId'] as int;
-      final typeStr = json['type'] as String;
+      final model = data[i];
+      int? runtime = model.runtime;
+      List<String>? genres = model.genres;
+      final tmdbId = model.tmdbId;
+      final typeStr = model.type;
       final type = typeStr == 'movie' ? MediaType.movie : MediaType.tv;
-      final seasonNumber = json['seasonNumber'] as int?;
-      final episodeNumber = json['episodeNumber'] as int?;
-      final title = json['title'] as String;
+      final seasonNumber = model.seasonNumber;
+      final episodeNumber = model.episodeNumber;
+      final title = model.title;
 
       if (onProgress != null) {
         onProgress(i / total, 'Processing $title...');
@@ -931,8 +924,8 @@ class MediaRepositoryImpl implements MediaRepository {
           tmdbId: tmdbId,
           type: typeStr,
           title: title,
-          posterPath: json['posterPath'] as String?,
-          seenDate: DateTime.parse(json['seenDate'] as String),
+          posterPath: model.posterPath,
+          seenDate: model.seenDate,
           seasonNumber: seasonNumber,
           episodeNumber: episodeNumber,
           runtime: runtime,
@@ -945,6 +938,104 @@ class MediaRepositoryImpl implements MediaRepository {
       onProgress(1.0, 'Saving entries...');
     }
     await localDataSource.importSeenItems(items, mode: mode);
+  }
+
+  @override
+  Future<List<int>> exportAllData() async {
+    await _ensureInitialized();
+    final seenModels = await localDataSource.getExportData();
+    final likedModels = await localDataSource.getLikedItems();
+    final notifiedModels = await localDataSource.getNotifiedItems();
+
+    final names = await localDataSource.getAllListNames();
+    final Map<String, List<MediaListItem>> lists = {};
+    for (final name in names) {
+      lists[name] = await localDataSource.getListItems(name);
+    }
+
+    final envelope = ExportEnvelope(
+      version: 1,
+      exportedAt: DateTime.now(),
+      seen: seenModels,
+      likes: likedModels,
+      notifications: notifiedModels,
+      lists: lists,
+    );
+
+    return envelope.toZipBytes();
+  }
+
+  @override
+  Future<void> importAllData(
+    List<int> zipBytes, {
+    ImportMode mode = ImportMode.append,
+    Function(double, String)? onProgress,
+  }) async {
+    await _ensureInitialized();
+    final envelope = ExportEnvelope.fromZipBytes(zipBytes);
+
+    final seenData = envelope.seen;
+    final likesData = envelope.likes;
+    final notData = envelope.notifications;
+    final listsData = envelope.lists;
+
+    final totalStages = 4;
+    int stage = 0;
+
+    if (seenData.isNotEmpty) {
+      if (onProgress != null) {
+        onProgress(stage / totalStages, 'Importing seen...');
+      }
+      await _importSeenData(
+        seenData,
+        mode: mode,
+        onProgress: (p, s) {
+          if (onProgress != null) onProgress((stage + p) / totalStages, s);
+        },
+      );
+    }
+    stage++;
+
+    if (likesData.isNotEmpty) {
+      if (onProgress != null) {
+        onProgress(stage / totalStages, 'Importing likes...');
+      }
+      await localDataSource.importLikedItems(
+        likesData,
+        mode: mode,
+        onProgress: (p, s) {
+          if (onProgress != null) onProgress((stage + p) / totalStages, s);
+        },
+      );
+    }
+    stage++;
+
+    if (notData.isNotEmpty) {
+      if (onProgress != null) {
+        onProgress(stage / totalStages, 'Importing notifications...');
+      }
+      await localDataSource.importNotifiedItems(
+        notData,
+        mode: mode,
+        onProgress: (p, s) {
+          if (onProgress != null) onProgress((stage + p) / totalStages, s);
+        },
+      );
+    }
+    stage++;
+
+    if (listsData.isNotEmpty) {
+      if (onProgress != null) {
+        onProgress(stage / totalStages, 'Importing lists...');
+      }
+      await localDataSource.importListsData(
+        listsData,
+        mode: mode,
+        onProgress: (p, s) {
+          if (onProgress != null) onProgress((stage + p) / totalStages, s);
+        },
+      );
+    }
   }
 
   @override
@@ -1221,7 +1312,10 @@ class MediaRepositoryImpl implements MediaRepository {
             final ep = s.episodeNumber!;
             final mapForSeason = lastSeenMap.putIfAbsent(season, () => {});
             final prevSeen = mapForSeason[ep];
-            mapForSeason[ep] = (prevSeen == null || prevSeen.isBefore(s.seenDate)) ? s.seenDate : prevSeen;
+            mapForSeason[ep] =
+                (prevSeen == null || prevSeen.isBefore(s.seenDate))
+                ? s.seenDate
+                : prevSeen;
           }
 
           // Existing quick-add candidates for this tmdbId
@@ -1297,8 +1391,9 @@ class MediaRepositoryImpl implements MediaRepository {
 
                   // Consider episode as "seen after tail" only if its last seen date
                   // is strictly after the tail's seenDate.
-                    final lastSeenForEp = lastSeenMap[season.seasonNumber]?[epNum];
-                    final isEpSeenAfterTail =
+                  final lastSeenForEp =
+                      lastSeenMap[season.seasonNumber]?[epNum];
+                  final isEpSeenAfterTail =
                       lastSeenForEp != null &&
                       // Treat equal timestamps as "after" for tail grouping
                       !lastSeenForEp.isBefore(tailSeenDate);
