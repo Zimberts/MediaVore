@@ -16,7 +16,7 @@ Content:
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.example.mediavore",
+      "package_name": "fr.zimberts.mediavore",
       "sha256_cert_fingerprints": [
         "YOUR_APP_SHA256_FINGERPRINT"
       ]

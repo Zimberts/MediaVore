@@ -24,6 +24,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>MediaVore needs access to the camera to scan book/dvd barcodes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MediaVore needs access to the photo library to share or attach media.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>MediaVore needs permission to save images to your library.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

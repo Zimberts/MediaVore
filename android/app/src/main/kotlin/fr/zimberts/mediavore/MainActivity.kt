@@ -1,4 +1,4 @@
-package com.example.mediavore
+package fr.zimberts.mediavore
 
 import io.flutter.embedding.android.FlutterActivity
 
