@@ -1121,6 +1121,11 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Stream<void> watchNotifiedItems() {
+    return localDataSource.watchNotifiedItems();
+  }
+
+  @override
   Future<void> optOutSeries(
     int tmdbId, {
     int? seasonNumber,

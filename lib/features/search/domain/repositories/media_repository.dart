@@ -149,6 +149,9 @@ abstract class MediaRepository {
   /// Gets all notified media entries.
   Future<List<NotifiedItem>> getNotifiedItems();
 
+  /// Watches for changes in notified items.
+  Stream<void> watchNotifiedItems();
+
   /// Force refreshes all notified items from network.
   Future<void> refreshNotifiedItems();
 

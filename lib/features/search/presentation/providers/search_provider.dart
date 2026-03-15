@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -6,6 +8,7 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 
 class SearchProvider with ChangeNotifier {
   final MediaRepository repository;
+  StreamSubscription<void>? _notifiedItemsSubscription;
 
   SearchProvider(this.repository) {
     _init();
@@ -122,6 +125,16 @@ class SearchProvider with ChangeNotifier {
     await loadLikedStatus();
     await loadNotifiedItems();
     await loadQuickAddItems();
+
+    _notifiedItemsSubscription = repository.watchNotifiedItems().listen((_) {
+      loadNotifiedItems();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifiedItemsSubscription?.cancel();
+    super.dispose();
   }
 
   void setSelectedTab(int index) {

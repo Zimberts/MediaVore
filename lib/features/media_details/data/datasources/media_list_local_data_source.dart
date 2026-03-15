@@ -527,6 +527,10 @@ class MediaListLocalDataSource {
     return await _isar.notifiedItemModels.where().findAll();
   }
 
+  Stream<void> watchNotifiedItems() {
+    return _isar.notifiedItemModels.watchLazy();
+  }
+
   Future<void> importLikedItems(
     List<LikedItem> items, {
     required ImportMode mode,
