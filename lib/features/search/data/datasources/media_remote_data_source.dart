@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -10,21 +10,23 @@ import 'package:mediavore/core/error/exceptions.dart';
 @lazySingleton
 class MediaRemoteDataSource {
   final Dio dio;
-  final String apiToken;
+  final SharedPreferences prefs;
+
+  String get _apiToken => prefs.getString('tmdbApiKey') ?? '';
 
   /// Creates a new instance of [MediaRemoteDataSource].
   ///
   /// Requires a [Dio] to make network requests and an [apiToken] for TMDB API.
   /// If [apiToken] is not provided, it will be read from the environment variable 'TMDB_API_TOKEN'.
   @factoryMethod
-  factory MediaRemoteDataSource({required Dio dio, String? apiToken}) {
+  factory MediaRemoteDataSource({required Dio dio, required SharedPreferences prefs}) {
     return MediaRemoteDataSource._internal(
       dio: dio,
-      apiToken: apiToken ?? dotenv.env['TMDB_API_TOKEN'] ?? '',
+      prefs: prefs,
     );
   }
 
-  MediaRemoteDataSource._internal({required this.dio, required this.apiToken});
+  MediaRemoteDataSource._internal({required this.dio, required this.prefs});
 
   /// Searches for movies and series on the TMDB API, supporting optional filters.
   Future<List<MediaItem>> searchMedia(
@@ -56,7 +58,7 @@ class MediaRemoteDataSource {
       final response = await dio.get(
         'https://api.themoviedb.org/3/search/$path',
         queryParameters: params,
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
 
       final List results = response.data['results'];
@@ -108,7 +110,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/$path/$id',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final data = Map<String, dynamic>.from(response.data);
       data['media_type'] = path;
@@ -142,7 +144,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/tv/$tvId/season/$seasonNumber',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       return response.data;
     } on DioException catch (e) {
@@ -165,7 +167,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/$path/$id/credits',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       return response.data;
     } on DioException catch (e) {
@@ -194,7 +196,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/person/$actorId',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       return ActorDetails.fromJson(response.data);
     } on DioException catch (e) {
@@ -250,7 +252,7 @@ class MediaRemoteDataSource {
       final response = await dio.get(
         'https://api.themoviedb.org/3/discover/$path',
         queryParameters: params,
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
 
       final List results = response.data['results'];
@@ -304,7 +306,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/person/$actorId/combined_credits',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['cast'];
       return results.map((m) => MediaItem.fromJson(m)).toList();
@@ -361,7 +363,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/$path/$id/similar',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['results'];
       return results.map((m) {
@@ -379,7 +381,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/collection/$collectionId',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['parts'] ?? [];
       return results.map((m) {
@@ -397,7 +399,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/$path/$id/recommendations',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['results'];
       return results.map((m) {
@@ -415,7 +417,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/$path/$id/watch/providers',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       return response.data['results'] as Map<String, dynamic>;
     } catch (e) {
@@ -428,7 +430,7 @@ class MediaRemoteDataSource {
     try {
       final response = await dio.get(
         'https://api.themoviedb.org/3/$path/$id/videos',
-        options: Options(headers: {'Authorization': 'Bearer $apiToken'}),
+        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['results'];
       return results.cast<Map<String, dynamic>>();

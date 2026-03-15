@@ -6,7 +6,6 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
 
@@ -15,8 +14,7 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
-    dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-    if (locator.isRegistered<MediaRepository>()) {
+        if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
@@ -96,8 +95,7 @@ void main() {
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
     searchTrigger = ValueNotifier<int>(0);
-    dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-  });
+      });
 
   tearDown(() {
     searchTrigger.dispose();

@@ -12,18 +12,18 @@ import 'package:dio/dio.dart' as _i5;
 import 'package:get_it/get_it.dart' as _i1;
 import 'package:injectable/injectable.dart' as _i2;
 import 'package:isar/isar.dart' as _i6;
-import 'package:shared_preferences/shared_preferences.dart' as _i10;
+import 'package:shared_preferences/shared_preferences.dart' as _i9;
 
 import '../../features/achievements/data/repositories/achievement_repository_impl.dart'
-    as _i12;
-import '../../features/achievements/domain/repositories/achievement_repository.dart'
     as _i11;
+import '../../features/achievements/domain/repositories/achievement_repository.dart'
+    as _i10;
 import '../../features/achievements/presentation/providers/achievement_provider.dart'
     as _i15;
 import '../../features/media_details/data/datasources/media_list_local_data_source.dart'
     as _i8;
 import '../../features/search/data/datasources/media_remote_data_source.dart'
-    as _i9;
+    as _i12;
 import '../../features/search/data/repositories/media_repository_impl.dart'
     as _i14;
 import '../../features/search/domain/repositories/media_repository.dart'
@@ -56,30 +56,29 @@ Future<_i1.GetIt> init(
   gh.lazySingleton<_i7.MediaCache>(() => _i7.MediaCache(gh<_i6.Isar>()));
   gh.lazySingleton<_i8.MediaListLocalDataSource>(
       () => _i8.MediaListLocalDataSource(gh<_i6.Isar>()));
-  gh.lazySingleton<_i9.MediaRemoteDataSource>(() => _i9.MediaRemoteDataSource(
-        dio: gh<_i5.Dio>(),
-        apiToken: gh<String>(),
-      ));
-  await gh.factoryAsync<_i10.SharedPreferences>(
+  await gh.factoryAsync<_i9.SharedPreferences>(
     () => registerModule.sharedPreferences,
     preResolve: true,
   );
-  gh.singleton<String>(() => registerModule.apiToken);
   gh.singleton<bool>(() => registerModule.autoInit);
-  gh.lazySingleton<_i11.AchievementRepository>(
-      () => _i12.AchievementRepositoryImpl(
+  gh.lazySingleton<_i10.AchievementRepository>(
+      () => _i11.AchievementRepositoryImpl(
             gh<_i6.Isar>(),
             gh<_i8.MediaListLocalDataSource>(),
             definitionsLoader: gh<_i3.DefinitionsLoader>(),
           ));
+  gh.lazySingleton<_i12.MediaRemoteDataSource>(() => _i12.MediaRemoteDataSource(
+        dio: gh<_i5.Dio>(),
+        prefs: gh<_i9.SharedPreferences>(),
+      ));
   gh.lazySingleton<_i13.MediaRepository>(() => _i14.MediaRepositoryImpl(
-        remoteDataSource: gh<_i9.MediaRemoteDataSource>(),
+        remoteDataSource: gh<_i12.MediaRemoteDataSource>(),
         localDataSource: gh<_i8.MediaListLocalDataSource>(),
         cache: gh<_i7.MediaCache>(),
         autoInit: gh<bool>(),
       ));
   gh.lazySingleton<_i15.AchievementProvider>(
-      () => _i15.AchievementProvider(gh<_i11.AchievementRepository>()));
+      () => _i15.AchievementProvider(gh<_i10.AchievementRepository>()));
   return getIt;
 }
 

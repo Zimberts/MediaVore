@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
@@ -15,12 +14,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    try {
-      await dotenv.load(fileName: ".env");
-    } catch (e) {
-      debugPrint('Warning: .env file not found or failed to load: $e');
-    }
-
     // DefinitionsLoader should be provided by generated DI (injection.config.dart).
     // Avoid manual registration here; run codegen to ensure it's registered.
 

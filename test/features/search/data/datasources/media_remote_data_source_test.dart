@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -8,10 +9,13 @@ import '../../../../helpers/mocks.dart';
 void main() {
   late MediaRemoteDataSource dataSource;
   late MockDio mockDio;
+  late MockSharedPreferences mockPrefs;
 
   setUp(() {
     mockDio = MockDio();
-    dataSource = MediaRemoteDataSource(dio: mockDio, apiToken: 'mock_token');
+    mockPrefs = MockSharedPreferences();
+    when(() => mockPrefs.getString('tmdbApiKey')).thenReturn('mock_token');
+    dataSource = MediaRemoteDataSource(dio: mockDio, prefs: mockPrefs);
   });
 
   group('searchMedia with Filters', () {
@@ -171,3 +175,5 @@ void main() {
     });
   });
 }
+
+

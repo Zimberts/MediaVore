@@ -11,7 +11,6 @@ import 'package:mediavore/features/media_details/presentation/pages/media_detail
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
@@ -58,8 +57,7 @@ void main() {
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences);
-    dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-
+    
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }

@@ -18,6 +18,7 @@ class SettingsProvider with ChangeNotifier {
   int _lightAppThemeIndex = 0;
   int _darkAppThemeIndex = 0;
   ThemeMode _themeMode = ThemeMode.system;
+  String _tmdbApiKey = '';
 
   DisplayMode get displayMode => _displayMode;
   double get gridSize => _gridSize;
@@ -26,6 +27,7 @@ class SettingsProvider with ChangeNotifier {
   int get lightAppThemeIndex => _lightAppThemeIndex;
   int get darkAppThemeIndex => _darkAppThemeIndex;
   ThemeMode get themeMode => _themeMode;
+  String get tmdbApiKey => _tmdbApiKey;
 
   AppPalette get lightPalette => lightThemes[_lightAppThemeIndex].palette;
   AppPalette get darkPalette => darkThemes[_darkAppThemeIndex].palette;
@@ -56,6 +58,14 @@ class SettingsProvider with ChangeNotifier {
     }
     _themeMode = ThemeMode.values[themeModeIndex];
 
+    _tmdbApiKey = _prefs.getString('tmdbApiKey') ?? '';
+
+    notifyListeners();
+  }
+
+  Future<void> setTmdbApiKey(String apiKey) async {
+    _tmdbApiKey = apiKey;
+    await _prefs.setString('tmdbApiKey', apiKey);
     notifyListeners();
   }
 
