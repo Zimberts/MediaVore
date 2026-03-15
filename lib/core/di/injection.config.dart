@@ -19,20 +19,28 @@ import '../../features/achievements/data/repositories/achievement_repository_imp
 import '../../features/achievements/domain/repositories/achievement_repository.dart'
     as _i11;
 import '../../features/achievements/presentation/providers/achievement_provider.dart'
-    as _i15;
+    as _i19;
+import '../../features/books/data/datasources/book_local_data_source.dart'
+    as _i13;
+import '../../features/books/data/datasources/book_remote_data_source.dart'
+    as _i14;
+import '../../features/books/data/repositories/book_repository_impl.dart'
+    as _i16;
+import '../../features/books/domain/repositories/book_repository.dart' as _i15;
+import '../../features/books/presentation/providers/book_provider.dart' as _i20;
 import '../../features/media_details/data/datasources/media_list_local_data_source.dart'
     as _i8;
 import '../../features/search/data/datasources/media_remote_data_source.dart'
     as _i9;
 import '../../features/search/data/repositories/media_repository_impl.dart'
-    as _i14;
+    as _i18;
 import '../../features/search/domain/repositories/media_repository.dart'
-    as _i13;
+    as _i17;
 import '../cache/media_cache.dart' as _i7;
-import '../database/app_database.dart' as _i17;
+import '../database/app_database.dart' as _i22;
 import 'asset_definitions_loader.dart' as _i4;
 import 'definitions_loader.dart' as _i3;
-import 'injection.dart' as _i16;
+import 'injection.dart' as _i21;
 
 // initializes the registration of main-scope dependencies inside of GetIt
 Future<_i1.GetIt> init(
@@ -72,17 +80,27 @@ Future<_i1.GetIt> init(
             gh<_i8.MediaListLocalDataSource>(),
             definitionsLoader: gh<_i3.DefinitionsLoader>(),
           ));
-  gh.lazySingleton<_i13.MediaRepository>(() => _i14.MediaRepositoryImpl(
+  gh.lazySingleton<_i13.BookLocalDataSource>(
+      () => _i13.BookLocalDataSource(gh<_i6.Isar>()));
+  gh.lazySingleton<_i14.BookRemoteDataSource>(
+      () => _i14.BookRemoteDataSource(gh<_i5.Dio>()));
+  gh.lazySingleton<_i15.BookRepository>(() => _i16.BookRepositoryImpl(
+        localDataSource: gh<_i13.BookLocalDataSource>(),
+        remoteDataSource: gh<_i14.BookRemoteDataSource>(),
+      ));
+  gh.lazySingleton<_i17.MediaRepository>(() => _i18.MediaRepositoryImpl(
         remoteDataSource: gh<_i9.MediaRemoteDataSource>(),
         localDataSource: gh<_i8.MediaListLocalDataSource>(),
         cache: gh<_i7.MediaCache>(),
         autoInit: gh<bool>(),
       ));
-  gh.lazySingleton<_i15.AchievementProvider>(
-      () => _i15.AchievementProvider(gh<_i11.AchievementRepository>()));
+  gh.lazySingleton<_i19.AchievementProvider>(
+      () => _i19.AchievementProvider(gh<_i11.AchievementRepository>()));
+  gh.factory<_i20.BookProvider>(
+      () => _i20.BookProvider(gh<_i15.BookRepository>()));
   return getIt;
 }
 
-class _$RegisterModule extends _i16.RegisterModule {}
+class _$RegisterModule extends _i21.RegisterModule {}
 
-class _$DatabaseModule extends _i17.DatabaseModule {}
+class _$DatabaseModule extends _i22.DatabaseModule {}

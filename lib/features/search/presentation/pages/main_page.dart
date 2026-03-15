@@ -8,6 +8,7 @@ import 'package:mediavore/features/achievements/presentation/providers/achieveme
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
+import 'package:mediavore/features/books/presentation/pages/book_library_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -38,6 +39,7 @@ class _MainPageState extends State<MainPage> {
     const SavedMediaPage(),
     const SeenHistoryPage(),
     const NotificationCenterPage(),
+    const BookLibraryPage(),
   ];
 
   @override
@@ -234,6 +236,10 @@ class _MainPageState extends State<MainPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),
             label: 'Alerts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book),
+            label: 'Livres',
           ),
         ],
         currentIndex: _selectedIndex,
