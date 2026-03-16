@@ -1,5 +1,5 @@
 name: mediavore
-description: "A new Flutter project."
+description: "App to keep track of media seen"
 publish_to: "none"
 
 version: 1.0.0+1
@@ -43,6 +43,12 @@ dev_dependencies:
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.8
   flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.7
+flutter_native_splash:
+  color: "#000000" # Comme pour ton icône adaptive
+  image: "assets/icon/app_icon.png" # On réutilise ton icône pour le centre de l'écran
+  ios: true
+  android: true
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
