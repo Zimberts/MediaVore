@@ -126,14 +126,14 @@ class DataCacheSettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.cloud_upload),
                 title: const Text('Export All Data'),
                 subtitle: const Text(
-                  'Export seen, likes, notifications and lists as a single ZIP file.',
+                  'Export seen, likes, notifications and lists as a single MDV file.',
                 ),
                 onTap: () async {
                   final zipBytes = await provider.exportAllData();
                   if (!context.mounted) return;
                   final tempDir = await getTemporaryDirectory();
                   final fileName =
-                      'mediavore_export_${DateTime.now().millisecondsSinceEpoch}.zip';
+                      'mediavore_export_${DateTime.now().millisecondsSinceEpoch}.mdv';
                   final tempFile = File('${tempDir.path}/$fileName');
                   await tempFile.writeAsBytes(zipBytes);
                   if (context.mounted) {
@@ -163,7 +163,7 @@ class DataCacheSettingsPage extends StatelessWidget {
                                 await Share.shareXFiles([
                                   XFile(
                                     tempFile.path,
-                                    mimeType: 'application/zip',
+                                    mimeType: 'application/octet-stream',
                                   ),
                                 ], text: 'MediaVore Export');
                               },
@@ -179,7 +179,7 @@ class DataCacheSettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.file_download),
                 title: const Text('Import All Data'),
                 subtitle: const Text(
-                  'Import seen, likes, notifications and lists from an export ZIP.',
+                  'Import seen, likes, notifications and lists from an export MDV or ZIP.',
                 ),
                 onTap: () => _importAllDataWithPreview(context, provider),
               ),
@@ -324,15 +324,25 @@ class DataCacheSettingsPage extends StatelessWidget {
     // ignore: avoid_print
     print('_importAllDataWithPreview called');
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['zip'],
+      type: FileType.any,
       initialDirectory: Platform.isAndroid ? _defaultPath : null,
     );
 
     if (!context.mounted) return;
 
     if (result != null && result.files.single.path != null) {
-      final file = File(result.files.single.path!);
+      final path = result.files.single.path!;
+      if (!path.toLowerCase().endsWith('.mdv') &&
+          !path.toLowerCase().endsWith('.zip')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a valid .mdv or .zip export file.'),
+          ),
+        );
+        return;
+      }
+
+      final file = File(path);
       final bytes = await file.readAsBytes();
 
       try {

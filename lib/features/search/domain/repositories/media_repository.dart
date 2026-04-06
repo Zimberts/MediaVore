@@ -121,7 +121,7 @@ abstract class MediaRepository {
   /// Manually triggers a full cache fill (pre-caching lists and recent seen).
   Future<void> fillCache();
 
-  /// Exports all user data (seen, likes, notifications, lists) as a single zip archive byte list.
+  /// Exports all user data (seen, likes, notifications, lists) as a single MDV archive byte list.
   Future<List<int>> exportAllData();
 
   /// Imports an export archive produced by `exportAllData`.
