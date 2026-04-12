@@ -30,17 +30,19 @@ class MediaListLocalDataSource {
           .findFirst();
 
       if (existing == null) {
-        final count = await _isar.mediaListItems
+        final maxItem = await _isar.mediaListItems
             .filter()
             .listNameEqualTo(listName)
-            .count();
+            .sortByPositionDesc()
+            .findFirst();
+        final nextPosition = maxItem != null ? maxItem.position + 1 : 0;
 
         final item = MediaListItem(
           id: id,
           type: type,
           listName: listName,
           title: title,
-          position: count,
+          position: nextPosition,
         );
         await _isar.mediaListItems.put(item);
       }

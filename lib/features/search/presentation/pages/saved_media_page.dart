@@ -1152,7 +1152,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return _MediaSwipeItem(item: item, provider: provider);
+        return _MediaSwipeItem(
+          key: ValueKey('${item.id}_${item.mediaType.name}'),
+          item: item,
+          provider: provider,
+        );
       },
     );
   }
@@ -1203,6 +1207,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                       onTap: () {
                         setState(() {
                           _selectedList = name;
+                          _currentItems.clear();
+                          _sortMethod = SortMethod.manual;
+                          _isReversed = false;
                           _isEditMode = false;
                           _selectedItems.clear();
                         });
@@ -1500,7 +1507,11 @@ class _MediaSwipeItem extends StatelessWidget {
   final MediaItem item;
   final SearchProvider provider;
 
-  const _MediaSwipeItem({required this.item, required this.provider});
+  const _MediaSwipeItem({
+    super.key,
+    required this.item,
+    required this.provider,
+  });
 
   @override
   Widget build(BuildContext context) {

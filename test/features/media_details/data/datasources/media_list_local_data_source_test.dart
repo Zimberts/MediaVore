@@ -153,6 +153,46 @@ void main() {
       expect(lists, isNot(contains('Custom List')));
     });
 
+    test('should add to list and prevent position gaps on deletion', () async {
+      await dataSource.addToList(
+        id: 1,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'A',
+      );
+      await dataSource.addToList(
+        id: 2,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'B',
+      );
+      await dataSource.addToList(
+        id: 3,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'C',
+      );
+
+      final itemsBeforeDelete = await dataSource.getListItems('watchlist');
+      expect(itemsBeforeDelete.map((e) => e.position).toList(), [0, 1, 2]);
+
+      // Remove middle item
+      await dataSource.removeFromList(2, 'movie', 'watchlist');
+
+      // Add a new item
+      await dataSource.addToList(
+        id: 4,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'D',
+      );
+
+      final itemsAfterAdd = await dataSource.getListItems('watchlist');
+      // Positions should be preserved for existing items, and D appended to max + 1
+      expect(itemsAfterAdd.map((e) => e.position).toList(), [0, 2, 3]);
+      expect(itemsAfterAdd.map((e) => e.title).toList(), ['A', 'C', 'D']);
+    });
+
     test('should add to list and update position', () async {
       await dataSource.addToList(
         id: 1,

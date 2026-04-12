@@ -54,6 +54,9 @@ void main() {
       () => mockMediaRepository.getNotifiedItems(),
     ).thenAnswer((_) async => []);
     when(
+      () => mockMediaRepository.watchNotifiedItems(),
+    ).thenAnswer((_) => const Stream.empty());
+    when(
       () => mockMediaRepository.getListPreviews(
         any(),
         limit: any(named: 'limit'),
