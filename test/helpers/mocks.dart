@@ -105,6 +105,16 @@ class MockMediaRepository extends Mock implements MediaRepository {
       return Future.value();
     }
   }
+
+  @override
+  Stream<void> watchNotifiedItems() {
+    try {
+      return super.noSuchMethod(Invocation.method(#watchNotifiedItems, []))
+          as Stream<void>;
+    } catch (_) {
+      return const Stream.empty();
+    }
+  }
 }
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}

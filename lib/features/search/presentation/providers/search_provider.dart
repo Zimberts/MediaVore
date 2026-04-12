@@ -293,7 +293,9 @@ class SearchProvider with ChangeNotifier {
       _listEntries[listName] = [...currentEntries, entry];
       if (listName == 'watchlist') {
         _watchlistIds.add(item.id.toString());
-        await repository.toggleNotification(item, autoNotify: true);
+        if (item.canBeNotified) {
+          await repository.toggleNotification(item, autoNotify: true);
+        }
         await loadNotifiedItems();
       }
     }

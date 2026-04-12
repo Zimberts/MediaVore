@@ -253,6 +253,23 @@ class MediaItem extends Equatable {
     );
   }
 
+  bool get canBeNotified {
+    if (mediaType == MediaType.tv) {
+      return status != 'Ended' && status != 'Canceled';
+    } else if (mediaType == MediaType.movie) {
+      if (releaseDate.isEmpty) {
+        return true;
+      }
+      try {
+        final date = DateTime.parse(releaseDate);
+        return date.isAfter(DateTime.now());
+      } catch (_) {
+        return true; // Malformed or missing date
+      }
+    }
+    return false;
+  }
+
   @override
   List<Object?> get props => [
     id,

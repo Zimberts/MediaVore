@@ -41,6 +41,7 @@ void main() {
     ).thenAnswer((_) async => <repo_types.MediaItemPreview>[]);
     when(() => mock.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mock.getSeenDbSize()).thenAnswer((_) async => 0);
+    when(() => mock.watchNotifiedItems()).thenAnswer((_) => const Stream.empty());
 
     provider = SearchProvider(mock);
   });
