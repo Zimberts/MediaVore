@@ -149,6 +149,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     if (_selectedList != 'watchlist') {
       setState(() {
         _selectedList = 'watchlist';
+        _currentItems.clear();
+        _sortMethod = SortMethod.manual;
+        _isReversed = false;
         _isEditMode = false;
         _selectedItems.clear();
       });
@@ -244,7 +247,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         .toList();
 
     for (final item in itemsToRemove) {
-      await provider.toggleInList(item, _selectedList);
+      await provider.removeFromList(item, _selectedList);
     }
 
     setState(() {
@@ -1018,16 +1021,34 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
           // Map indices to _currentItems to handle filtering correctly
           final oldPersistentIndex = _currentItems.indexOf(item);
-          _currentItems.removeAt(oldPersistentIndex);
+          if (oldPersistentIndex != -1) {
+            _currentItems.removeAt(oldPersistentIndex);
+          }
 
           if (newIndex < items.length - 1) {
             final nextItemInFiltered = items[newIndex + 1];
             final nextPersistentIndex = _currentItems.indexOf(
               nextItemInFiltered,
             );
-            _currentItems.insert(nextPersistentIndex, item);
+            if (nextPersistentIndex != -1) {
+              _currentItems.insert(nextPersistentIndex, item);
+            } else {
+              _currentItems.add(item);
+            }
           } else {
-            _currentItems.add(item);
+            if (items.length > 1 && newIndex > 0) {
+              final previousItemInFiltered = items[newIndex - 1];
+              final prevPersistentIndex = _currentItems.indexOf(
+                previousItemInFiltered,
+              );
+              if (prevPersistentIndex != -1) {
+                _currentItems.insert(prevPersistentIndex + 1, item);
+              } else {
+                _currentItems.add(item);
+              }
+            } else {
+              _currentItems.add(item);
+            }
           }
         });
 
@@ -1094,16 +1115,34 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
           // Map indices to _currentItems to handle filtering correctly
           final oldPersistentIndex = _currentItems.indexOf(item);
-          _currentItems.removeAt(oldPersistentIndex);
+          if (oldPersistentIndex != -1) {
+            _currentItems.removeAt(oldPersistentIndex);
+          }
 
           if (newIndex < items.length - 1) {
             final nextItemInFiltered = items[newIndex + 1];
             final nextPersistentIndex = _currentItems.indexOf(
               nextItemInFiltered,
             );
-            _currentItems.insert(nextPersistentIndex, item);
+            if (nextPersistentIndex != -1) {
+              _currentItems.insert(nextPersistentIndex, item);
+            } else {
+              _currentItems.add(item);
+            }
           } else {
-            _currentItems.add(item);
+            if (items.length > 1 && newIndex > 0) {
+              final previousItemInFiltered = items[newIndex - 1];
+              final prevPersistentIndex = _currentItems.indexOf(
+                previousItemInFiltered,
+              );
+              if (prevPersistentIndex != -1) {
+                _currentItems.insert(prevPersistentIndex + 1, item);
+              } else {
+                _currentItems.add(item);
+              }
+            } else {
+              _currentItems.add(item);
+            }
           }
         });
 
@@ -1193,15 +1232,20 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                       subtitle: Text('$count items'),
                       selected: name == _selectedList,
                       trailing: (name != 'watchlist')
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.delete_outline,
-                                color: colors.error,
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _showDeleteListConfirm(context, provider, name);
-                              },
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: colors.error,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    _showDeleteListConfirm(context, provider, name);
+                                  },
+                                ),
+                              ],
                             )
                           : null,
                       onTap: () {
@@ -1309,10 +1353,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ),
           TextButton(
             onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                await provider.createList(controller.text);
+              final trimmedName = controller.text.trim();
+              if (trimmedName.isNotEmpty) {
+                await provider.createList(trimmedName);
                 setState(() {
-                  _selectedList = controller.text;
+                  _selectedList = trimmedName;
+                  _currentItems.clear();
+                  _sortMethod = SortMethod.manual;
+                  _isReversed = false;
                   _isEditMode = false;
                   _selectedItems.clear();
                 });
@@ -1347,9 +1395,12 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ),
           TextButton(
             onPressed: () async {
-              if (_selectedList == listName) {
+              if (mounted && _selectedList == listName) {
                 setState(() {
                   _selectedList = 'watchlist';
+                  _currentItems.clear();
+                  _sortMethod = SortMethod.manual;
+                  _isReversed = false;
                   _isEditMode = false;
                   _selectedItems.clear();
                 });
@@ -1545,7 +1596,7 @@ class _MediaSwipeItem extends StatelessWidget {
                 children: [
                   const SizedBox(width: 56), // Balances the larger LikeButton
                   Expanded(
-                      child: InkWell(
+                    child: InkWell(
                       onTap: () => MediaDetailPage.show(context, item),
                       child: Text(
                         item.title,

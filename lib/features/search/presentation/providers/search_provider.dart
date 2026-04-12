@@ -298,6 +298,22 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> removeFromList(MediaItem item, String listName) async {
+    final entry = '${item.id}:${item.mediaType.name}';
+    final currentEntries = _listEntries[listName] ?? [];
+    
+    if (currentEntries.contains(entry)) {
+      await repository.removeFromList(item.id, item.mediaType, listName);
+      _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
+      if (listName == 'watchlist') {
+        _watchlistIds.remove(item.id.toString());
+      }
+      _listPreviews[listName] = await repository.getListPreviews(listName);
+      await updateCacheSize();
+      notifyListeners();
+    }
+  }
+
   Future<void> toggleWatchlist(MediaItem item) async {
     await toggleInList(item, 'watchlist');
   }
@@ -311,8 +327,8 @@ class SearchProvider with ChangeNotifier {
   Future<void> createList(String name) async {
     await repository.createList(name);
     await loadListNames();
-    _listEntries[name] = [];
-    _listPreviews[name] = [];
+    _listEntries[name] = await repository.getListEntries(name);
+    _listPreviews[name] = await repository.getListPreviews(name);
     notifyListeners();
   }
 
