@@ -120,7 +120,7 @@ class MediaListLocalDataSource {
   }
 
   Future<void> deleteList(String name) async {
-    if (name == 'watchlist') return; // Cannot delete watchlist
+    if (name.toLowerCase() == 'watchlist') return; // Cannot delete watchlist
     await _isar.writeTxn(() async {
       await _isar.userLists.filter().nameEqualTo(name).deleteAll();
       await _isar.mediaListItems.filter().listNameEqualTo(name).deleteAll();

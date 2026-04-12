@@ -1011,12 +1011,51 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     SearchProvider provider,
     SettingsProvider settings,
   ) {
+    if (_sortMethod != SortMethod.manual || _isEditMode) {
+      return ListView.builder(
+        itemCount: items.length,
+        clipBehavior: Clip.none,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final isSelected = _selectedItems.contains(
+            '${item.id}:${item.mediaType.name}',
+          );
+
+          return _MediaListTile(
+            key: ValueKey('${item.id}_${item.mediaType.name}'),
+            index: index,
+            item: item,
+            provider: provider,
+            settings: settings,
+            isEditMode: _isEditMode,
+            isSelected: isSelected,
+            isManualSort: false,
+            onTap: () async {
+              if (_isEditMode) {
+                _toggleItemSelection(item);
+              } else {
+                await MediaDetailPage.show(context, item);
+                loadSavedMedia();
+              }
+            },
+            onLongPress: () {
+              if (!_isEditMode) {
+                setState(() {
+                  _isEditMode = true;
+                  _selectedItems.add('${item.id}:${item.mediaType.name}');
+                });
+              }
+            },
+          );
+        },
+      );
+    }
+
     return ReorderableListView.builder(
       itemCount: items.length,
       clipBehavior: Clip.none,
+      buildDefaultDragHandles: false,
       onReorder: (oldIndex, newIndex) async {
-        if (_sortMethod != SortMethod.manual) return;
-
         setState(() {
           if (newIndex > oldIndex) newIndex -= 1;
           final item = items.removeAt(oldIndex);
@@ -1074,6 +1113,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           settings: settings,
           isEditMode: _isEditMode,
           isSelected: isSelected,
+          isManualSort: true,
           onTap: () async {
             if (_isEditMode) {
               _toggleItemSelection(item);
@@ -1100,6 +1140,50 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     SearchProvider provider,
     SettingsProvider settings,
   ) {
+    if (_sortMethod != SortMethod.manual || _isEditMode) {
+      return GridView.builder(
+        padding: const EdgeInsets.all(8),
+        clipBehavior: Clip.none,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: settings.gridSize.round(),
+          childAspectRatio: 0.66,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final isSelected = _selectedItems.contains(
+            '${item.id}:${item.mediaType.name}',
+          );
+
+          return _MediaGridItem(
+            key: ValueKey('${item.id}_${item.mediaType.name}'),
+            item: item,
+            provider: provider,
+            isSelected: isSelected,
+            isEditMode: _isEditMode,
+            onTap: () async {
+              if (_isEditMode) {
+                _toggleItemSelection(item);
+              } else {
+                await MediaDetailPage.show(context, item);
+                loadSavedMedia();
+              }
+            },
+            onLongPress: _isEditMode
+                ? null
+                : () {
+                    setState(() {
+                      _isEditMode = true;
+                      _selectedItems.add('${item.id}:${item.mediaType.name}');
+                    });
+                  },
+          );
+        },
+      );
+    }
+
     return ReorderableGridView.builder(
       padding: const EdgeInsets.all(8),
       clipBehavior: Clip.none,
@@ -1111,8 +1195,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       ),
       itemCount: items.length,
       onReorder: (oldIndex, newIndex) async {
-        if (_sortMethod != SortMethod.manual) return;
-
         setState(() {
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
@@ -1368,7 +1450,8 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           TextButton(
             onPressed: () async {
               final trimmedName = controller.text.trim();
-              if (trimmedName.isNotEmpty) {
+              if (trimmedName.isNotEmpty &&
+                  trimmedName.toLowerCase() != 'watchlist') {
                 await provider.createList(trimmedName);
                 setState(() {
                   _selectedList = trimmedName;
@@ -1438,6 +1521,7 @@ class _MediaListTile extends StatelessWidget {
   final SettingsProvider settings;
   final bool isEditMode;
   final bool isSelected;
+  final bool isManualSort;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -1449,6 +1533,7 @@ class _MediaListTile extends StatelessWidget {
     required this.settings,
     required this.isEditMode,
     required this.isSelected,
+    required this.isManualSort,
     required this.onTap,
     required this.onLongPress,
   });
@@ -1490,10 +1575,12 @@ class _MediaListTile extends StatelessWidget {
           subtitle: Text('${item.releaseDate} • $lengthText'),
           trailing: isEditMode
               ? Checkbox(value: isSelected, onChanged: (_) => onTap())
-              : ReorderableDragStartListener(
+              : isManualSort
+              ? ReorderableDragStartListener(
                   index: index,
                   child: const Icon(Icons.drag_handle),
-                ),
+                )
+              : null,
         ),
       ),
     );
@@ -1509,6 +1596,7 @@ class _MediaGridItem extends StatelessWidget {
   final VoidCallback? onLongPress;
 
   const _MediaGridItem({
+    super.key,
     required this.item,
     required this.provider,
     required this.isSelected,
