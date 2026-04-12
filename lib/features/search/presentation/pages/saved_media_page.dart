@@ -910,12 +910,15 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _isEditMode
-                      ? '${_selectedItems.length} selected'
-                      : (_selectedList == 'watchlist'
-                            ? 'Watchlist'
-                            : _selectedList),
+                Flexible(
+                  child: Text(
+                    _isEditMode
+                        ? '${_selectedItems.length} selected'
+                        : (_selectedList == 'watchlist'
+                              ? 'Watchlist'
+                              : _selectedList),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 if (!_isEditMode) const Icon(Icons.arrow_drop_down),
               ],
@@ -1071,11 +1074,12 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           settings: settings,
           isEditMode: _isEditMode,
           isSelected: isSelected,
-          onTap: () {
+          onTap: () async {
             if (_isEditMode) {
               _toggleItemSelection(item);
             } else {
-              MediaDetailPage.show(context, item);
+              await MediaDetailPage.show(context, item);
+              loadSavedMedia();
             }
           },
           onLongPress: () {
@@ -1165,11 +1169,12 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             provider: provider,
             isSelected: isSelected,
             isEditMode: _isEditMode,
-            onTap: () {
+            onTap: () async {
               if (_isEditMode) {
                 _toggleItemSelection(item);
               } else {
-                MediaDetailPage.show(context, item);
+                await MediaDetailPage.show(context, item);
+                loadSavedMedia();
               }
             },
             onLongPress: _isEditMode
@@ -1195,6 +1200,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           key: ValueKey('${item.id}_${item.mediaType.name}'),
           item: item,
           provider: provider,
+          onReturn: loadSavedMedia,
         );
       },
     );
@@ -1228,7 +1234,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
                     return ListTile(
                       leading: _buildListPreviewIcon(previews, provider),
-                      title: Text(name == 'watchlist' ? 'Watchlist' : name),
+                      title: Text(
+                        name == 'watchlist' ? 'Watchlist' : name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       subtitle: Text('$count items'),
                       selected: name == _selectedList,
                       trailing: (name != 'watchlist')
@@ -1242,7 +1252,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                                   ),
                                   onPressed: () {
                                     Navigator.pop(context);
-                                    _showDeleteListConfirm(context, provider, name);
+                                    _showDeleteListConfirm(
+                                      context,
+                                      provider,
+                                      name,
+                                    );
                                   },
                                 ),
                               ],
@@ -1557,11 +1571,13 @@ class _MediaGridItem extends StatelessWidget {
 class _MediaSwipeItem extends StatelessWidget {
   final MediaItem item;
   final SearchProvider provider;
+  final VoidCallback onReturn;
 
   const _MediaSwipeItem({
     super.key,
     required this.item,
     required this.provider,
+    required this.onReturn,
   });
 
   @override
@@ -1575,7 +1591,10 @@ class _MediaSwipeItem extends StatelessWidget {
           children: [
             Expanded(
               child: InkWell(
-                onTap: () => MediaDetailPage.show(context, item),
+                onTap: () async {
+                  await MediaDetailPage.show(context, item);
+                  onReturn();
+                },
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
@@ -1597,7 +1616,10 @@ class _MediaSwipeItem extends StatelessWidget {
                   const SizedBox(width: 56), // Balances the larger LikeButton
                   Expanded(
                     child: InkWell(
-                      onTap: () => MediaDetailPage.show(context, item),
+                      onTap: () async {
+                        await MediaDetailPage.show(context, item);
+                        onReturn();
+                      },
                       child: Text(
                         item.title,
                         style: Theme.of(context).textTheme.headlineSmall,

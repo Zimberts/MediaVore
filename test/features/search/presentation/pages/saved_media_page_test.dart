@@ -122,4 +122,78 @@ void main() {
     // Use matching by icon data since Icons.favorite is used in the widget
     expect(find.byIcon(Icons.favorite), findsOneWidget);
   });
+
+  testWidgets('displays very long list name without overflow exceptions', (
+    WidgetTester tester,
+  ) async {
+    const longName =
+        'This is a very very very very very very very very very very very very long list name';
+    when(
+      () => mockMediaRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist', longName]);
+    when(
+      () => mockMediaRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    // Force provider to load names
+    await searchProvider.loadListNames();
+    await tester.pumpAndSettle();
+
+    // Open list picker
+    await tester.tap(find.text('Watchlist').first);
+    await tester.pumpAndSettle();
+
+    // Select the long name list
+    await tester.tap(find.text(longName).first);
+    await tester.pumpAndSettle();
+
+    // Should render the long list name without exception
+    expect(tester.takeException(), isNull);
+    expect(find.text(longName), findsWidgets);
+  });
+
+  testWidgets('removing an item updates the list in real-time', (
+    WidgetTester tester,
+  ) async {
+    const item = MediaItem(
+      id: 1,
+      title: 'Inception',
+      overview: 'Overview',
+      releaseDate: '2010',
+      mediaType: MediaType.movie,
+    );
+
+    // Initial state with item
+    when(
+      () => mockMediaRepository.getListEntries('watchlist'),
+    ).thenAnswer((_) async => ['1:movie']);
+    when(
+      () => mockMediaRepository.getMediaDetails(1, type: MediaType.movie),
+    ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
+    when(
+      () => mockMediaRepository.removeFromList(1, MediaType.movie, 'watchlist'),
+    ).thenAnswer((_) async {});
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Inception'), findsOneWidget);
+
+    // Long press to enter edit mode and select item
+    await tester.longPress(find.text('Inception'));
+    await tester.pumpAndSettle();
+
+    // Update mock to return empty list on reload
+    when(
+      () => mockMediaRepository.getListEntries('watchlist'),
+    ).thenAnswer((_) async => []);
+
+    // Tap delete icon to remove
+    await tester.tap(find.byIcon(Icons.delete).first);
+    await tester.pumpAndSettle();
+
+    // Item should no longer be visible
+    expect(find.text('Inception'), findsNothing);
+  });
 }
