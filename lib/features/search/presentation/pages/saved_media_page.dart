@@ -43,6 +43,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   Uint8List? _croppedLogoBytes;
   Color? _lastThemeColor;
 
+  // Sync state tracking for external list mutations
+  String _lastSelectedList = 'watchlist';
+  Set<String> _lastListSet = {};
+
   // Edit Mode State
   bool _isEditMode = false;
   final Set<String> _selectedItems = {};
@@ -881,6 +885,18 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     final provider = Provider.of<SearchProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
     final colors = context.appColors;
+
+    final currentListSet = provider.getListEntriesCached(_selectedList).toSet();
+    if (_lastSelectedList != _selectedList) {
+      _lastSelectedList = _selectedList;
+      _lastListSet = currentListSet;
+    } else if (currentListSet.length != _lastListSet.length ||
+        !currentListSet.containsAll(_lastListSet)) {
+      _lastListSet = currentListSet;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) loadSavedMedia();
+      });
+    }
 
     return PopScope(
       canPop: !_isEditMode,
