@@ -647,14 +647,18 @@ class MediaRepositoryImpl implements MediaRepository {
                 }
 
                 final airDateStr = ep['air_date'] as String?;
-                if (airDateStr != null) {
-                  try {
-                    final ad = DateTime.parse(airDateStr);
-                    if (ad.isAfter(DateTime.now())) {
-                      continue;
-                    }
-                    foundAirDate = ad;
-                  } catch (_) {}
+                if (airDateStr == null || airDateStr.isEmpty) {
+                  continue;
+                }
+
+                try {
+                  final ad = DateTime.parse(airDateStr);
+                  if (ad.isAfter(DateTime.now())) {
+                    continue;
+                  }
+                  foundAirDate = ad;
+                } catch (_) {
+                  continue;
                 }
 
                 foundSeason = season.seasonNumber;
@@ -1245,6 +1249,66 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> refreshReturningSeries(int tmdbId) async {
+    await _ensureInitialized();
+    try {
+      final type = MediaType.tv;
+
+      // 1. Fetch TV details
+      final itemFuture = remoteDataSource.getMediaItem(tmdbId, type: type);
+      final creditsFuture = remoteDataSource.getMediaCredits(tmdbId, type: type);
+      final similarFuture = remoteDataSource.getSimilarMedia(tmdbId, type);
+      final recommendationsFuture = remoteDataSource.getRecommendedMedia(tmdbId, type);
+      final watchProvidersFuture = remoteDataSource.getWatchProviders(tmdbId, type);
+      final videosFuture = remoteDataSource.getVideos(tmdbId, type);
+
+      final item = await itemFuture;
+
+      Map<String, dynamic> credits = {'cast': [], 'crew': []};
+      try { credits = await creditsFuture; } catch (_) {}
+
+      final List castResults = credits['cast'] ?? [];
+      final List crewResults = credits['crew'] ?? [];
+      final List<CastMember> cast = castResults.map((c) => CastMember.fromJson(c)).toList();
+      final CrewMember? director = crewResults.firstWhere(
+        (c) => c['job'] == 'Director',
+        orElse: () => null,
+      ) != null ? CrewMember.fromJson(crewResults.firstWhere((c) => c['job'] == 'Director')) : null;
+
+      final similar = await similarFuture;
+      final recommendations = await recommendationsFuture;
+      final watchProviders = await watchProvidersFuture;
+      final videos = await videosFuture;
+
+      final details = MediaDetails(
+        item: item,
+        cast: cast,
+        director: director,
+        similar: similar,
+        recommendations: recommendations,
+        watchProviders: watchProviders,
+        videos: videos,
+      );
+
+      // Overwrite the cache
+      await cache.cacheItem(item);
+      await cache.cacheDetails(details);
+
+      // 2. Fetch latest season
+      final lastSeasonNum = item.numberOfSeasons;
+      if (lastSeasonNum != null && lastSeasonNum > 0) {
+        final seasonDetails = await remoteDataSource.getSeasonDetails(tmdbId, lastSeasonNum);
+        await cache.cacheSeason(tmdbId, lastSeasonNum, seasonDetails);
+      }
+      
+      // 3. Update Quick Add logic to pick up new episodes
+      await populateQuickAddFromSeenHistory(tmdbId: tmdbId);
+    } catch (e) {
+      debugPrint("Failed to refresh returning series $tmdbId: $e");
+    }
+  }
+
+  @override
   Future<void> addQuickAddItem(QuickAddItem item) async {
     await _ensureInitialized();
     final model = QuickAddItemModel(
@@ -1407,15 +1471,19 @@ class MediaRepositoryImpl implements MediaRepository {
                   }
 
                   final airDateStr = ep['air_date'] as String?;
-                  if (airDateStr != null) {
-                    try {
-                      final ad = DateTime.parse(airDateStr);
-                      if (ad.isAfter(DateTime.now())) {
-                        // skip future episodes
-                        continue;
-                      }
-                      foundAirDate = ad;
-                    } catch (_) {}
+                  if (airDateStr == null || airDateStr.isEmpty) {
+                    continue;
+                  }
+
+                  try {
+                    final ad = DateTime.parse(airDateStr);
+                    if (ad.isAfter(DateTime.now())) {
+                      // skip future episodes
+                      continue;
+                    }
+                    foundAirDate = ad;
+                  } catch (_) {
+                    continue;
                   }
 
                   foundSeason = season.seasonNumber;
@@ -1464,5 +1532,11 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<void> clearQuickAddItems() async {
     await _ensureInitialized();
     return localDataSource.clearQuickAddItems();
+  }
+
+  @override
+  Future<DateTime?> getCacheUpdateDate(int tmdbId, MediaType type) async {
+    await _ensureInitialized();
+    return cache.getCacheUpdateDate(tmdbId, type);
   }
 }

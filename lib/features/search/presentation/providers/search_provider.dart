@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 class SearchProvider with ChangeNotifier {
@@ -667,6 +668,21 @@ class SearchProvider with ChangeNotifier {
                 mediaItem.lastEpisodeNumber != null &&
                 mediaItem.lastSeasonNumber == item.seasonNumber &&
                 mediaItem.lastEpisodeNumber == item.episodeNumber;
+
+            // Trigger background sync if they just watched the last episode of a returning series
+            // and the cache is older than 2 days.
+            if (isLastEpisode && 
+                mediaItem.status != null && 
+                mediaItem.status!.toLowerCase() == 'returning series') {
+              final cacheDate = await repository.getCacheUpdateDate(item.tmdbId, MediaType.tv);
+              if (cacheDate == null || DateTime.now().difference(cacheDate).inDays >= 2) {
+                try {
+                  BackgroundTaskService.dispatchOneOffRefresh(item.tmdbId);
+                } catch (e) {
+                  debugPrint('Failed to dispatch background task: $e');
+                }
+              }
+            }
 
             bool noNext = false;
             try {

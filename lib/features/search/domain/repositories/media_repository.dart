@@ -170,6 +170,12 @@ abstract class MediaRepository {
   /// QuickAdd: returns current quick-add entries (next episodes the user can quickly mark seen)
   Future<List<QuickAddItem>> getQuickAddItems();
 
+  /// Refreshes a Returning Series specifically for background syncing
+  Future<void> refreshReturningSeries(int tmdbId);
+
+  /// Gets the last cache update date for a specific media item.
+  Future<DateTime?> getCacheUpdateDate(int tmdbId, MediaType type);
+
   /// Removes a quick-add entry by its isar id.
   Future<void> removeQuickAddItemById(int isarId);
 

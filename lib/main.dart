@@ -3,6 +3,7 @@ import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -12,33 +13,94 @@ import 'features/search/presentation/pages/main_page.dart';
 Future<void> main() async {
   debugPrint('--- App Starting ---');
   WidgetsFlutterBinding.ensureInitialized();
+  runApp(const BootstrapperApp());
+}
 
-  try {
-    // DefinitionsLoader should be provided by generated DI (injection.config.dart).
-    // Avoid manual registration here; run codegen to ensure it's registered.
+class BootstrapperApp extends StatefulWidget {
+  const BootstrapperApp({super.key});
 
-    await init(locator);
-    runApp(const MediaVoreApp());
-  } catch (e, stackTrace) {
-    debugPrint('Fatal error during initialization: $e');
-    debugPrint(stackTrace.toString());
+  @override
+  State<BootstrapperApp> createState() => _BootstrapperAppState();
+}
 
-    runApp(
-      MaterialApp(
+class _BootstrapperAppState extends State<BootstrapperApp> {
+  bool _isInit = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Allow the first frame to paint the spinner BEFORE starting any heavy init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeApp();
+    });
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      // Yield slightly time for the UI thread to push the frame
+      await Future.delayed(const Duration(milliseconds: 250));
+
+      await init(locator);
+      
+      // Setup Background Tasks (safe to call after isar is opened by locator)
+      if (Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS) {
+        try {
+          BackgroundTaskService.initialize();
+          BackgroundTaskService.registerDailySync();
+        } catch (e) {
+          debugPrint('Failed to init workmanager $e');
+        }
+      }
+
+      if (mounted) setState(() => _isInit = true);
+    } catch (e, stackTrace) {
+      debugPrint('Fatal error during initialization: $e');
+      debugPrint(stackTrace.toString());
+      if (mounted) setState(() => _error = e.toString());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return MaterialApp(
         home: Scaffold(
           body: Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Text(
-                'Failed to start app:\n$e',
+                'Failed to start app:\n$_error',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.red),
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    }
+
+    if (!_isInit) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(brightness: Brightness.dark),
+        home: const Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(color: Colors.white),
+                SizedBox(height: 16),
+                Text('Loading MediaVore...', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return const MediaVoreApp();
   }
 }
 

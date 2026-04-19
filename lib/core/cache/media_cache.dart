@@ -270,4 +270,12 @@ class MediaCache {
       _detailsCache.containsKey(_getKey(id, type));
   bool isSeasonCached(int tvId, int seasonNumber) =>
       _seasonCache.containsKey(_getSeasonKey(tvId, seasonNumber));
+
+  DateTime? getCacheUpdateDate(int tmdbId, MediaType type) {
+    final cachedRecord = _isar.cachedMedias
+        .where()
+        .tmdbIdTypeEqualTo(tmdbId, type.name)
+        .findFirstSync();
+    return cachedRecord?.updatedAt;
+  }
 }
