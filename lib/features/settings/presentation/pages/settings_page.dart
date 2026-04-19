@@ -168,7 +168,7 @@ class SettingsPage extends StatelessWidget {
           const _SectionHeader(title: 'API Configuration'),
           ListTile(
             leading: const Icon(Icons.key),
-            title: const Text('TMDB API Key'),
+            title: const Text('TMDB API Credential'),
             subtitle: Text(
               settings.tmdbApiKey.isEmpty
                   ? 'Not set'
@@ -209,11 +209,11 @@ class SettingsPage extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('TMDB API Key'),
+          title: const Text('TMDB API Credential'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              hintText: 'Enter your API key here',
+              hintText: 'Enter TMDB v3 API key or v4 read token',
               border: OutlineInputBorder(),
             ),
             obscureText: true,

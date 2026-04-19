@@ -12,12 +12,50 @@ class MediaRemoteDataSource {
   final Dio dio;
   final SharedPreferences prefs;
 
-  String get _apiToken => prefs.getString('tmdbApiKey') ?? '';
+  String get _apiCredential {
+    final raw = (prefs.getString('tmdbApiKey') ?? '').trim();
+    if (raw.toLowerCase().startsWith('bearer ')) {
+      return raw.substring(7).trim();
+    }
+    return raw;
+  }
+
+  bool _isV3ApiKey(String credential) =>
+      RegExp(r'^[a-fA-F0-9]{32}$').hasMatch(credential);
+
+  Future<Response<dynamic>> _tmdbGet(
+    String url, {
+    Map<String, dynamic>? queryParameters,
+  }) {
+    final credential = _apiCredential;
+    if (credential.isEmpty) {
+      throw const ConfigurationException(
+        'TMDB API credential is missing. Add a v3 API key or v4 read token in Settings.',
+      );
+    }
+
+    final params = <String, dynamic>{...?queryParameters};
+    final useV3ApiKey = _isV3ApiKey(credential);
+
+    if (useV3ApiKey) {
+      params['api_key'] = credential;
+    }
+
+    final options = useV3ApiKey
+        ? null
+        : Options(headers: {'Authorization': 'Bearer $credential'});
+
+    return dio.get(
+      url,
+      queryParameters: params.isEmpty ? null : params,
+      options: options,
+    );
+  }
 
   /// Creates a new instance of [MediaRemoteDataSource].
   ///
-  /// Requires a [Dio] to make network requests and an [apiToken] for TMDB API.
-  /// If [apiToken] is not provided, it will be read from the environment variable 'TMDB_API_TOKEN'.
+  /// Requires a [Dio] to make network requests and [SharedPreferences]
+  /// that stores the TMDB credential under 'tmdbApiKey'.
   @factoryMethod
   factory MediaRemoteDataSource({required Dio dio, required SharedPreferences prefs}) {
     return MediaRemoteDataSource._internal(
@@ -55,10 +93,9 @@ class MediaRemoteDataSource {
       if (language != null) params['language'] = language;
 
       debugPrint('[Remote] searchMedia -> /search/$path params=$params');
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/search/$path',
         queryParameters: params,
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
 
       final List results = response.data['results'];
@@ -97,6 +134,7 @@ class MediaRemoteDataSource {
           throw ServerException('Failed to load results', null, e);
       }
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to parse search response', e);
     }
   }
@@ -108,10 +146,7 @@ class MediaRemoteDataSource {
   }) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/$path/$id',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
-      );
+      final response = await _tmdbGet('https://api.themoviedb.org/3/$path/$id');
       final data = Map<String, dynamic>.from(response.data);
       data['media_type'] = path;
       return MediaItem.fromJson(data);
@@ -132,6 +167,7 @@ class MediaRemoteDataSource {
           throw ServerException('Failed to load details', null, e);
       }
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to parse response', e);
     }
   }
@@ -142,9 +178,8 @@ class MediaRemoteDataSource {
     int seasonNumber,
   ) async {
     try {
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/tv/$tvId/season/$seasonNumber',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       return response.data;
     } on DioException catch (e) {
@@ -154,6 +189,7 @@ class MediaRemoteDataSource {
         e,
       );
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to parse season details', e);
     }
   }
@@ -165,9 +201,8 @@ class MediaRemoteDataSource {
   }) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/credits',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       return response.data;
     } on DioException catch (e) {
@@ -187,6 +222,7 @@ class MediaRemoteDataSource {
           throw ServerException('Failed to load credits', null, e);
       }
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to parse credits response', e);
     }
   }
@@ -194,10 +230,7 @@ class MediaRemoteDataSource {
   /// Fetches the details for an actor from the TMDB API.
   Future<ActorDetails> getActorDetails(int actorId) async {
     try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/person/$actorId',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
-      );
+      final response = await _tmdbGet('https://api.themoviedb.org/3/person/$actorId');
       return ActorDetails.fromJson(response.data);
     } on DioException catch (e) {
       switch (e.type) {
@@ -219,6 +252,7 @@ class MediaRemoteDataSource {
           throw ServerException('Failed to load actor details', null, e);
       }
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to parse actor details response', e);
     }
   }
@@ -249,10 +283,9 @@ class MediaRemoteDataSource {
       if (minRating != null) params['vote_average.gte'] = minRating;
       if (language != null) params['language'] = language;
 
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/discover/$path',
         queryParameters: params,
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
 
       final List results = response.data['results'];
@@ -297,6 +330,7 @@ class MediaRemoteDataSource {
           throw ServerException('Failed to discover', null, e);
       }
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to parse discover response', e);
     }
   }
@@ -304,9 +338,8 @@ class MediaRemoteDataSource {
   /// Fetches the movies an actor has been in.
   Future<List<MediaItem>> getActorMediaCredits(int actorId) async {
     try {
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/person/$actorId/combined_credits',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['cast'];
       return results.map((m) => MediaItem.fromJson(m)).toList();
@@ -330,6 +363,7 @@ class MediaRemoteDataSource {
           throw ServerException('Failed to load actor movie credits', null, e);
       }
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to parse actor movie credits response', e);
     }
   }
@@ -361,10 +395,7 @@ class MediaRemoteDataSource {
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/$path/$id/similar',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
-      );
+      final response = await _tmdbGet('https://api.themoviedb.org/3/$path/$id/similar');
       final List results = response.data['results'];
       return results.map((m) {
         final data = Map<String, dynamic>.from(m);
@@ -372,6 +403,7 @@ class MediaRemoteDataSource {
         return MediaItem.fromJson(data);
       }).toList();
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to fetch similar media', e);
     }
   }
@@ -379,9 +411,8 @@ class MediaRemoteDataSource {
   /// Fetches the parts of a collection (saga) by collection id.
   Future<List<MediaItem>> getCollectionParts(int collectionId) async {
     try {
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/collection/$collectionId',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['parts'] ?? [];
       return results.map((m) {
@@ -390,6 +421,7 @@ class MediaRemoteDataSource {
         return MediaItem.fromJson(data);
       }).toList();
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to fetch collection parts', e);
     }
   }
@@ -397,9 +429,8 @@ class MediaRemoteDataSource {
   Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/recommendations',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       final List results = response.data['results'];
       return results.map((m) {
@@ -408,6 +439,7 @@ class MediaRemoteDataSource {
         return MediaItem.fromJson(data);
       }).toList();
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to fetch recommendations', e);
     }
   }
@@ -415,12 +447,12 @@ class MediaRemoteDataSource {
   Future<Map<String, dynamic>> getWatchProviders(int id, MediaType type) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
-      final response = await dio.get(
+      final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/watch/providers',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
       );
       return response.data['results'] as Map<String, dynamic>;
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to fetch watch providers', e);
     }
   }
@@ -428,13 +460,11 @@ class MediaRemoteDataSource {
   Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type) async {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     try {
-      final response = await dio.get(
-        'https://api.themoviedb.org/3/$path/$id/videos',
-        options: Options(headers: {'Authorization': 'Bearer $_apiToken'}),
-      );
+      final response = await _tmdbGet('https://api.themoviedb.org/3/$path/$id/videos');
       final List results = response.data['results'];
       return results.cast<Map<String, dynamic>>();
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ParsingException('Failed to fetch videos', e);
     }
   }

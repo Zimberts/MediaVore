@@ -30,6 +30,15 @@
 		<string>MediaVore needs access to the photo library to share or attach media.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>MediaVore needs permission to save images to your library.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>processing</string>
+		</array>
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>fr.zimberts.mediavore.dailySync</string>
+		</array>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>

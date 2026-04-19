@@ -255,18 +255,18 @@ class _MainPageState extends State<MainPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('TMDB API Key Required'),
+          title: const Text('TMDB Credential Required'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'To use this app, you need a TMDB API key. You can get one for free at themoviedb.org.',
+                'To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.',
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 decoration: const InputDecoration(
-                  hintText: 'Enter your API key here',
+                  hintText: 'Enter TMDB v3 API key or v4 read token',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,

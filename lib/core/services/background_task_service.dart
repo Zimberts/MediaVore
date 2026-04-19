@@ -6,7 +6,9 @@ import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 const fetchTask = "dailySync";
+const fetchTaskIdentifier = "fr.zimberts.mediavore.dailySync";
 const refreshReturningSeriesTask = "refreshReturningSeries";
+const refreshReturningSeriesPrefix = "refresh_";
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -19,7 +21,7 @@ void callbackDispatcher() {
       await init(locator);
       final repo = locator<MediaRepository>();
 
-      if (task == fetchTask) {
+      if (task == fetchTask || task == fetchTaskIdentifier || task == Workmanager.iOSBackgroundTask) {
         debugPrint("Running daily background sync...");
         final seenItems = await repo.getSeenItems();
         
@@ -81,7 +83,7 @@ void callbackDispatcher() {
             }
           } catch (_) {}
         }
-      } else if (task == refreshReturningSeriesTask) {
+      } else if (task == refreshReturningSeriesTask || task.startsWith(refreshReturningSeriesPrefix)) {
         final int? id = inputData?['tmdbId'];
         if (id != null) {
           debugPrint("Running 1-off refresh for series ID: $id...");
@@ -106,7 +108,7 @@ class BackgroundTaskService {
 
   static void registerDailySync() {
     Workmanager().registerPeriodicTask(
-      "1", // Unique ID
+      fetchTaskIdentifier,
       fetchTask,
       frequency: const Duration(days: 1),
       constraints: Constraints(
