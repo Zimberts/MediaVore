@@ -1576,8 +1576,9 @@ class _MediaListTile extends StatelessWidget {
         child: ListTile(
           leading: _PosterWithBadge(item: item, provider: provider),
           title: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
+              Flexible(
                 child: Text(
                   item.title,
                   maxLines: 1,
@@ -1585,10 +1586,36 @@ class _MediaListTile extends StatelessWidget {
                 ),
               ),
               if (isLiked)
-                Icon(Icons.favorite, size: 16, color: colors.likeHeart),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                  child: Icon(
+                    Icons.favorite,
+                    size: 16,
+                    color: colors.likeHeart,
+                  ),
+                ),
             ],
           ),
-          subtitle: Text('${item.releaseDate} • $lengthText'),
+          subtitle: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(isTv ? Icons.tv : Icons.movie, size: 12, color: Colors.grey),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  '${item.releaseDate?.isNotEmpty == true && item.releaseDate!.length >= 4 ? item.releaseDate!.substring(0, 4) : "?"} • $lengthText',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              if (item.voteAverage != null && item.voteAverage! > 0) ...[
+                const Text(' • '),
+                const Icon(Icons.star, color: Colors.amber, size: 12),
+                const SizedBox(width: 2),
+                Text(item.voteAverage!.toStringAsFixed(1)),
+              ],
+            ],
+          ),
           trailing: isEditMode
               ? Checkbox(value: isSelected, onChanged: (_) => onTap())
               : isManualSort
@@ -1624,18 +1651,145 @@ class _MediaGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final isTv = item.mediaType == MediaType.tv;
+
+    String lengthText = '';
+    if (isTv) {
+      lengthText = '${item.numberOfSeasons ?? "?"} S';
+    } else if (item.runtime != null) {
+      lengthText = '${item.runtime}m';
+    }
+
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          _PosterWithBadge(
-            item: item,
-            provider: provider,
-            width: double.infinity,
-            height: double.infinity,
-            showBadge: false,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _PosterWithBadge(
+                  item: item,
+                  provider: provider,
+                  width: double.infinity,
+                  height: double.infinity,
+                  showBadge: false,
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black87, Colors.transparent],
+                      ),
+                    ),
+                    padding: const EdgeInsets.only(
+                      left: 6,
+                      top: 24,
+                      bottom: 6,
+                      right: 18,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (provider.isLiked(item))
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4.0),
+                                child: Icon(
+                                  Icons.favorite,
+                                  size: 10,
+                                  color: colors.likeHeart,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${item.releaseDate?.isNotEmpty == true && item.releaseDate!.length >= 4 ? item.releaseDate!.substring(0, 4) : ""} • $lengthText',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 9,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (item.voteAverage != null && item.voteAverage! > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    margin: const EdgeInsets.only(right: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 10),
+                        const SizedBox(width: 2),
+                        Text(
+                          item.voteAverage!.toStringAsFixed(1),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 4,
+            left: 4,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                item.mediaType == MediaType.tv ? Icons.tv : Icons.movie,
+                color: Colors.white,
+                size: 10,
+              ),
+            ),
           ),
           if (isSelected)
             Positioned.fill(
