@@ -11,7 +11,7 @@ class SettingsProvider with ChangeNotifier {
     _loadSettings();
   }
 
-  DisplayMode _displayMode = DisplayMode.list;
+  DisplayMode _displayMode = DisplayMode.grid;
   double _gridSize = 3.0;
   bool _hideNonReleased = false;
 
@@ -33,11 +33,15 @@ class SettingsProvider with ChangeNotifier {
   AppPalette get darkPalette => darkThemes[_darkAppThemeIndex].palette;
 
   void _loadSettings() {
-    int displayModeIndex = _prefs.getInt('displayMode') ?? 0;
-    if (displayModeIndex < 0 || displayModeIndex >= DisplayMode.values.length) {
-      displayModeIndex = 0;
+    // Only override the in-memory default if a persisted value exists.
+    final int? storedDisplayModeIndex = _prefs.getInt('displayMode');
+    if (storedDisplayModeIndex != null) {
+      var displayModeIndex = storedDisplayModeIndex;
+      if (displayModeIndex < 0 || displayModeIndex >= DisplayMode.values.length) {
+        displayModeIndex = 0;
+      }
+      _displayMode = DisplayMode.values[displayModeIndex];
     }
-    _displayMode = DisplayMode.values[displayModeIndex];
 
     _gridSize = _prefs.getDouble('gridSize') ?? 3.0;
     _hideNonReleased = _prefs.getBool('hideNonReleased') ?? false;

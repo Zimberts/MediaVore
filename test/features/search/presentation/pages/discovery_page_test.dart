@@ -192,7 +192,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.grid_on));
     await tester.pumpAndSettle();
 
-    expect(find.text('Adjust Grid Size'), findsOneWidget);
+    // The UI shows 'Grid Size' inside the display options sheet
+    expect(find.text('Grid Size'), findsOneWidget);
 
     final slider = find.byType(Slider);
     await tester.drag(slider, const Offset(100, 0));

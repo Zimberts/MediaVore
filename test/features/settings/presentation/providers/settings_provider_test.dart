@@ -26,7 +26,7 @@ void main() {
     test(
       'should initialize with default values when SharedPreferences is empty',
       () {
-        expect(provider.displayMode, DisplayMode.list);
+        expect(provider.displayMode, DisplayMode.grid);
         expect(provider.gridSize, 3.0);
         expect(provider.themeMode, ThemeMode.system);
         expect(provider.lightAppThemeIndex, 0);

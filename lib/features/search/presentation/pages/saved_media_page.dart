@@ -1603,7 +1603,7 @@ class _MediaListTile extends StatelessWidget {
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
-                  '${item.releaseDate?.isNotEmpty == true && item.releaseDate!.length >= 4 ? item.releaseDate!.substring(0, 4) : "?"} • $lengthText',
+                  '${item.releaseDate.isNotEmpty == true && item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : "?"} • $lengthText',
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
@@ -1728,7 +1728,7 @@ class _MediaGridItem extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${item.releaseDate?.isNotEmpty == true && item.releaseDate!.length >= 4 ? item.releaseDate!.substring(0, 4) : ""} • $lengthText',
+                          '${item.releaseDate.isNotEmpty == true && item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : ""} • $lengthText',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 9,
@@ -1925,25 +1925,29 @@ class _PosterWithBadge extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: item.posterPath != null
-              ? CachedNetworkImage(
-                  imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
-                  width: width,
-                  height: height,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  errorWidget: (context, url, error) =>
-                      Icon(isTv ? Icons.tv : Icons.movie, size: width),
-                )
+                  ? CachedNetworkImage(
+                      imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
+                      width: width,
+                      height: height,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      errorWidget: (context, url, error) => Icon(
+                        isTv ? Icons.tv : Icons.movie,
+                        size: (width?.isFinite == true) ? width : 48,
+                      ),
+                    )
               : Container(
                   width: width,
                   height: height,
                   color: colors.placeholder,
-                  child: Icon(
-                    isTv ? Icons.tv : Icons.movie,
-                    size: width != null ? width! / 2 : 24,
-                  ),
+                                    child: Icon(
+                                      isTv ? Icons.tv : Icons.movie,
+                                        size: (width?.isFinite == true)
+                                          ? (width! / 2)
+                                          : 24,
+                                    ),
                 ),
         ),
         if (isSeen && showBadge)
