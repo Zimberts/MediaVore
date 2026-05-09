@@ -950,6 +950,7 @@ class MediaRepositoryImpl implements MediaRepository {
     final seenModels = await localDataSource.getExportData();
     final likedModels = await localDataSource.getLikedItems();
     final notifiedModels = await localDataSource.getNotifiedItems();
+    final quickAddModels = await localDataSource.getQuickAddItems();
 
     final names = await localDataSource.getAllListNames();
     final Map<String, List<MediaListItem>> lists = {};
@@ -963,6 +964,7 @@ class MediaRepositoryImpl implements MediaRepository {
       seen: seenModels,
       likes: likedModels,
       notifications: notifiedModels,
+      quickAdd: quickAddModels,
       lists: lists,
     );
 
@@ -982,8 +984,9 @@ class MediaRepositoryImpl implements MediaRepository {
     final likesData = envelope.likes;
     final notData = envelope.notifications;
     final listsData = envelope.lists;
+    final quickAddData = envelope.quickAdd;
 
-    final totalStages = 4;
+    final totalStages = 5;
     int stage = 0;
 
     if (seenData.isNotEmpty) {
@@ -1020,6 +1023,20 @@ class MediaRepositoryImpl implements MediaRepository {
       }
       await localDataSource.importNotifiedItems(
         notData,
+        mode: mode,
+        onProgress: (p, s) {
+          if (onProgress != null) onProgress((stage + p) / totalStages, s);
+        },
+      );
+    }
+    stage++;
+
+    if (quickAddData.isNotEmpty) {
+      if (onProgress != null) {
+        onProgress(stage / totalStages, 'Importing quick add...');
+      }
+      await localDataSource.importQuickAddItems(
+        quickAddData,
         mode: mode,
         onProgress: (p, s) {
           if (onProgress != null) onProgress((stage + p) / totalStages, s);

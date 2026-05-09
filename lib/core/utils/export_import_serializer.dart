@@ -6,6 +6,7 @@ import '../../features/media_details/data/models/liked_item.dart';
 import '../../features/media_details/data/models/media_list_item.dart';
 import '../../features/media_details/data/models/notified_item_model.dart';
 import '../../features/media_details/data/models/seen_item_model.dart';
+import '../../features/media_details/data/models/quick_add_item_model.dart';
 
 class ExportEnvelope {
   final int version;
@@ -15,19 +16,22 @@ class ExportEnvelope {
   final List<SeenItemModel> seen;
   final List<LikedItem> likes;
   final List<NotifiedItemModel> notifications;
+  final List<QuickAddItemModel> quickAdd;
   final Map<String, List<MediaListItem>> lists;
 
   ExportEnvelope({
     required this.version,
     required this.exportedAt,
     this.source,
-    List<SeenItemModel>? seen,
-    List<LikedItem>? likes,
-    List<NotifiedItemModel>? notifications,
-    Map<String, List<MediaListItem>>? lists,
+     List<SeenItemModel>? seen,
+     List<LikedItem>? likes,
+     List<NotifiedItemModel>? notifications,
+     List<QuickAddItemModel>? quickAdd,
+     Map<String, List<MediaListItem>>? lists,
   }) : seen = seen ?? [],
        likes = likes ?? [],
        notifications = notifications ?? [],
+       quickAdd = quickAdd ?? [],
        lists = lists ?? {};
 
   List<int> toZipBytes() {
@@ -148,6 +152,38 @@ class ExportEnvelope {
       );
     }
 
+    // quickadd.csv
+    if (quickAdd.isNotEmpty) {
+      final qaRows = <List<dynamic>>[
+        [
+          'tmdbId',
+          'type',
+          'seasonNumber',
+          'episodeNumber',
+          'insertedAt',
+          'airDate',
+          'title',
+          'posterPath',
+        ],
+      ];
+      for (final q in quickAdd) {
+        qaRows.add([
+          q.tmdbId,
+          q.type,
+          q.seasonNumber?.toString() ?? '',
+          q.episodeNumber?.toString() ?? '',
+          q.insertedAt.toIso8601String(),
+          q.airDate?.toIso8601String() ?? '',
+          q.title ?? '',
+          q.posterPath ?? '',
+        ]);
+      }
+      final qaCsv = csv.encode(qaRows);
+      archive.addFile(
+        ArchiveFile('quickadd.csv', qaCsv.length, utf8.encode(qaCsv)),
+      );
+    }
+
     return ZipEncoder().encode(archive);
   }
 
@@ -160,6 +196,7 @@ class ExportEnvelope {
     final List<SeenItemModel> seen = [];
     final List<LikedItem> likes = [];
     final List<NotifiedItemModel> notifications = [];
+    final List<QuickAddItemModel> quickAdd = [];
     final Map<String, List<MediaListItem>> lists = {};
 
     for (final file in archive) {
@@ -340,6 +377,66 @@ class ExportEnvelope {
             ),
           );
         }
+      } else if (filename == 'quickadd.csv') {
+        for (int i = 1; i < rows.length; i++) {
+          final row = rows[i];
+          int tmdbId = 0;
+          String type = 'tv';
+          int? seasonNumber;
+          int? episodeNumber;
+          DateTime insertedAt = DateTime.now();
+          DateTime? airDate;
+          String? title;
+          String? posterPath;
+
+          for (int j = 0; j < headers.length && j < row.length; j++) {
+            final val = row[j];
+            final valStr = val.toString().trim();
+            if (valStr.isEmpty && headers[j] != 'type') continue;
+            switch (headers[j]) {
+              case 'tmdbId':
+                if (val is num)
+                  tmdbId = val.toInt();
+                else
+                  tmdbId = int.tryParse(valStr) ?? 0;
+                break;
+              case 'type':
+                type = valStr;
+                break;
+              case 'seasonNumber':
+                seasonNumber = int.tryParse(valStr);
+                break;
+              case 'episodeNumber':
+                episodeNumber = int.tryParse(valStr);
+                break;
+              case 'insertedAt':
+                insertedAt = DateTime.tryParse(valStr) ?? insertedAt;
+                break;
+              case 'airDate':
+                airDate = DateTime.tryParse(valStr);
+                break;
+              case 'title':
+                title = valStr.isNotEmpty ? valStr : null;
+                break;
+              case 'posterPath':
+                posterPath = valStr.isNotEmpty ? valStr : null;
+                break;
+            }
+          }
+
+          quickAdd.add(
+            QuickAddItemModel(
+              tmdbId: tmdbId,
+              type: type,
+              seasonNumber: seasonNumber,
+              episodeNumber: episodeNumber,
+              insertedAt: insertedAt,
+              airDate: airDate,
+              title: title,
+              posterPath: posterPath,
+            ),
+          );
+        }
       } else if (filename == 'lists.csv') {
         for (int i = 1; i < rows.length; i++) {
           final row = rows[i];
@@ -398,6 +495,7 @@ class ExportEnvelope {
       seen: seen,
       likes: likes,
       notifications: notifications,
+      quickAdd: quickAdd,
       lists: lists,
     );
   }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mediavore/core/utils/release_sort.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
@@ -122,33 +124,20 @@ class _ReleasesTabState extends State<_ReleasesTab> {
     return Consumer<SearchProvider>(
       builder: (context, provider, child) {
         final now = DateTime.now();
-        final startOfDay = DateTime(now.year, now.month, now.day);
-        final oneMonthAgo = startOfDay.subtract(const Duration(days: 30));
 
-        final releases = provider.notifiedItems.where((item) {
-          if (item.releaseDate == null) {
-            return false;
-          }
-
-          final releaseDate = item.releaseDate!;
-          final releaseDay = DateTime(
-            releaseDate.year,
-            releaseDate.month,
-            releaseDate.day,
-          );
-
+        // Build the releases list: include all notified items but filter out things
+        // the user already marked as seen. We'll then sort by concrete date first
+        // and append unplanned items grouped by type.
+        final filtered = <NotifiedItem>[];
+        for (final item in provider.notifiedItems) {
           // Filtering by "Seen" status
+          bool isSeen = false;
           if (item.type == MediaType.movie) {
             final seenCount = provider.seenItems
                 .where((s) => s.tmdbId == item.tmdbId)
                 .length;
-            if (seenCount > 0) {
-              return false;
-            }
-          }
-
-          if (item.type == MediaType.tv) {
-            // FIX: Use season and episode number for precise filtering
+            if (seenCount > 0) isSeen = true;
+          } else if (item.type == MediaType.tv) {
             if (item.seasonNumber != null && item.episodeNumber != null) {
               final isEpSeen = provider.seenItems.any(
                 (s) =>
@@ -157,11 +146,14 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                     s.seasonNumber == item.seasonNumber &&
                     s.episodeNumber == item.episodeNumber,
               );
-              if (isEpSeen) {
-                return false;
-              }
-            } else {
+              if (isEpSeen) isSeen = true;
+            } else if (item.releaseDate != null) {
               // Fallback to date-based logic ONLY if episode info is missing
+              final releaseDay = DateTime(
+                item.releaseDate!.year,
+                item.releaseDate!.month,
+                item.releaseDate!.day,
+              );
               final alreadySeenRecent = provider.seenItems.any(
                 (s) =>
                     s.tmdbId == item.tmdbId &&
@@ -169,18 +161,23 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                     (s.seenDate.isAfter(releaseDay) ||
                         DateUtils.isSameDay(s.seenDate, releaseDay)),
               );
-              if (alreadySeenRecent) {
-                return false;
-              }
+              if (alreadySeenRecent) isSeen = true;
             }
           }
 
-          // Check if it's within our window
-          return releaseDay.isAfter(oneMonthAgo) ||
-              DateUtils.isSameDay(releaseDay, startOfDay);
-        }).toList();
+          if (!isSeen) {
+            // Skip old TV releases (30+ days) to reduce clutter, but keep them notified
+            if (item.type == MediaType.tv && item.releaseDate != null) {
+              final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+              if (item.releaseDate!.isBefore(thirtyDaysAgo)) {
+                continue; // Hide old episode, user can catch up
+              }
+            }
+            filtered.add(item);
+          }
+        }
 
-        releases.sort((a, b) => a.releaseDate!.compareTo(b.releaseDate!));
+        final releases = sortReleases(filtered);
 
         return RefreshIndicator(
           onRefresh: widget.onRefresh,
@@ -196,14 +193,21 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                   itemCount: releases.length,
                   itemBuilder: (context, index) {
                     final item = releases[index];
-                    final isReleased = !item.releaseDate!.isAfter(now);
+                    final isReleased = item.releaseDate != null
+                        ? !item.releaseDate!.isAfter(now)
+                        : false;
 
                     String title = item.title;
-                    if (item.type == MediaType.tv &&
-                        item.seasonNumber != null) {
-                      title +=
-                          ' (S${item.seasonNumber} E${item.episodeNumber})';
+                    if (item.type == MediaType.tv && item.seasonNumber != null) {
+                      title += ' (S${item.seasonNumber} E${item.episodeNumber})';
                     }
+
+                    final subtitleText = item.releaseDate != null
+                        ? '${isReleased ? "Released" : "Releases"}: ${DateFormat.yMMMd().format(item.releaseDate!)}'
+                        : releaseSubtitleForItem(item);
+                    final subtitleColor = item.releaseDate != null
+                        ? (isReleased ? Colors.green : Colors.orange)
+                        : Colors.grey;
 
                     return ListTile(
                       leading: item.posterPath != null
@@ -213,10 +217,8 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                           : const Icon(Icons.movie),
                       title: Text(title),
                       subtitle: Text(
-                        '${isReleased ? "Released" : "Releases"}: ${DateFormat.yMMMd().format(item.releaseDate!)}',
-                        style: TextStyle(
-                          color: isReleased ? Colors.green : Colors.orange,
-                        ),
+                        subtitleText,
+                        style: TextStyle(color: subtitleColor),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,

@@ -2,7 +2,7 @@
 
 ## Overview
 
-MediaVore uses a single ZIP archive to export/import user data. The archive contains multiple `.csv` files: `seen.csv`, `likes.csv`, `notifications.csv`, `lists.csv`, and a `meta.csv` header with a `version`, `exportedAt` timestamp and `source`.
+MediaVore uses a single ZIP archive to export/import user data. The archive contains multiple `.csv` files: `seen.csv`, `likes.csv`, `notifications.csv`, `quickadd.csv`, `lists.csv`, and a `meta.csv` header with a `version`, `exportedAt` timestamp and `source`.
 
 ## Archive structure
 
@@ -12,6 +12,7 @@ export.zip
 ├── seen.csv
 ├── likes.csv
 ├── notifications.csv
+├── quickadd.csv
 └── lists.csv
 ```
 
@@ -50,6 +51,16 @@ Columns: `tmdbId`, `type`, `title`
 Columns: `tmdbId`, `type`, `title`, `posterPath`, `releaseDate`, `seasonNumber`, `episodeNumber`, `autoNotify`
 
 - `autoNotify` is represented as `true` or `false` string.
+
+### `quickadd.csv`
+
+Columns: `tmdbId`, `type`, `seasonNumber`, `episodeNumber`, `insertedAt`, `airDate`, `title`, `posterPath`
+
+- `tmdbId` (int), `type` ("movie"|"tv")
+- `seasonNumber`, `episodeNumber` (nullable int) -- the next unseen episode for TV series.
+- `insertedAt` (ISO8601 string) -- when this quick add entry was created.
+- `airDate` (nullable ISO8601 string) -- the air date of the episode or movie.
+- `title`, `posterPath` (nullable strings) -- metadata snapshot at insertion time.
 
 ### `lists.csv`
 

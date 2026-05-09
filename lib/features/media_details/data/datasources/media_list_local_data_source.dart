@@ -653,4 +653,46 @@ class MediaListLocalDataSource {
       i++;
     }
   }
+
+  Future<void> importQuickAddItems(
+    List<QuickAddItemModel> items, {
+    required ImportMode mode,
+    Function(double progress, String status)? onProgress,
+  }) async {
+    final total = items.length;
+
+    if (mode == ImportMode.replace) {
+      await _isar.writeTxn(() async {
+        await _isar.quickAddItemModels.clear();
+      });
+    }
+
+    if (mode == ImportMode.replace || mode == ImportMode.append) {
+      for (int i = 0; i < items.length; i++) {
+        if (onProgress != null) onProgress(i / total, 'Importing quick add...');
+      }
+
+      await _isar.writeTxn(() async {
+        await _isar.quickAddItemModels.putAll(items);
+      });
+    } else if (mode == ImportMode.merge) {
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        if (onProgress != null) {
+          onProgress(i / total, 'Processing quick add ${i + 1}');
+        }
+        final existing = await _isar.quickAddItemModels
+            .filter()
+            .tmdbIdEqualTo(item.tmdbId)
+            .seasonNumberEqualTo(item.seasonNumber)
+            .episodeNumberEqualTo(item.episodeNumber)
+            .findFirst();
+        if (existing == null) {
+          await _isar.writeTxn(() async {
+            await _isar.quickAddItemModels.put(item);
+          });
+        }
+      }
+    }
+  }
 }

@@ -787,6 +787,15 @@ class SearchProvider with ChangeNotifier {
       await _loadAllListEntries();
       await updateCacheSize();
       await updateSeenDbSize();
+      // If quick add was not part of import, populate from seen history
+      try {
+        final qaItems = await repository.getQuickAddItems();
+        if (qaItems.isEmpty) {
+          await repository.populateQuickAddFromSeenHistory();
+          await loadQuickAddItems();
+        }
+      } catch (_) {}
+
       _isImporting = false;
       notifyListeners();
     }
