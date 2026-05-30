@@ -1925,29 +1925,27 @@ class _PosterWithBadge extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: item.posterPath != null
-                  ? CachedNetworkImage(
-                      imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
-                      width: width,
-                      height: height,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      errorWidget: (context, url, error) => Icon(
-                        isTv ? Icons.tv : Icons.movie,
-                        size: (width?.isFinite == true) ? width : 48,
-                      ),
-                    )
+              ? CachedNetworkImage(
+                  imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
+                  width: width,
+                  height: height,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  errorWidget: (context, url, error) => Icon(
+                    isTv ? Icons.tv : Icons.movie,
+                    size: (width?.isFinite == true) ? width : 48,
+                  ),
+                )
               : Container(
                   width: width,
                   height: height,
                   color: colors.placeholder,
-                                    child: Icon(
-                                      isTv ? Icons.tv : Icons.movie,
-                                        size: (width?.isFinite == true)
-                                          ? (width! / 2)
-                                          : 24,
-                                    ),
+                  child: Icon(
+                    isTv ? Icons.tv : Icons.movie,
+                    size: (width?.isFinite == true) ? (width! / 2) : 24,
+                  ),
                 ),
         ),
         if (isSeen && showBadge)

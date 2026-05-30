@@ -13,6 +13,7 @@ import 'package:mediavore/features/media_details/presentation/widgets/media_list
 import 'package:mediavore/features/media_details/presentation/widgets/seen_manager.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/like_button.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/notify_button.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watch_next_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:path_provider/path_provider.dart';
@@ -340,6 +341,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             actions: [
               LikeButton(item: itemToDisplay),
               NotifyButton(item: itemToDisplay),
+              WatchlistIconButton(item: itemToDisplay),
               IconButton(
                 icon: const Icon(Icons.file_upload_outlined),
                 onPressed: _exportHistory,
