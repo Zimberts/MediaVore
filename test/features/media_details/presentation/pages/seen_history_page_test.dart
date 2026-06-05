@@ -107,6 +107,7 @@ void main() {
         type: MediaType.movie,
         title: 'Movie A',
         seenDate: seenDate,
+        runtime: 130,
       ),
       SeenItem(
         id: 2,
@@ -138,6 +139,7 @@ void main() {
     expect(find.byIcon(Icons.favorite), findsOneWidget);
     // Check group header
     expect(find.textContaining('October 1, 2023'), findsOneWidget);
+    expect(find.textContaining('2h 10m'), findsOneWidget);
   });
 
   testWidgets('swiping to delete shows confirmation and calls delete', (

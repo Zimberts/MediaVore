@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
@@ -366,6 +367,11 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                   subtitle +=
                       (subtitle.isNotEmpty ? ' • ' : '') +
                       DateFormat.yMd().format(seenItem.seenDate);
+                }
+
+                final runtimeText = Formatters.formatRuntime(seenItem.runtime);
+                if (runtimeText.isNotEmpty) {
+                  subtitle += (subtitle.isNotEmpty ? ' • ' : '') + runtimeText;
                 }
 
                 return Dismissible(
