@@ -184,7 +184,7 @@ class SettingsPage extends StatelessWidget {
           const AboutListTile(
             icon: Icon(Icons.info_outline),
             applicationName: 'MediaVore',
-            applicationVersion: '1.0.0',
+            applicationVersion: '1.1.0',
             aboutBoxChildren: [Text('A simple media tracking app using TMDB.')],
           ),
         ],
