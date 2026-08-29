@@ -285,6 +285,7 @@ class MediaRepositoryImpl implements MediaRepository {
     DateTime? releaseDate;
     int? seasonNum;
     int? episodeNum;
+    int? runtime;
 
     if (item.mediaType == MediaType.tv) {
       // Logic: Find the FIRST unseen episode air date
@@ -334,6 +335,7 @@ class MediaRepositoryImpl implements MediaRepository {
                 releaseDate = DateTime.parse(airDateStr);
                 seasonNum = season.seasonNumber;
                 episodeNum = epNum;
+                runtime = ep['runtime'] as int?;
                 break;
               }
             }
@@ -347,6 +349,7 @@ class MediaRepositoryImpl implements MediaRepository {
       if (item.mediaType == MediaType.movie) {
         if (item.releaseDate.isNotEmpty) {
           try {
+            runtime = item.runtime;
             releaseDate = DateTime.parse(item.releaseDate);
           } catch (_) {}
         }
@@ -380,6 +383,7 @@ class MediaRepositoryImpl implements MediaRepository {
         item.mediaType.name,
         releaseDate,
         seasonNumber: seasonNum,
+        runtime: runtime,
         episodeNumber: episodeNum,
       );
     }
@@ -1107,6 +1111,7 @@ class MediaRepositoryImpl implements MediaRepository {
         type: item.mediaType.name,
         title: item.title,
         posterPath: item.posterPath,
+        runtime: item.runtime,
         autoNotify: autoNotify,
       );
       await _refreshNotificationDate(item);
@@ -1135,6 +1140,7 @@ class MediaRepositoryImpl implements MediaRepository {
             releaseDate: m.releaseDate,
             seasonNumber: m.seasonNumber,
             episodeNumber: m.episodeNumber,
+            runtime: m.runtime,
             autoNotify: m.autoNotify,
           ),
         )

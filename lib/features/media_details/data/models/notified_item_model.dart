@@ -21,6 +21,8 @@ class NotifiedItemModel {
 
   final int? episodeNumber;
 
+  final int? runtime;
+
   final bool autoNotify; // If it was added automatically via watchlist
 
   NotifiedItemModel({
@@ -31,6 +33,7 @@ class NotifiedItemModel {
     this.releaseDate,
     this.seasonNumber,
     this.episodeNumber,
+    this.runtime,
     this.autoNotify = false,
   });
 }

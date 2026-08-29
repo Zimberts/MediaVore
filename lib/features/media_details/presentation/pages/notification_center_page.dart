@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/utils/release_sort.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -202,9 +203,11 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                       title += ' (S${item.seasonNumber} E${item.episodeNumber})';
                     }
 
-                    final subtitleText = item.releaseDate != null
-                        ? '${isReleased ? "Released" : "Releases"}: ${DateFormat.yMMMd().format(item.releaseDate!)}'
-                        : releaseSubtitleForItem(item);
+                    final runtimeText = Formatters.formatRuntime(item.runtime);
+                    final subtitleText = (item.releaseDate != null
+                            ? '${isReleased ? "Released" : "Releases"}: ${DateFormat.yMMMd().format(item.releaseDate!)}'
+                            : releaseSubtitleForItem(item)) +
+                        (runtimeText.isNotEmpty ? ' · $runtimeText' : '');
                     final subtitleColor = item.releaseDate != null
                         ? (isReleased ? Colors.green : Colors.orange)
                         : Colors.grey;

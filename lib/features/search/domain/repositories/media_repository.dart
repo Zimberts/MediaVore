@@ -220,6 +220,7 @@ class NotifiedItem {
   final DateTime? releaseDate;
   final int? seasonNumber;
   final int? episodeNumber;
+  final int? runtime;
   final bool autoNotify;
 
   NotifiedItem({
@@ -230,6 +231,7 @@ class NotifiedItem {
     this.releaseDate,
     this.seasonNumber,
     this.episodeNumber,
+    this.runtime,
     this.autoNotify = false,
   });
 }

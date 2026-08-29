@@ -309,5 +309,44 @@ void main() {
         expect(notified.length, 1); // Should not have been deleted
       },
     );
+
+    test('should persist runtime on toggleNotification', () async {
+      await dataSource.toggleNotification(
+        tmdbId: 1,
+        type: 'movie',
+        title: 'A',
+        runtime: 135,
+      );
+
+      final notified = await dataSource.getNotifiedItems();
+      expect(notified.length, 1);
+      expect(notified.first.runtime, 135);
+    });
+
+    test(
+      'should update runtime via updateNotificationDate and preserve it when null',
+      () async {
+        await dataSource.toggleNotification(
+          tmdbId: 1,
+          type: 'movie',
+          title: 'A',
+          runtime: 135,
+        );
+
+        await dataSource.updateNotificationDate(
+          1,
+          'movie',
+          DateTime(2023, 10, 2),
+          runtime: 90,
+        );
+        var notified = await dataSource.getNotifiedItems();
+        expect(notified.first.runtime, 90);
+
+        // Omitting runtime preserves the existing value (runtime ?? existing.runtime)
+        await dataSource.updateNotificationDate(1, 'movie', DateTime(2023, 10, 3));
+        notified = await dataSource.getNotifiedItems();
+        expect(notified.first.runtime, 90);
+      },
+    );
   });
 }
