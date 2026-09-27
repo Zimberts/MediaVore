@@ -42,6 +42,7 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
     await provider.refreshNotifiedItems(); // Refresh dates from network
     await provider.loadNotifiedItems();
     await provider.loadAllSeenStatus();
+    await provider.refreshQuickAddItems(); // Backfill missing runtimes
     await provider.loadQuickAddItems();
   }
 
@@ -348,6 +349,11 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                     if (qa.seasonNumber != null && qa.episodeNumber != null) {
                       subtitle =
                           'Next: Season ${qa.seasonNumber}, Episode ${qa.episodeNumber}';
+                    }
+                    final runtimeText = Formatters.formatRuntime(qa.runtime);
+                    if (runtimeText.isNotEmpty) {
+                      subtitle =
+                          subtitle.isEmpty ? runtimeText : '$subtitle · $runtimeText';
                     }
 
                     final dismissKey =

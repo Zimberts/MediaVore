@@ -106,4 +106,122 @@ void main() {
     expect(keys, contains('1:4'));
     expect(keys, contains('2:3'));
   });
+
+  test('populateQuickAddFromSeenHistory captures episode runtime', () async {
+    final tmdbId = 400;
+    final now = DateTime.now();
+    final seenItems = [
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'T',
+        seenDate: now.subtract(const Duration(days: 5)),
+        seasonNumber: 1,
+        episodeNumber: 1,
+      ),
+    ];
+
+    when(() => local.getAllSeenItems()).thenAnswer((_) async => seenItems);
+    when(() => local.getQuickAddItems())
+        .thenAnswer((_) async => <QuickAddItemModel>[]);
+    when(
+      () => local.isOptedOut(
+        any(),
+        seasonNumber: any(named: 'seasonNumber'),
+        episodeNumber: any(named: 'episodeNumber'),
+      ),
+    ).thenAnswer((_) async => false);
+    when(() => local.getSeenStatus(tmdbId, 'tv'))
+        .thenAnswer((_) async => seenItems);
+
+    final media = MediaItem(
+      id: tmdbId,
+      title: 'T',
+      overview: '',
+      releaseDate: '2020-01-01',
+      seasons: [TVSeason(id: 1, seasonNumber: 1, episodeCount: 5)],
+    );
+
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+    when(() => remote.getMediaItem(tmdbId, type: MediaType.tv))
+        .thenAnswer((_) async => media);
+    when(() => cache.cacheItem(any())).thenAnswer((_) async {});
+    when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
+    when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
+    when(() => cache.getSeason(any(), any())).thenReturn(null);
+
+    when(() => remote.getSeasonDetails(tmdbId, 1)).thenAnswer(
+      (_) async => {
+        'episodes': List.generate(5, (i) {
+          return {
+            'episode_number': i + 1,
+            'air_date': '2020-01-0${i + 1}',
+            'runtime': 42 + i,
+          };
+        }),
+      },
+    );
+
+    final added = <QuickAddItemModel>[];
+    when(() => local.addQuickAddItem(any())).thenAnswer((inv) async {
+      added.add(inv.positionalArguments[0] as QuickAddItemModel);
+    });
+
+    await repository.populateQuickAddFromSeenHistory();
+
+    // Season 1 episode 1 is seen, so the next unseen episode is s1e2 (runtime 43).
+    expect(added.length, 1);
+    expect(added.first.seasonNumber, 1);
+    expect(added.first.episodeNumber, 2);
+    expect(added.first.runtime, 43);
+  });
+
+  test('refreshQuickAddItems backfills missing runtime for existing entries', () async {
+    final tmdbId = 500;
+    final model = QuickAddItemModel(
+      tmdbId: tmdbId,
+      type: 'tv',
+      seasonNumber: 2,
+      episodeNumber: 5,
+      insertedAt: DateTime.now(),
+      title: 'T',
+    );
+    model.isarId = 7;
+
+    when(() => local.getQuickAddItems()).thenAnswer((_) async => [model]);
+    when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
+    when(() => cache.getSeason(any(), any())).thenReturn(null);
+    when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
+    when(() => remote.getSeasonDetails(tmdbId, 2)).thenAnswer(
+      (_) async => {
+        'episodes': [
+          {'episode_number': 5, 'runtime': 48},
+        ],
+      },
+    );
+
+    await repository.refreshQuickAddItems();
+
+    verify(() => local.updateQuickAddItemRuntime(7, 48)).called(1);
+  });
+
+  test('refreshQuickAddItems skips entries that already have runtime', () async {
+    final tmdbId = 600;
+    final model = QuickAddItemModel(
+      tmdbId: tmdbId,
+      type: 'tv',
+      seasonNumber: 2,
+      episodeNumber: 5,
+      insertedAt: DateTime.now(),
+      title: 'T',
+      runtime: 48,
+    );
+    model.isarId = 8;
+
+    when(() => local.getQuickAddItems()).thenAnswer((_) async => [model]);
+
+    await repository.refreshQuickAddItems();
+
+    verifyNever(() => local.updateQuickAddItemRuntime(any(), any()));
+  });
 }

@@ -622,6 +622,7 @@ class MediaRepositoryImpl implements MediaRepository {
           DateTime? foundAirDate;
           int? foundSeason;
           int? foundEpisode;
+          int? foundRuntime;
 
           for (final season in sortedSeasons) {
             if (season.seasonNumber == 0) continue;
@@ -667,6 +668,7 @@ class MediaRepositoryImpl implements MediaRepository {
 
                 foundSeason = season.seasonNumber;
                 foundEpisode = epNum;
+                foundRuntime = ep['runtime'] as int?;
                 break;
               }
             } catch (_) {}
@@ -689,6 +691,7 @@ class MediaRepositoryImpl implements MediaRepository {
                 insertedAt: item.seenDate,
                 airDate: foundAirDate,
                 title: detailsItem.title,
+                runtime: foundRuntime,
                 posterPath: detailsItem.posterPath,
               );
               await localDataSource.addQuickAddItem(quick);
@@ -1199,6 +1202,45 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> refreshQuickAddItems() async {
+    await _ensureInitialized();
+    final items = await localDataSource.getQuickAddItems();
+
+    for (final item in items) {
+      if (item.runtime != null) continue;
+      if (item.type != 'tv') continue;
+      final seasonNumber = item.seasonNumber;
+      final episodeNumber = item.episodeNumber;
+      if (seasonNumber == null || episodeNumber == null || item.isarId == null) {
+        continue;
+      }
+
+      try {
+        final seasonDetails = await getSeasonDetails(
+          item.tmdbId,
+          seasonNumber,
+        );
+        final episodes = seasonDetails['episodes'] as List?;
+        int? runtime;
+        if (episodes != null) {
+          for (final ep in episodes) {
+            if (ep['episode_number'] == episodeNumber) {
+              runtime = ep['runtime'] as int?;
+              break;
+            }
+          }
+        }
+        if (runtime != null) {
+          await localDataSource.updateQuickAddItemRuntime(
+            item.isarId!,
+            runtime,
+          );
+        }
+      } catch (_) {}
+    }
+  }
+
+  @override
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) async {
     await _ensureInitialized();
     try {
@@ -1266,6 +1308,7 @@ class MediaRepositoryImpl implements MediaRepository {
             airDate: m.airDate,
             title: m.title,
             posterPath: m.posterPath,
+            runtime: m.runtime,
           ),
         )
         .toList();
@@ -1343,6 +1386,7 @@ class MediaRepositoryImpl implements MediaRepository {
       airDate: item.airDate,
       title: item.title,
       posterPath: item.posterPath,
+      runtime: item.runtime,
     );
     return localDataSource.addQuickAddItem(model);
   }
@@ -1458,6 +1502,7 @@ class MediaRepositoryImpl implements MediaRepository {
             DateTime? foundAirDate;
             int? foundSeason;
             int? foundEpisode;
+            int? foundRuntime;
 
             for (final season in sortedSeasons) {
               if (season.seasonNumber == 0) {
@@ -1511,6 +1556,7 @@ class MediaRepositoryImpl implements MediaRepository {
 
                   foundSeason = season.seasonNumber;
                   foundEpisode = epNum;
+                  foundRuntime = ep['runtime'] as int?;
                   break;
                 }
               } catch (_) {}
@@ -1540,6 +1586,7 @@ class MediaRepositoryImpl implements MediaRepository {
                 insertedAt: tailSeenDate,
                 airDate: foundAirDate,
                 title: detailsItem.title,
+                runtime: foundRuntime,
                 posterPath: detailsItem.posterPath,
               );
               await localDataSource.addQuickAddItem(quick);

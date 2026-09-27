@@ -431,6 +431,27 @@ class MediaListLocalDataSource {
     });
   }
 
+  Future<void> updateQuickAddItemRuntime(int isarId, int? runtime) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.quickAddItemModels.get(isarId);
+      if (existing != null) {
+        final updated = QuickAddItemModel(
+          tmdbId: existing.tmdbId,
+          type: existing.type,
+          seasonNumber: existing.seasonNumber,
+          episodeNumber: existing.episodeNumber,
+          insertedAt: existing.insertedAt,
+          airDate: existing.airDate,
+          title: existing.title,
+          posterPath: existing.posterPath,
+          runtime: runtime,
+        );
+        updated.isarId = existing.isarId;
+        await _isar.quickAddItemModels.put(updated);
+      }
+    });
+  }
+
   Future<void> removeQuickAddItemById(int isarId) async {
     await _isar.writeTxn(() async {
       await _isar.quickAddItemModels.delete(isarId);

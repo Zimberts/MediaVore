@@ -481,7 +481,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           _SearchIconText(icon: Icons.calendar_today, text: itemToDisplay.releaseDate),
                           if (itemToDisplay.status != null)
                             _SearchIconText(icon: Icons.info_outline, text: itemToDisplay.status!),
-                          if (itemToDisplay.mediaType == MediaType.movie && itemToDisplay.runtime != null)
+                          if (itemToDisplay.runtime != null)
                             _SearchIconText(icon: Icons.access_time, text: Formatters.formatRuntime(itemToDisplay.runtime)),
                           if (itemToDisplay.mediaType == MediaType.tv && itemToDisplay.numberOfSeasons != null)
                             _SearchIconText(icon: Icons.tv, text: '${itemToDisplay.numberOfSeasons} Seasons'),

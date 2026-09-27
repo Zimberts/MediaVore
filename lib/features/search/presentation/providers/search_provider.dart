@@ -1028,6 +1028,11 @@ class SearchProvider with ChangeNotifier {
     }
   }
 
+  Future<void> refreshQuickAddItems() async {
+    await repository.refreshQuickAddItems();
+    await loadQuickAddItems();
+  }
+
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) =>
       repository.getSimilarMedia(id, type);
   Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) =>

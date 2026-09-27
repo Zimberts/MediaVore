@@ -18,6 +18,7 @@ class QuickAddItemModel {
 
   final String? title;
   final String? posterPath;
+  final int? runtime;
 
   QuickAddItemModel({
     this.isarId,
@@ -29,5 +30,6 @@ class QuickAddItemModel {
     this.airDate,
     this.title,
     this.posterPath,
+    this.runtime,
   });
 }

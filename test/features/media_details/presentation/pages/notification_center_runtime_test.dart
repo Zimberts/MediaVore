@@ -111,4 +111,39 @@ void main() {
       expect(find.textContaining('·'), findsNothing);
     },
   );
+
+  testWidgets(
+    'shows formatted runtime in the Quick Add tab when available',
+    (WidgetTester tester) async {
+      when(() => mockRepository.getQuickAddItems()).thenAnswer(
+        (_) async => [
+          QuickAddItem(
+            tmdbId: 20,
+            type: MediaType.tv,
+            seasonNumber: 1,
+            episodeNumber: 3,
+            insertedAt: DateTime.now(),
+            title: 'Show20',
+            runtime: 45,
+          ),
+        ],
+      );
+
+      await provider.loadQuickAddItems();
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<SearchProvider>.value(
+          value: provider,
+          child: const MaterialApp(home: NotificationCenterPage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Quick Add'));
+      await tester.pumpAndSettle();
+
+      // 45 minutes -> '45m' via Formatters.formatRuntime
+      expect(find.textContaining('45m'), findsOneWidget);
+    },
+  );
 }

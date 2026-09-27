@@ -143,7 +143,7 @@ class MediaItem extends Equatable {
       status: json['status'] as String?,
       genres: genresList,
       voteAverage: (json['vote_average'] as num?)?.toDouble(),
-      runtime: json['runtime'] as int?,
+      runtime: _parseRuntime(json),
       seasons: seasonsList,
       nextEpisodeAirDate: nextAirDate,
       nextEpisodeNumber: nextEpNum,
@@ -171,6 +171,23 @@ class MediaItem extends Equatable {
       default:
         return MediaType.unknown;
     }
+  }
+
+  /// Resolves the runtime in minutes from either a movie's `runtime` field or
+  /// a TV series' `episode_run_time` list (TMDB returns a list for series).
+  static int? _parseRuntime(Map<String, dynamic> json) {
+    final movieRuntime = json['runtime'];
+    if (movieRuntime is int) return movieRuntime;
+    if (movieRuntime is num) return movieRuntime.toInt();
+
+    final episodeRunTimes = json['episode_run_time'];
+    if (episodeRunTimes is List && episodeRunTimes.isNotEmpty) {
+      for (final value in episodeRunTimes) {
+        if (value is int) return value;
+        if (value is num) return value.toInt();
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {
