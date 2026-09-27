@@ -343,7 +343,11 @@ void main() {
         expect(notified.first.runtime, 90);
 
         // Omitting runtime preserves the existing value (runtime ?? existing.runtime)
-        await dataSource.updateNotificationDate(1, 'movie', DateTime(2023, 10, 3));
+        await dataSource.updateNotificationDate(
+          1,
+          'movie',
+          DateTime(2023, 10, 3),
+        );
         notified = await dataSource.getNotifiedItems();
         expect(notified.first.runtime, 90);
       },
@@ -393,28 +397,31 @@ void main() {
       expect(notified.autoNotify, isTrue);
     });
 
-    test('should store an undated episode via setNotificationEpisode', () async {
-      await dataSource.toggleNotification(
-        tmdbId: 1,
-        type: 'tv',
-        title: 'Show',
-        releaseDate: DateTime(2024, 1, 1),
-        seasonNumber: 1,
-        episodeNumber: 1,
-      );
+    test(
+      'should store an undated episode via setNotificationEpisode',
+      () async {
+        await dataSource.toggleNotification(
+          tmdbId: 1,
+          type: 'tv',
+          title: 'Show',
+          releaseDate: DateTime(2024, 1, 1),
+          seasonNumber: 1,
+          episodeNumber: 1,
+        );
 
-      await dataSource.setNotificationEpisode(
-        1,
-        'tv',
-        seasonNumber: 5,
-        episodeNumber: 1,
-        releaseDate: null,
-      );
+        await dataSource.setNotificationEpisode(
+          1,
+          'tv',
+          seasonNumber: 5,
+          episodeNumber: 1,
+          releaseDate: null,
+        );
 
-      final notified = await dataSource.getNotifiedItem(1, 'tv');
-      expect(notified!.seasonNumber, 5);
-      expect(notified.episodeNumber, 1);
-      expect(notified.releaseDate, isNull);
-    });
+        final notified = await dataSource.getNotifiedItem(1, 'tv');
+        expect(notified!.seasonNumber, 5);
+        expect(notified.episodeNumber, 1);
+        expect(notified.releaseDate, isNull);
+      },
+    );
   });
 }

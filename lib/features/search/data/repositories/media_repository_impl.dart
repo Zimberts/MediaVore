@@ -814,11 +814,12 @@ class MediaRepositoryImpl implements MediaRepository {
           }
 
           if (foundSeason != null && foundEpisode != null) {
-            // Respect per-streak opt-out for the streak identified by the episode we just marked
+            // Respect the opt-out recorded when the user dismissed this episode
+            // (the UI keys it by the dismissed episode, not the streak tail).
             final optedOut = await localDataSource.isOptedOut(
               item.tmdbId,
-              seasonNumber: item.seasonNumber,
-              episodeNumber: item.episodeNumber,
+              seasonNumber: foundSeason,
+              episodeNumber: foundEpisode,
             );
             if (!optedOut) {
               final quick = QuickAddItemModel(
@@ -1639,6 +1640,8 @@ class MediaRepositoryImpl implements MediaRepository {
           DateTime? firstFutureAirDate;
           int? futureSeason;
           int? futureEpisode;
+          int? noAirDateSeason;
+          int? noAirDateEpisode;
           var hadNoAirDate = false;
           var cacheMiss = false;
 
@@ -1654,6 +1657,17 @@ class MediaRepositoryImpl implements MediaRepository {
             }
 
             final episodes = seasonData['episodes'] as List?;
+            // Ignore seasons with no dated episodes at all (e.g. an announced but
+            // unscheduled next season): they are not actionable in Quick Add and
+            // must not surface as "no air date".
+            final hasDatedEpisode = (episodes ?? const []).any((ep) {
+              final airDate = (ep is Map) ? ep['air_date'] as String? : null;
+              return airDate != null &&
+                  airDate.isNotEmpty &&
+                  DateTime.tryParse(airDate) != null;
+            });
+            if (!hasDatedEpisode) continue;
+
             for (final ep in episodes ?? []) {
               final epNum = ep['episode_number'] as int?;
               if (epNum == null) continue;
@@ -1670,6 +1684,8 @@ class MediaRepositoryImpl implements MediaRepository {
               final airDateStr = ep['air_date'] as String?;
               if (airDateStr == null || airDateStr.isEmpty) {
                 hadNoAirDate = true;
+                noAirDateSeason ??= season.seasonNumber;
+                noAirDateEpisode ??= epNum;
                 continue;
               }
 
@@ -1708,8 +1724,8 @@ class MediaRepositoryImpl implements MediaRepository {
 
             final optedOut = await localDataSource.isOptedOut(
               tmdbId,
-              seasonNumber: tailSeason,
-              episodeNumber: tailEpisode,
+              seasonNumber: foundSeason,
+              episodeNumber: foundEpisode,
             );
             final reason = optedOut
                 ? QuickAddOmissionReason.optedOut
@@ -1778,7 +1794,7 @@ class MediaRepositoryImpl implements MediaRepository {
 
           if (hadNoAirDate) {
             if (!seenOmissionKeys.add(
-              'noAirDate|$tmdbId|$tailSeason|$tailEpisode',
+              'noAirDate|$tmdbId|$noAirDateSeason|$noAirDateEpisode',
             )) {
               continue;
             }
@@ -1787,6 +1803,8 @@ class MediaRepositoryImpl implements MediaRepository {
                 tmdbId: tmdbId,
                 title: title,
                 posterPath: posterPath,
+                seasonNumber: noAirDateSeason,
+                episodeNumber: noAirDateEpisode,
                 tailSeason: tailSeason,
                 tailEpisode: tailEpisode,
                 reason: QuickAddOmissionReason.noAirDate,
@@ -2046,7 +2064,9 @@ class MediaRepositoryImpl implements MediaRepository {
                   }
 
                   // Consider episode as "seen after tail" only if its last seen date
-                  // is strictly after the tail's seenDate.
+                  // is strictly after the tail's seenDate, which preserves
+                  // re-watch streaks (a later tail can legitimately point at an
+                  // episode seen earlier in a previous pass).
                   final lastSeenForEp =
                       lastSeenMap[season.seasonNumber]?[epNum];
                   final isEpSeenAfterTail =
@@ -2090,8 +2110,8 @@ class MediaRepositoryImpl implements MediaRepository {
 
               final optedOut = await localDataSource.isOptedOut(
                 tmdbId,
-                seasonNumber: localTailSeason,
-                episodeNumber: localTailEpisode,
+                seasonNumber: foundSeason,
+                episodeNumber: foundEpisode,
               );
               if (optedOut) {
                 continue;

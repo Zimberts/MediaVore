@@ -2,12 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/utils/watch_tail.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 
-SeenItemModel seen(
-  int season,
-  int episode, {
-  DateTime? date,
-  int tmdbId = 1,
-}) {
+SeenItemModel seen(int season, int episode, {DateTime? date, int tmdbId = 1}) {
   return SeenItemModel(
     tmdbId: tmdbId,
     type: 'tv',
@@ -18,12 +13,7 @@ SeenItemModel seen(
   );
 }
 
-EpisodeRef ep(
-  int season,
-  int episode, {
-  DateTime? airDate,
-  int? runtime,
-}) {
+EpisodeRef ep(int season, int episode, {DateTime? airDate, int? runtime}) {
   return EpisodeRef(
     seasonNumber: season,
     episodeNumber: episode,

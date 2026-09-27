@@ -121,49 +121,55 @@ void main() {
     expect(omissions.single.episodeNumber, 2);
   });
 
-  test('should report nothing when the episode is already in quick add', () async {
-    stubSingleSeenEpisode();
-    when(() => local.getQuickAddItems()).thenAnswer(
-      (_) async => [
-        QuickAddItemModel(
-          tmdbId: tmdbId,
-          type: 'tv',
-          seasonNumber: 1,
-          episodeNumber: 2,
-          insertedAt: DateTime.now(),
-        ),
-      ],
-    );
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
-    stubEpisodesE1AiredE2Aired();
+  test(
+    'should report nothing when the episode is already in quick add',
+    () async {
+      stubSingleSeenEpisode();
+      when(() => local.getQuickAddItems()).thenAnswer(
+        (_) async => [
+          QuickAddItemModel(
+            tmdbId: tmdbId,
+            type: 'tv',
+            seasonNumber: 1,
+            episodeNumber: 2,
+            insertedAt: DateTime.now(),
+          ),
+        ],
+      );
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+      stubEpisodesE1AiredE2Aired();
 
-    final omissions = await repository.getQuickAddOmissions();
+      final omissions = await repository.getQuickAddOmissions();
 
-    expect(omissions, isEmpty);
-  });
+      expect(omissions, isEmpty);
+    },
+  );
 
-  test('should report notReleased when the next episode has not aired', () async {
-    stubSingleSeenEpisode();
-    when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
-    final futureStr = DateTime.now()
-        .add(const Duration(days: 10))
-        .toIso8601String()
-        .substring(0, 10);
-    when(() => cache.getSeason(tmdbId, 1)).thenReturn(
-      seasonWith([
-        {'episode_number': 1, 'air_date': '2020-01-01'},
-        {'episode_number': 2, 'air_date': futureStr},
-      ]),
-    );
+  test(
+    'should report notReleased when the next episode has not aired',
+    () async {
+      stubSingleSeenEpisode();
+      when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+      final futureStr = DateTime.now()
+          .add(const Duration(days: 10))
+          .toIso8601String()
+          .substring(0, 10);
+      when(() => cache.getSeason(tmdbId, 1)).thenReturn(
+        seasonWith([
+          {'episode_number': 1, 'air_date': '2020-01-01'},
+          {'episode_number': 2, 'air_date': futureStr},
+        ]),
+      );
 
-    final omissions = await repository.getQuickAddOmissions();
+      final omissions = await repository.getQuickAddOmissions();
 
-    expect(omissions, hasLength(1));
-    expect(omissions.single.reason, QuickAddOmissionReason.notReleased);
-    expect(omissions.single.episodeNumber, 2);
-    expect(omissions.single.airDate, isNotNull);
-  });
+      expect(omissions, hasLength(1));
+      expect(omissions.single.reason, QuickAddOmissionReason.notReleased);
+      expect(omissions.single.episodeNumber, 2);
+      expect(omissions.single.airDate, isNotNull);
+    },
+  );
 
   test('should report noCacheData when show metadata is not cached', () async {
     stubSingleSeenEpisode();
@@ -199,4 +205,87 @@ void main() {
     expect(omissions.single.reason, QuickAddOmissionReason.optedOut);
     verify(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).called(1);
   });
+
+  test('should ignore an announced next season with no air dates', () async {
+    // A fully-watched show whose only "next" is an announced but unscheduled
+    // season must not surface as a "no air date" omission.
+    final now = DateTime.now();
+    final seen = [
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'Show',
+        seenDate: now.subtract(const Duration(days: 2)),
+        seasonNumber: 1,
+        episodeNumber: 1,
+      ),
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'Show',
+        seenDate: now.subtract(const Duration(days: 1)),
+        seasonNumber: 1,
+        episodeNumber: 2,
+      ),
+    ];
+    when(() => local.getAllSeenItems()).thenAnswer((_) async => seen);
+    when(() => local.getSeenStatus(tmdbId, 'tv')).thenAnswer((_) async => seen);
+    when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(
+      MediaItem(
+        id: tmdbId,
+        title: 'Show',
+        overview: '',
+        releaseDate: '2020-01-01',
+        seasons: [
+          TVSeason(id: 1, seasonNumber: 1, episodeCount: 2),
+          TVSeason(id: 2, seasonNumber: 2, episodeCount: 3),
+        ],
+      ),
+    );
+    when(() => cache.getSeason(tmdbId, 1)).thenReturn(
+      seasonWith([
+        {'episode_number': 1, 'air_date': '2020-01-01'},
+        {'episode_number': 2, 'air_date': '2020-01-08'},
+      ]),
+    );
+    when(() => cache.getSeason(tmdbId, 2)).thenReturn(
+      seasonWith([
+        {'episode_number': 1, 'air_date': null},
+        {'episode_number': 2, 'air_date': null},
+        {'episode_number': 3, 'air_date': null},
+      ]),
+    );
+
+    final omissions = await repository.getQuickAddOmissions();
+
+    expect(omissions, isEmpty);
+  });
+
+  test(
+    'should match the opt-out to the found episode, not the streak tail',
+    () async {
+      stubSingleSeenEpisode(); // tail = S1E1
+      when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+      stubEpisodesE1AiredE2Aired(); // found = S1E2
+      when(
+        () => local.isOptedOut(
+          any(),
+          seasonNumber: any(named: 'seasonNumber'),
+          episodeNumber: any(named: 'episodeNumber'),
+        ),
+      ).thenAnswer(
+        (inv) async =>
+            inv.namedArguments[#seasonNumber] == 1 &&
+            inv.namedArguments[#episodeNumber] == 2,
+      );
+
+      final omissions = await repository.getQuickAddOmissions();
+
+      expect(omissions.single.reason, QuickAddOmissionReason.optedOut);
+      expect(omissions.single.seasonNumber, 1);
+      expect(omissions.single.episodeNumber, 2);
+    },
+  );
 }

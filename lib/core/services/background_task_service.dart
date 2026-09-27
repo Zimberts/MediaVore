@@ -15,19 +15,22 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
       debugPrint("Native called background task: $task");
-      
-      // Initialize full DI safely so we can use locator<MediaRepository>() 
+
+      // Initialize full DI safely so we can use locator<MediaRepository>()
       // It includes opening Isar gracefully.
       await init(locator);
       final repo = locator<MediaRepository>();
 
-      if (task == fetchTask || task == fetchTaskIdentifier || task == Workmanager.iOSBackgroundTask) {
+      if (task == fetchTask ||
+          task == fetchTaskIdentifier ||
+          task == Workmanager.iOSBackgroundTask) {
         debugPrint("Running daily background sync...");
         final seenItems = await repo.getSeenItems();
-        
+
         final Map<int, List> tvWatches = {};
         for (var item in seenItems) {
-          if (item.type.name == 'tv') { // MediaType.tv
+          if (item.type.name == 'tv') {
+            // MediaType.tv
             tvWatches.putIfAbsent(item.tmdbId, () => []).add(item);
           }
         }
@@ -50,23 +53,35 @@ void callbackDispatcher() {
           }
 
           try {
-            final details = await repo.getMediaDetails(tmdbId, type: MediaType.values.firstWhere((t) => t.name == 'tv'));
+            final details = await repo.getMediaDetails(
+              tmdbId,
+              type: MediaType.values.firstWhere((t) => t.name == 'tv'),
+            );
             final mediaItem = details.item;
-            
-            final isReturning = mediaItem.status?.toLowerCase() == 'returning series';
-            final isLastEpisode = mediaItem.lastSeasonNumber == maxSeason && mediaItem.lastEpisodeNumber == maxEpisode;
+
+            final isReturning =
+                mediaItem.status?.toLowerCase() == 'returning series';
+            final isLastEpisode =
+                mediaItem.lastSeasonNumber == maxSeason &&
+                mediaItem.lastEpisodeNumber == maxEpisode;
 
             if (isReturning && isLastEpisode) {
-              final cacheDate = await repo.getCacheUpdateDate(tmdbId, MediaType.values.firstWhere((t) => t.name == 'tv'));
+              final cacheDate = await repo.getCacheUpdateDate(
+                tmdbId,
+                MediaType.values.firstWhere((t) => t.name == 'tv'),
+              );
               if (cacheDate == null) continue;
 
               final age = DateTime.now().difference(cacheDate).inDays;
               bool shouldUpdate = false;
 
               if (age > 7) {
-                if (mediaItem.lastEpisodeAirDate != null && mediaItem.lastEpisodeAirDate!.isNotEmpty) {
+                if (mediaItem.lastEpisodeAirDate != null &&
+                    mediaItem.lastEpisodeAirDate!.isNotEmpty) {
                   try {
-                    final lastAir = DateTime.parse(mediaItem.lastEpisodeAirDate!);
+                    final lastAir = DateTime.parse(
+                      mediaItem.lastEpisodeAirDate!,
+                    );
                     if (lastAir.weekday == DateTime.now().weekday) {
                       shouldUpdate = true;
                     }
@@ -92,7 +107,8 @@ void callbackDispatcher() {
             await repo.refreshNotificationForSeries(n.tmdbId, n.type);
           }
         } catch (_) {}
-      } else if (task == refreshReturningSeriesTask || task.startsWith(refreshReturningSeriesPrefix)) {
+      } else if (task == refreshReturningSeriesTask ||
+          task.startsWith(refreshReturningSeriesPrefix)) {
         final int? id = inputData?['tmdbId'];
         if (id != null) {
           debugPrint("Running 1-off refresh for series ID: $id...");
@@ -110,9 +126,7 @@ void callbackDispatcher() {
 
 class BackgroundTaskService {
   static void initialize() {
-    Workmanager().initialize(
-      callbackDispatcher,
-    );
+    Workmanager().initialize(callbackDispatcher);
   }
 
   static void registerDailySync() {
@@ -131,9 +145,7 @@ class BackgroundTaskService {
       "refresh_${tmdbId}_${DateTime.now().millisecondsSinceEpoch}", // Unique ID
       refreshReturningSeriesTask,
       inputData: {"tmdbId": tmdbId},
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
   }
 }

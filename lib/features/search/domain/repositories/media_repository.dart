@@ -203,7 +203,7 @@ abstract class MediaRepository {
   /// Removes a quick-add entry by its isar id.
   Future<void> removeQuickAddItemById(int isarId);
 
-  /// User opts out of automatic quick-add for a specific streak.
+  /// User opts out of automatic quick-add for a specific episode.
   /// If `seasonNumber`/`episodeNumber` are omitted, behavior defaults to opt-out for the series.
   Future<void> optOutSeries(
     int tmdbId, {
@@ -302,7 +302,7 @@ class QuickAddItem {
 
 /// Why an expected next episode is not present in the Quick Add list.
 enum QuickAddOmissionReason {
-  /// The user dismissed this streak, opting out of Quick Add for it.
+  /// The user dismissed this episode, opting out of Quick Add for it.
   optedOut,
 
   /// The next episode exists but has not aired yet.

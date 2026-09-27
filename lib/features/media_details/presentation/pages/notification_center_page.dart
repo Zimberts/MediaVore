@@ -169,12 +169,15 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                         : false;
 
                     String title = item.title;
-                    if (item.type == MediaType.tv && item.seasonNumber != null) {
-                      title += ' (S${item.seasonNumber} E${item.episodeNumber})';
+                    if (item.type == MediaType.tv &&
+                        item.seasonNumber != null) {
+                      title +=
+                          ' (S${item.seasonNumber} E${item.episodeNumber})';
                     }
 
                     final runtimeText = Formatters.formatRuntime(item.runtime);
-                    final subtitleText = (item.releaseDate != null
+                    final subtitleText =
+                        (item.releaseDate != null
                             ? '${isReleased ? "Released" : "Releases"}: ${DateFormat.yMMMd().format(item.releaseDate!)}'
                             : releaseSubtitleForItem(item)) +
                         (runtimeText.isNotEmpty ? ' · $runtimeText' : '');
@@ -346,8 +349,9 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                     }
                     final runtimeText = Formatters.formatRuntime(qa.runtime);
                     if (runtimeText.isNotEmpty) {
-                      subtitle =
-                          subtitle.isEmpty ? runtimeText : '$subtitle · $runtimeText';
+                      subtitle = subtitle.isEmpty
+                          ? runtimeText
+                          : '$subtitle · $runtimeText';
                     }
 
                     final dismissKey =
@@ -379,7 +383,9 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                             messenger.removeCurrentSnackBar();
                             messenger.showSnackBar(
                               SnackBar(
-                                content: const Text('Streak opted out of Quick Add'),
+                                content: const Text(
+                                  'Streak opted out of Quick Add',
+                                ),
                                 duration: const Duration(seconds: 4),
                                 action: SnackBarAction(
                                   label: 'Undo',
@@ -428,7 +434,11 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                             await provider.loadQuickAddItems();
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Marked ${qa.title ?? 'episode'} as seen')),
+                                SnackBar(
+                                  content: Text(
+                                    'Marked ${qa.title ?? 'episode'} as seen',
+                                  ),
+                                ),
                               );
                             }
                           },
@@ -521,11 +531,7 @@ class _DebugSectionHeader extends StatelessWidget {
   final String? subtitle;
   final Widget? action;
 
-  const _DebugSectionHeader({
-    required this.title,
-    this.subtitle,
-    this.action,
-  });
+  const _DebugSectionHeader({required this.title, this.subtitle, this.action});
 
   @override
   Widget build(BuildContext context) {
@@ -620,8 +626,7 @@ List<Widget> _buildQuickAddDebugSections(
           : TextButton.icon(
               icon: const Icon(Icons.refresh, size: 18),
               label: const Text('Recompute'),
-              onPressed: () =>
-                  provider.loadQuickAddOmissions(allowFetch: true),
+              onPressed: () => provider.loadQuickAddOmissions(allowFetch: true),
             ),
     ),
   ];
@@ -672,7 +677,7 @@ String _quickAddDebugTitle(QuickAddOmission omission) {
 String _quickAddOmissionDetail(QuickAddOmission omission) {
   switch (omission.reason) {
     case QuickAddOmissionReason.optedOut:
-      return 'Opted out for S${omission.tailSeason} E${omission.tailEpisode} (swipe dismiss)';
+      return 'Opted out for S${omission.seasonNumber} E${omission.episodeNumber} (swipe dismiss)';
     case QuickAddOmissionReason.notReleased:
       final dateText = omission.airDate != null
           ? DateFormat.yMMMd().format(omission.airDate!)
