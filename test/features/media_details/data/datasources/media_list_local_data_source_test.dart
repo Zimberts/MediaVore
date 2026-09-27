@@ -348,5 +348,73 @@ void main() {
         expect(notified.first.runtime, 90);
       },
     );
+
+    test('should stamp and preserve lastRefreshedAt', () async {
+      await dataSource.toggleNotification(
+        tmdbId: 1,
+        type: 'tv',
+        title: 'Show',
+        releaseDate: DateTime(2024, 1, 1),
+      );
+
+      final stamp = DateTime(2024, 6, 1);
+      await dataSource.markNotifiedRefreshed(1, 'tv', stamp);
+
+      await dataSource.updateNotificationDate(1, 'tv', DateTime(2024, 2, 2));
+
+      final notified = await dataSource.getNotifiedItem(1, 'tv');
+      expect(notified, isNotNull);
+      expect(notified!.lastRefreshedAt, stamp);
+      expect(notified.releaseDate, DateTime(2024, 2, 2));
+    });
+
+    test('should clear episode info via markNotificationAsReturning', () async {
+      await dataSource.toggleNotification(
+        tmdbId: 1,
+        type: 'tv',
+        title: 'Show',
+        posterPath: '/p.jpg',
+        releaseDate: DateTime(2024, 1, 1),
+        seasonNumber: 2,
+        episodeNumber: 3,
+        runtime: 40,
+        autoNotify: true,
+      );
+
+      await dataSource.markNotificationAsReturning(1, 'tv');
+
+      final notified = await dataSource.getNotifiedItem(1, 'tv');
+      expect(notified, isNotNull);
+      expect(notified!.releaseDate, isNull);
+      expect(notified.seasonNumber, isNull);
+      expect(notified.episodeNumber, isNull);
+      expect(notified.runtime, isNull);
+      expect(notified.posterPath, '/p.jpg');
+      expect(notified.autoNotify, isTrue);
+    });
+
+    test('should store an undated episode via setNotificationEpisode', () async {
+      await dataSource.toggleNotification(
+        tmdbId: 1,
+        type: 'tv',
+        title: 'Show',
+        releaseDate: DateTime(2024, 1, 1),
+        seasonNumber: 1,
+        episodeNumber: 1,
+      );
+
+      await dataSource.setNotificationEpisode(
+        1,
+        'tv',
+        seasonNumber: 5,
+        episodeNumber: 1,
+        releaseDate: null,
+      );
+
+      final notified = await dataSource.getNotifiedItem(1, 'tv');
+      expect(notified!.seasonNumber, 5);
+      expect(notified.episodeNumber, 1);
+      expect(notified.releaseDate, isNull);
+    });
   });
 }

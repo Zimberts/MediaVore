@@ -152,8 +152,20 @@ abstract class MediaRepository {
   /// Watches for changes in notified items.
   Stream<void> watchNotifiedItems();
 
-  /// Force refreshes all notified items from network.
-  Future<void> refreshNotifiedItems();
+  /// Refreshes notified items from the network, series by series.
+  ///
+  /// Only entries missing information (no release date, or one already in the
+  /// past) are reconciled, and each series is throttled to at most once per day
+  /// unless [force] is set.
+  Future<void> refreshNotifiedItems({bool force = false});
+
+  /// Reconciles a single notified series/movie with the network, throttled to at
+  /// most once per day unless [force] is set.
+  Future<void> refreshNotificationForSeries(
+    int tmdbId,
+    MediaType type, {
+    bool force = false,
+  });
 
   /// Backfills missing runtime metadata for existing quick-add entries from network.
   Future<void> refreshQuickAddItems();

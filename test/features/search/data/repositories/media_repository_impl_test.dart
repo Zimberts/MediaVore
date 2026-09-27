@@ -4,6 +4,7 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -35,6 +36,7 @@ void main() {
     );
     registerFallbackValue(Duration.zero);
     registerFallbackValue(ImportMode.append);
+    registerFallbackValue(DateTime(2000));
   });
 
   setUp(() async {
@@ -352,6 +354,298 @@ void main() {
       final result = await repository.getVideos(1, MediaType.movie);
 
       expect(result, equals(tVideos));
+    });
+  });
+
+  group('refreshNotificationForSeries (latest streak)', () {
+    MediaItem tvItem({String? status, required List<TVSeason> seasons}) {
+      return MediaItem(
+        id: 1,
+        title: 'Show',
+        overview: '',
+        releaseDate: '2020-01-01',
+        mediaType: MediaType.tv,
+        status: status,
+        seasons: seasons,
+      );
+    }
+
+    Map<String, dynamic> season(List<Map<String, dynamic>> episodes) => {
+      'episodes': episodes,
+    };
+
+    Map<String, dynamic> ep(int n, {String? airDate, int? runtime}) => {
+      'episode_number': n,
+      'air_date': airDate,
+      'runtime': runtime,
+    };
+
+    SeenItemModel seen(int season, int episode, DateTime date) =>
+        SeenItemModel(
+          tmdbId: 1,
+          type: 'tv',
+          title: 'Show',
+          seenDate: date,
+          seasonNumber: season,
+          episodeNumber: episode,
+        );
+
+    void stubNotified({DateTime? lastRefreshedAt}) {
+      when(() => mockLocalDataSource.getNotifiedItem(1, 'tv')).thenAnswer(
+        (_) async => NotifiedItemModel(
+          tmdbId: 1,
+          type: 'tv',
+          title: 'Show',
+          releaseDate: DateTime(2024, 1, 1),
+          seasonNumber: 4,
+          episodeNumber: 5,
+          lastRefreshedAt: lastRefreshedAt,
+        ),
+      );
+      when(
+        () => mockLocalDataSource.isNotified(1, 'tv'),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockLocalDataSource.setNotificationEpisode(
+          any(),
+          any(),
+          seasonNumber: any(named: 'seasonNumber'),
+          episodeNumber: any(named: 'episodeNumber'),
+          releaseDate: any(named: 'releaseDate'),
+          runtime: any(named: 'runtime'),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.markNotificationAsReturning(any(), any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.markNotifiedRefreshed(any(), any(), any()),
+      ).thenAnswer((_) async {});
+      when(() => mockCache.getSeason(any(), any())).thenReturn(null);
+    }
+
+    test('should point to the next episode after the latest streak', () async {
+      stubNotified();
+      when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenAnswer(
+        (_) async => tvItem(
+          status: 'Returning Series',
+          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
+        ),
+      );
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+      when(
+        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+      when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
+        (_) async => season([
+          ep(5, airDate: '2024-05-01'),
+          ep(6, airDate: '2024-06-08', runtime: 42),
+        ]),
+      );
+
+      await repository.refreshNotificationForSeries(
+        1,
+        MediaType.tv,
+        force: true,
+      );
+
+      final captured = verify(
+        () => mockLocalDataSource.setNotificationEpisode(
+          1,
+          'tv',
+          seasonNumber: captureAny(named: 'seasonNumber'),
+          episodeNumber: captureAny(named: 'episodeNumber'),
+          releaseDate: captureAny(named: 'releaseDate'),
+          runtime: captureAny(named: 'runtime'),
+        ),
+      ).captured;
+      expect(captured[0], 4);
+      expect(captured[1], 6);
+      expect(captured[2], DateTime(2024, 6, 8));
+      expect(captured[3], 42);
+    });
+
+    test('should not look at seasons before the latest streak', () async {
+      stubNotified();
+      when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenAnswer(
+        (_) async => tvItem(
+          seasons: const [
+            TVSeason(id: 1, seasonNumber: 1, episodeCount: 2),
+            TVSeason(id: 4, seasonNumber: 4, episodeCount: 6),
+          ],
+        ),
+      );
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+      when(
+        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+      when(
+        () => mockRemoteDataSource.getSeasonDetails(1, 4),
+      ).thenAnswer((_) async => season([ep(6, airDate: '2024-06-08')]));
+
+      await repository.refreshNotificationForSeries(
+        1,
+        MediaType.tv,
+        force: true,
+      );
+
+      verifyNever(() => mockRemoteDataSource.getSeasonDetails(1, 1));
+      verify(() => mockRemoteDataSource.getSeasonDetails(1, 4)).called(1);
+    });
+
+    test('should remove a finished, fully watched series', () async {
+      stubNotified();
+      when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenAnswer(
+        (_) async => tvItem(
+          status: 'Ended',
+          seasons: const [TVSeason(id: 1, seasonNumber: 1, episodeCount: 2)],
+        ),
+      );
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+      when(() => mockLocalDataSource.getSeenStatus(1, 'tv')).thenAnswer(
+        (_) async => [
+          seen(1, 1, DateTime(2024, 1, 1)),
+          seen(1, 2, DateTime(2024, 1, 8)),
+        ],
+      );
+      when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
+        (_) async => season([
+          ep(1, airDate: '2024-01-01'),
+          ep(2, airDate: '2024-01-08'),
+        ]),
+      );
+
+      await repository.refreshNotificationForSeries(
+        1,
+        MediaType.tv,
+        force: true,
+      );
+
+      verify(
+        () => mockLocalDataSource.toggleNotification(
+          tmdbId: 1,
+          type: 'tv',
+          title: 'Show',
+        ),
+      ).called(1);
+    });
+
+    test('should downgrade a caught-up returning series to Returning', () async {
+      stubNotified();
+      when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenAnswer(
+        (_) async => tvItem(
+          status: 'Returning Series',
+          seasons: const [TVSeason(id: 1, seasonNumber: 1, episodeCount: 2)],
+        ),
+      );
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+      when(
+        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+      ).thenAnswer((_) async => [seen(1, 2, DateTime(2024, 1, 8))]);
+      when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
+        (_) async => season([
+          ep(1, airDate: '2024-01-01'),
+          ep(2, airDate: '2024-01-08'),
+        ]),
+      );
+
+      await repository.refreshNotificationForSeries(
+        1,
+        MediaType.tv,
+        force: true,
+      );
+
+      verify(
+        () => mockLocalDataSource.markNotificationAsReturning(1, 'tv'),
+      ).called(1);
+    });
+
+    test('should store an undated next episode as date TBA', () async {
+      stubNotified();
+      when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenAnswer(
+        (_) async => tvItem(
+          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
+        ),
+      );
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+      when(
+        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+      when(
+        () => mockRemoteDataSource.getSeasonDetails(1, 4),
+      ).thenAnswer((_) async => season([ep(6, airDate: null)]));
+
+      await repository.refreshNotificationForSeries(
+        1,
+        MediaType.tv,
+        force: true,
+      );
+
+      verify(
+        () => mockLocalDataSource.setNotificationEpisode(
+          1,
+          'tv',
+          seasonNumber: 4,
+          episodeNumber: 6,
+          releaseDate: null,
+          runtime: null,
+        ),
+      ).called(1);
+    });
+
+    test('should skip a series refreshed within the last day', () async {
+      stubNotified(lastRefreshedAt: DateTime.now());
+
+      await repository.refreshNotificationForSeries(1, MediaType.tv);
+
+      verifyNever(
+        () => mockRemoteDataSource.getMediaItem(
+          any(),
+          type: any(named: 'type'),
+        ),
+      );
+      verifyNever(
+        () => mockLocalDataSource.markNotifiedRefreshed(any(), any(), any()),
+      );
+    });
+
+    test('should refresh when forced even if refreshed recently', () async {
+      stubNotified(lastRefreshedAt: DateTime.now());
+      when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenAnswer(
+        (_) async => tvItem(
+          status: 'Ended',
+          seasons: const [TVSeason(id: 1, seasonNumber: 1, episodeCount: 1)],
+        ),
+      );
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+      when(
+        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+      ).thenAnswer((_) async => []);
+
+      await repository.refreshNotificationForSeries(
+        1,
+        MediaType.tv,
+        force: true,
+      );
+
+      verify(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).called(1);
+      verify(
+        () => mockLocalDataSource.markNotifiedRefreshed(1, 'tv', any()),
+      ).called(1);
     });
   });
 }

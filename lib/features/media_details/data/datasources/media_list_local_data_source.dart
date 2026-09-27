@@ -344,6 +344,7 @@ class MediaListLocalDataSource {
             episodeNumber: episodeNumber ?? existing.episodeNumber,
             runtime: runtime ?? existing.runtime,
             autoNotify: existing.autoNotify,
+            lastRefreshedAt: existing.lastRefreshedAt,
           );
           updated.isarId = existing.isarId;
           await _isar.notifiedItemModels.put(updated);
@@ -392,11 +393,125 @@ class MediaListLocalDataSource {
           episodeNumber: episodeNumber ?? existing.episodeNumber,
           runtime: runtime ?? existing.runtime,
           autoNotify: existing.autoNotify,
+          lastRefreshedAt: existing.lastRefreshedAt,
         );
         updated.isarId = existing.isarId;
         await _isar.notifiedItemModels.put(updated);
       }
     });
+  }
+
+  /// Sets the episode a notified entry points at, allowing a `null` release
+  /// date so an announced-but-undated episode can be shown as "date TBA".
+  ///
+  /// Unlike [updateNotificationDate], passing `null` here clears the field
+  /// instead of preserving the previous value.
+  Future<void> setNotificationEpisode(
+    int tmdbId,
+    String type, {
+    required int? seasonNumber,
+    required int? episodeNumber,
+    required DateTime? releaseDate,
+    int? runtime,
+  }) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.notifiedItemModels
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type)
+          .findFirst();
+
+      if (existing != null) {
+        final updated = NotifiedItemModel(
+          tmdbId: existing.tmdbId,
+          type: existing.type,
+          title: existing.title,
+          posterPath: existing.posterPath,
+          releaseDate: releaseDate,
+          seasonNumber: seasonNumber,
+          episodeNumber: episodeNumber,
+          runtime: runtime,
+          autoNotify: existing.autoNotify,
+          lastRefreshedAt: existing.lastRefreshedAt,
+        );
+        updated.isarId = existing.isarId;
+        await _isar.notifiedItemModels.put(updated);
+      }
+    });
+  }
+
+  /// Rewrites the notified entry for [tmdbId]/[type] so it no longer points at a
+  /// specific episode: the release date, season, episode and runtime are cleared
+  /// (a `null` date otherwise cannot be stored through [updateNotificationDate]).
+  ///
+  /// Used when a series is caught up but has a new season planned, so the UI
+  /// renders "Returning — new season planned" instead of a stale episode.
+  Future<void> markNotificationAsReturning(int tmdbId, String type) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.notifiedItemModels
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type)
+          .findFirst();
+
+      if (existing != null) {
+        final updated = NotifiedItemModel(
+          tmdbId: existing.tmdbId,
+          type: existing.type,
+          title: existing.title,
+          posterPath: existing.posterPath,
+          releaseDate: null,
+          seasonNumber: null,
+          episodeNumber: null,
+          runtime: null,
+          autoNotify: existing.autoNotify,
+          lastRefreshedAt: existing.lastRefreshedAt,
+        );
+        updated.isarId = existing.isarId;
+        await _isar.notifiedItemModels.put(updated);
+      }
+    });
+  }
+
+  /// Stamps when the notified entry for [tmdbId]/[type] was last refreshed from
+  /// the network, driving the once-a-day refresh throttle.
+  Future<void> markNotifiedRefreshed(
+    int tmdbId,
+    String type,
+    DateTime at,
+  ) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.notifiedItemModels
+          .filter()
+          .tmdbIdEqualTo(tmdbId)
+          .typeEqualTo(type)
+          .findFirst();
+
+      if (existing != null) {
+        final updated = NotifiedItemModel(
+          tmdbId: existing.tmdbId,
+          type: existing.type,
+          title: existing.title,
+          posterPath: existing.posterPath,
+          releaseDate: existing.releaseDate,
+          seasonNumber: existing.seasonNumber,
+          episodeNumber: existing.episodeNumber,
+          runtime: existing.runtime,
+          autoNotify: existing.autoNotify,
+          lastRefreshedAt: at,
+        );
+        updated.isarId = existing.isarId;
+        await _isar.notifiedItemModels.put(updated);
+      }
+    });
+  }
+
+  Future<NotifiedItemModel?> getNotifiedItem(int tmdbId, String type) async {
+    return await _isar.notifiedItemModels
+        .filter()
+        .tmdbIdEqualTo(tmdbId)
+        .typeEqualTo(type)
+        .findFirst();
   }
 
   Future<bool> isNotified(int tmdbId, String type) async {

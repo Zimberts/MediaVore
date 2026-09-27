@@ -25,6 +25,12 @@ class NotifiedItemModel {
 
   final bool autoNotify; // If it was added automatically via watchlist
 
+  /// When this entry's release data was last reconciled with TMDB.
+  ///
+  /// Used to throttle network refreshes (at most once per day per series) so
+  /// the Releases list stays fresh without hammering the API.
+  final DateTime? lastRefreshedAt;
+
   NotifiedItemModel({
     required this.tmdbId,
     required this.type,
@@ -35,5 +41,6 @@ class NotifiedItemModel {
     this.episodeNumber,
     this.runtime,
     this.autoNotify = false,
+    this.lastRefreshedAt,
   });
 }

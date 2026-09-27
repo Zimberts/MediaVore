@@ -83,6 +83,15 @@ void callbackDispatcher() {
             }
           } catch (_) {}
         }
+
+        // Reconcile Releases entries missing fresh data, one series at a time.
+        // Each series is throttled internally to at most once a day.
+        try {
+          final notified = await repo.getNotifiedItems();
+          for (final n in notified) {
+            await repo.refreshNotificationForSeries(n.tmdbId, n.type);
+          }
+        } catch (_) {}
       } else if (task == refreshReturningSeriesTask || task.startsWith(refreshReturningSeriesPrefix)) {
         final int? id = inputData?['tmdbId'];
         if (id != null) {

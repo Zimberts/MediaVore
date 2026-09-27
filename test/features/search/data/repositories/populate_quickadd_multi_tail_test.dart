@@ -224,4 +224,62 @@ void main() {
 
     verifyNever(() => local.updateQuickAddItemRuntime(any(), any()));
   });
+
+  test('populateQuickAddFromSeenHistory adds nothing when fully caught up', () async {
+    final tmdbId = 700;
+    final now = DateTime.now();
+    final seenItems = [
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'T',
+        seenDate: now.subtract(const Duration(days: 2)),
+        seasonNumber: 1,
+        episodeNumber: 1,
+      ),
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'T',
+        seenDate: now.subtract(const Duration(days: 1)),
+        seasonNumber: 1,
+        episodeNumber: 2,
+      ),
+    ];
+
+    when(() => local.getAllSeenItems()).thenAnswer((_) async => seenItems);
+    when(() => local.getQuickAddItems()).thenAnswer((_) async => <QuickAddItemModel>[]);
+    when(() => local.getSeenStatus(tmdbId, 'tv')).thenAnswer((_) async => seenItems);
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+    when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
+      (_) async => MediaItem(
+        id: tmdbId,
+        title: 'T',
+        overview: '',
+        releaseDate: '2020-01-01',
+        seasons: [TVSeason(id: 1, seasonNumber: 1, episodeCount: 2)],
+      ),
+    );
+    when(() => cache.cacheItem(any())).thenAnswer((_) async {});
+    when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
+    when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
+    when(() => cache.getSeason(any(), any())).thenReturn(null);
+    when(() => remote.getSeasonDetails(tmdbId, 1)).thenAnswer(
+      (_) async => {
+        'episodes': [
+          {'episode_number': 1, 'air_date': '2020-01-01'},
+          {'episode_number': 2, 'air_date': '2020-01-08'},
+        ],
+      },
+    );
+
+    var addedCount = 0;
+    when(() => local.addQuickAddItem(any())).thenAnswer((_) async {
+      addedCount++;
+    });
+
+    await repository.populateQuickAddFromSeenHistory();
+
+    expect(addedCount, 0);
+  });
 }

@@ -698,8 +698,12 @@ class SearchProvider with ChangeNotifier {
             if (isLastEpisode &&
                 mediaItem.status != null &&
                 mediaItem.status!.toLowerCase() == 'returning series') {
-              final cacheDate = await repository.getCacheUpdateDate(item.tmdbId, MediaType.tv);
-              if (cacheDate == null || DateTime.now().difference(cacheDate).inDays >= 2) {
+              final cacheDate = await repository.getCacheUpdateDate(
+                item.tmdbId,
+                MediaType.tv,
+              );
+              if (cacheDate == null ||
+                  DateTime.now().difference(cacheDate).inDays >= 2) {
                 try {
                   BackgroundTaskService.dispatchOneOffRefresh(item.tmdbId);
                 } catch (e) {
@@ -1044,6 +1048,9 @@ class SearchProvider with ChangeNotifier {
     _isNotifiedRefreshing = true;
     notifyListeners();
     try {
+      // Show the locally stored data immediately, then reconcile with the
+      // network series by series (throttled to at most once a day per series).
+      await loadNotifiedItems();
       await repository.refreshNotifiedItems();
       await loadNotifiedItems();
     } finally {
