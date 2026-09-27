@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -37,6 +38,9 @@ void main() {
     registerFallbackValue(Duration.zero);
     registerFallbackValue(ImportMode.append);
     registerFallbackValue(DateTime(2000));
+    registerFallbackValue(
+      QuickAddItemModel(tmdbId: 1, type: 'tv', insertedAt: DateTime(2000)),
+    );
   });
 
   setUp(() async {
@@ -646,6 +650,62 @@ void main() {
       verify(
         () => mockLocalDataSource.markNotifiedRefreshed(1, 'tv', any()),
       ).called(1);
+    });
+
+    test('should repopulate Quick Add for newly aired episodes', () async {
+      stubNotified();
+      final media = tvItem(
+        status: 'Returning Series',
+        seasons: const [TVSeason(id: 1, seasonNumber: 1, episodeCount: 2)],
+      );
+      when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenAnswer((_) async => media);
+      // Simulate the item cached by the preceding refresh step.
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(media);
+
+      final seenItems = [seen(1, 1, DateTime(2024, 1, 1))];
+      when(
+        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+      ).thenAnswer((_) async => seenItems);
+      when(
+        () => mockLocalDataSource.getAllSeenItems(),
+      ).thenAnswer((_) async => seenItems);
+      when(
+        () => mockLocalDataSource.getQuickAddItems(),
+      ).thenAnswer((_) async => <QuickAddItemModel>[]);
+      when(
+        () => mockLocalDataSource.isOptedOut(
+          any(),
+          seasonNumber: any(named: 'seasonNumber'),
+          episodeNumber: any(named: 'episodeNumber'),
+        ),
+      ).thenAnswer((_) async => false);
+      when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
+        (_) async => season([
+          ep(1, airDate: '2024-01-01'),
+          ep(2, airDate: '2024-01-08', runtime: 43),
+        ]),
+      );
+      when(
+        () => mockLocalDataSource.addQuickAddItem(any()),
+      ).thenAnswer((_) async {});
+
+      await repository.refreshNotificationForSeries(
+        1,
+        MediaType.tv,
+        force: true,
+      );
+
+      final captured = verify(
+        () => mockLocalDataSource.addQuickAddItem(captureAny()),
+      ).captured;
+      expect(captured, hasLength(1));
+      final quick = captured.first as QuickAddItemModel;
+      expect(quick.seasonNumber, 1);
+      expect(quick.episodeNumber, 2);
+      expect(quick.airDate, DateTime(2024, 1, 8));
+      expect(quick.runtime, 43);
     });
   });
 }

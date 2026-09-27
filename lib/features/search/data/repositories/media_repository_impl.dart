@@ -310,10 +310,7 @@ class MediaRepositoryImpl implements MediaRepository {
       return;
     }
 
-    final detailsItem = await _detailsItemWithSeasons(
-      item,
-      forceRemote: forceRemoteSeasons,
-    );
+    final detailsItem = await _detailsItemWithSeasons(item);
 
     final scan = await _scanForNextEpisode(
       detailsItem,
@@ -414,12 +411,12 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   /// Cache-first details fetch that guarantees a season list when possible.
-  Future<MediaItem?> _detailsItemWithSeasons(
-    MediaItem item, {
-    required bool forceRemote,
-  }) async {
+  ///
+  /// Callers that need freshly aired episodes force the *season* fetch instead
+  /// (see `_seasonDetailsForRefresh`); the item itself is acceptable from cache.
+  Future<MediaItem?> _detailsItemWithSeasons(MediaItem item) async {
     final cached = cache.getItem(item.id, MediaType.tv);
-    if (!forceRemote && cached?.seasons != null) return cached;
+    if (cached?.seasons != null) return cached;
 
     try {
       final fresh = await remoteDataSource.getMediaItem(
@@ -1387,6 +1384,14 @@ class MediaRepositoryImpl implements MediaRepository {
       await cache.cacheItem(item);
 
       await _refreshNotificationDate(item, forceRemoteSeasons: force);
+
+      // Keep Quick Add in sync in the same pass. populateQuickAddFromSeenHistory
+      // is cache-first and reuses the seasons just fetched above, so returning
+      // series pick up newly aired episodes without any extra network work.
+      if (type == MediaType.tv) {
+        await populateQuickAddFromSeenHistory(tmdbId: tmdbId);
+      }
+
       await localDataSource.markNotifiedRefreshed(tmdbId, type.name, now);
     } catch (_) {}
   }
