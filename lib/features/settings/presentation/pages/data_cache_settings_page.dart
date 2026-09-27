@@ -9,6 +9,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/core/utils/export_import_serializer.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +25,7 @@ class DataCacheSettingsPage extends StatelessWidget {
     print('DataCacheSettingsPage.build');
     final provider = context.watch<SearchProvider>();
     final achievementProvider = context.watch<AchievementProvider>();
+    final settings = context.watch<SettingsProvider>();
     final isCacheLoading = provider.isCacheLoading;
     final isDbSizeLoading = provider.isDbSizeLoading;
     final isImporting = provider.isImporting;
@@ -238,6 +240,16 @@ class DataCacheSettingsPage extends StatelessWidget {
                     }
                   },
                 ),
+              ),
+              const Divider(),
+              const _SectionHeader(title: 'Debug'),
+              SwitchListTile(
+                title: const Text('Notification Center Debug'),
+                subtitle: const Text(
+                  'Show hidden Notification Center items and why they were omitted.',
+                ),
+                value: settings.notificationCenterDebug,
+                onChanged: (val) => settings.setNotificationCenterDebug(val),
               ),
             ],
           ),

@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watch_next_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -14,6 +15,7 @@ import '../../../../helpers/mocks.dart';
 void main() {
   late MockMediaRepository mockRepository;
   late SearchProvider provider;
+  late SettingsProvider settingsProvider;
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
@@ -55,6 +57,7 @@ void main() {
       () => mockRepository.markAsSeen(any()),
     ).thenAnswer((_) async => Future.value());
 
+    settingsProvider = SettingsProvider(MockSharedPreferences());
     provider = SearchProvider(mockRepository);
     when(
       () => mockRepository.getSeenStatus(any(), any()),
@@ -101,8 +104,13 @@ void main() {
       await provider.loadWatchlist();
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<SearchProvider>.value(
-          value: provider,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SearchProvider>.value(value: provider),
+            ChangeNotifierProvider<SettingsProvider>.value(
+              value: settingsProvider,
+            ),
+          ],
           child: const MaterialApp(home: NotificationCenterPage()),
         ),
       );
@@ -312,8 +320,13 @@ void main() {
       await provider.loadNotifiedItems();
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<SearchProvider>.value(
-          value: provider,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SearchProvider>.value(value: provider),
+            ChangeNotifierProvider<SettingsProvider>.value(
+              value: settingsProvider,
+            ),
+          ],
           child: const MaterialApp(home: NotificationCenterPage()),
         ),
       );

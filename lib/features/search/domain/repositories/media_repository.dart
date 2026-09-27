@@ -173,6 +173,15 @@ abstract class MediaRepository {
   /// QuickAdd: returns current quick-add entries (next episodes the user can quickly mark seen)
   Future<List<QuickAddItem>> getQuickAddItems();
 
+  /// QuickAdd: diagnostic list of expected next episodes that are NOT shown.
+  ///
+  /// Read-only; never persists. Uses runtime/cached data only unless
+  /// [allowFetch] is true, in which case missing season data is fetched from
+  /// the network.
+  Future<List<QuickAddOmission>> getQuickAddOmissions({
+    bool allowFetch = false,
+  });
+
   /// Refreshes a Returning Series specifically for background syncing
   Future<void> refreshReturningSeries(int tmdbId);
 
@@ -276,5 +285,55 @@ class QuickAddItem {
     this.title,
     this.posterPath,
     this.runtime,
+  });
+}
+
+/// Why an expected next episode is not present in the Quick Add list.
+enum QuickAddOmissionReason {
+  /// The user dismissed this streak, opting out of Quick Add for it.
+  optedOut,
+
+  /// The next episode exists but has not aired yet.
+  notReleased,
+
+  /// The next episode has no known air date.
+  noAirDate,
+
+  /// Season/episode data is not cached and fetching was not allowed.
+  noCacheData,
+
+  /// A valid aired next episode exists but is missing from Quick Add.
+  notPopulated,
+}
+
+/// A diagnostic entry describing an expected Quick Add episode that is absent.
+class QuickAddOmission {
+  final int tmdbId;
+  final String title;
+  final String? posterPath;
+
+  /// Season/episode of the next episode the omission refers to, when known.
+  final int? seasonNumber;
+  final int? episodeNumber;
+
+  /// Air date of the next episode (used for [QuickAddOmissionReason.notReleased]).
+  final DateTime? airDate;
+
+  /// The seen streak (tail) this omission was computed from, when known.
+  final int? tailSeason;
+  final int? tailEpisode;
+
+  final QuickAddOmissionReason reason;
+
+  QuickAddOmission({
+    required this.tmdbId,
+    required this.title,
+    this.posterPath,
+    this.seasonNumber,
+    this.episodeNumber,
+    this.airDate,
+    this.tailSeason,
+    this.tailEpisode,
+    required this.reason,
   });
 }

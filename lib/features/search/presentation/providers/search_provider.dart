@@ -52,6 +52,8 @@ class SearchProvider with ChangeNotifier {
   List<String> _likedIds = []; // "id:type"
   List<NotifiedItem> _notifiedItems = [];
   List<QuickAddItem> _quickAddItems = [];
+  List<QuickAddOmission> _quickAddOmissions = [];
+  bool _isQuickAddOmissionsLoading = false;
 
   List<MediaItem> get items => _searchResults; // For SearchPage
   bool get isLoading => _isLoading;
@@ -70,6 +72,8 @@ class SearchProvider with ChangeNotifier {
   List<String> get likedIds => _likedIds;
   List<NotifiedItem> get notifiedItems => _notifiedItems;
   List<QuickAddItem> get quickAddItems => _quickAddItems;
+  List<QuickAddOmission> get quickAddOmissions => _quickAddOmissions;
+  bool get isQuickAddOmissionsLoading => _isQuickAddOmissionsLoading;
   int get selectedTab => _selectedTab;
 
   double get importProgress => _importProgress;
@@ -243,6 +247,26 @@ class SearchProvider with ChangeNotifier {
     // Use repository-provided quick-add entries only (no compatibility fallback)
     _quickAddItems = repoItems;
     notifyListeners();
+  }
+
+  /// Loads the Quick Add diagnostics (why expected episodes are missing).
+  ///
+  /// Cache/runtime only by default; set [allowFetch] to permit fetching missing
+  /// season data from the network. Never throws.
+  Future<void> loadQuickAddOmissions({bool allowFetch = false}) async {
+    _isQuickAddOmissionsLoading = true;
+    notifyListeners();
+    try {
+      _quickAddOmissions = await repository.getQuickAddOmissions(
+        allowFetch: allowFetch,
+      );
+    } catch (e) {
+      debugPrint('[SearchProvider] loadQuickAddOmissions error: $e');
+      _quickAddOmissions = [];
+    } finally {
+      _isQuickAddOmissionsLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> clearQuickAddItems() async {
@@ -671,8 +695,8 @@ class SearchProvider with ChangeNotifier {
 
             // Trigger background sync if they just watched the last episode of a returning series
             // and the cache is older than 2 days.
-            if (isLastEpisode && 
-                mediaItem.status != null && 
+            if (isLastEpisode &&
+                mediaItem.status != null &&
                 mediaItem.status!.toLowerCase() == 'returning series') {
               final cacheDate = await repository.getCacheUpdateDate(item.tmdbId, MediaType.tv);
               if (cacheDate == null || DateTime.now().difference(cacheDate).inDays >= 2) {

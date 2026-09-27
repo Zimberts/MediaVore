@@ -1315,6 +1315,288 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<List<QuickAddOmission>> getQuickAddOmissions({
+    bool allowFetch = false,
+  }) async {
+    await _ensureInitialized();
+    final omissions = <QuickAddOmission>[];
+    final seenOmissionKeys = <String>{};
+
+    try {
+      final seenItems = await localDataSource.getAllSeenItems();
+      final tvIds = seenItems
+          .where((s) => s.type == 'tv')
+          .map((s) => s.tmdbId)
+          .toSet();
+      if (tvIds.isEmpty) return omissions;
+
+      final existingQuick = await localDataSource.getQuickAddItems();
+      final existingKeysByTv = <int, Set<String>>{};
+      for (final q in existingQuick) {
+        existingKeysByTv
+            .putIfAbsent(q.tmdbId, () => <String>{})
+            .add('${q.seasonNumber}:${q.episodeNumber}');
+      }
+
+      for (final tmdbId in tvIds) {
+        final seen = await localDataSource.getSeenStatus(tmdbId, 'tv');
+        if (seen.isEmpty) continue;
+
+        MediaItem? resolved = cache.getItem(tmdbId, MediaType.tv);
+        if (resolved?.seasons == null && allowFetch) {
+          try {
+            resolved = await remoteDataSource.getMediaItem(
+              tmdbId,
+              type: MediaType.tv,
+            );
+            await cache.cacheItem(resolved);
+          } catch (_) {}
+        }
+
+        final seasons = resolved?.seasons;
+        final title =
+            resolved?.title ?? (seen.isNotEmpty ? seen.first.title : 'Unknown');
+        final posterPath = resolved?.posterPath;
+
+        if (seasons == null) {
+          if (seenOmissionKeys.add('noCacheData|$tmdbId')) {
+            omissions.add(
+              QuickAddOmission(
+                tmdbId: tmdbId,
+                title: title,
+                posterPath: posterPath,
+                reason: QuickAddOmissionReason.noCacheData,
+              ),
+            );
+          }
+          continue;
+        }
+
+        // Latest seen date per (season, episode).
+        final lastSeenMap = <int, Map<int, DateTime>>{};
+        for (final s in seen) {
+          final season = s.seasonNumber;
+          final ep = s.episodeNumber;
+          if (season == null || ep == null) continue;
+          final mapForSeason = lastSeenMap.putIfAbsent(season, () => {});
+          final prev = mapForSeason[ep];
+          mapForSeason[ep] =
+              (prev == null || prev.isBefore(s.seenDate)) ? s.seenDate : prev;
+        }
+
+        final sortedSeasons = List<TVSeason>.from(seasons)
+          ..sort((a, b) => a.seasonNumber.compareTo(b.seasonNumber));
+
+        // Season lookup is cache-first. Only [allowFetch] triggers a network
+        // call, and each season is fetched at most once per show.
+        final seasonMemo = <int, Map<String, dynamic>?>{};
+        Future<Map<String, dynamic>?> seasonFor(int seasonNumber) async {
+          if (seasonMemo.containsKey(seasonNumber)) {
+            return seasonMemo[seasonNumber];
+          }
+          Map<String, dynamic>? data = cache.getSeason(tmdbId, seasonNumber);
+          if (data == null && allowFetch) {
+            try {
+              data = await getSeasonDetails(tmdbId, seasonNumber);
+            } catch (_) {
+              data = null;
+            }
+          }
+          seasonMemo[seasonNumber] = data;
+          return data;
+        }
+
+        final existingForTv = existingKeysByTv[tmdbId] ?? const <String>{};
+
+        final seenSorted = List.from(seen)
+          ..sort((a, b) {
+            final dateCmp = b.seenDate.compareTo(a.seenDate);
+            if (dateCmp != 0) return dateCmp;
+            final aSeason = a.seasonNumber ?? 0;
+            final bSeason = b.seasonNumber ?? 0;
+            if (aSeason != bSeason) return aSeason.compareTo(bSeason);
+            return (a.episodeNumber ?? 0).compareTo(b.episodeNumber ?? 0);
+          });
+
+        for (final s in seenSorted) {
+          final tailSeason = s.seasonNumber;
+          final tailEpisode = s.episodeNumber;
+          if (tailSeason == null || tailEpisode == null) continue;
+
+          final tailSeenDate = s.seenDate;
+          final startEpisode = tailEpisode + 1;
+
+          int? foundSeason;
+          int? foundEpisode;
+          DateTime? foundAirDate;
+          DateTime? firstFutureAirDate;
+          int? futureSeason;
+          int? futureEpisode;
+          var hadNoAirDate = false;
+          var cacheMiss = false;
+
+          for (final season in sortedSeasons) {
+            if (season.seasonNumber == 0) continue;
+            if (season.seasonNumber < tailSeason) continue;
+
+            final seasonData = await seasonFor(season.seasonNumber);
+            if (seasonData == null) {
+              // Can't inspect this season without a fetch; stop scanning.
+              cacheMiss = true;
+              break;
+            }
+
+            final episodes = seasonData['episodes'] as List?;
+            for (final ep in episodes ?? []) {
+              final epNum = ep['episode_number'] as int?;
+              if (epNum == null) continue;
+              if (season.seasonNumber == tailSeason && epNum < startEpisode) {
+                continue;
+              }
+
+              final lastSeenForEp = lastSeenMap[season.seasonNumber]?[epNum];
+              final isEpSeenAfterTail =
+                  lastSeenForEp != null &&
+                  !lastSeenForEp.isBefore(tailSeenDate);
+              if (isEpSeenAfterTail) continue;
+
+              final airDateStr = ep['air_date'] as String?;
+              if (airDateStr == null || airDateStr.isEmpty) {
+                hadNoAirDate = true;
+                continue;
+              }
+
+              DateTime ad;
+              try {
+                ad = DateTime.parse(airDateStr);
+              } catch (_) {
+                hadNoAirDate = true;
+                continue;
+              }
+
+              if (ad.isAfter(DateTime.now())) {
+                if (firstFutureAirDate == null ||
+                    ad.isBefore(firstFutureAirDate)) {
+                  firstFutureAirDate = ad;
+                  futureSeason = season.seasonNumber;
+                  futureEpisode = epNum;
+                }
+                continue;
+              }
+
+              foundSeason = season.seasonNumber;
+              foundEpisode = epNum;
+              foundAirDate = ad;
+              break;
+            }
+
+            if (foundSeason != null) break;
+          }
+
+          if (foundSeason != null && foundEpisode != null) {
+            final key = '$foundSeason:$foundEpisode';
+            if (existingForTv.contains(key)) {
+              continue; // Already shown in Quick Add.
+            }
+
+            final optedOut = await localDataSource.isOptedOut(
+              tmdbId,
+              seasonNumber: tailSeason,
+              episodeNumber: tailEpisode,
+            );
+            final reason = optedOut
+                ? QuickAddOmissionReason.optedOut
+                : QuickAddOmissionReason.notPopulated;
+            if (!seenOmissionKeys.add(
+              '${reason.name}|$tmdbId|$foundSeason|$foundEpisode',
+            )) {
+              continue;
+            }
+            omissions.add(
+              QuickAddOmission(
+                tmdbId: tmdbId,
+                title: title,
+                posterPath: posterPath,
+                seasonNumber: foundSeason,
+                episodeNumber: foundEpisode,
+                airDate: foundAirDate,
+                tailSeason: tailSeason,
+                tailEpisode: tailEpisode,
+                reason: reason,
+              ),
+            );
+            continue;
+          }
+
+          if (firstFutureAirDate != null) {
+            if (!seenOmissionKeys.add(
+              'notReleased|$tmdbId|$futureSeason|$futureEpisode',
+            )) {
+              continue;
+            }
+            omissions.add(
+              QuickAddOmission(
+                tmdbId: tmdbId,
+                title: title,
+                posterPath: posterPath,
+                seasonNumber: futureSeason,
+                episodeNumber: futureEpisode,
+                airDate: firstFutureAirDate,
+                tailSeason: tailSeason,
+                tailEpisode: tailEpisode,
+                reason: QuickAddOmissionReason.notReleased,
+              ),
+            );
+            continue;
+          }
+
+          if (cacheMiss) {
+            if (!seenOmissionKeys.add(
+              'noCacheData|$tmdbId|$tailSeason|$tailEpisode',
+            )) {
+              continue;
+            }
+            omissions.add(
+              QuickAddOmission(
+                tmdbId: tmdbId,
+                title: title,
+                posterPath: posterPath,
+                tailSeason: tailSeason,
+                tailEpisode: tailEpisode,
+                reason: QuickAddOmissionReason.noCacheData,
+              ),
+            );
+            continue;
+          }
+
+          if (hadNoAirDate) {
+            if (!seenOmissionKeys.add(
+              'noAirDate|$tmdbId|$tailSeason|$tailEpisode',
+            )) {
+              continue;
+            }
+            omissions.add(
+              QuickAddOmission(
+                tmdbId: tmdbId,
+                title: title,
+                posterPath: posterPath,
+                tailSeason: tailSeason,
+                tailEpisode: tailEpisode,
+                reason: QuickAddOmissionReason.noAirDate,
+              ),
+            );
+          }
+          // Otherwise the show is fully caught up: nothing expected.
+        }
+      }
+    } catch (e) {
+      debugPrint('[Repo] getQuickAddOmissions error: $e');
+    }
+
+    return omissions;
+  }
+
+  @override
   Future<void> refreshReturningSeries(int tmdbId) async {
     await _ensureInitialized();
     try {
@@ -1366,7 +1648,7 @@ class MediaRepositoryImpl implements MediaRepository {
         final seasonDetails = await remoteDataSource.getSeasonDetails(tmdbId, lastSeasonNum);
         await cache.cacheSeason(tmdbId, lastSeasonNum, seasonDetails);
       }
-      
+
       // 3. Update Quick Add logic to pick up new episodes
       await populateQuickAddFromSeenHistory(tmdbId: tmdbId);
     } catch (e) {

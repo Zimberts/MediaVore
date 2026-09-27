@@ -14,6 +14,7 @@ class SettingsProvider with ChangeNotifier {
   DisplayMode _displayMode = DisplayMode.grid;
   double _gridSize = 3.0;
   bool _hideNonReleased = false;
+  bool _notificationCenterDebug = false;
 
   int _lightAppThemeIndex = 0;
   int _darkAppThemeIndex = 0;
@@ -23,6 +24,7 @@ class SettingsProvider with ChangeNotifier {
   DisplayMode get displayMode => _displayMode;
   double get gridSize => _gridSize;
   bool get hideNonReleased => _hideNonReleased;
+  bool get notificationCenterDebug => _notificationCenterDebug;
 
   int get lightAppThemeIndex => _lightAppThemeIndex;
   int get darkAppThemeIndex => _darkAppThemeIndex;
@@ -45,6 +47,8 @@ class SettingsProvider with ChangeNotifier {
 
     _gridSize = _prefs.getDouble('gridSize') ?? 3.0;
     _hideNonReleased = _prefs.getBool('hideNonReleased') ?? false;
+    _notificationCenterDebug =
+        _prefs.getBool('notificationCenterDebug') ?? false;
 
     _lightAppThemeIndex = _prefs.getInt('lightAppTheme') ?? 0;
     if (_lightAppThemeIndex < 0 || _lightAppThemeIndex >= lightThemes.length) {
@@ -88,6 +92,12 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setHideNonReleased(bool hide) async {
     _hideNonReleased = hide;
     await _prefs.setBool('hideNonReleased', hide);
+    notifyListeners();
+  }
+
+  Future<void> setNotificationCenterDebug(bool enabled) async {
+    _notificationCenterDebug = enabled;
+    await _prefs.setBool('notificationCenterDebug', enabled);
     notifyListeners();
   }
 

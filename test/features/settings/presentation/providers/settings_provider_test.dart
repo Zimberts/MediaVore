@@ -30,8 +30,19 @@ void main() {
         expect(provider.gridSize, 3.0);
         expect(provider.themeMode, ThemeMode.system);
         expect(provider.lightAppThemeIndex, 0);
+        expect(provider.notificationCenterDebug, false);
       },
     );
+
+    test('should load notificationCenterDebug from SharedPreferences', () {
+      when(
+        () => mockPrefs.getBool('notificationCenterDebug'),
+      ).thenReturn(true);
+
+      final newProvider = SettingsProvider(mockPrefs);
+
+      expect(newProvider.notificationCenterDebug, true);
+    });
 
     test('should load values from SharedPreferences', () {
       when(() => mockPrefs.getInt('displayMode')).thenReturn(1); // Grid
@@ -78,6 +89,18 @@ void main() {
       expect(provider.lightAppThemeIndex, 2);
       verify(() => mockPrefs.setInt('lightAppTheme', 2)).called(1);
     });
+
+    test(
+      'setNotificationCenterDebug should update state and save to prefs',
+      () async {
+        await provider.setNotificationCenterDebug(true);
+
+        expect(provider.notificationCenterDebug, true);
+        verify(
+          () => mockPrefs.setBool('notificationCenterDebug', true),
+        ).called(1);
+      },
+    );
   });
 
   group('SettingsProvider - Palettes', () {

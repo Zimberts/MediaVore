@@ -13,6 +13,9 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
     as repo_types;
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+
+import '../../../../helpers/mocks.dart';
 
 class MockAchievementRepo extends Mock implements AchievementRepository {}
 
@@ -148,8 +151,9 @@ void main() {
       () => mockAchievementProvider.clearAchievements(),
     ).thenAnswer((_) async {});
 
-    final mockFilePicker = FakeFilePicker();
-    mockFilePicker.onPick =
+    final settingsProvider = SettingsProvider(MockSharedPreferences());
+
+    final mockFilePicker = FakeFilePicker();    mockFilePicker.onPick =
         ({
           String? dialogTitle,
           String? initialDirectory,
@@ -177,6 +181,9 @@ void main() {
             ChangeNotifierProvider<SearchProvider>.value(value: provider),
             ChangeNotifierProvider<AchievementProvider>.value(
               value: mockAchievementProvider,
+            ),
+            ChangeNotifierProvider<SettingsProvider>.value(
+              value: settingsProvider,
             ),
           ],
           child: const DataCacheSettingsPage(),
