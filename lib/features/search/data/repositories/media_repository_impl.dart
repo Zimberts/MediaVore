@@ -332,16 +332,16 @@ class MediaRepositoryImpl implements MediaRepository {
       return;
     }
 
-    // Caught up (or the next episode is unknown). Never remove/clear on
-    // incomplete season data so a transient failure cannot drop a series.
-    if (!scan.complete) return;
-
     // Prefer TMDB's explicit next-episode metadata when it is available.
     if (await _applyNextEpisodeFallback(item)) return;
 
     final status = (detailsItem?.status ?? item.status)?.toLowerCase();
-    if (status == 'ended' || status == 'canceled') {
-      // Finished and fully watched: stop tracking it.
+    final isFinished = status == 'ended' || status == 'canceled';
+
+    // Finished and fully watched: stop tracking it. Only drop the series when
+    // the scan was complete; a transient season-fetch failure must not remove it.
+    if (isFinished) {
+      if (!scan.complete) return;
       await localDataSource.toggleNotification(
         tmdbId: item.id,
         type: item.mediaType.name,
@@ -350,9 +350,38 @@ class MediaRepositoryImpl implements MediaRepository {
       return;
     }
 
+    // No concrete next episode. On a partial scan, only reconcile a record that
+    // already points at a watched episode (it is stale, e.g. the episode just
+    // marked seen); never clobber a record still pointing at an unseen release.
+    if (!scan.complete) {
+      final stored = await localDataSource.getNotifiedItem(
+        item.id,
+        item.mediaType.name,
+      );
+      if (!_recordPointsAtSeenEpisode(stored, seen)) return;
+    }
+
     await localDataSource.markNotificationAsReturning(
       item.id,
       item.mediaType.name,
+    );
+  }
+
+  /// Whether the stored notified record already points at an episode present in
+  /// [seen] (i.e. it is stale and safe to downgrade to "Returning").
+  bool _recordPointsAtSeenEpisode(
+    NotifiedItemModel? record,
+    List<SeenItemModel> seen,
+  ) {
+    final season = record?.seasonNumber;
+    final episode = record?.episodeNumber;
+    if (season == null || episode == null) return false;
+    final key = episodeKey(season, episode);
+    return seen.any(
+      (s) =>
+          s.seasonNumber != null &&
+          s.episodeNumber != null &&
+          episodeKey(s.seasonNumber!, s.episodeNumber!) == key,
     );
   }
 
@@ -472,14 +501,17 @@ class MediaRepositoryImpl implements MediaRepository {
           forceRemote: forceRemote,
         );
       } catch (_) {
-        complete = false;
-        break;
+        // A season with no known episodes (e.g. an announced but unscheduled
+        // next season) cannot contain a candidate, so its absence is not
+        // "incomplete" data. Seasons that claim episodes make the scan partial.
+        if (season.episodeCount > 0) complete = false;
+        continue;
       }
 
       final rawEpisodes = seasonDetails['episodes'];
       if (rawEpisodes is! List) {
-        complete = false;
-        break;
+        if (season.episodeCount > 0) complete = false;
+        continue;
       }
 
       for (final raw in rawEpisodes) {
@@ -703,8 +735,9 @@ class MediaRepositoryImpl implements MediaRepository {
 
     // Trigger update of notification date when progress changes. If the episode
     // just marked is the latest of the streak, refresh from the network
-    // (bypassing caches) so newly released episodes show up immediately.
-    unawaited(_refreshNotificationAfterSeen(item));
+    // (bypassing caches) so newly released episodes show up immediately. This is
+    // awaited so callers reloading notified items observe the reconciled state.
+    await _refreshNotificationAfterSeen(item);
 
     // After marking as seen, for TV items compute next unseen episode for THIS streak
     try {

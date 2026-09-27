@@ -707,5 +707,139 @@ void main() {
       expect(quick.airDate, DateTime(2024, 1, 8));
       expect(quick.runtime, 43);
     });
+
+    test(
+      'should downgrade to Returning when an announced next season has no episodes',
+      () async {
+        stubNotified();
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer(
+          (_) async => tvItem(
+            status: 'Returning Series',
+            seasons: const [
+              TVSeason(id: 1, seasonNumber: 1, episodeCount: 1),
+              // Announced but unscheduled: TMDB reports no episodes.
+              TVSeason(id: 2, seasonNumber: 2, episodeCount: 0),
+            ],
+          ),
+        );
+        when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
+        when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
+          (_) async => season([ep(1, airDate: '2024-01-01')]),
+        );
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 2),
+        ).thenThrow(Exception('season not found'));
+
+        await repository.refreshNotificationForSeries(
+          1,
+          MediaType.tv,
+          force: true,
+        );
+
+        verify(
+          () => mockLocalDataSource.markNotificationAsReturning(1, 'tv'),
+        ).called(1);
+      },
+    );
+
+    test(
+      'should downgrade a partial scan when the record points at a seen episode',
+      () async {
+        stubNotified();
+        // The stored record still points at the episode the user just watched.
+        when(() => mockLocalDataSource.getNotifiedItem(1, 'tv')).thenAnswer(
+          (_) async => NotifiedItemModel(
+            tmdbId: 1,
+            type: 'tv',
+            title: 'Show',
+            releaseDate: DateTime(2024, 1, 1),
+            seasonNumber: 1,
+            episodeNumber: 1,
+          ),
+        );
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer(
+          (_) async => tvItem(
+            status: 'Returning Series',
+            seasons: const [TVSeason(id: 1, seasonNumber: 1, episodeCount: 2)],
+          ),
+        );
+        when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 1),
+        ).thenThrow(Exception('network'));
+
+        await repository.refreshNotificationForSeries(
+          1,
+          MediaType.tv,
+          force: true,
+        );
+
+        verify(
+          () => mockLocalDataSource.markNotificationAsReturning(1, 'tv'),
+        ).called(1);
+      },
+    );
+
+    test(
+      'should leave the record untouched when a partial scan points at an unseen episode',
+      () async {
+        stubNotified();
+        when(() => mockLocalDataSource.getNotifiedItem(1, 'tv')).thenAnswer(
+          (_) async => NotifiedItemModel(
+            tmdbId: 1,
+            type: 'tv',
+            title: 'Show',
+            releaseDate: DateTime(2024, 1, 1),
+            seasonNumber: 1,
+            episodeNumber: 2, // not seen
+          ),
+        );
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer(
+          (_) async => tvItem(
+            status: 'Returning Series',
+            seasons: const [TVSeason(id: 1, seasonNumber: 1, episodeCount: 2)],
+          ),
+        );
+        when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(null);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 1),
+        ).thenThrow(Exception('network'));
+
+        await repository.refreshNotificationForSeries(
+          1,
+          MediaType.tv,
+          force: true,
+        );
+
+        verifyNever(
+          () => mockLocalDataSource.markNotificationAsReturning(any(), any()),
+        );
+        verifyNever(
+          () => mockLocalDataSource.setNotificationEpisode(
+            any(),
+            any(),
+            seasonNumber: any(named: 'seasonNumber'),
+            episodeNumber: any(named: 'episodeNumber'),
+            releaseDate: any(named: 'releaseDate'),
+            runtime: any(named: 'runtime'),
+          ),
+        );
+      },
+    );
   });
 }
