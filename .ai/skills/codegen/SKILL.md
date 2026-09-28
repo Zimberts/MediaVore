@@ -1,6 +1,6 @@
 ---
 name: codegen
-description: "Use when regenerating build_runner codegen output for MediaVore — Isar `*.g.dart` collection files and injectable `injection.config.dart` — after adding or changing `@collection`, `@injectable`, or `@module` classes. Run `dart run build_runner build --delete-conflicting-outputs`, then verify with `dart analyze` and `flutter test`."
+description: "Use when regenerating build_runner codegen output for MediaVore - Isar `*.g.dart` collection files and injectable `injection.config.dart` - after adding or changing `@collection`, `@injectable`, or `@module` classes. Run `dart run build_runner build`, then verify with `dart analyze` and `flutter test`."
 argument-hint: "Scope: full or verify-only"
 user-invocable: true
 ---
@@ -24,10 +24,10 @@ commands and the rules around never hand-editing generated output.
 ## Procedure
 1. **Run codegen** from the repo root:
    ```bash
-   dart run build_runner build --delete-conflicting-outputs
+   dart run build_runner build
    ```
-   `--delete-conflicting-outputs` is required: it removes stale generated files that
-   would otherwise conflict with the newly generated ones.
+   Older build_runner versions required `--delete-conflicting-outputs` to clear stale
+   outputs; build_runner 2.15+ removed that flag and deletes them automatically.
 
 2. **Analyze**:
    ```bash

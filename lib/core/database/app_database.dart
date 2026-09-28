@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';

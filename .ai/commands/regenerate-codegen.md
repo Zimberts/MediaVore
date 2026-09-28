@@ -8,7 +8,7 @@ Run this after changing an Isar `@collection` model, a DI annotation, or any
 `@module`/`@LazySingleton` binding:
 
 ```bash
-dart run build_runner build --delete-conflicting-outputs
+dart run build_runner build
 ```
 
 Never hand-edit `*.g.dart` or `lib/core/di/injection.config.dart`. See

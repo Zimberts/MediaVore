@@ -39,6 +39,19 @@ android {
     }
 }
 
+// 16 KB page size (Android 15+ / Google Play): `androidx.datastore` 1.2.0 ships a
+// `libdatastore_shared_counter.so` whose RELRO segment is not 16 KB aligned
+// (flutter/flutter#182744), which fails Play's ELF alignment check. Version 1.1.7
+// is the known-good release, and `shared_preferences_android` already requests it —
+// force it across the graph so a transitive bump cannot silently regress us.
+configurations.all {
+    resolutionStrategy {
+        force("androidx.datastore:datastore:1.1.7")
+        force("androidx.datastore:datastore-core:1.1.7")
+        force("androidx.datastore:datastore-preferences:1.1.7")
+    }
+}
+
 flutter {
     source = "../.."
 }

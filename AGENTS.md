@@ -42,7 +42,7 @@ Run from the repo root:
 ```bash
 flutter doctor                                            # check environment
 flutter pub get                                           # install deps
-dart run build_runner build --delete-conflicting-outputs  # REQUIRED after fresh clone
+dart run build_runner build                               # REQUIRED after fresh clone
 flutter analyze                                           # lint
 flutter test                                              # tests
 ```
@@ -62,6 +62,9 @@ flutter test                                              # tests
 
 - **Generated files** — `*.g.dart` and `*.config.dart` are gitignored; regenerate with
   build_runner, never hand-edit.
+- **Isar** — persistence comes from the community fork `isar_community` (v3 API), **not**
+  the upstream `isar` package, which is abandoned and ships 4 KB-aligned Android
+  binaries. Do not switch back; imports are `package:isar_community/isar.dart`.
 - **Achievements** — source of truth is `assets/achievements/definitions.json` (stable ids).
   `ACHIEVEMENTS.md` is a non-authoritative summary; don't treat it as the schema.
 - **Config** — `.env` is bundled as an asset but never referenced in code; the TMDB key is

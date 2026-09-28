@@ -6,7 +6,7 @@ import 'package:mediavore/features/media_details/data/datasources/media_list_loc
 import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/cache/media_cache.dart';

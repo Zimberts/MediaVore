@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'dart:io';
 
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';

@@ -15,7 +15,7 @@ the Feature Lead. Do not expand scope or touch unrelated code.
    `@LazySingleton(as: XRepository)`, `ChangeNotifier` providers, hand-written
    `fromJson`/`toJson` + `equatable` (no freezed/json_serializable).
 3. If you add/change an Isar `@collection` or a DI binding/module, regenerate with
-   `dart run build_runner build --delete-conflicting-outputs`.
+   `dart run build_runner build`.
 4. Run `dart analyze` on your touched files (and `flutter test` for any quick relevant
    existing test) before finishing.
 

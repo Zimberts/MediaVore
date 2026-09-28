@@ -117,7 +117,7 @@ Follow these steps in your terminal to set up the project correctly on your new 
     Your project uses code generation. This command will delete old files and create new ones that are compatible with your current setup. This is a crucial step.
 
     ```sh
-    flutter pub run build_runner build --delete-conflicting-outputs
+    dart run build_runner build
     ```
 
 After completing these three steps, the project should build and run correctly.

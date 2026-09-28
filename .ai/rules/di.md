@@ -25,7 +25,7 @@ applyTo:
   `@module`, regenerate:
 
   ```bash
-  dart run build_runner build --delete-conflicting-outputs
+  dart run build_runner build
   ```
 
 - `injection.config.dart` is generated — never hand-edit it. See `.ai/rules/codegen.md`.

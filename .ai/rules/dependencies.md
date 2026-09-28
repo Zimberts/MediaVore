@@ -24,5 +24,5 @@ applyTo:
 
 ## Codegen deps (dev)
 
-- `isar_generator` and `injectable_generator` are codegen dev dependencies that pair
-  with `isar`/`injectable`; see `.ai/rules/codegen.md`. Keep them as dev deps.
+- `isar_community_generator` and `injectable_generator` are codegen dev dependencies that
+  pair with `isar_community`/`injectable`; see `.ai/rules/codegen.md`. Keep them as dev deps.

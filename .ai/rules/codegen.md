@@ -25,11 +25,11 @@ Never hand-edit generated output — always regenerate and let the generator rew
   annotation (`@LazySingleton`, `@Injectable`, `@module`, `as:` bindings), run:
 
   ```bash
-  dart run build_runner build --delete-conflicting-outputs
+  dart run build_runner build
   ```
 
-- `isar_generator` and `injectable_generator` are codegen dev dependencies (see the
-  root `AGENTS.md` dependencies section); do not remove them.
+- `isar_community_generator` and `injectable_generator` are codegen dev dependencies (see
+  the root `AGENTS.md` dependencies section); do not remove them.
 
 ## Isar model changes require care
 

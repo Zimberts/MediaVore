@@ -13,7 +13,7 @@ You are a specialist at writing workflow skills (`.ai/skills/<name>/SKILL.md`) f
 
 ## Approach
 1. Read the Repo Context Brief, root `AGENTS.md`, and `.ai/rules/codegen.md`.
-2. Create `.ai/skills/codegen/SKILL.md` — `name` must match folder `codegen`; frontmatter `name: codegen` + "Use when…" description. Body: when to use, exact `dart run build_runner build --delete-conflicting-outputs` procedure, verify via `dart analyze`/`flutter test`, and gotchas (gitignored outputs, never hand-edit).
+2. Create `.ai/skills/codegen/SKILL.md` - `name` must match folder `codegen`; frontmatter `name: codegen` + "Use when..." description. Body: when to use, exact `dart run build_runner build` procedure, verify via `dart analyze`/`flutter test`, and gotchas (gitignored outputs, never hand-edit).
 3. Only add an `add-feature` skill if the feature scaffold is complex enough to warrant multi-step guidance; otherwise note it as a prompt instead.
 
 ## Output Format

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/features/achievements/data/repositories/achievement_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';

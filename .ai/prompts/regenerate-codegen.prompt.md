@@ -9,7 +9,7 @@ Run build_runner to regenerate generated files after a model or dependency-injec
 
 ## Task
 
-1. Run `dart run build_runner build --delete-conflicting-outputs` to regenerate all `*.g.dart` (Isar) and `injection.config.dart` (injectable) outputs.
+1. Run `dart run build_runner build` to regenerate all `*.g.dart` (Isar) and `injection.config.dart` (injectable) outputs.
 2. Confirm the generated files were updated and contain no hand edits (they must never be edited by hand — see `.ai/rules/codegen.md`).
 3. Run `flutter analyze` to confirm the regenerated outputs compile.
 

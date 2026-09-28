@@ -7,7 +7,7 @@ import Foundation
 
 import app_links
 import file_picker
-import isar_flutter_libs
+import isar_community_flutter_libs
 import mobile_scanner
 import path_provider_foundation
 import share_plus
