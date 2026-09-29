@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/top_scrim_gradient.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
@@ -75,6 +76,9 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump();
     await tester.pumpAndSettle();
+
+    // The header artwork is topped with a readability scrim.
+    expect(find.byType(TopScrimGradient), findsOneWidget);
 
     // AppBar title + Body title
     expect(find.text(tActorName), findsAtLeastNWidgets(2));

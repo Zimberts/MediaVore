@@ -15,6 +15,7 @@ import 'package:mediavore/features/media_details/presentation/widgets/like_butto
 import 'package:mediavore/features/media_details/presentation/widgets/notify_button.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watch_next_button.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/top_scrim_gradient.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -355,8 +356,11 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                 ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: itemToDisplay.posterPath != null && !Platform.environment.containsKey('FLUTTER_TEST')
-                  ? Image.network(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (itemToDisplay.posterPath != null && !Platform.environment.containsKey('FLUTTER_TEST'))
+                    Image.network(
                       'https://image.tmdb.org/t/p/w500${itemToDisplay.posterPath}',
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -365,12 +369,16 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         child: Center(child: Icon(Icons.broken_image, size: 64, color: colors.comments)),
                       ),
                     )
-                  : Container(
+                  else
+                    Container(
                       color: colors.placeholder,
                       child: Center(
                         child: Icon(Icons.movie, size: 100, color: colors.comments),
                       ),
                     ),
+                  const TopScrimGradient(),
+                ],
+              ),
             ),
           ),
           if (widget.isSheet)

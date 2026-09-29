@@ -8,6 +8,7 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/top_scrim_gradient.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -135,6 +136,9 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump(); // Run post-frame callbacks
       await tester.pumpAndSettle(); // Finish loading
+
+      // The header artwork is topped with a readability scrim.
+      expect(find.byType(TopScrimGradient), findsOneWidget);
 
       expect(find.text('Inception'), findsAtLeast(1));
       expect(find.text('2010-07-16'), findsOneWidget);

@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/top_scrim_gradient.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -100,14 +101,6 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final brightness = Theme.of(context).brightness;
-    final baseBgColor = brightness == Brightness.dark
-        ? Colors.black
-        : Theme.of(context).scaffoldBackgroundColor;
-    final overlayHeight = MediaQuery.of(context).padding.top + 120.0;
-    final overlayStartColor = brightness == Brightness.dark
-        ? baseBgColor.withValues(alpha: 0.75)
-        : baseBgColor.withValues(alpha: 0.95);
 
     return Scaffold(
       backgroundColor: widget.isSheet ? Colors.transparent : null,
@@ -151,22 +144,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                           ),
                         ),
 
-                  Align(
-                    alignment: Alignment.topCenter,
-                    child: Container(
-                      height: overlayHeight,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            overlayStartColor,
-                            overlayStartColor.withValues(alpha: 0.0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  const TopScrimGradient(),
                 ],
               ),
             ),
