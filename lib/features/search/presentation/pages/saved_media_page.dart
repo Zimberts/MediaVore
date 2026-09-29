@@ -39,6 +39,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   SortMethod _sortMethod = SortMethod.manual;
   bool _isReversed = false;
   List<MediaItem> _currentItems = [];
+
+  /// The list name [_currentItems] currently reflects. Used to keep the
+  /// scrollable mounted (preserving scroll offset) while a refresh is in
+  /// flight instead of tearing it down behind a loading spinner.
+  String? _currentItemsList;
   final GlobalKey _qrKey = GlobalKey();
   Uint8List? _croppedLogoBytes;
   Color? _lastThemeColor;
@@ -50,6 +55,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   // Edit Mode State
   bool _isEditMode = false;
   final Set<String> _selectedItems = {};
+
+  /// Accumulated movement of the current grid drag. A long-press with little
+  /// movement is treated as a request to enter edit mode.
+  double _gridDragDistance = 0;
 
   @override
   void initState() {
@@ -154,6 +163,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       setState(() {
         _selectedList = 'watchlist';
         _currentItems.clear();
+        _currentItemsList = null;
         _sortMethod = SortMethod.manual;
         _isReversed = false;
         _isEditMode = false;
@@ -164,10 +174,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   }
 
   Future<List<MediaItem>> _fetchSavedMedia() async {
+    final requestedList = _selectedList;
     final provider = context.read<SearchProvider>();
-    final entries = await _mediaRepository.getListEntries(_selectedList);
+    final entries = await _mediaRepository.getListEntries(requestedList);
     final localItems = await _mediaRepository.getListPreviews(
-      _selectedList,
+      requestedList,
       limit: 1000,
     );
 
@@ -237,7 +248,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     if (mounted) {
       provider.loadAllSeenStatus();
     }
-    _currentItems = items;
+    // Ignore results that arrive after the user switched to another list.
+    if (requestedList == _selectedList) {
+      _currentItems = items;
+      _currentItemsList = requestedList;
+    }
     return items;
   }
 
@@ -250,14 +265,21 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         )
         .toList();
 
+    // Drop the rows immediately so the viewport does not jump; the refetch
+    // below reconciles with the persisted state.
+    setState(() {
+      _currentItems.removeWhere(
+        (item) =>
+            _selectedItems.contains('${item.id}:${item.mediaType.name}'),
+      );
+      _isEditMode = false;
+      _selectedItems.clear();
+    });
+
     for (final item in itemsToRemove) {
       await provider.removeFromList(item, _selectedList);
     }
 
-    setState(() {
-      _isEditMode = false;
-      _selectedItems.clear();
-    });
     loadSavedMedia();
   }
 
@@ -996,16 +1018,22 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         body: FutureBuilder<List<MediaItem>>(
           future: _savedMediaFuture,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                _savedMediaFuture != null) {
+            // Prefer fresh data, but fall back to the last loaded items for the
+            // same list so the scrollable is not torn down (losing its scroll
+            // offset) while a refresh is in flight.
+            final List<MediaItem>? displayItems = snapshot.hasData
+                ? snapshot.data
+                : (_currentItemsList == _selectedList ? _currentItems : null);
+
+            if (displayItems == null && !snapshot.hasError) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            if (displayItems == null || displayItems.isEmpty) {
               return const Center(child: Text('No items in this list.'));
             }
 
             final sortedItems = _getFilteredAndSortedItems(
-              snapshot.data!,
+              displayItems,
               settings,
             );
 
@@ -1027,7 +1055,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     SearchProvider provider,
     SettingsProvider settings,
   ) {
-    if (_sortMethod != SortMethod.manual || _isEditMode) {
+    // Keep a single scrollable type for the manual sort so toggling edit mode
+    // does not dispose the viewport and reset the scroll offset.
+    if (_sortMethod != SortMethod.manual) {
       return ListView.builder(
         itemCount: items.length,
         clipBehavior: Clip.none,
@@ -1156,7 +1186,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     SearchProvider provider,
     SettingsProvider settings,
   ) {
-    if (_sortMethod != SortMethod.manual || _isEditMode) {
+    // Keep a single scrollable type for the manual sort so toggling edit mode
+    // does not dispose the viewport and reset the scroll offset.
+    if (_sortMethod != SortMethod.manual) {
       return GridView.builder(
         padding: const EdgeInsets.all(8),
         clipBehavior: Clip.none,
@@ -1203,6 +1235,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     return ReorderableGridView.builder(
       padding: const EdgeInsets.all(8),
       clipBehavior: Clip.none,
+      // Drag only outside edit mode; a long-press that does not move is used to
+      // enter edit mode (see onReorder below).
+      dragEnabled: !_isEditMode,
+      // Suppress edge auto-scroll until the user actually drags. The drag also
+      // starts on a stationary long-press (used for edit mode) and would
+      // otherwise nudge the list by up to 5px the moment it starts.
+      scrollSpeedController: (elapsed, overSize, itemSize) =>
+          _gridDragDistance < 12 ? 0 : 5,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: settings.gridSize.round(),
         childAspectRatio: 0.66,
@@ -1210,7 +1250,22 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         mainAxisSpacing: 4,
       ),
       itemCount: items.length,
+      onDragStart: (index) => _gridDragDistance = 0,
+      onDragUpdate: (index, position, delta) =>
+          _gridDragDistance += delta.distance,
       onReorder: (oldIndex, newIndex) async {
+        // A long-press without meaningful movement enters edit mode; otherwise
+        // the drag reorders. This keeps the tile's long-press (edit mode) from
+        // competing with the grid's long-press (drag), which previously made
+        // reordering impossible.
+        if (_gridDragDistance < 12) {
+          final pressed = items[oldIndex];
+          setState(() {
+            _isEditMode = true;
+            _selectedItems.add('${pressed.id}:${pressed.mediaType.name}');
+          });
+          return;
+        }
         setState(() {
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
@@ -1259,32 +1314,29 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           '${item.id}:${item.mediaType.name}',
         );
 
-        return ReorderableDelayedDragStartListener(
+        final mediaTile = _MediaGridItem(
           key: ValueKey('${item.id}_${item.mediaType.name}'),
-          index: index,
-          child: _MediaGridItem(
-            item: item,
-            provider: provider,
-            isSelected: isSelected,
-            isEditMode: _isEditMode,
-            onTap: () async {
-              if (_isEditMode) {
-                _toggleItemSelection(item);
-              } else {
-                await MediaDetailPage.show(context, item);
-                loadSavedMedia();
-              }
-            },
-            onLongPress: _isEditMode
-                ? null
-                : () {
-                    setState(() {
-                      _isEditMode = true;
-                      _selectedItems.add('${item.id}:${item.mediaType.name}');
-                    });
-                  },
-          ),
+          item: item,
+          provider: provider,
+          isSelected: isSelected,
+          isEditMode: _isEditMode,
+          onTap: () async {
+            if (_isEditMode) {
+              _toggleItemSelection(item);
+            } else {
+              await MediaDetailPage.show(context, item);
+              loadSavedMedia();
+            }
+          },
+          // Long-press is handled by the grid drag: holding without moving
+          // enters edit mode (see onReorder), so the tile must not also grab it.
+          onLongPress: null,
         );
+
+        // The reorderable grid drives the drag itself. Wrapping the tile in a
+        // Flutter drag listener here is redundant and would steal the gesture,
+        // so the keyed tile is returned directly.
+        return mediaTile;
       },
     );
   }
@@ -1364,6 +1416,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                         setState(() {
                           _selectedList = name;
                           _currentItems.clear();
+                          _currentItemsList = null;
                           _sortMethod = SortMethod.manual;
                           _isReversed = false;
                           _isEditMode = false;
@@ -1472,6 +1525,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 setState(() {
                   _selectedList = trimmedName;
                   _currentItems.clear();
+                  _currentItemsList = null;
                   _sortMethod = SortMethod.manual;
                   _isReversed = false;
                   _isEditMode = false;
@@ -1512,6 +1566,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 setState(() {
                   _selectedList = 'watchlist';
                   _currentItems.clear();
+                  _currentItemsList = null;
                   _sortMethod = SortMethod.manual;
                   _isReversed = false;
                   _isEditMode = false;
