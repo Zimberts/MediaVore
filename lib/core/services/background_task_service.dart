@@ -115,11 +115,11 @@ void callbackDispatcher() {
           await repo.refreshReturningSeries(id);
         }
       }
-      return Future.value(true);
+      return true;
     } catch (err, stack) {
       debugPrint("Background Task Failed: $err");
       debugPrint(stack.toString());
-      return Future.value(false); // return false on failure
+      return false; // return false on failure
     }
   });
 }
