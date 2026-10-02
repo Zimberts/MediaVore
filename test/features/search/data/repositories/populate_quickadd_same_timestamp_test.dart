@@ -69,13 +69,12 @@ void main() {
       ],
     );
 
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
     when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer((_) async => media);
 
     when(() => cache.cacheItem(any())).thenAnswer((_) async {});
-    when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
     when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
-    when(() => cache.getSeason(any(), any())).thenReturn(null);
+    when(() => cache.getSeason(any(), any())).thenAnswer((_) async => null);
 
     List<Map<String, dynamic>> makeEpisodes(int count) => List.generate(count, (i) => {
           'episode_number': i + 1,
