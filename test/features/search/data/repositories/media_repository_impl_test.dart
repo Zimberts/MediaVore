@@ -361,6 +361,91 @@ void main() {
     });
   });
 
+  group('getSeasonDetails (ongoing series TTL)', () {
+    const staleData = {
+      'episodes': [
+        {'episode_number': 1},
+      ],
+    };
+    const freshData = {
+      'episodes': [
+        {'episode_number': 1},
+        {'episode_number': 2},
+      ],
+    };
+
+    MediaItem tv(String status) => MediaItem(
+      id: 1,
+      title: 'Show',
+      overview: '',
+      releaseDate: '2020-01-01',
+      mediaType: MediaType.tv,
+      status: status,
+    );
+
+    void stubCachedSeason({required String status, required Duration age}) {
+      when(() => mockCache.isSeasonCached(1, 1)).thenReturn(true);
+      when(() => mockCache.getSeason(1, 1)).thenReturn(staleData);
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(tv(status));
+      when(
+        () => mockCache.getSeasonUpdateDate(1, 1),
+      ).thenReturn(DateTime.now().subtract(age));
+    }
+
+    test('should re-fetch a day-old season of a returning series', () async {
+      stubCachedSeason(
+        status: 'Returning Series',
+        age: const Duration(days: 2),
+      );
+      when(
+        () => mockRemoteDataSource.getSeasonDetails(1, 1),
+      ).thenAnswer((_) async => freshData);
+
+      final result = await repository.getSeasonDetails(1, 1);
+
+      expect(result, freshData);
+      verify(() => mockCache.cacheSeason(1, 1, freshData)).called(1);
+    });
+
+    test(
+      'should use a recent season of a returning series from cache',
+      () async {
+        stubCachedSeason(
+          status: 'Returning Series',
+          age: const Duration(hours: 2),
+        );
+
+        final result = await repository.getSeasonDetails(1, 1);
+
+        expect(result, staleData);
+        verifyNever(() => mockRemoteDataSource.getSeasonDetails(1, 1));
+      },
+    );
+
+    test('should never expire seasons of an ended series', () async {
+      stubCachedSeason(status: 'Ended', age: const Duration(days: 90));
+
+      final result = await repository.getSeasonDetails(1, 1);
+
+      expect(result, staleData);
+      verifyNever(() => mockRemoteDataSource.getSeasonDetails(1, 1));
+    });
+
+    test('should fall back to the stale copy when the network fails', () async {
+      stubCachedSeason(
+        status: 'Returning Series',
+        age: const Duration(days: 2),
+      );
+      when(
+        () => mockRemoteDataSource.getSeasonDetails(1, 1),
+      ).thenThrow(Exception('offline'));
+
+      final result = await repository.getSeasonDetails(1, 1);
+
+      expect(result, staleData);
+    });
+  });
+
   group('refreshNotificationForSeries (latest streak)', () {
     MediaItem tvItem({String? status, required List<TVSeason> seasons}) {
       return MediaItem(
@@ -652,6 +737,49 @@ void main() {
       ).called(1);
     });
 
+    test(
+      'should discover a new episode without force despite a stale season cache',
+      () async {
+        stubNotified();
+        final media = tvItem(
+          status: 'Returning Series',
+          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 5)],
+        );
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer((_) async => media);
+        when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(media);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+        // The cache only knows episode 5; episode 6 was published since.
+        when(() => mockCache.isSeasonCached(1, 4)).thenReturn(true);
+        when(
+          () => mockCache.getSeason(1, 4),
+        ).thenReturn(season([ep(5, airDate: '2024-05-01')]));
+        when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
+          (_) async => season([
+            ep(5, airDate: '2024-05-01'),
+            ep(6, airDate: '2024-06-08', runtime: 42),
+          ]),
+        );
+
+        await repository.refreshNotificationForSeries(1, MediaType.tv);
+
+        final captured = verify(
+          () => mockLocalDataSource.setNotificationEpisode(
+            1,
+            'tv',
+            seasonNumber: captureAny(named: 'seasonNumber'),
+            episodeNumber: captureAny(named: 'episodeNumber'),
+            releaseDate: any(named: 'releaseDate'),
+            runtime: any(named: 'runtime'),
+          ),
+        ).captured;
+        expect(captured, [4, 6]);
+      },
+    );
+
     test('should repopulate Quick Add for newly aired episodes', () async {
       stubNotified();
       final media = tvItem(
@@ -728,9 +856,9 @@ void main() {
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
         ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
-        when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
-          (_) async => season([ep(1, airDate: '2024-01-01')]),
-        );
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 1),
+        ).thenAnswer((_) async => season([ep(1, airDate: '2024-01-01')]));
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 2),
         ).thenThrow(Exception('season not found'));
