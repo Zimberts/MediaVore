@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
@@ -16,8 +18,43 @@ Future<void> main() async {
   runApp(const BootstrapperApp());
 }
 
+/// Startup work run by [BootstrapperApp]. Safe to call again after a failure.
+Future<void> bootstrapServices() async {
+  // A previous attempt may have failed midway: release what it opened and
+  // clear partial registrations so `init` can register everything again.
+  if (locator.isRegistered<Isar>()) {
+    final isar = locator<Isar>();
+    if (isar.isOpen) await isar.close();
+  }
+  await locator.reset();
+
+  await init(locator);
+
+  // Background sync is best-effort: a failure here must not block startup.
+  final isMobile =
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+  if (isMobile) {
+    try {
+      await BackgroundTaskService.initialize();
+      await BackgroundTaskService.registerDailySync();
+    } catch (e, stackTrace) {
+      debugPrint('Failed to init workmanager: $e');
+      debugPrint(stackTrace.toString());
+    }
+  }
+}
+
 class BootstrapperApp extends StatefulWidget {
-  const BootstrapperApp({super.key});
+  const BootstrapperApp({
+    super.key,
+    this.initializer = bootstrapServices,
+    this.app = const MediaVoreApp(),
+  });
+
+  final Future<void> Function() initializer;
+  final Widget app;
 
   @override
   State<BootstrapperApp> createState() => _BootstrapperAppState();
@@ -25,7 +62,8 @@ class BootstrapperApp extends StatefulWidget {
 
 class _BootstrapperAppState extends State<BootstrapperApp> {
   bool _isInit = false;
-  String? _error;
+  bool _isLoading = false;
+  Object? _error;
 
   @override
   void initState() {
@@ -37,70 +75,120 @@ class _BootstrapperAppState extends State<BootstrapperApp> {
   }
 
   Future<void> _initializeApp() async {
+    if (_isLoading) return;
+    _isLoading = true;
+    if (_error != null) setState(() => _error = null);
     try {
       // Yield slightly time for the UI thread to push the frame
       await Future.delayed(const Duration(milliseconds: 250));
 
-      await init(locator);
-      
-      // Setup Background Tasks (safe to call after isar is opened by locator)
-      if (Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS) {
-        try {
-          BackgroundTaskService.initialize();
-          BackgroundTaskService.registerDailySync();
-        } catch (e) {
-          debugPrint('Failed to init workmanager $e');
-        }
-      }
+      await widget.initializer();
 
       if (mounted) setState(() => _isInit = true);
     } catch (e, stackTrace) {
       debugPrint('Fatal error during initialization: $e');
       debugPrint(stackTrace.toString());
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted) setState(() => _error = e);
+    } finally {
+      _isLoading = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_error != null) {
-      return MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Text(
-                'Failed to start app:\n$_error',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    if (_isInit) return widget.app;
 
-    if (!_isInit) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(brightness: Brightness.dark),
-        home: const Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(brightness: Brightness.dark),
+      home: _error == null
+          ? const _LoadingScreen()
+          : _StartupErrorScreen(error: _error!, onRetry: _initializeApp),
+    );
+  }
+}
+
+class _LoadingScreen extends StatelessWidget {
+  const _LoadingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Colors.white),
+            SizedBox(height: 16),
+            Text('Loading MediaVore...', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StartupErrorScreen extends StatelessWidget {
+  const _StartupErrorScreen({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(color: Colors.white),
-                SizedBox(height: 16),
-                Text('Loading MediaVore...', style: TextStyle(color: Colors.white)),
+                Icon(
+                  Icons.error_outline,
+                  size: 56,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'MediaVore could not start',
+                  style: theme.textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Something went wrong while loading your data. '
+                  'Please try again.',
+                  style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                ),
+                const SizedBox(height: 16),
+                ExpansionTile(
+                  title: Text(
+                    'Technical details',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  children: [
+                    SelectableText(
+                      error.toString(),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
-      );
-    }
-
-    return const MediaVoreApp();
+      ),
+    );
   }
 }
 
