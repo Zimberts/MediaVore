@@ -548,7 +548,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
-                                  '${item.releaseDate?.isNotEmpty == true && item.releaseDate!.length >= 4 ? item.releaseDate!.substring(0, 4) : "?"} • $lengthText',
+                                  '${item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : "?"} • $lengthText',
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                 ),
@@ -688,7 +688,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            '${item.releaseDate?.isNotEmpty == true && item.releaseDate!.length >= 4 ? item.releaseDate!.substring(0, 4) : ""} • $lengthText',
+                                            '${item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : ""} • $lengthText',
                                             style: const TextStyle(
                                               color: Colors.white70,
                                               fontSize: 9,
