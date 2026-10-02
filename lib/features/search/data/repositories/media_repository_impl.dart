@@ -1042,7 +1042,8 @@ class MediaRepositoryImpl implements MediaRepository {
     int seasonNumber,
   ) async {
     await _ensureInitialized();
-    if (cache.isSeasonCached(tvId, seasonNumber)) {
+    if (cache.isSeasonCached(tvId, seasonNumber) &&
+        !_isOngoingSeasonStale(tvId, seasonNumber)) {
       return cache.getSeason(tvId, seasonNumber)!;
     }
 
@@ -1056,6 +1057,18 @@ class MediaRepositoryImpl implements MediaRepository {
     } catch (e) {
       return cache.getSeason(tvId, seasonNumber) ?? (throw e);
     }
+  }
+
+  /// Seasons of ongoing series gain episodes over time, so a cached copy older
+  /// than a day is re-fetched (the stale copy remains the offline fallback).
+  bool _isOngoingSeasonStale(int tvId, int seasonNumber) {
+    final status = cache.getItem(tvId, MediaType.tv)?.status?.toLowerCase();
+    if (status != 'returning series' && status != 'in production') {
+      return false;
+    }
+    final updatedAt = cache.getSeasonUpdateDate(tvId, seasonNumber);
+    if (updatedAt == null) return false;
+    return DateTime.now().difference(updatedAt) >= const Duration(days: 1);
   }
 
   @override
@@ -1417,7 +1430,12 @@ class MediaRepositoryImpl implements MediaRepository {
       final item = await remoteDataSource.getMediaItem(tmdbId, type: type);
       await cache.cacheItem(item);
 
-      await _refreshNotificationDate(item, forceRemoteSeasons: force);
+      // TV seasons are cached without expiry, so bypass them here (already
+      // throttled to once a day) to discover newly published episodes.
+      await _refreshNotificationDate(
+        item,
+        forceRemoteSeasons: force || type == MediaType.tv,
+      );
 
       // Keep Quick Add in sync in the same pass. populateQuickAddFromSeenHistory
       // is cache-first and reuses the seasons just fetched above, so returning
