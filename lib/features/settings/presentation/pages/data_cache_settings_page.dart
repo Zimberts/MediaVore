@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -358,8 +359,7 @@ class DataCacheSettingsPage extends StatelessWidget {
       final bytes = await file.readAsBytes();
 
       try {
-        // ignore: avoid_print
-        print('File picked, reading content');
+        debugPrint('File picked, reading content');
 
         // Use serializer to normalize and validate
         final ExportEnvelope envelope = ExportEnvelope.fromZipBytes(bytes);
@@ -370,6 +370,12 @@ class DataCacheSettingsPage extends StatelessWidget {
         final likesCount = envelope.likes.length;
         final notCount = envelope.notifications.length;
         final listsCount = envelope.lists.length;
+        final warnings = envelope.warnings;
+        final warningsText = warnings.isEmpty
+            ? ''
+            : '\n${warnings.length} invalid row(s) will be skipped:\n'
+                  '${warnings.take(5).join('\n')}'
+                  '${warnings.length > 5 ? '\n…' : ''}\n';
 
         showDialog(
           context: context,
@@ -380,7 +386,8 @@ class DataCacheSettingsPage extends StatelessWidget {
               'Seen: $seenCount\n'
               'Likes: $likesCount\n'
               'Notifications: $notCount\n'
-              'Lists: $listsCount\n\n'
+              'Lists: $listsCount\n'
+              '$warningsText\n'
               'Choose how to apply the data to your current profile.',
             ),
             actions: [
@@ -436,6 +443,12 @@ class DataCacheSettingsPage extends StatelessWidget {
             ],
           ),
         );
+      } on ParsingException catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Import failed: ${e.message}')),
+          );
+        }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

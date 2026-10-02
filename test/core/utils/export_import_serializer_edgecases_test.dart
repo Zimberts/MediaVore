@@ -90,7 +90,7 @@ void main() {
 
     test('Extra long list strings or special characters', () {
       final envelope = ExportEnvelope(
-        version: 2,
+        version: 1,
         exportedAt: DateTime.utc(2025, 1, 1),
         seen: [
           SeenItemModel(

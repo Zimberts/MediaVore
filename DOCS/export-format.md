@@ -39,13 +39,24 @@ export.mdv
   produces no CSV entry in the archive.
 - Unknown extra columns are ignored on import. Missing optional columns are
   handled gracefully.
-- Dates are ISO8601 strings; booleans are the strings `true` / `false`.
+- Dates are ISO8601 strings written in UTC with a `Z` suffix
+  (`2025-06-01T21:30:00.000Z`), so an archive denotes the same instants whatever
+  the time zone of the exporting and importing devices. Dates without an offset
+  (archives written before this rule) are read as local time of the importing
+  device.
+- Booleans are the strings `true` / `false`.
+- Free-text cells (`title`, `listName`, `posterPath`, `genres`, `source`) whose
+  first character after any leading `'` is `=`, `+`, `-`, `@`, tab or CR are
+  prefixed with one extra `'` to prevent formula injection when the file is
+  opened in a spreadsheet. The importer removes exactly that prefix.
 
 ### `meta.csv`
 
 Columns: `version`, `exportedAt`, `source`
 
-- `version` — integer, increment when breaking changes occur.
+- `version` — integer, increment when breaking changes occur. The current
+  version is `1`. An archive with a higher (or non-integer) version is rejected;
+  an archive without `meta.csv` is read as version `1`.
 - `exportedAt` — ISO8601 timestamp of the export.
 - `source` — string, optional origin.
 
@@ -102,6 +113,18 @@ Columns: `listName`, `tmdbId`, `type`, `title`, `position`
 - `type` — `movie` | `tv`.
 - `title` — string.
 - `position` — int, the intended ordering within the list (see format notes).
+
+## Validation
+
+- The archive is rejected as a whole (nothing is imported) when it is not a
+  readable ZIP, contains none of the files above, has more than 64 entries, has
+  an entry larger than 64 MiB, contains a non-UTF-8 or malformed CSV, or has an
+  unsupported `version`.
+- Individual rows are skipped, and reported as warnings in the import preview
+  (`<file> row <line>: <reason>`), when `tmdbId` is missing or not a positive
+  integer, `type` is not `movie` / `tv`, `seenDate` (seen) is missing or not a
+  date, or `listName` (lists) is empty. Blank lines are ignored.
+- Entries with unknown names are ignored.
 
 ## Import semantics
 
