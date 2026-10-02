@@ -22,6 +22,28 @@ class EpisodeRef {
 String episodeKey(int seasonNumber, int episodeNumber) =>
     '$seasonNumber:$episodeNumber';
 
+/// Keys ([episodeKey]) of the episodes present in [seen].
+///
+/// When [seenSince] is set, only entries seen at or after that instant count,
+/// which scopes the set to the viewing streak starting at [seenSince].
+/// Entries without a season/episode are ignored.
+Set<String> seenEpisodeKeys(
+  Iterable<SeenItemModel> seen, {
+  DateTime? seenSince,
+}) => {
+  for (final s in seen)
+    if (s.seasonNumber != null &&
+        s.episodeNumber != null &&
+        (seenSince == null || !s.seenDate.isBefore(seenSince)))
+      episodeKey(s.seasonNumber!, s.episodeNumber!),
+};
+
+/// Whether [episode] has a known air date that is not after [now].
+bool isAired(EpisodeRef episode, DateTime now) {
+  final airDate = episode.airDate;
+  return airDate != null && !airDate.isAfter(now);
+}
+
 /// The most recently watched episode of a series — the "tail" of the latest
 /// viewing streak.
 ///
@@ -87,7 +109,8 @@ WatchTail? findLatestTail(Iterable<SeenItemModel> seenTvItems) {
 /// skipped so the result always follows the latest watching streak rather than
 /// an older gap the user already moved past. Episodes present in
 /// [seenEpisodeKeys] (from [episodeKey]) are skipped too, since the viewer has
-/// already watched them.
+/// already watched them. When [where] is given, episodes it rejects are
+/// skipped as well.
 ///
 /// The returned episode may have a `null` [EpisodeRef.airDate] — TMDB often
 /// lists an announced episode before it has an air date, which surfaces in the
@@ -96,10 +119,12 @@ EpisodeRef? findNextEpisodeAfterTail({
   required WatchTail tail,
   required Iterable<EpisodeRef> episodes,
   required Set<String> seenEpisodeKeys,
+  bool Function(EpisodeRef episode)? where,
 }) {
   for (final episode in episodes) {
     if (episode.seasonNumber == 0) continue;
     if (!_isAfterTail(episode, tail)) continue;
+    if (where != null && !where(episode)) continue;
     if (seenEpisodeKeys.contains(
       episodeKey(episode.seasonNumber, episode.episodeNumber),
     )) {

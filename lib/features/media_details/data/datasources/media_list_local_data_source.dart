@@ -239,37 +239,24 @@ class MediaListLocalDataSource {
   Future<void> importSeenItems(
     List<SeenItemModel> items, {
     required ImportMode mode,
-  }) async {
-    if (mode == ImportMode.replace) {
-      await _isar.writeTxn(() async {
-        await _isar.seenItemModels.clear();
-      });
-    }
-
-    await _isar.writeTxn(() async {
-      if (mode == ImportMode.replace || mode == ImportMode.append) {
-        await _isar.seenItemModels.putAll(items);
-      } else if (mode == ImportMode.merge) {
-        for (final item in items) {
-          final existing = await _isar.seenItemModels
-              .filter()
-              .tmdbIdEqualTo(item.tmdbId)
-              .typeEqualTo(item.type)
-              .seasonNumberEqualTo(item.seasonNumber)
-              .episodeNumberEqualTo(item.episodeNumber)
-              .seenDateBetween(
-                item.seenDate.subtract(const Duration(seconds: 1)),
-                item.seenDate.add(const Duration(seconds: 1)),
-              )
-              .findFirst();
-
-          if (existing == null) {
-            await _isar.seenItemModels.put(item);
-          }
-        }
-      }
-    });
-  }
+  }) => _importItems(
+    _isar.seenItemModels,
+    items,
+    mode: mode,
+    // Same entry: same episode seen within a second of each other.
+    exists: (item) => _isar.seenItemModels
+        .filter()
+        .tmdbIdEqualTo(item.tmdbId)
+        .typeEqualTo(item.type)
+        .seasonNumberEqualTo(item.seasonNumber)
+        .episodeNumberEqualTo(item.episodeNumber)
+        .seenDateBetween(
+          item.seenDate.subtract(const Duration(seconds: 1)),
+          item.seenDate.add(const Duration(seconds: 1)),
+        )
+        .findFirst()
+        .then((e) => e != null),
+  );
 
   Future<int> getSeenDbSize() async {
     return await _isar.seenItemModels.getSize();
@@ -678,85 +665,39 @@ class MediaListLocalDataSource {
     List<LikedItem> items, {
     required ImportMode mode,
     Function(double progress, String status)? onProgress,
-  }) async {
-    final total = items.length;
-
-    if (mode == ImportMode.replace) {
-      await _isar.writeTxn(() async {
-        await _isar.likedItems.clear();
-      });
-    }
-
-    if (mode == ImportMode.replace || mode == ImportMode.append) {
-      for (int i = 0; i < items.length; i++) {
-        if (onProgress != null) onProgress(i / total, 'Importing likes...');
-      }
-
-      await _isar.writeTxn(() async {
-        await _isar.likedItems.putAll(items);
-      });
-    } else if (mode == ImportMode.merge) {
-      for (int i = 0; i < items.length; i++) {
-        final item = items[i];
-        if (onProgress != null) {
-          onProgress(i / total, 'Processing like ${i + 1}');
-        }
-        final existing = await _isar.likedItems
-            .filter()
-            .tmdbIdEqualTo(item.tmdbId)
-            .typeEqualTo(item.type)
-            .findFirst();
-        if (existing == null) {
-          await _isar.writeTxn(() async {
-            await _isar.likedItems.put(item);
-          });
-        }
-      }
-    }
-  }
+  }) => _importItems(
+    _isar.likedItems,
+    items,
+    mode: mode,
+    onProgress: onProgress,
+    writeStatus: 'Importing likes...',
+    mergeStatus: (i) => 'Processing like $i',
+    exists: (item) => _isar.likedItems
+        .filter()
+        .tmdbIdEqualTo(item.tmdbId)
+        .typeEqualTo(item.type)
+        .findFirst()
+        .then((e) => e != null),
+  );
 
   Future<void> importNotifiedItems(
     List<NotifiedItemModel> items, {
     required ImportMode mode,
     Function(double progress, String status)? onProgress,
-  }) async {
-    final total = items.length;
-
-    if (mode == ImportMode.replace) {
-      await _isar.writeTxn(() async {
-        await _isar.notifiedItemModels.clear();
-      });
-    }
-
-    if (mode == ImportMode.replace || mode == ImportMode.append) {
-      for (int i = 0; i < items.length; i++) {
-        if (onProgress != null) {
-          onProgress(i / total, 'Importing notifications...');
-        }
-      }
-
-      await _isar.writeTxn(() async {
-        await _isar.notifiedItemModels.putAll(items);
-      });
-    } else if (mode == ImportMode.merge) {
-      for (int i = 0; i < items.length; i++) {
-        final item = items[i];
-        if (onProgress != null) {
-          onProgress(i / total, 'Processing notification ${i + 1}');
-        }
-        final existing = await _isar.notifiedItemModels
-            .filter()
-            .tmdbIdEqualTo(item.tmdbId)
-            .typeEqualTo(item.type)
-            .findFirst();
-        if (existing == null) {
-          await _isar.writeTxn(() async {
-            await _isar.notifiedItemModels.put(item);
-          });
-        }
-      }
-    }
-  }
+  }) => _importItems(
+    _isar.notifiedItemModels,
+    items,
+    mode: mode,
+    onProgress: onProgress,
+    writeStatus: 'Importing notifications...',
+    mergeStatus: (i) => 'Processing notification $i',
+    exists: (item) => _isar.notifiedItemModels
+        .filter()
+        .tmdbIdEqualTo(item.tmdbId)
+        .typeEqualTo(item.type)
+        .findFirst()
+        .then((e) => e != null),
+  );
 
   Future<void> importListsData(
     Map<String, List<MediaListItem>> lists, {
@@ -799,41 +740,62 @@ class MediaListLocalDataSource {
     List<QuickAddItemModel> items, {
     required ImportMode mode,
     Function(double progress, String status)? onProgress,
+  }) => _importItems(
+    _isar.quickAddItemModels,
+    items,
+    mode: mode,
+    onProgress: onProgress,
+    writeStatus: 'Importing quick add...',
+    mergeStatus: (i) => 'Processing quick add $i',
+    exists: (item) => _isar.quickAddItemModels
+        .filter()
+        .tmdbIdEqualTo(item.tmdbId)
+        .seasonNumberEqualTo(item.seasonNumber)
+        .episodeNumberEqualTo(item.episodeNumber)
+        .findFirst()
+        .then((e) => e != null),
+  );
+
+  /// Shared replace / append / merge import into [collection].
+  ///
+  /// - [ImportMode.replace] clears the collection, then writes every item.
+  /// - [ImportMode.append] writes every item.
+  /// - [ImportMode.merge] writes only items for which [exists] is `false`.
+  ///   Items are checked inside the write transaction, so duplicates within
+  ///   [items] are also written once.
+  ///
+  /// [writeStatus] / [mergeStatus] (1-based index) label [onProgress] updates.
+  Future<void> _importItems<T>(
+    IsarCollection<T> collection,
+    List<T> items, {
+    required ImportMode mode,
+    required Future<bool> Function(T item) exists,
+    Function(double progress, String status)? onProgress,
+    String writeStatus = 'Importing...',
+    String Function(int index)? mergeStatus,
   }) async {
     final total = items.length;
 
     if (mode == ImportMode.replace) {
-      await _isar.writeTxn(() async {
-        await _isar.quickAddItemModels.clear();
-      });
+      await _isar.writeTxn(() => collection.clear());
     }
 
     if (mode == ImportMode.replace || mode == ImportMode.append) {
-      for (int i = 0; i < items.length; i++) {
-        if (onProgress != null) onProgress(i / total, 'Importing quick add...');
+      for (int i = 0; i < total; i++) {
+        onProgress?.call(i / total, writeStatus);
       }
-
-      await _isar.writeTxn(() async {
-        await _isar.quickAddItemModels.putAll(items);
-      });
-    } else if (mode == ImportMode.merge) {
-      for (int i = 0; i < items.length; i++) {
-        final item = items[i];
-        if (onProgress != null) {
-          onProgress(i / total, 'Processing quick add ${i + 1}');
-        }
-        final existing = await _isar.quickAddItemModels
-            .filter()
-            .tmdbIdEqualTo(item.tmdbId)
-            .seasonNumberEqualTo(item.seasonNumber)
-            .episodeNumberEqualTo(item.episodeNumber)
-            .findFirst();
-        if (existing == null) {
-          await _isar.writeTxn(() async {
-            await _isar.quickAddItemModels.put(item);
-          });
-        }
-      }
+      await _isar.writeTxn(() => collection.putAll(items));
+      return;
     }
+
+    await _isar.writeTxn(() async {
+      for (int i = 0; i < total; i++) {
+        final item = items[i];
+        onProgress?.call(i / total, mergeStatus?.call(i + 1) ?? writeStatus);
+        if (!await exists(item)) {
+          await collection.put(item);
+        }
+      }
+    });
   }
 }

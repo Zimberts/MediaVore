@@ -728,9 +728,9 @@ void main() {
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
         ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
-        when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
-          (_) async => season([ep(1, airDate: '2024-01-01')]),
-        );
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 1),
+        ).thenAnswer((_) async => season([ep(1, airDate: '2024-01-01')]));
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 2),
         ).thenThrow(Exception('season not found'));
@@ -841,5 +841,179 @@ void main() {
         );
       },
     );
+  });
+
+  group('markAsSeen next Quick Add', () {
+    const show = MediaItem(
+      id: 1,
+      title: 'Show',
+      overview: '',
+      releaseDate: '2020-01-01',
+      mediaType: MediaType.tv,
+      posterPath: '/show.jpg',
+      seasons: [
+        TVSeason(id: 1, seasonNumber: 1, episodeCount: 4),
+        TVSeason(id: 2, seasonNumber: 2, episodeCount: 2),
+      ],
+    );
+    final markedAt = DateTime(2024, 6, 1, 20);
+    final future = DateTime.now().add(const Duration(days: 30));
+    String day(DateTime d) => d.toIso8601String().substring(0, 10);
+
+    Map<String, dynamic> ep(int n, {String? airDate, int? runtime}) => {
+      'episode_number': n,
+      'air_date': airDate,
+      'runtime': runtime,
+    };
+
+    SeenItemModel seen(int season, int episode, DateTime date) => SeenItemModel(
+      tmdbId: 1,
+      type: 'tv',
+      title: 'Show',
+      seenDate: date,
+      seasonNumber: season,
+      episodeNumber: episode,
+    );
+
+    SeenItem marked(int season, int episode) => SeenItem(
+      tmdbId: 1,
+      type: MediaType.tv,
+      title: 'Show',
+      seenDate: markedAt,
+      seasonNumber: season,
+      episodeNumber: episode,
+      runtime: 45,
+      genres: const ['Drama'],
+    );
+
+    void stubShow({
+      required List<SeenItemModel> seenItems,
+      required Map<int, List<Map<String, dynamic>>> seasons,
+      bool optedOut = false,
+    }) {
+      when(
+        () => mockLocalDataSource.markAsSeen(any()),
+      ).thenAnswer((_) async {});
+      when(() => mockCache.getItem(1, MediaType.tv)).thenReturn(show);
+      when(
+        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+      ).thenAnswer((_) async => seenItems);
+      when(
+        () => mockLocalDataSource.removeQuickAddItemByTmdbSeasonEpisode(
+          any(),
+          seasonNumber: any(named: 'seasonNumber'),
+          episodeNumber: any(named: 'episodeNumber'),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.isOptedOut(
+          any(),
+          seasonNumber: any(named: 'seasonNumber'),
+          episodeNumber: any(named: 'episodeNumber'),
+        ),
+      ).thenAnswer((_) async => optedOut);
+      when(
+        () => mockLocalDataSource.addQuickAddItem(any()),
+      ).thenAnswer((_) async {});
+      for (final entry in seasons.entries) {
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, entry.key),
+        ).thenAnswer((_) async => {'episodes': entry.value});
+      }
+    }
+
+    test(
+      'should queue the next episode of the streak, skipping ones seen after it',
+      () async {
+        stubShow(
+          seenItems: [
+            seen(1, 1, markedAt),
+            // Seen after the mark: part of this streak, so skipped.
+            seen(1, 2, markedAt.add(const Duration(hours: 1))),
+            // Seen before the mark (older viewing): still proposed.
+            seen(1, 3, DateTime(2024, 1, 1)),
+          ],
+          seasons: {
+            1: [
+              ep(1, airDate: '2024-01-01'),
+              ep(2, airDate: '2024-01-08'),
+              ep(3, airDate: '2024-01-15', runtime: 47),
+              ep(4, airDate: '2024-01-22'),
+            ],
+          },
+        );
+
+        await repository.markAsSeen(marked(1, 1));
+
+        final captured = verify(
+          () => mockLocalDataSource.addQuickAddItem(captureAny()),
+        ).captured;
+        expect(captured, hasLength(1));
+        final quick = captured.single as QuickAddItemModel;
+        expect((quick.seasonNumber, quick.episodeNumber), (1, 3));
+        expect(quick.airDate, DateTime(2024, 1, 15));
+        expect(quick.runtime, 47);
+        expect(quick.insertedAt, markedAt);
+        expect(quick.title, 'Show');
+        expect(quick.posterPath, '/show.jpg');
+        verify(
+          () => mockLocalDataSource.removeQuickAddItemByTmdbSeasonEpisode(
+            1,
+            seasonNumber: 1,
+            episodeNumber: 1,
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'should skip episodes without air date or airing in the future',
+      () async {
+        stubShow(
+          seenItems: [
+            seen(1, 1, markedAt),
+            seen(2, 2, markedAt.add(const Duration(days: 1))),
+          ],
+          seasons: {
+            1: [
+              ep(1, airDate: '2024-01-01'),
+              ep(2),
+              ep(3, airDate: day(future)),
+            ],
+            2: [ep(1, airDate: '2024-03-01'), ep(2, airDate: '2024-03-08')],
+          },
+        );
+
+        await repository.markAsSeen(marked(1, 1));
+
+        final quick =
+            verify(
+                  () => mockLocalDataSource.addQuickAddItem(captureAny()),
+                ).captured.single
+                as QuickAddItemModel;
+        expect((quick.seasonNumber, quick.episodeNumber), (2, 1));
+      },
+    );
+
+    test('should not queue an episode the user opted out of', () async {
+      stubShow(
+        seenItems: [seen(1, 1, markedAt)],
+        seasons: {
+          1: [ep(1, airDate: '2024-01-01'), ep(2, airDate: '2024-01-08')],
+        },
+        optedOut: true,
+      );
+
+      await repository.markAsSeen(marked(1, 1));
+
+      verify(
+        () => mockLocalDataSource.isOptedOut(
+          1,
+          seasonNumber: 1,
+          episodeNumber: 2,
+        ),
+      ).called(1);
+      verifyNever(() => mockLocalDataSource.addQuickAddItem(any()));
+    });
   });
 }
