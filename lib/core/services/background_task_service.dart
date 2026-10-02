@@ -125,15 +125,19 @@ void callbackDispatcher() {
 }
 
 class BackgroundTaskService {
-  static void initialize() {
-    Workmanager().initialize(callbackDispatcher);
+  static Future<void> initialize() {
+    return Workmanager().initialize(callbackDispatcher);
   }
 
-  static void registerDailySync() {
-    Workmanager().registerPeriodicTask(
+  /// Idempotent: `update` keeps the already-enqueued periodic work (and its
+  /// schedule) instead of re-enqueuing it on every launch, while still
+  /// applying any change to its configuration.
+  static Future<void> registerDailySync() {
+    return Workmanager().registerPeriodicTask(
       fetchTaskIdentifier,
       fetchTask,
       frequency: const Duration(days: 1),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
       constraints: Constraints(
         networkType: NetworkType.connected, // Only run on wifi/data
       ),
