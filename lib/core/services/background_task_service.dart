@@ -72,26 +72,11 @@ void callbackDispatcher() {
               );
               if (cacheDate == null) continue;
 
+              // Weekly shows publish at any time, so refresh once a day
+              // instead of guessing the air weekday.
               final age = DateTime.now().difference(cacheDate).inDays;
-              bool shouldUpdate = false;
 
-              if (age > 7) {
-                if (mediaItem.lastEpisodeAirDate != null &&
-                    mediaItem.lastEpisodeAirDate!.isNotEmpty) {
-                  try {
-                    final lastAir = DateTime.parse(
-                      mediaItem.lastEpisodeAirDate!,
-                    );
-                    if (lastAir.weekday == DateTime.now().weekday) {
-                      shouldUpdate = true;
-                    }
-                  } catch (_) {}
-                }
-              } else if (age >= 1) {
-                shouldUpdate = true;
-              }
-
-              if (shouldUpdate) {
+              if (age >= 1) {
                 debugPrint("Daily sync refreshing returning series: $tmdbId");
                 await repo.refreshReturningSeries(tmdbId);
               }

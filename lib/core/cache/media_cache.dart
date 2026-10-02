@@ -271,6 +271,15 @@ class MediaCache {
   bool isSeasonCached(int tvId, int seasonNumber) =>
       _seasonCache.containsKey(_getSeasonKey(tvId, seasonNumber));
 
+  DateTime? getSeasonUpdateDate(int tvId, int seasonNumber) {
+    return _isar.cachedSeasons
+        .filter()
+        .tvIdEqualTo(tvId)
+        .seasonNumberEqualTo(seasonNumber)
+        .findFirstSync()
+        ?.updatedAt;
+  }
+
   DateTime? getCacheUpdateDate(int tmdbId, MediaType type) {
     final cachedRecord = _isar.cachedMedias
         .where()
