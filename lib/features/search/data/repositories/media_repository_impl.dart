@@ -161,9 +161,7 @@ class MediaRepositoryImpl implements MediaRepository {
         language: language,
         type: type,
       );
-      for (final item in results) {
-        await cache.cacheItem(item);
-      }
+      await cache.cacheItems(results);
       return results;
     } catch (e) {
       debugPrint('[Repo] searchMedia error: $e');
@@ -192,9 +190,7 @@ class MediaRepositoryImpl implements MediaRepository {
         type: type,
         sortBy: sortBy,
       );
-      for (final item in results) {
-        await cache.cacheItem(item);
-      }
+      await cache.cacheItems(results);
       return results;
     } catch (e) {
       debugPrint('[Repo] discoverMedia error: $e');
@@ -209,9 +205,8 @@ class MediaRepositoryImpl implements MediaRepository {
   }) async {
     await _ensureInitialized();
 
-    if (cache.areDetailsCached(id, type)) {
-      return cache.getDetails(id, type)!;
-    }
+    final cachedDetails = await cache.getDetails(id, type);
+    if (cachedDetails != null) return cachedDetails;
 
     final itemFuture = remoteDataSource.getMediaItem(id, type: type);
     final creditsFuture = remoteDataSource.getMediaCredits(id, type: type);
@@ -444,7 +439,7 @@ class MediaRepositoryImpl implements MediaRepository {
   /// Callers that need freshly aired episodes force the *season* fetch instead
   /// (see `_seasonDetailsForRefresh`); the item itself is acceptable from cache.
   Future<MediaItem?> _detailsItemWithSeasons(MediaItem item) async {
-    final cached = cache.getItem(item.id, MediaType.tv);
+    final cached = await cache.getItem(item.id, MediaType.tv);
     if (cached?.seasons != null) return cached;
 
     try {
@@ -671,17 +666,22 @@ class MediaRepositoryImpl implements MediaRepository {
     int limit = 4,
   }) async {
     await _ensureInitialized();
-    final items = await localDataSource.getListItems(listName);
-    return items.take(limit).map((item) {
-      final type = item.type == 'movie' ? MediaType.movie : MediaType.tv;
-      final cachedItem = cache.getItem(item.id, type);
-      return MediaItemPreview(
-        id: item.id,
-        title: item.title,
-        posterPath: cachedItem?.posterPath,
-        type: item.type,
-      );
-    }).toList();
+    final items = (await localDataSource.getListItems(
+      listName,
+    )).take(limit).toList();
+    final cachedItems = await cache.getItems([
+      for (final item in items)
+        (item.id, item.type == 'movie' ? MediaType.movie : MediaType.tv),
+    ]);
+    return [
+      for (var i = 0; i < items.length; i++)
+        MediaItemPreview(
+          id: items[i].id,
+          title: items[i].title,
+          posterPath: cachedItems[i]?.posterPath,
+          type: items[i].type,
+        ),
+    ];
   }
 
   @override
@@ -756,7 +756,7 @@ class MediaRepositoryImpl implements MediaRepository {
         // compute next unseen episode starting after the one just marked
         final seen = await localDataSource.getSeenStatus(item.tmdbId, 'tv');
 
-        MediaItem? detailsItem = cache.getItem(item.tmdbId, MediaType.tv);
+        MediaItem? detailsItem = await cache.getItem(item.tmdbId, MediaType.tv);
         if (detailsItem == null) {
           try {
             detailsItem = await remoteDataSource.getMediaItem(
@@ -908,7 +908,7 @@ class MediaRepositoryImpl implements MediaRepository {
     MediaType type,
   ) async {
     try {
-      final item = cache.getItem(tmdbId, type);
+      final item = await cache.getItem(tmdbId, type);
       if (item != null) {
         await _refreshNotificationDate(item);
       } else {
@@ -971,11 +971,24 @@ class MediaRepositoryImpl implements MediaRepository {
     final items = await localDataSource.getAllSeenItems();
     final List<SeenItem> results = [];
 
+    // Only rows without a stored poster need the cache: one batched read.
+    final missingPoster = items.where((m) => m.posterPath == null).toList();
+    final cachedPosters = <String, String?>{};
+    if (missingPoster.isNotEmpty) {
+      final cached = await cache.getItems([
+        for (final m in missingPoster)
+          (m.tmdbId, m.type == 'movie' ? MediaType.movie : MediaType.tv),
+      ]);
+      for (var i = 0; i < missingPoster.length; i++) {
+        final m = missingPoster[i];
+        cachedPosters['${m.type}:${m.tmdbId}'] = cached[i]?.posterPath;
+      }
+    }
+
     for (final m in items) {
       final type = m.type == 'movie' ? MediaType.movie : MediaType.tv;
-      final cachedItem = cache.getItem(m.tmdbId, type);
       String? posterPath = m.posterPath;
-      final cachedPoster = cachedItem?.posterPath;
+      final cachedPoster = cachedPosters['${m.type}:${m.tmdbId}'];
 
       if (posterPath == null && cachedPoster != null) {
         posterPath = cachedPoster;
@@ -1006,7 +1019,7 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<SeenItem>> getSeenStatus(int tmdbId, MediaType type) async {
     await _ensureInitialized();
     final items = await localDataSource.getSeenStatus(tmdbId, type.name);
-    final cachedItem = cache.getItem(tmdbId, type);
+    final cachedItem = await cache.getItem(tmdbId, type);
 
     final List<SeenItem> results = [];
     for (final m in items) {
@@ -1042,9 +1055,8 @@ class MediaRepositoryImpl implements MediaRepository {
     int seasonNumber,
   ) async {
     await _ensureInitialized();
-    if (cache.isSeasonCached(tvId, seasonNumber)) {
-      return cache.getSeason(tvId, seasonNumber)!;
-    }
+    final cachedSeason = await cache.getSeason(tvId, seasonNumber);
+    if (cachedSeason != null) return cachedSeason;
 
     try {
       final details = await remoteDataSource.getSeasonDetails(
@@ -1054,7 +1066,7 @@ class MediaRepositoryImpl implements MediaRepository {
       await cache.cacheSeason(tvId, seasonNumber, details);
       return details;
     } catch (e) {
-      return cache.getSeason(tvId, seasonNumber) ?? (throw e);
+      return await cache.getSeason(tvId, seasonNumber) ?? (throw e);
     }
   }
 
@@ -1421,9 +1433,7 @@ class MediaRepositoryImpl implements MediaRepository {
     await _ensureInitialized();
     try {
       final results = await remoteDataSource.getSimilarMedia(id, type);
-      for (final item in results) {
-        await cache.cacheItem(item);
-      }
+      await cache.cacheItems(results);
       return results;
     } catch (e) {
       debugPrint('[Repo] getSimilarMedia error: $e');
@@ -1436,9 +1446,7 @@ class MediaRepositoryImpl implements MediaRepository {
     await _ensureInitialized();
     try {
       final results = await remoteDataSource.getRecommendedMedia(id, type);
-      for (final item in results) {
-        await cache.cacheItem(item);
-      }
+      await cache.cacheItems(results);
       return results;
     } catch (e) {
       debugPrint('[Repo] getRecommendedMedia error: $e');
@@ -1518,7 +1526,7 @@ class MediaRepositoryImpl implements MediaRepository {
         final seen = await localDataSource.getSeenStatus(tmdbId, 'tv');
         if (seen.isEmpty) continue;
 
-        MediaItem? resolved = cache.getItem(tmdbId, MediaType.tv);
+        MediaItem? resolved = await cache.getItem(tmdbId, MediaType.tv);
         if (resolved?.seasons == null && allowFetch) {
           try {
             resolved = await remoteDataSource.getMediaItem(
@@ -1571,7 +1579,10 @@ class MediaRepositoryImpl implements MediaRepository {
           if (seasonMemo.containsKey(seasonNumber)) {
             return seasonMemo[seasonNumber];
           }
-          Map<String, dynamic>? data = cache.getSeason(tmdbId, seasonNumber);
+          Map<String, dynamic>? data = await cache.getSeason(
+            tmdbId,
+            seasonNumber,
+          );
           if (data == null && allowFetch) {
             try {
               data = await getSeasonDetails(tmdbId, seasonNumber);
@@ -1932,7 +1943,7 @@ class MediaRepositoryImpl implements MediaRepository {
       for (final tmdbId in tvIds) {
         final seen = await localDataSource.getSeenStatus(tmdbId, 'tv');
 
-        MediaItem? detailsItem = cache.getItem(tmdbId, MediaType.tv);
+        MediaItem? detailsItem = await cache.getItem(tmdbId, MediaType.tv);
         if (detailsItem == null) {
           try {
             detailsItem = await remoteDataSource.getMediaItem(
