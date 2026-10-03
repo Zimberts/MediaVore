@@ -34,8 +34,7 @@ class TopScrimGradient extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = color ?? Theme.of(context).scaffoldBackgroundColor;
-    final scrimHeight =
-        height ?? (MediaQuery.of(context).padding.top + 120.0);
+    final scrimHeight = height ?? (MediaQuery.of(context).padding.top + 120.0);
 
     return IgnorePointer(
       child: Align(
