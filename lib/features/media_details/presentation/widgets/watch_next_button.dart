@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -77,7 +78,10 @@ class _WatchNextButtonState extends State<WatchNextButton> {
         onPressed: _markNextAsSeen,
         icon: const Icon(Icons.play_arrow),
         label: Text(
-          'Watch Next: S${_nextEpisode!.seasonNumber} E${_nextEpisode!.episodeNumber}',
+          context.l10n.watchNext(
+            _nextEpisode!.seasonNumber,
+            _nextEpisode!.episodeNumber,
+          ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,

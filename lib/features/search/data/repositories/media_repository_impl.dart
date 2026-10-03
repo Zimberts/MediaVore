@@ -9,6 +9,8 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
@@ -127,6 +129,11 @@ class MediaRepositoryImpl implements MediaRepository {
       unawaited(_runWarmup());
     }
   }
+
+  /// Strings for progress messages, in the current app language.
+  AppLocalizations get _l10n => lookupAppLocalizations(
+    (localeService?.current ?? fallbackAppLanguage).locale,
+  );
 
   /// Title of a saved entry in the current language: the cached TMDB title
   /// when available, else the one stored when it was saved.
@@ -1266,7 +1273,7 @@ class MediaRepositoryImpl implements MediaRepository {
       final title = model.title;
 
       if (onProgress != null) {
-        onProgress(i / total, 'Processing $title...');
+        onProgress(i / total, _l10n.progressProcessingItem(title));
       }
 
       if (runtime == null || genres == null) {
@@ -1352,7 +1359,7 @@ class MediaRepositoryImpl implements MediaRepository {
       onProgress: (p, s) => onProgress?.call(p * 0.9, s),
     );
 
-    onProgress?.call(0.9, 'Saving entries...');
+    onProgress?.call(0.9, _l10n.progressSavingEntries);
     await localDataSource.importAll(
       mode: mode,
       seen: seenItems,
@@ -1361,7 +1368,7 @@ class MediaRepositoryImpl implements MediaRepository {
       quickAdd: envelope.quickAdd,
       lists: envelope.lists,
     );
-    onProgress?.call(1.0, 'Import complete');
+    onProgress?.call(1.0, _l10n.progressImportComplete);
   }
 
   @override

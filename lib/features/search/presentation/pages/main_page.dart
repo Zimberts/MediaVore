@@ -445,7 +445,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                           ),
                         ),
                         Text(
-                          widget.achievement.title,
+                          widget.achievement.titleFor(context.l10n.localeName),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,

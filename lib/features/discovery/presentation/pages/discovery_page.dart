@@ -114,7 +114,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           }
 
           return AlertDialog(
-            title: const Text('Discovery Filters'),
+            title: Text(context.l10n.discoveryFiltersTitle),
             content: SizedBox(
               width: double.maxFinite,
               child: SingleChildScrollView(
@@ -122,22 +122,25 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Media Type',
+                    Text(
+                      context.l10n.seenMediaType,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     DropdownButton<MediaType?>(
                       value: selectedType,
                       isExpanded: true,
-                      items: const [
-                        DropdownMenuItem(value: null, child: Text('Both')),
+                      items: [
+                        DropdownMenuItem(
+                          value: null,
+                          child: Text(context.l10n.discoveryBoth),
+                        ),
                         DropdownMenuItem(
                           value: MediaType.movie,
-                          child: Text('Movies'),
+                          child: Text(context.l10n.commonMovies),
                         ),
                         DropdownMenuItem(
                           value: MediaType.tv,
-                          child: Text('TV Shows'),
+                          child: Text(context.l10n.commonTvShows),
                         ),
                       ],
                       onChanged: (v) {
@@ -148,8 +151,8 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Release Year',
+                    Text(
+                      context.l10n.discoveryReleaseYear,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
@@ -163,7 +166,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                             return Padding(
                               padding: const EdgeInsets.only(right: 8.0),
                               child: ChoiceChip(
-                                label: const Text('Any'),
+                                label: Text(context.l10n.discoveryAnyYear),
                                 selected: selectedYear == null,
                                 onSelected: (selected) {
                                   if (selected) {
@@ -191,7 +194,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                     ),
                     const Divider(),
                     Text(
-                      'Min Rating: ${selectedRating.toStringAsFixed(1)}',
+                      context.l10n.discoveryMinRating(
+                        selectedRating.toStringAsFixed(1),
+                      ),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Slider(
@@ -204,8 +209,8 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                           setDialogState(() => selectedRating = v),
                     ),
                     const Divider(),
-                    const Text(
-                      'Genres',
+                    Text(
+                      context.l10n.discoveryGenres,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
@@ -215,7 +220,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                         final isSelected = selectedGenres.contains(entry.key);
                         return FilterChip(
                           label: Text(
-                            entry.value,
+                            GenreUtils.localizedName(context.l10n, entry.key),
                             style: const TextStyle(fontSize: 12),
                           ),
                           selected: isSelected,
@@ -245,11 +250,11 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                     selectedRating = 0.0;
                   });
                 },
-                child: const Text('Reset'),
+                child: Text(context.l10n.discoveryReset),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
+                child: Text(context.l10n.commonCancel),
               ),
               TextButton(
                 onPressed: () {
@@ -262,7 +267,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                   _refreshDiscovery();
                   Navigator.pop(ctx);
                 },
-                child: const Text('Apply'),
+                child: Text(context.l10n.discoveryApply),
               ),
             ],
           );
@@ -282,8 +287,8 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Display Options',
+                Text(
+                  context.l10n.listsDisplayOptions,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
@@ -310,8 +315,8 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 ),
                 if (settings.displayMode == DisplayMode.grid) ...[
                   const SizedBox(height: 24),
-                  const Text(
-                    'Grid Size',
+                  Text(
+                    context.l10n.listsGridSize,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Row(
@@ -390,7 +395,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
               ElevatedButton.icon(
                 key: const Key('discovery_retry'),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(context.l10n.commonRetry),
                 onPressed: () => _refreshDiscovery(),
               ),
           ],
@@ -409,7 +414,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
       child: TextButton.icon(
         key: const Key('discovery_retry_next_page'),
         icon: const Icon(Icons.refresh),
-        label: const Text('Retry'),
+        label: Text(context.l10n.commonRetry),
         onPressed: provider.retryNextPage,
       ),
     );
@@ -427,13 +432,13 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 controller: _controller,
                 autofocus: true,
                 focusNode: _searchFocusNode,
-                decoration: const InputDecoration(
-                  hintText: 'Search within Discovery...',
+                decoration: InputDecoration(
+                  hintText: context.l10n.discoverySearchHint,
                   border: InputBorder.none,
                 ),
                 onChanged: _onSearchChanged,
               )
-            : const Text('Discover'),
+            : Text(context.l10n.discoveryTitle),
         actions: [
           IconButton(
             icon: Icon(_showSearch ? Icons.close : Icons.search),
@@ -454,7 +459,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                   : Icons.list,
             ),
             onPressed: _showDisplayModePicker,
-            tooltip: 'Display Mode',
+            tooltip: context.l10n.listsDisplayMode,
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
@@ -479,7 +484,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('No results found'),
+                  Text(context.l10n.discoveryNoResults),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
@@ -487,7 +492,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                       _controller.clear();
                       _refreshDiscovery();
                     },
-                    child: const Text('Clear Filters'),
+                    child: Text(context.l10n.discoveryClearFilters),
                   ),
                 ],
               ),
@@ -519,9 +524,15 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
                       String lengthText = '';
                       if (item.mediaType == MediaType.tv) {
-                        lengthText = '${item.numberOfSeasons ?? "?"} seasons';
+                        lengthText = (item.numberOfSeasons == null
+                            ? '?'
+                            : context.l10n.mediaSeasonCount(
+                                item.numberOfSeasons!,
+                              ));
                       } else if (item.runtime != null) {
-                        lengthText = '${item.runtime} min';
+                        lengthText = context.l10n.mediaRuntimeMinutes(
+                          item.runtime!,
+                        );
                       }
 
                       return InkWell(
@@ -674,7 +685,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
                       String lengthText = '';
                       if (item.mediaType == MediaType.tv) {
-                        lengthText = '${item.numberOfSeasons ?? "?"} S';
+                        lengthText = context.l10n.mediaSeasonShort(
+                          '${item.numberOfSeasons ?? "?"}',
+                        );
                       } else if (item.runtime != null) {
                         lengthText = '${item.runtime}m';
                       }

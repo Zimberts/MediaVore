@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
@@ -200,6 +201,16 @@ class _MediaVoreAppState extends State<MediaVoreApp>
           supportedLocales: _supportedLocales,
           locale: settings.locale,
           localeListResolutionCallback: _resolveLocale,
+          // Keeps `intl` formatting (DateFormat, NumberFormat) on the app
+          // language.
+          builder: (context, child) => Builder(
+            builder: (context) {
+              Intl.defaultLocale = Localizations.localeOf(
+                context,
+              ).toLanguageTag();
+              return child!;
+            },
+          ),
           theme: settings.lightPalette.toThemeData(),
           darkTheme: settings.darkPalette.toThemeData(),
           themeMode: settings.themeMode,

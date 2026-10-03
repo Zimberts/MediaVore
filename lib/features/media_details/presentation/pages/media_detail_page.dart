@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -198,7 +199,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
           _expandedSeason = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot load season details while offline.')),
+          SnackBar(content: Text(context.l10n.detailOfflineSeason)),
         );
       }
     }
@@ -229,7 +230,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
     if (data.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No history to export for this item.')),
+          SnackBar(content: Text(context.l10n.detailNoHistoryToExport)),
         );
       }
       return;
@@ -247,7 +248,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.save_alt),
-                title: const Text('Save to device'),
+                title: Text(context.l10n.dataSaveToDevice),
                 onTap: () async {
                   Navigator.pop(context);
                   await _saveFileToDevice(context, jsonString, fileName);
@@ -255,7 +256,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
               ),
               ListTile(
                 leading: const Icon(Icons.share),
-                title: const Text('Share via System'),
+                title: Text(context.l10n.dataShareViaSystem),
                 onTap: () async {
                   Navigator.pop(context);
                   final tempDir = await getTemporaryDirectory();
@@ -263,7 +264,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                   await tempFile.writeAsString(jsonString);
                   await Share.shareXFiles(
                     [XFile(tempFile.path, mimeType: 'application/json')],
-                    text: 'Seen history for ${widget.item.title}',
+                    text: context.l10n.detailHistoryShareText(widget.item.title),
                   );
                 },
               ),
@@ -278,7 +279,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
     try {
       final bytes = utf8.encode(jsonString);
       final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save History',
+        dialogTitle: context.l10n.detailSaveHistoryDialog,
         fileName: fileName,
         initialDirectory: '/storage/emulated/0/Download/MediaVore',
         bytes: bytes,
@@ -286,13 +287,13 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
 
       if (result != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File saved successfully')),
+          SnackBar(content: Text(context.l10n.dataFileSaved)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Save failed: $e')),
+          SnackBar(content: Text(context.l10n.detailSaveFailed('$e'))),
         );
       }
     }
@@ -320,7 +321,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
     final itemToDisplay = _mediaDetails?.item ?? widget.item;
     final colors = context.appColors;
 
-    final String directorLabel = itemToDisplay.mediaType == MediaType.tv ? 'Creator' : 'Director';
+    final String directorLabel = itemToDisplay.mediaType == MediaType.tv ? context.l10n.detailCreator : context.l10n.detailDirector;
 
     final int uniqueEpisodesSeenTotal = _seenStatus
         .where((s) => s.seasonNumber != null && s.episodeNumber != null)
@@ -346,7 +347,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
               IconButton(
                 icon: const Icon(Icons.file_upload_outlined),
                 onPressed: _exportHistory,
-                tooltip: 'Export history for this item',
+                tooltip: context.l10n.detailExportHistory,
               ),
               if (itemToDisplay.mediaType == MediaType.movie)
                 SeenManager(
@@ -444,7 +445,10 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Progress: $uniqueEpisodesSeenTotal / ${itemToDisplay.numberOfEpisodes} episodes seen',
+                        context.l10n.detailProgress(
+                          uniqueEpisodesSeenTotal,
+                          itemToDisplay.numberOfEpisodes!,
+                        ),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colors.onWatchlist, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
@@ -464,11 +468,11 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                             Icon(Icons.cloud_off, size: 48, color: colors.warning),
                             const SizedBox(height: 8),
                             Text(
-                              'Offline Mode',
+                              context.l10n.detailOfflineMode,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             Text(
-                              'Detailed information is unavailable without internet.',
+                              context.l10n.detailOfflineMessage,
                               textAlign: TextAlign.center,
                               style: TextStyle(color: colors.comments),
                             ),
@@ -476,7 +480,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                             ElevatedButton.icon(
                               onPressed: _fetchMediaDetails,
                               icon: const Icon(Icons.refresh),
-                              label: const Text('Try Again'),
+                              label: Text(context.l10n.commonTryAgain),
                             ),
                           ],
                         ),
@@ -488,13 +492,13 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         children: [
                           _SearchIconText(icon: Icons.calendar_today, text: itemToDisplay.releaseDate),
                           if (itemToDisplay.status != null)
-                            _SearchIconText(icon: Icons.info_outline, text: itemToDisplay.status!),
+                            _SearchIconText(icon: Icons.info_outline, text: localizedMediaStatus(context.l10n, itemToDisplay.status!)),
                           if (itemToDisplay.runtime != null)
                             _SearchIconText(icon: Icons.access_time, text: Formatters.formatRuntime(itemToDisplay.runtime)),
                           if (itemToDisplay.mediaType == MediaType.tv && itemToDisplay.numberOfSeasons != null)
-                            _SearchIconText(icon: Icons.tv, text: '${itemToDisplay.numberOfSeasons} Seasons'),
+                            _SearchIconText(icon: Icons.tv, text: context.l10n.detailSeasonCount(itemToDisplay.numberOfSeasons!)),
                           if (itemToDisplay.mediaType == MediaType.tv && itemToDisplay.numberOfEpisodes != null)
-                            _SearchIconText(icon: Icons.subscriptions, text: '${itemToDisplay.numberOfEpisodes} Episodes'),
+                            _SearchIconText(icon: Icons.subscriptions, text: context.l10n.detailEpisodeCount(itemToDisplay.numberOfEpisodes!)),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -514,12 +518,15 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
 
                       if (_mediaDetails?.director != null)
                         Text(
-                          '$directorLabel: ${_mediaDetails!.director!.name}',
+                          context.l10n.detailCreditLine(
+                            directorLabel,
+                            _mediaDetails!.director!.name,
+                          ),
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Overview',
+                      Text(
+                        context.l10n.detailOverview,
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
@@ -531,8 +538,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
 
                     if (itemToDisplay.mediaType == MediaType.tv && itemToDisplay.seasons != null) ...[
                       const SizedBox(height: 24),
-                      const Text(
-                        'Seasons',
+                      Text(
+                        context.l10n.detailSeasons,
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
@@ -558,9 +565,12 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                             children: [
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                title: Text(season.name ?? 'Season $seasonNumber'),
+                                title: Text(season.name ?? context.l10n.detailSeasonName(seasonNumber)),
                                 subtitle: Text(
-                                  '$episodesSeenInSeason / ${season.episodeCount} episodes seen',
+                                  context.l10n.detailSeasonProgress(
+                                    episodesSeenInSeason,
+                                    season.episodeCount,
+                                  ),
                                   style: TextStyle(
                                     color: isComplete ? colors.onWatchlist : null,
                                     fontWeight: isComplete ? FontWeight.bold : null,
@@ -604,8 +614,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
 
                     if (_mediaDetails != null) ...[
                       const SizedBox(height: 24),
-                      const Text(
-                        'Cast',
+                      Text(
+                        context.l10n.detailCast,
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -669,8 +679,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         ),
                       ),
 
-                      _buildHorizontalList('Similar', _mediaDetails!.similar),
-                      _buildHorizontalList('Recommendations', _mediaDetails!.recommendations),
+                      _buildHorizontalList(context.l10n.detailSimilar, _mediaDetails!.similar),
+                      _buildHorizontalList(context.l10n.detailRecommendations, _mediaDetails!.recommendations),
                     ],
                     const SizedBox(height: 24),
                     MediaListManager(
@@ -702,7 +712,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Watch on:', style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(context.l10n.detailWatchOn, style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
         Wrap(
           spacing: 8,
@@ -735,7 +745,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Trailers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(context.l10n.detailTrailers, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           SizedBox(
             height: 100,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -24,8 +25,8 @@ class NotifyButton extends StatelessWidget {
           ),
           onPressed: () => provider.toggleNotification(item),
           tooltip: isNotified
-              ? 'Disable notifications'
-              : 'Notify me on release',
+              ? context.l10n.notifyDisable
+              : context.l10n.notifyEnable,
         );
       },
     );

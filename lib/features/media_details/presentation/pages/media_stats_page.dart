@@ -1,14 +1,48 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 
 enum StatsMetric { entries, runtime }
 
 enum StatsScope { allTime, specificYear, specificMonth }
+
+/// Locale-independent month keys used for the selected period.
+const _monthKeys = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _monthKey(DateTime date) => _monthKeys[date.month - 1];
+
+/// Abbreviated month name in the active locale for a [_monthKeys] entry.
+String _monthLabel(String key) =>
+    DateFormat.MMM().format(DateTime(2000, _monthKeys.indexOf(key) + 1));
+
+String _metricLabel(BuildContext context, StatsMetric metric) =>
+    metric == StatsMetric.entries
+    ? context.l10n.statsMetricLogs
+    : context.l10n.statsMetricTime;
+
+String _mediaTypeLabel(BuildContext context, MediaType type) =>
+    type == MediaType.movie
+    ? context.l10n.commonMovies
+    : context.l10n.commonTvShows;
 
 class MediaStatsPage extends StatefulWidget {
   const MediaStatsPage({super.key});
@@ -27,7 +61,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
   void initState() {
     super.initState();
     _selectedYear = DateTime.now().year.toString();
-    _selectedMonth = DateFormat('MMM').format(DateTime.now());
+    _selectedMonth = _monthKey(DateTime.now());
   }
 
   @override
@@ -37,8 +71,8 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
 
     if (allSeenItems.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Media Stats')),
-        body: const Center(child: Text('No data yet. Start watching!')),
+        appBar: AppBar(title: Text(context.l10n.statsTitle)),
+        body: Center(child: Text(context.l10n.statsEmpty)),
       );
     }
 
@@ -55,7 +89,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Media Stats'),
+          title: Text(context.l10n.statsTitle),
           elevation: 0,
           actions: [
             IconButton(
@@ -64,7 +98,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                     ? Icons.history
                     : Icons.timer_outlined,
               ),
-              tooltip: 'Toggle Metric (Logs/Time)',
+              tooltip: context.l10n.statsToggleMetric,
               onPressed: () {
                 setState(() {
                   _selectedMetric = _selectedMetric == StatsMetric.entries
@@ -96,7 +130,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                       child: Row(
                         children: [
                           _ScopeButton(
-                            label: 'All Time',
+                            label: context.l10n.statsAllTime,
                             isSelected: _selectedScope == StatsScope.allTime,
                             onTap: () => setState(
                               () => _selectedScope = StatsScope.allTime,
@@ -104,7 +138,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                           ),
                           _ScopeButton(
                             label: _selectedScope == StatsScope.allTime
-                                ? 'Year'
+                                ? context.l10n.statsYear
                                 : _selectedYear!,
                             isSelected:
                                 _selectedScope == StatsScope.specificYear,
@@ -112,8 +146,8 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                           ),
                           _ScopeButton(
                             label: _selectedScope != StatsScope.specificMonth
-                                ? 'Month'
-                                : '$_selectedMonth $_selectedYear',
+                                ? context.l10n.statsMonth
+                                : '${_monthLabel(_selectedMonth!)} $_selectedYear',
                             isSelected:
                                 _selectedScope == StatsScope.specificMonth,
                             onTap: () => _pickMonth(availableYears),
@@ -122,15 +156,15 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                       ),
                     ),
                   ),
-                  const TabBar(
+                  TabBar(
                     indicatorSize: TabBarIndicatorSize.label,
                     tabs: [
                       Tab(
-                        text: 'Overview',
+                        text: context.l10n.statsOverview,
                         icon: Icon(Icons.analytics_outlined, size: 20),
                       ),
                       Tab(
-                        text: 'Distribution',
+                        text: context.l10n.statsDistribution,
                         icon: Icon(Icons.pie_chart_outline, size: 20),
                       ),
                     ],
@@ -171,7 +205,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Select Year',
+                context.l10n.statsSelectYear,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
@@ -204,20 +238,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
   }
 
   void _pickMonth(List<String> availableYears) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const months = _monthKeys;
 
     // Sort available years to ensure consistent swiping (newest to oldest or oldest to newest)
     final sortedYears = List<String>.from(availableYears)
@@ -249,7 +270,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                       },
                     ),
                     Text(
-                      'Select Period',
+                      context.l10n.statsSelectPeriod,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     IconButton(
@@ -331,7 +352,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                                         ),
                                       ),
                                       alignment: Alignment.center,
-                                      child: Text(m),
+                                      child: Text(_monthLabel(m)),
                                     ),
                                   ),
                                 )
@@ -363,7 +384,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
       final yearMatch = i.seenDate.year.toString() == _selectedYear;
       if (_selectedScope == StatsScope.specificYear) return yearMatch;
 
-      final monthMatch = DateFormat('MMM').format(i.seenDate) == _selectedMonth;
+      final monthMatch = _monthKey(i.seenDate) == _selectedMonth;
       return yearMatch && monthMatch;
     }).toList();
   }
@@ -483,11 +504,11 @@ class _OverviewTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         _StatCard(
-          title: 'Total Watch Time',
+          title: context.l10n.statsTotalWatchTime,
           child: Column(
             children: [
               Text(
-                '${days}d ${remainingHours}h ${minutes}m',
+                context.l10n.statsDuration(days, remainingHours, minutes),
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -498,13 +519,13 @@ class _OverviewTab extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _SummaryMiniCard(
-                    label: 'Movies',
+                    label: context.l10n.commonMovies,
                     value: '$movieCount',
                     icon: Icons.movie,
                   ),
                   const SizedBox(width: 16),
                   _SummaryMiniCard(
-                    label: 'Episodes',
+                    label: context.l10n.statsEpisodes,
                     value: '$tvCount',
                     icon: Icons.tv,
                   ),
@@ -515,23 +536,23 @@ class _OverviewTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _StatCard(
-          title: 'Hall of Fame (${metric.name})',
+          title: context.l10n.statsHallOfFame(_metricLabel(context, metric)),
           child: Column(
             children: [
               _HallOfFameItem(
-                label: 'Most Watched Movie',
+                label: context.l10n.statsMostWatchedMovie,
                 data: topMovie,
                 metric: metric,
               ),
               const Divider(),
               _HallOfFameItem(
-                label: 'Most Watched Series',
+                label: context.l10n.statsMostWatchedSeries,
                 data: topTV,
                 metric: metric,
               ),
               const Divider(),
               _HallOfFameItem(
-                label: 'Most Watched Episode',
+                label: context.l10n.statsMostWatchedEpisode,
                 data: topEp,
                 metric: metric,
               ),
@@ -541,8 +562,8 @@ class _OverviewTab extends StatelessWidget {
         const SizedBox(height: 16),
         _StatCard(
           title: metric == StatsMetric.entries
-              ? 'Viewing Activity (logs)'
-              : 'Viewing Activity (minutes)',
+              ? context.l10n.statsActivityLogs
+              : context.l10n.statsActivityMinutes,
           child: _ActivityChart(
             items: items,
             metric: metric,
@@ -596,8 +617,8 @@ class _HallOfFameItem extends StatelessWidget {
     if (data == null) return const SizedBox();
 
     final valueDisplay = metric == StatsMetric.entries
-        ? '${data!.$2} logs'
-        : '${(data!.$3 / 60).toStringAsFixed(1)}h';
+        ? context.l10n.statsLogCount(data!.$2)
+        : context.l10n.statsHours((data!.$3 / 60).toStringAsFixed(1));
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -647,37 +668,43 @@ class _ActivityChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activityData = <String, double>{};
+    final activityData = <DateTime, double>{};
     String dateFormat;
+    DateTime Function(DateTime) bucket;
 
     if (scope == StatsScope.allTime) {
       final years = items.map((i) => i.seenDate.year).toSet();
       if (years.length > 5) {
         dateFormat = 'yyyy';
+        bucket = (d) => DateTime(d.year);
       } else {
         dateFormat = 'MMM yy';
+        bucket = (d) => DateTime(d.year, d.month);
       }
     } else if (scope == StatsScope.specificYear) {
       dateFormat = 'MMM';
+      bucket = (d) => DateTime(d.year, d.month);
     } else {
       dateFormat = 'dd';
+      bucket = (d) => DateTime(d.year, d.month, d.day);
     }
 
     for (final item in items) {
-      final key = DateFormat(dateFormat).format(item.seenDate);
+      final key = bucket(item.seenDate);
       final value = metric == StatsMetric.entries
           ? 1.0
           : (item.runtime?.toDouble() ?? 0.0);
       activityData[key] = (activityData[key] ?? 0) + value;
     }
 
-    final sortedKeys = activityData.keys.toList();
-    _sortKeys(sortedKeys, dateFormat);
+    final sortedBuckets = activityData.keys.toList()..sort();
+    final formatter = DateFormat(dateFormat);
+    final sortedKeys = sortedBuckets.map(formatter.format).toList();
 
     if (sortedKeys.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text('No activity data')),
+        child: Center(child: Text(context.l10n.statsNoActivity)),
       );
     }
 
@@ -690,7 +717,7 @@ class _ActivityChart extends StatelessWidget {
               x: e.key,
               barRods: [
                 BarChartRodData(
-                  toY: activityData[e.value]!,
+                  toY: activityData[sortedBuckets[e.key]]!,
                   color: Theme.of(context).colorScheme.primary,
                   width: sortedKeys.length > 15 ? 6 : 12,
                   borderRadius: BorderRadius.circular(4),
@@ -746,7 +773,13 @@ class _ActivityChart extends StatelessWidget {
             touchTooltipData: BarTouchTooltipData(
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
-                  '${sortedKeys[groupIndex]}\n${rod.toY.toInt()} ${metric == StatsMetric.entries ? 'logs' : 'min'}',
+                  context.l10n.statsTooltip(
+                    sortedKeys[groupIndex],
+                    rod.toY.toInt(),
+                    metric == StatsMetric.entries
+                        ? context.l10n.statsMetricLogs
+                        : 'min',
+                  ),
                   const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -758,38 +791,6 @@ class _ActivityChart extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _sortKeys(List<String> keys, String dateFormat) {
-    try {
-      if (dateFormat == 'dd') {
-        keys.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
-      } else if (dateFormat == 'MMM') {
-        const months = [
-          'Jan',
-          'Feb',
-          'Mar',
-          'Apr',
-          'May',
-          'Jun',
-          'Jul',
-          'Aug',
-          'Sep',
-          'Oct',
-          'Nov',
-          'Dec',
-        ];
-        keys.sort((a, b) => months.indexOf(a).compareTo(months.indexOf(b)));
-      } else {
-        keys.sort(
-          (a, b) => DateFormat(
-            dateFormat,
-          ).parse(a).compareTo(DateFormat(dateFormat).parse(b)),
-        );
-      }
-    } catch (_) {
-      keys.sort();
-    }
   }
 }
 
@@ -812,7 +813,12 @@ class _DistributionTab extends StatelessWidget {
 
       typeData[item.type] = (typeData[item.type] ?? 0) + value;
       if (item.genres != null) {
-        for (final genre in item.genres!) {
+        for (final rawGenre in item.genres!) {
+          // History may mix languages; group by TMDB id when known.
+          final genreId = GenreUtils.getGenreIdByName(rawGenre);
+          final genre = genreId != null
+              ? GenreUtils.localizedName(context.l10n, genreId)
+              : rawGenre;
           genreData[genre] = (genreData[genre] ?? 0) + value;
         }
       }
@@ -826,7 +832,7 @@ class _DistributionTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         _StatCard(
-          title: 'Media Split (${metric.name})',
+          title: context.l10n.statsMediaSplit(_metricLabel(context, metric)),
           child: SizedBox(
             height: 250,
             child: PieChart(
@@ -843,7 +849,10 @@ class _DistributionTab extends StatelessWidget {
                   return PieChartSectionData(
                     color: color,
                     value: e.value,
-                    title: '${e.key.name}\n$percentage%',
+                    title: context.l10n.statsPieLabel(
+                      _mediaTypeLabel(context, e.key),
+                      percentage,
+                    ),
                     radius: 70,
                     titleStyle: const TextStyle(
                       fontSize: 12,
@@ -858,7 +867,7 @@ class _DistributionTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _StatCard(
-          title: 'Top Genres (by ${metric.name})',
+          title: context.l10n.statsTopGenres(_metricLabel(context, metric)),
           child: Column(
             children: topGenres.map((e) {
               final percentage = totalValue > 0
@@ -866,7 +875,7 @@ class _DistributionTab extends StatelessWidget {
                   : '0';
               final displayValue = metric == StatsMetric.entries
                   ? e.value.toInt().toString()
-                  : '${(e.value / 60).toStringAsFixed(1)}h';
+                  : context.l10n.statsHours((e.value / 60).toStringAsFixed(1));
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Column(
@@ -877,7 +886,10 @@ class _DistributionTab extends StatelessWidget {
                       children: [
                         Text(e.key),
                         Text(
-                          '$displayValue ($percentage%)',
+                          context.l10n.statsGenreValue(
+                            displayValue,
+                            percentage,
+                          ),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],

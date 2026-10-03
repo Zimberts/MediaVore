@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/error/exceptions.dart';
+import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
@@ -187,6 +188,11 @@ class SearchProvider with ChangeNotifier {
     _notifiedItemsSubscription?.cancel();
     super.dispose();
   }
+
+  /// Strings for messages built outside the widget tree.
+  AppLocalizations get _l10n => lookupAppLocalizations(
+    (localeService?.current ?? fallbackAppLanguage).locale,
+  );
 
   void _onLanguageChanged() => unawaited(reloadForLanguageChange());
 
@@ -868,7 +874,7 @@ class SearchProvider with ChangeNotifier {
   }) async {
     _isImporting = true;
     _importProgress = 0.0;
-    _importStatus = 'Importing all data...';
+    _importStatus = _l10n.progressImportingAll;
     notifyListeners();
 
     try {
@@ -883,9 +889,9 @@ class SearchProvider with ChangeNotifier {
       );
 
       _importProgress = 1.0;
-      _importStatus = 'Done!';
+      _importStatus = _l10n.progressDone;
     } catch (e) {
-      _importStatus = 'Error: $e';
+      _importStatus = _l10n.progressError('$e');
     } finally {
       await loadAllSeenStatus();
       await loadLikedStatus();
@@ -911,7 +917,7 @@ class SearchProvider with ChangeNotifier {
   Future<void> refetchMissingData() async {
     _isImporting = true;
     _importProgress = 0.0;
-    _importStatus = 'Refetching missing runtimes...';
+    _importStatus = _l10n.progressRefetchingRuntimes;
     notifyListeners();
 
     try {
@@ -923,7 +929,7 @@ class SearchProvider with ChangeNotifier {
       int processed = 0;
       for (final item in itemsToUpdate) {
         _importProgress = processed / itemsToUpdate.length;
-        _importStatus = 'Refetching ${item.title}...';
+        _importStatus = _l10n.progressRefetchingItem(item.title);
         notifyListeners();
 
         try {
@@ -975,9 +981,9 @@ class SearchProvider with ChangeNotifier {
       }
 
       _importProgress = 1.0;
-      _importStatus = 'Done refetching data!';
+      _importStatus = _l10n.progressRefetchDone;
     } catch (e) {
-      _importStatus = 'Error: $e';
+      _importStatus = _l10n.progressError('$e');
     } finally {
       await loadAllSeenStatus();
       await updateSeenDbSize();

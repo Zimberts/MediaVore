@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -23,7 +24,7 @@ class LikeButton extends StatelessWidget {
         color: isLiked ? colors.likeHeart : null,
       ),
       onPressed: () => provider.toggleLike(item),
-      tooltip: isLiked ? 'Unlike' : 'Like',
+      tooltip: isLiked ? context.l10n.likeUnlike : context.l10n.likeLike,
     );
   }
 }

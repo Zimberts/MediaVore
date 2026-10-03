@@ -1,3 +1,4 @@
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
@@ -32,7 +33,9 @@ List<NotifiedItem> sortReleases(List<NotifiedItem> items) {
   return sorted;
 }
 
-String releaseSubtitleForItem(NotifiedItem item) {
+/// Subtitle for a release without a date, in English unless [l10n] is given.
+String releaseSubtitleForItem(NotifiedItem item, [AppLocalizations? l10n]) {
+  final strings = l10n ?? fallbackLocalizations;
   if (item.releaseDate != null) {
     return '';
   }
@@ -40,12 +43,12 @@ String releaseSubtitleForItem(NotifiedItem item) {
   if (item.type == MediaType.tv &&
       item.seasonNumber != null &&
       item.episodeNumber != null) {
-    return 'Episode — date TBA';
+    return strings.releaseEpisodeTba;
   }
 
   if (item.type == MediaType.tv) {
-    return 'Returning — new season planned';
+    return strings.releaseReturning;
   }
 
-  return 'Planned — no release date';
+  return strings.releasePlanned;
 }
