@@ -44,7 +44,8 @@ void main() {
         QuickAddItemModelSchema,
       ],
       directory: tempPath,
-      name: 'test_repo_import_all_qa_db_${DateTime.now().millisecondsSinceEpoch}',
+      name:
+          'test_repo_import_all_qa_db_${DateTime.now().millisecondsSinceEpoch}',
     );
     local = MediaListLocalDataSource(isar);
     cache = MediaCache(isar);

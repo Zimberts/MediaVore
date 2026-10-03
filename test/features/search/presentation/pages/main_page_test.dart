@@ -64,7 +64,10 @@ void main() {
     ).thenAnswer((_) => const Stream<Achievement>.empty());
 
     searchProvider = SearchProvider(mockRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore('fake_api_key'));
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore('fake_api_key'),
+    );
 
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
@@ -107,7 +110,7 @@ void main() {
 
     // If API key is empty, dialog shows up. The mock returned a fake key, so there shouldn't be a dialog blocking clicks.
     // If it *does* happen to show up, we might need to close it. But let's assume it didn't box the tap.
-    
+
     // Initially on Discover (SearchPage)
     expect(
       find.text('Discover'),

@@ -75,14 +75,15 @@ void main() {
       return Future.value();
     });
 
-    when(
-      () => repo.addQuickAddItem(any()),
-    ).thenAnswer((inv) async {
+    when(() => repo.addQuickAddItem(any())).thenAnswer((inv) async {
       // Simulate repopulation by restoring the quick-add item
       when(() => repo.getQuickAddItems()).thenAnswer((_) async => [qa]);
     });
 
-    settingsProvider = SettingsProvider(MockSharedPreferences(), FakeTmdbCredentialStore());
+    settingsProvider = SettingsProvider(
+      MockSharedPreferences(),
+      FakeTmdbCredentialStore(),
+    );
     provider = SearchProvider(repo);
     await provider.loadQuickAddItems();
   });
@@ -129,8 +130,6 @@ void main() {
     verify(
       () => repo.clearOptOutSeries(100, seasonNumber: 1, episodeNumber: 2),
     ).called(1);
-    verify(
-      () => repo.addQuickAddItem(any()),
-    ).called(1);
+    verify(() => repo.addQuickAddItem(any())).called(1);
   });
 }

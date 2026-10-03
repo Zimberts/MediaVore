@@ -150,18 +150,22 @@ class AchievementRepositoryImpl implements AchievementRepository {
           return _loyalistMilestone(episodes, targetL);
         case 'behavioral':
           final subtype = params['subtype'] as String? ?? '';
-            if (subtype == 'night_owl') {
-              final nightItems = seenItems
-                  .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
-                  .toList();
-              final targetB = params['target'] as int? ?? 0;
-              return _countMilestone(nightItems, targetB);
-            }
-            if (subtype == 'weekend') {
-              final targetB = params['target'] as int? ?? 0;
-              // Sliding 72-hour window
-              return _windowMilestone(seenItems, const Duration(hours: 72), targetB);
-            }
+          if (subtype == 'night_owl') {
+            final nightItems = seenItems
+                .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
+                .toList();
+            final targetB = params['target'] as int? ?? 0;
+            return _countMilestone(nightItems, targetB);
+          }
+          if (subtype == 'weekend') {
+            final targetB = params['target'] as int? ?? 0;
+            // Sliding 72-hour window
+            return _windowMilestone(
+              seenItems,
+              const Duration(hours: 72),
+              targetB,
+            );
+          }
           break;
         case 'streak':
           final targetS = params['target'] as int? ?? 0;
@@ -170,8 +174,11 @@ class AchievementRepositoryImpl implements AchievementRepository {
           final targetMin = params['targetMinutes'] as int? ?? 0;
           return _runtimeMilestone(seenItems, targetMin);
         case 'marathon':
-            final targetM = params['target'] as int? ?? 0;
-            return _marathonMilestone(seenItems.where((i) => i.type == 'tv').toList(), targetM);
+          final targetM = params['target'] as int? ?? 0;
+          return _marathonMilestone(
+            seenItems.where((i) => i.type == 'tv').toList(),
+            targetM,
+          );
       }
     }
 
@@ -420,7 +427,11 @@ class AchievementRepositoryImpl implements AchievementRepository {
     );
   }
 
-  _ProgressData _windowMilestone(List<SeenItemModel> items, Duration window, int target) {
+  _ProgressData _windowMilestone(
+    List<SeenItemModel> items,
+    Duration window,
+    int target,
+  ) {
     if (items.isEmpty) return const _ProgressData(0.0, '0/0');
     final dates = items.map((i) => i.seenDate).toList()..sort();
 
@@ -451,14 +462,17 @@ class AchievementRepositoryImpl implements AchievementRepository {
     DateTime? reachedAt;
 
     for (final item in episodes) {
-      final dateKey = '${item.tmdbId}_${item.seenDate.year}-${item.seenDate.month}-${item.seenDate.day}';
+      final dateKey =
+          '${item.tmdbId}_${item.seenDate.year}-${item.seenDate.month}-${item.seenDate.day}';
       counts[dateKey] = (counts[dateKey] ?? 0) + 1;
       if (counts[dateKey]! >= target && reachedAt == null) {
         reachedAt = item.seenDate;
       }
     }
 
-    final maxCount = counts.values.isEmpty ? 0 : counts.values.reduce((a, b) => a > b ? a : b);
+    final maxCount = counts.values.isEmpty
+        ? 0
+        : counts.values.reduce((a, b) => a > b ? a : b);
 
     return _ProgressData(
       (maxCount / target).clamp(0.0, 1.0),

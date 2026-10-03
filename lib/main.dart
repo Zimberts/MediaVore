@@ -43,9 +43,10 @@ class _BootstrapperAppState extends State<BootstrapperApp> {
       await Future.delayed(const Duration(milliseconds: 250));
 
       await init(locator);
-      
+
       // Setup Background Tasks (safe to call after isar is opened by locator)
-      if (Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS) {
+      if (Theme.of(context).platform == TargetPlatform.android ||
+          Theme.of(context).platform == TargetPlatform.iOS) {
         try {
           BackgroundTaskService.initialize();
           BackgroundTaskService.registerDailySync();
@@ -93,7 +94,10 @@ class _BootstrapperAppState extends State<BootstrapperApp> {
               children: [
                 CircularProgressIndicator(color: Colors.white),
                 SizedBox(height: 16),
-                Text('Loading MediaVore...', style: TextStyle(color: Colors.white)),
+                Text(
+                  'Loading MediaVore...',
+                  style: TextStyle(color: Colors.white),
+                ),
               ],
             ),
           ),

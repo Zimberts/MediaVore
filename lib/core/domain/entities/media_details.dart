@@ -53,8 +53,8 @@ class MediaDetails {
           : null,
       collection: json['collection'] != null
           ? (json['collection'] as List)
-            .map((i) => MediaItem.fromJson(i))
-            .toList()
+                .map((i) => MediaItem.fromJson(i))
+                .toList()
           : null,
       watchProviders: json['watch_providers'],
       videos: json['videos'] != null
