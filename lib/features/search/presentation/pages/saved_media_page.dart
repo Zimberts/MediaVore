@@ -675,7 +675,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           items,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[SavedMediaPage] scanned link handling failed: $e');
+    }
   }
 
   void _showImportLinkDialog(SearchProvider provider) {

@@ -398,13 +398,17 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                                       );
                                       // Restore the exact dismissed quick-add entry directly
                                       await provider.addQuickAddItem(qa);
-                                    } catch (_) {}
+                                    } catch (e) {
+                                      debugPrint('[NotificationCenter] undo streak opt-out failed: $e');
+                                    }
                                   },
                                 ),
                               ),
                             );
                           }
-                        } catch (_) {}
+                        } catch (e) {
+                          debugPrint('[NotificationCenter] streak opt-out failed: $e');
+                        }
                       },
                       child: ListTile(
                         leading: posterPath != null

@@ -83,7 +83,6 @@ class FakeFilePicker extends FilePicker {
 
 void main() {
   testWidgets('pump page with mocks', (tester) async {
-    print('TEST START');
     registerFallbackValue(ImportMode.append);
     registerFallbackValue((double p, String s) {});
 
@@ -172,7 +171,6 @@ void main() {
         };
     FilePicker.platform = mockFilePicker;
 
-    print('ABOUT TO PUMP WIDGET');
     await tester.pumpWidget(
       MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
@@ -190,9 +188,7 @@ void main() {
         ),
       ),
     );
-    print('PUMPED');
     await tester.pump();
-    print('DONE');
     expect(find.byType(DataCacheSettingsPage), findsOneWidget);
   });
 
