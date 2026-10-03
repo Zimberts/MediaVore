@@ -76,3 +76,4 @@ flutter test                                              # tests
 
 Write Conventional Commit messages per the rules above (`<type>(<scope>): <desc>`).
 Verify with `flutter analyze` and `flutter test` before considering a change done.
+CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `dart format --set-exit-if-changed lib test`, `flutter test --coverage`, and a Conventional Commits PR-title check. `android-build.yml` builds the APK separately.

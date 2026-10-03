@@ -1,41 +1,51 @@
-# name: Android APK Build
+name: Android APK Build
 
-# on:
-#   pull_request:
-#     branches:
-#       - main
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'lib/**'
+      - 'assets/**'
+      - 'pubspec.*'
+      - '.github/workflows/android-build.yml'
+  push:
+    tags: ['v*']
 
-# jobs:
-#   build:
-#     name: Build Android APK
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: read
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
 
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # debug on PRs (fast break detection); release only on tags (signing: #166)
+      BUILD_MODE: ${{ startsWith(github.ref, 'refs/tags/') && 'release' || 'debug' }}
 
-#       - name: Set up Java 17
-#         uses: actions/setup-java@v4
-#         with:
-#           distribution: temurin
-#           java-version: '17'
+    steps:
+      - uses: actions/checkout@v4
 
-#       - name: Set up Flutter
-#         uses: subosito/flutter-action@v2
-#         with:
-#           channel: stable
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-#       - name: Install dependencies
-#         run: flutter pub get
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
 
-#       - name: Build APK
-#         run: flutter build apk --release
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter build apk --${{ env.BUILD_MODE }}
 
-#       - name: Upload APK artifact
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: mediavore-release-apk
-#           path: build/app/outputs/flutter-apk/app-release.apk
-#           retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mediavore-${{ env.BUILD_MODE }}-apk
+          path: build/app/outputs/flutter-apk/app-${{ env.BUILD_MODE }}.apk
+          retention-days: 7
