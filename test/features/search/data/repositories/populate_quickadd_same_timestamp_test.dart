@@ -14,17 +14,17 @@ void main() {
   late MediaRepositoryImpl repository;
 
   setUpAll(() {
-    registerFallbackValue(SeenItemModel(
-      tmdbId: 1,
-      type: 'tv',
-      title: 'f',
-      seenDate: DateTime.now(),
-    ));
-    registerFallbackValue(QuickAddItemModel(
-      tmdbId: 1,
-      type: 'tv',
-      insertedAt: DateTime.now(),
-    ));
+    registerFallbackValue(
+      SeenItemModel(
+        tmdbId: 1,
+        type: 'tv',
+        title: 'f',
+        seenDate: DateTime.now(),
+      ),
+    );
+    registerFallbackValue(
+      QuickAddItemModel(tmdbId: 1, type: 'tv', insertedAt: DateTime.now()),
+    );
     registerFallbackValue(FakeMediaItem());
   });
 
@@ -47,42 +47,81 @@ void main() {
     final now = DateTime.now();
     // episodes 1 and 2 seen earlier, episodes 3 and 4 seen at the exact same time
     final seenItems = [
-      SeenItemModel(tmdbId: tmdbId, type: 'tv', title: 'T', seenDate: now.subtract(Duration(days: 3)), seasonNumber: 1, episodeNumber: 1),
-      SeenItemModel(tmdbId: tmdbId, type: 'tv', title: 'T', seenDate: now.subtract(Duration(days: 2)), seasonNumber: 1, episodeNumber: 2),
-      SeenItemModel(tmdbId: tmdbId, type: 'tv', title: 'T', seenDate: now, seasonNumber: 1, episodeNumber: 3),
-      SeenItemModel(tmdbId: tmdbId, type: 'tv', title: 'T', seenDate: now, seasonNumber: 1, episodeNumber: 4),
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'T',
+        seenDate: now.subtract(Duration(days: 3)),
+        seasonNumber: 1,
+        episodeNumber: 1,
+      ),
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'T',
+        seenDate: now.subtract(Duration(days: 2)),
+        seasonNumber: 1,
+        episodeNumber: 2,
+      ),
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'T',
+        seenDate: now,
+        seasonNumber: 1,
+        episodeNumber: 3,
+      ),
+      SeenItemModel(
+        tmdbId: tmdbId,
+        type: 'tv',
+        title: 'T',
+        seenDate: now,
+        seasonNumber: 1,
+        episodeNumber: 4,
+      ),
     ];
 
     when(() => local.getAllSeenItems()).thenAnswer((_) async => seenItems);
-    when(() => local.getQuickAddItems()).thenAnswer((_) async => <QuickAddItemModel>[]);
-    when(() => local.isOptedOut(any(), seasonNumber: any(named: 'seasonNumber'), episodeNumber: any(named: 'episodeNumber')))
-        .thenAnswer((_) async => false);
-    when(() => local.getSeenStatus(tmdbId, 'tv')).thenAnswer((_) async => seenItems);
+    when(
+      () => local.getQuickAddItems(),
+    ).thenAnswer((_) async => <QuickAddItemModel>[]);
+    when(
+      () => local.isOptedOut(
+        any(),
+        seasonNumber: any(named: 'seasonNumber'),
+        episodeNumber: any(named: 'episodeNumber'),
+      ),
+    ).thenAnswer((_) async => false);
+    when(
+      () => local.getSeenStatus(tmdbId, 'tv'),
+    ).thenAnswer((_) async => seenItems);
 
     final media = MediaItem(
       id: tmdbId,
       title: 'T',
       overview: '',
       releaseDate: '2020-01-01',
-      seasons: [
-        TVSeason(id: 1, seasonNumber: 1, episodeCount: 10),
-      ],
+      seasons: [TVSeason(id: 1, seasonNumber: 1, episodeCount: 10)],
     );
 
     when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
-    when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer((_) async => media);
+    when(
+      () => remote.getMediaItem(tmdbId, type: MediaType.tv),
+    ).thenAnswer((_) async => media);
 
     when(() => cache.cacheItem(any())).thenAnswer((_) async {});
     when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
     when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
     when(() => cache.getSeason(any(), any())).thenReturn(null);
 
-    List<Map<String, dynamic>> makeEpisodes(int count) => List.generate(count, (i) => {
-          'episode_number': i + 1,
-          'air_date': '2020-01-0${(i % 9) + 1}',
-        });
+    List<Map<String, dynamic>> makeEpisodes(int count) => List.generate(
+      count,
+      (i) => {'episode_number': i + 1, 'air_date': '2020-01-0${(i % 9) + 1}'},
+    );
 
-    when(() => remote.getSeasonDetails(tmdbId, 1)).thenAnswer((_) async => {'episodes': makeEpisodes(10)});
+    when(
+      () => remote.getSeasonDetails(tmdbId, 1),
+    ).thenAnswer((_) async => {'episodes': makeEpisodes(10)});
 
     final added = <QuickAddItemModel>[];
     when(() => local.addQuickAddItem(any())).thenAnswer((inv) async {

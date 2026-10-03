@@ -783,9 +783,9 @@ void main() {
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
         ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
-        when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
-          (_) async => season([ep(1, airDate: '2024-01-01')]),
-        );
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 1),
+        ).thenAnswer((_) async => season([ep(1, airDate: '2024-01-01')]));
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 2),
         ).thenThrow(Exception('season not found'));

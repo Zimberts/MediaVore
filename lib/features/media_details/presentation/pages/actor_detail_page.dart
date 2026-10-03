@@ -243,7 +243,8 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: item.posterPath != null &&
+                    child:
+                        item.posterPath != null &&
                             !Platform.environment.containsKey('FLUTTER_TEST')
                         ? CachedNetworkImage(
                             imageUrl:

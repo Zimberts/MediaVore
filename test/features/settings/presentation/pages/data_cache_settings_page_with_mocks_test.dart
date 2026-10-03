@@ -151,9 +151,13 @@ void main() {
       () => mockAchievementProvider.clearAchievements(),
     ).thenAnswer((_) async {});
 
-    final settingsProvider = SettingsProvider(MockSharedPreferences(), FakeTmdbCredentialStore());
+    final settingsProvider = SettingsProvider(
+      MockSharedPreferences(),
+      FakeTmdbCredentialStore(),
+    );
 
-    final mockFilePicker = FakeFilePicker();    mockFilePicker.onPick =
+    final mockFilePicker = FakeFilePicker();
+    mockFilePicker.onPick =
         ({
           String? dialogTitle,
           String? initialDirectory,

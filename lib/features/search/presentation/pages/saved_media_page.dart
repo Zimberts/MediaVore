@@ -269,8 +269,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     // below reconciles with the persisted state.
     setState(() {
       _currentItems.removeWhere(
-        (item) =>
-            _selectedItems.contains('${item.id}:${item.mediaType.name}'),
+        (item) => _selectedItems.contains('${item.id}:${item.mediaType.name}'),
       );
       _isEditMode = false;
       _selectedItems.clear();

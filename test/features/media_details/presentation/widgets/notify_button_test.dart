@@ -40,7 +40,9 @@ void main() {
     ).thenAnswer((_) async => []);
     when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
-    when(() => mockRepository.watchNotifiedItems()).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockRepository.watchNotifiedItems(),
+    ).thenAnswer((_) => const Stream.empty());
     when(
       () => mockRepository.toggleNotification(
         any(),

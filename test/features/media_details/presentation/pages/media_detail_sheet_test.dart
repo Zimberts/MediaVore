@@ -34,17 +34,33 @@ void main() {
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
 
-    when(() => mockMediaRepository.getAllListNames()).thenAnswer((_) async => ['watchlist']);
-    when(() => mockMediaRepository.getWatchlistEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListEntries(any())).thenAnswer((_) async => ['1:movie']);
+    when(
+      () => mockMediaRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist']);
+    when(
+      () => mockMediaRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListEntries(any()),
+    ).thenAnswer((_) async => ['1:movie']);
     when(() => mockMediaRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockMediaRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getLikedEntries()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getNotifiedItems()).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
-    when(() => mockMediaRepository.getSeenStatus(any(), any()))
-      .thenAnswer((_) async => <SeenItem>[]);
+    when(
+      () => mockMediaRepository.getLikedEntries(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getNotifiedItems(),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getListPreviews(
+        any(),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockMediaRepository.getSeenStatus(any(), any()),
+    ).thenAnswer((_) async => <SeenItem>[]);
 
     final item = const MediaItem(
       id: 1,
@@ -54,11 +70,15 @@ void main() {
       mediaType: MediaType.movie,
     );
 
-    when(() => mockMediaRepository.getMediaDetails(1, type: MediaType.movie))
-        .thenAnswer((_) async => MediaDetails(item: item, cast: []));
+    when(
+      () => mockMediaRepository.getMediaDetails(1, type: MediaType.movie),
+    ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
 
     if (!locator.isRegistered<SearchProvider>()) {
       locator.registerSingleton<SearchProvider>(searchProvider);
@@ -85,7 +105,9 @@ void main() {
     );
   }
 
-  testWidgets('tapping saved media opens details as bottom-sheet', (WidgetTester tester) async {
+  testWidgets('tapping saved media opens details as bottom-sheet', (
+    WidgetTester tester,
+  ) async {
     // Ensure provider preloads
     await searchProvider.loadLikedStatus();
 

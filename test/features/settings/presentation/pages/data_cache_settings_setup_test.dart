@@ -8,6 +8,7 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 
 class MockAchievementRepo extends Mock implements AchievementRepository {}
+
 class MockRepo extends Mock implements MediaRepository {}
 
 class FakeFilePicker extends FilePicker {
@@ -36,10 +37,18 @@ void main() {
     final mockRepo = MockRepo();
     final mockAchievementRepo = MockAchievementRepo();
 
-    when(() => mockAchievementRepo.getAchievements()).thenAnswer((_) async => <Achievement>[]);
-    when(() => mockAchievementRepo.watchAchievements()).thenAnswer((_) => Stream<List<Achievement>>.value(<Achievement>[]));
-    when(() => mockAchievementRepo.clearAchievements()).thenAnswer((_) async {});
-    when(() => mockAchievementRepo.unlockAchievement(any(), any())).thenAnswer((_) async {});
+    when(
+      () => mockAchievementRepo.getAchievements(),
+    ).thenAnswer((_) async => <Achievement>[]);
+    when(
+      () => mockAchievementRepo.watchAchievements(),
+    ).thenAnswer((_) => Stream<List<Achievement>>.value(<Achievement>[]));
+    when(
+      () => mockAchievementRepo.clearAchievements(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockAchievementRepo.unlockAchievement(any(), any()),
+    ).thenAnswer((_) async {});
 
     when(() => mockRepo.getSeenItems()).thenAnswer((_) async => <SeenItem>[]);
     when(() => mockRepo.getLikedEntries()).thenAnswer((_) async => <String>[]);

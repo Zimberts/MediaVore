@@ -41,7 +41,8 @@ class SettingsProvider with ChangeNotifier {
     final int? storedDisplayModeIndex = _prefs.getInt('displayMode');
     if (storedDisplayModeIndex != null) {
       var displayModeIndex = storedDisplayModeIndex;
-      if (displayModeIndex < 0 || displayModeIndex >= DisplayMode.values.length) {
+      if (displayModeIndex < 0 ||
+          displayModeIndex >= DisplayMode.values.length) {
         displayModeIndex = 0;
       }
       _displayMode = DisplayMode.values[displayModeIndex];

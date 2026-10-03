@@ -35,9 +35,7 @@ void main() {
     );
 
     test('should load notificationCenterDebug from SharedPreferences', () {
-      when(
-        () => mockPrefs.getBool('notificationCenterDebug'),
-      ).thenReturn(true);
+      when(() => mockPrefs.getBool('notificationCenterDebug')).thenReturn(true);
 
       final newProvider = SettingsProvider(
         mockPrefs,

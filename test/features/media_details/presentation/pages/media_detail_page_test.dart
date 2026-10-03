@@ -57,8 +57,11 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
-    
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
+
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
