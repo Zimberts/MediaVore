@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -134,19 +135,17 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove log?'),
-        content: const Text(
-          'Are you sure you want to remove this viewing entry from your history?',
-        ),
+        title: Text(context.l10n.seenRemoveLogTitle),
+        content: Text(context.l10n.seenRemoveLogMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Remove'),
+            child: Text(context.l10n.commonRemove),
           ),
         ],
       ),
@@ -163,12 +162,12 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Filter & Sort',
+                context.l10n.seenFilterSort,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             ListTile(
-              title: const Text('View Mode'),
+              title: Text(context.l10n.seenViewMode),
               trailing: DropdownButton<SeenViewMode>(
                 value: _viewMode,
                 onChanged: (val) {
@@ -177,20 +176,20 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                     setModalState(() {});
                   }
                 },
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: SeenViewMode.history,
-                    child: Text('History (All episodes)'),
+                    child: Text(context.l10n.seenViewHistory),
                   ),
                   DropdownMenuItem(
                     value: SeenViewMode.library,
-                    child: Text('Library (Unique titles)'),
+                    child: Text(context.l10n.seenViewLibrary),
                   ),
                 ],
               ),
             ),
             ListTile(
-              title: const Text('Sort by'),
+              title: Text(context.l10n.seenSortBy),
               trailing: DropdownButton<SeenSort>(
                 value: _currentSort,
                 onChanged: (val) {
@@ -199,43 +198,46 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                     setModalState(() {});
                   }
                 },
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: SeenSort.dateDesc,
-                    child: Text('Date (Newest)'),
+                    child: Text(context.l10n.seenSortDateNewest),
                   ),
                   DropdownMenuItem(
                     value: SeenSort.dateAsc,
-                    child: Text('Date (Oldest)'),
+                    child: Text(context.l10n.seenSortDateOldest),
                   ),
                   DropdownMenuItem(
                     value: SeenSort.nameAsc,
-                    child: Text('Name (A-Z)'),
+                    child: Text(context.l10n.seenSortNameAsc),
                   ),
                   DropdownMenuItem(
                     value: SeenSort.nameDesc,
-                    child: Text('Name (Z-A)'),
+                    child: Text(context.l10n.seenSortNameDesc),
                   ),
                 ],
               ),
             ),
             ListTile(
-              title: const Text('Media Type'),
+              title: Text(context.l10n.seenMediaType),
               trailing: DropdownButton<MediaType?>(
                 value: _filterType,
                 onChanged: (val) {
                   setState(() => _filterType = val);
                   setModalState(() {});
                 },
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('All')),
+                items: [
+                  DropdownMenuItem(
+                    value: null,
+                    child: Text(context.l10n.commonAll),
+                  ),
                   DropdownMenuItem(
                     value: MediaType.movie,
-                    child: Text('Movies'),
+                    child: Text(context.l10n.commonMovies),
                   ),
                   DropdownMenuItem(
                     value: MediaType.tv,
-                    child: Text('TV Shows'),
+                    child: Text(context.l10n.commonTvShows),
                   ),
                 ],
               ),
@@ -261,7 +263,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Seen History'),
+        title: Text(context.l10n.seenTitle),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
@@ -272,7 +274,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search history...',
+                hintText: context.l10n.seenSearchHint,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.tune),
@@ -294,12 +296,12 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                 MaterialPageRoute(builder: (context) => const MediaStatsPage()),
               );
             },
-            tooltip: 'Statistics',
+            tooltip: context.l10n.seenStatistics,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => provider.loadAllSeenStatus(),
-            tooltip: 'Refresh',
+            tooltip: context.l10n.commonRefresh,
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -308,14 +310,14 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                 MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
             },
-            tooltip: 'Settings',
+            tooltip: context.l10n.settingsTitle,
           ),
         ],
       ),
       body: allSeenItems.isEmpty
-          ? const Center(child: Text('No items seen yet.'))
+          ? Center(child: Text(context.l10n.seenEmpty))
           : filteredItems.isEmpty
-          ? const Center(child: Text('No matches found.'))
+          ? Center(child: Text(context.l10n.seenNoMatches))
           : ListView.builder(
               controller: _scrollController,
               itemCount: groupedItems.length,
@@ -359,7 +361,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                       mediaType: seenItem.type,
                     ),
                   );
-                  subtitle = '$count episodes seen';
+                  subtitle = context.l10n.seenEpisodesSeen(count);
                 }
 
                 if (_currentSort == SeenSort.nameAsc ||
@@ -386,10 +388,8 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                   confirmDismiss: (direction) {
                     if (_viewMode == SeenViewMode.library) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Cannot delete from Library mode. Switch to History to remove entries.',
-                          ),
+                        SnackBar(
+                          content: Text(context.l10n.seenCannotDeleteLibrary),
                         ),
                       );
                       return Future.value(false);

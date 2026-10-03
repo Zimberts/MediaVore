@@ -15,6 +15,8 @@ Tracks earned achievements (full `data` + `domain` + `presentation` layering).
 - Definitions load at runtime from `assets/achievements/definitions.json` via
   `DefinitionsLoader`; that JSON is the single source of truth (stable ids). See
   `.ai/rules/achievements.md` — never hardcode titles/progress in Dart.
+- Titles/descriptions are translated in the JSON (`translations.<code>`); display them
+  with `achievement.titleFor(context.l10n.localeName)`, never `achievement.title`.
 - `achievement_model.dart` has a generated `part 'achievement_model.g.dart'`; never
   hand-edit generated files (`.ai/rules/codegen.md`).
 

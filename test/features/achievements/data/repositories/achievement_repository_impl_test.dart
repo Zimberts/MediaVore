@@ -152,5 +152,61 @@ void main() {
       final count = await isar.achievementModels.count();
       expect(count, 0);
     });
+
+    test('should count genre milestones across genre name languages', () async {
+      // 5 seen in English, 5 seen in French: same TMDB genre (Horror).
+      final seenItems = [
+        for (var i = 0; i < 10; i++)
+          SeenItemModel(
+            tmdbId: i,
+            type: 'movie',
+            title: 'H$i',
+            seenDate: DateTime(2023, 1, i + 1),
+            genres: [i.isEven ? 'Horror' : 'Horreur'],
+          ),
+      ];
+      when(
+        () => mockDataSource.getAllSeenItems(),
+      ).thenAnswer((_) async => seenItems);
+
+      final achievements = await repository.getAchievements();
+      final horror = achievements.firstWhere((a) => a.id == 'genre_horror');
+
+      expect(horror.isUnlocked, isTrue);
+    });
+
+    test('should expose translated titles from the definitions', () async {
+      when(() => mockDataSource.getAllSeenItems()).thenAnswer((_) async => []);
+      final repo = AchievementRepositoryImpl(
+        isar,
+        mockDataSource,
+        definitionsLoader: _TestDefinitionsLoader(
+          () async => [
+            {
+              'id': 'movie_1',
+              'title': 'Movie Starter',
+              'description': 'Watch your first movie',
+              'iconPath': 'assets/achievements/movie_1.png',
+              'type': 'count',
+              'params': {'mediaType': 'movie', 'target': 1},
+              'translations': {
+                'fr': {
+                  'title': 'Premier film',
+                  'description': 'Regarder votre premier film',
+                },
+              },
+            },
+          ],
+        ),
+      );
+
+      final starter = (await repo.getAchievements()).single;
+
+      expect(starter.titleFor('en'), 'Movie Starter');
+      expect(starter.titleFor('fr'), 'Premier film');
+      expect(starter.descriptionFor('fr'), 'Regarder votre premier film');
+      expect(starter.titleFor('xx'), 'Movie Starter');
+      expect(starter.descriptionFor('xx'), 'Watch your first movie');
+    });
   });
 }

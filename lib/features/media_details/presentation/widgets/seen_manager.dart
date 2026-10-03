@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -61,7 +62,9 @@ class _SeenManagerState extends State<SeenManager> {
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
           color: isSeen ? colors.success : colors.comments,
         ),
-        tooltip: isSeen ? 'View History' : 'Mark as seen',
+        tooltip: isSeen
+            ? context.l10n.seenOpenHistory
+            : context.l10n.commonMarkAsSeen,
         onPressed: () {
           if (isSeen) {
             _showSeenHistory(context, provider);
@@ -73,8 +76,14 @@ class _SeenManagerState extends State<SeenManager> {
     }
 
     return ListTile(
-      title: Text(isTv ? 'Episodes Seen' : 'Seen'),
-      subtitle: Text(isTv ? '$count episodes' : (isSeen ? 'Yes' : 'No')),
+      title: Text(
+        isTv ? context.l10n.seenEpisodesSeenTitle : context.l10n.seenSeen,
+      ),
+      subtitle: Text(
+        isTv
+            ? context.l10n.seenEpisodeCount(count)
+            : (isSeen ? context.l10n.commonYes : context.l10n.commonNo),
+      ),
       trailing: IconButton(
         icon: Icon(
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
@@ -164,21 +173,22 @@ class _SeenManagerState extends State<SeenManager> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Clear History'),
-        content: Text(
-          'Are you sure you want to clear all viewing history for "${widget.item.title}"?',
-        ),
+        title: Text(context.l10n.seenClearHistory),
+        content: Text(context.l10n.seenClearHistoryMessage(widget.item.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           TextButton(
             onPressed: () {
               provider.removeFromSeen(widget.item.id, widget.item.mediaType);
               Navigator.pop(dialogContext);
             },
-            child: Text('Clear All', style: TextStyle(color: colors.error)),
+            child: Text(
+              context.l10n.seenClearAll,
+              style: TextStyle(color: colors.error),
+            ),
           ),
         ],
       ),
@@ -212,15 +222,15 @@ class _SeenManagerState extends State<SeenManager> {
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'Viewing History',
+                  context.l10n.seenViewingHistory,
                   style: Theme.of(sheetContext).textTheme.titleLarge,
                 ),
               ),
               const Divider(),
               ListTile(
                 leading: Icon(Icons.add_circle_outline, color: colors.success),
-                title: const Text(
-                  'Add New Viewing',
+                title: Text(
+                  context.l10n.seenAddViewing,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () {
@@ -230,9 +240,9 @@ class _SeenManagerState extends State<SeenManager> {
               ),
               const Divider(),
               if (history.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.all(32.0),
-                  child: Text('No viewing history found for this item.'),
+                  child: Text(context.l10n.seenNoHistory),
                 )
               else
                 Flexible(
@@ -244,9 +254,9 @@ class _SeenManagerState extends State<SeenManager> {
                       return ListTile(
                         leading: Icon(Icons.event, color: colors.comments),
                         title: Text(
-                          DateFormat(
-                            'MMM dd, yyyy - HH:mm',
-                          ).format(seenEntry.seenDate),
+                          DateFormat.yMMMd().add_Hm().format(
+                            seenEntry.seenDate,
+                          ),
                         ),
                         trailing: IconButton(
                           icon: Icon(Icons.delete_outline, color: colors.error),
@@ -270,7 +280,7 @@ class _SeenManagerState extends State<SeenManager> {
                     Navigator.pop(sheetContext);
                     _confirmClear(context, provider);
                   },
-                  child: const Text('Remove All History'),
+                  child: Text(context.l10n.seenRemoveAllHistory),
                 ),
               ),
             ],
@@ -356,7 +366,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Mark as seen',
+                          context.l10n.commonMarkAsSeen,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(color: colors.comments),
                         ),
@@ -376,7 +386,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     ),
                     onPressed: () =>
                         setState(() => _isTextEntry = !_isTextEntry),
-                    tooltip: _isTextEntry ? 'Use Calendar' : 'Type Date',
+                    tooltip: _isTextEntry
+                        ? context.l10n.seenUseCalendar
+                        : context.l10n.seenTypeDate,
                     color: colors.logicFlow,
                   ),
                 ],
@@ -408,7 +420,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   controller: _dateController,
                   autofocus: true,
                   decoration: InputDecoration(
-                    labelText: 'Date (DD/MM/YYYY)',
+                    labelText: context.l10n.seenDateLabel,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -447,7 +459,17 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       Icon(Icons.access_time, color: colors.logicFlow),
                       const SizedBox(width: 12),
                       Text(
-                        'Time: ${DateFormat('HH:mm').format(DateTime(0, 0, 0, _selectedTime.hour, _selectedTime.minute))}',
+                        context.l10n.seenTimeLabel(
+                          DateFormat('HH:mm').format(
+                            DateTime(
+                              0,
+                              0,
+                              0,
+                              _selectedTime.hour,
+                              _selectedTime.minute,
+                            ),
+                          ),
+                        ),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -463,7 +485,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('CANCEL'),
+                    child: Text(context.l10n.seenCancelCaps),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -496,15 +518,11 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                         Navigator.pop(context, result);
                       } catch (_) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Please enter a valid date (DD/MM/YYYY)',
-                            ),
-                          ),
+                          SnackBar(content: Text(context.l10n.seenInvalidDate)),
                         );
                       }
                     },
-                    child: const Text('LOG VIEWING'),
+                    child: Text(context.l10n.seenLogViewing),
                   ),
                 ],
               ),

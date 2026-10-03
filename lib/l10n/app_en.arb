@@ -1,0 +1,715 @@
+{
+  "@@locale": "en",
+  "appTitle": "MediaVore",
+  "appLoading": "Loading MediaVore...",
+  "appStartupFailed": "Failed to start app:\n{error}",
+  "@appStartupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonImport": "Import",
+  "commonOpenSettings": "Open Settings",
+  "navSearch": "Search",
+  "navMyLists": "My Lists",
+  "navSeen": "Seen",
+  "navAlerts": "Alerts",
+  "importListTitle": "Import List",
+  "importListMessage": "{count, plural, =1{You are about to import a list with 1 item.} other{You are about to import a list with {count} items.}}",
+  "@importListMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importListNameLabel": "List Name",
+  "importListNameHint": "Enter name",
+  "tmdbCredentialRequiredTitle": "TMDB Credential Required",
+  "tmdbCredentialRequiredMessage": "To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.",
+  "tmdbCredentialHint": "Enter TMDB v3 API key or v4 read token",
+  "tmdbCredentialLater": "You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).",
+  "tmdbCredentialCancelForNow": "Cancel for now",
+  "achievementUnlocked": "Achievement Unlocked!",
+  "searchErrorMissingApiKey": "Add your TMDB API key in Settings to search and discover media.",
+  "searchErrorInvalidApiKey": "Your TMDB API key was rejected. Check it in Settings.",
+  "searchErrorOffline": "You're offline. Check your connection and try again.",
+  "searchErrorServer": "TMDB is unavailable right now. Please try again later.",
+  "searchErrorUnknown": "Something went wrong while loading results.",
+  "settingsTitle": "Settings",
+  "settingsSectionAppearance": "Appearance",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System",
+  "settingsThemeMode": "Theme Mode",
+  "settingsThemeModeSystem": "System",
+  "settingsThemeModeLight": "Light",
+  "settingsThemeModeDark": "Dark",
+  "settingsLightTheme": "Light Theme",
+  "settingsDarkTheme": "Dark Theme",
+  "settingsSectionMilestones": "Gaming & Milestones",
+  "settingsAchievements": "Achievements",
+  "settingsAchievementsSubtitle": "View your collection of badges and progress.",
+  "settingsSectionListsDisplay": "Lists Display",
+  "settingsHideNonReleased": "Hide Non-Released Media",
+  "settingsHideNonReleasedSubtitle": "Only show movies and episodes that have already aired.",
+  "settingsSectionStorage": "Storage & History",
+  "settingsStorage": "Storage & Data",
+  "settingsStorageSubtitle": "Manage cache, exports, and viewing history database.",
+  "settingsSectionApi": "API Configuration",
+  "settingsTmdbCredential": "TMDB API Credential",
+  "settingsNotSet": "Not set",
+  "settingsSectionAbout": "About",
+  "settingsAboutDescription": "A simple media tracking app using TMDB.",
+  "dataSectionCache": "Cache Management",
+  "dataCacheSize": "Cache Size",
+  "dataCleanupCache": "Cleanup Cache",
+  "dataCleanupCacheSubtitle": "Remove old, unused search results and details.",
+  "dataCleanupCacheMessage": "This will remove search results and details older than 60 days that are not in your lists.",
+  "dataFillCache": "Fill Cache",
+  "dataFillCacheSubtitle": "Pre-cache all items in your lists and recent history for offline use.",
+  "dataWipeCache": "Wipe All Cache",
+  "dataWipeCacheSubtitle": "Delete everything from cache.",
+  "dataWipeCacheMessage": "This will delete ALL cached posters and details. You will need internet to see them again.",
+  "dataSectionData": "Data Management",
+  "dataSeenDbSize": "Seen Database Size",
+  "dataRefetchRuntimes": "Refetch Media Runtimes",
+  "dataRefetchRuntimesSubtitle": "Fetch missing runtimes and genres for your history.",
+  "dataRefetchTitle": "Refetch Data",
+  "dataRefetchMessage": "This will check your seen history and fetch any missing runtimes or genres from TMDb. This might take a while.",
+  "dataExportAll": "Export All Data",
+  "dataExportAllSubtitle": "Export seen, likes, notifications and lists as a single MDV file.",
+  "dataSaveToDevice": "Save to device",
+  "dataShareViaSystem": "Share via System",
+  "dataExportShareText": "MediaVore Export",
+  "dataImportAll": "Import All Data",
+  "dataImportAllSubtitle": "Import seen, likes, notifications and lists from an export MDV or ZIP.",
+  "dataPopulateQuickAdd": "Populate Quick Add from Seen History",
+  "dataPopulateQuickAddSubtitle": "Compute next episodes from your seen history and save them to Quick Add.",
+  "dataPopulateQuickAddTitle": "Populate Quick Add",
+  "dataPopulateQuickAddMessage": "This will compute next unseen episodes for your TV shows and add them to Quick Add. Proceed?",
+  "dataPopulateQuickAddDone": "Quick Add populated from history.",
+  "dataSectionAchievements": "Achievement Data",
+  "dataClearAchievements": "Clear Achievement Database",
+  "dataClearAchievementsSubtitle": "Remove all persisted achievement milestones.",
+  "dataClearAchievementsTitle": "Clear Achievements?",
+  "dataClearAchievementsMessage": "This will remove all persisted achievement dates from the database. Achievements calculated from your watch history will reappear automatically.",
+  "dataClearAchievementsDone": "Achievement database cleared.",
+  "dataSectionDebug": "Debug",
+  "dataNotificationDebug": "Notification Center Debug",
+  "dataNotificationDebugSubtitle": "Show hidden Notification Center items and why they were omitted.",
+  "commonProcessing": "Processing...",
+  "dataSaveExportDialog": "Save Export",
+  "dataFileSaved": "File saved successfully",
+  "dataSaveFailed": "Save failed: {error}. Try using \"Share\" instead.",
+  "@dataSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dataInvalidFile": "Please select a valid .mdv or .zip export file.",
+  "dataImportPreviewTitle": "Import Preview",
+  "dataImportPreviewMessage": "This file contains:\nSeen: {seen}\nLikes: {likes}\nNotifications: {notifications}\nLists: {lists}\n\nChoose how to apply the data to your current profile.",
+  "@dataImportPreviewMessage": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "likes": {
+        "type": "int"
+      },
+      "notifications": {
+        "type": "int"
+      },
+      "lists": {
+        "type": "int"
+      }
+    }
+  },
+  "dataImportedAppended": "Imported (Appended)",
+  "dataAppend": "Append",
+  "dataImportedMerged": "Imported (Merged)",
+  "dataMerge": "Merge",
+  "dataImportedReplaced": "Imported (Replaced)",
+  "dataReplace": "Replace",
+  "dataImportFailed": "Import failed: Invalid file format",
+  "dataReplaceTitle": "DANGER: Replace History",
+  "dataReplaceMessage": "This will delete all your current seen history and replace it with the data from the file. This action cannot be undone. Are you absolutely sure?",
+  "dataReplaceConfirm": "Yes, Replace Everything",
+  "commonProceed": "Proceed",
+  "listsDisplayOptions": "Display Options",
+  "listsGridSize": "Grid Size",
+  "listsSharingImporting": "Sharing & Importing",
+  "listsScanQr": "Scan QR Code",
+  "listsImportViaLink": "Import via Link",
+  "listsShareWebLink": "Share Web Link (WhatsApp/SMS)",
+  "listsShareLinkMessage": "Check out my {list} on MediaVore: {link}",
+  "@listsShareLinkMessage": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "listsShowQr": "Show QR Code",
+  "listsQrShareMessage": "Scan this QR code to import my {list} on MediaVore",
+  "@listsQrShareMessage": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "listsQrShareError": "Error sharing QR code: {error}",
+  "@listsQrShareError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "listsShareTitle": "Share {list}",
+  "@listsShareTitle": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "listsQrCaption": "MediaVore List Share",
+  "listsQrHint": "Scan this with another phone to import the list.",
+  "listsShareQrImage": "Share QR Code Image",
+  "commonClose": "Close",
+  "listsScanTitle": "Scan MediaVore List",
+  "listsScanHint": "Point your camera at a MediaVore QR code",
+  "listsPasteLinkHint": "Paste the shared link here",
+  "listsShareLinkLabel": "Share Link",
+  "listsInvalidLink": "Invalid link format",
+  "listsCouldNotParseLink": "Could not parse link",
+  "listsConfirmImport": "Confirm Import",
+  "commonConfirm": "Confirm",
+  "listsSortOptions": "Sort Options",
+  "listsSortManual": "Manual Order",
+  "listsSortManualHint": "Drag and drop items to reorder",
+  "listsSortReleaseDate": "Release Date",
+  "listsSortReleaseDateHint": "Sort by when it was released",
+  "listsSortShuffle": "Shuffle",
+  "listsSortShuffleHint": "Randomize the list",
+  "listsReverseOrder": "Reverse Order",
+  "listsSelectedCount": "{count} selected",
+  "@listsSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsWatchlist": "Watchlist",
+  "listsRemoveSelected": "Remove selected",
+  "listsDisplayMode": "Display Mode",
+  "listsEmpty": "No items in this list.",
+  "listsSwitchList": "Switch List",
+  "listsItemCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@listsItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsCreateNew": "Create New List",
+  "listsNewList": "New List",
+  "listsNameHint": "List name",
+  "commonCreate": "Create",
+  "listsDeleteList": "Delete List",
+  "listsDeleteListMessage": "Are you sure you want to delete \"{list}\"? This will also remove all items from this list.",
+  "@listsDeleteListMessage": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDelete": "Delete",
+  "mediaSeasonCount": "{count, plural, =1{1 season} other{{count} seasons}}",
+  "@mediaSeasonCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaRuntimeMinutes": "{minutes} min",
+  "@mediaRuntimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaSeasonShort": "{count} S",
+  "@mediaSeasonShort": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "seenRemoveLogTitle": "Remove log?",
+  "seenRemoveLogMessage": "Are you sure you want to remove this viewing entry from your history?",
+  "commonRemove": "Remove",
+  "seenFilterSort": "Filter & Sort",
+  "seenViewMode": "View Mode",
+  "seenViewHistory": "History (All episodes)",
+  "seenViewLibrary": "Library (Unique titles)",
+  "seenSortBy": "Sort by",
+  "seenSortDateNewest": "Date (Newest)",
+  "seenSortDateOldest": "Date (Oldest)",
+  "seenSortNameAsc": "Name (A-Z)",
+  "seenSortNameDesc": "Name (Z-A)",
+  "seenMediaType": "Media Type",
+  "commonAll": "All",
+  "commonMovies": "Movies",
+  "commonTvShows": "TV Shows",
+  "seenTitle": "Seen History",
+  "seenSearchHint": "Search history...",
+  "seenStatistics": "Statistics",
+  "commonRefresh": "Refresh",
+  "seenEmpty": "No items seen yet.",
+  "seenNoMatches": "No matches found.",
+  "seenEpisodesSeen": "{count, plural, =1{1 episode seen} other{{count} episodes seen}}",
+  "@seenEpisodesSeen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seenCannotDeleteLibrary": "Cannot delete from Library mode. Switch to History to remove entries.",
+  "statsTitle": "Media Stats",
+  "statsEmpty": "No data yet. Start watching!",
+  "statsToggleMetric": "Toggle Metric (Logs/Time)",
+  "statsAllTime": "All Time",
+  "statsYear": "Year",
+  "statsMonth": "Month",
+  "statsOverview": "Overview",
+  "statsDistribution": "Distribution",
+  "statsSelectYear": "Select Year",
+  "statsSelectPeriod": "Select Period",
+  "statsTotalWatchTime": "Total Watch Time",
+  "statsDuration": "{days}d {hours}h {minutes}m",
+  "@statsDuration": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "statsEpisodes": "Episodes",
+  "statsHallOfFame": "Hall of Fame ({metric})",
+  "@statsHallOfFame": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "statsMostWatchedMovie": "Most Watched Movie",
+  "statsMostWatchedSeries": "Most Watched Series",
+  "statsMostWatchedEpisode": "Most Watched Episode",
+  "statsActivityLogs": "Viewing Activity (logs)",
+  "statsActivityMinutes": "Viewing Activity (minutes)",
+  "statsLogCount": "{count, plural, =1{1 log} other{{count} logs}}",
+  "@statsLogCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsHours": "{hours}h",
+  "@statsHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "statsNoActivity": "No activity data",
+  "statsTooltip": "{label}\n{value} {unit}",
+  "@statsTooltip": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "statsMediaSplit": "Media Split ({metric})",
+  "@statsMediaSplit": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "statsPieLabel": "{type}\n{percent}%",
+  "@statsPieLabel": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "statsTopGenres": "Top Genres (by {metric})",
+  "@statsTopGenres": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "statsGenreValue": "{value} ({percent}%)",
+  "@statsGenreValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "statsMetricLogs": "logs",
+  "statsMetricTime": "time",
+  "genreAction": "Action",
+  "genreAdventure": "Adventure",
+  "genreAnimation": "Animation",
+  "genreComedy": "Comedy",
+  "genreCrime": "Crime",
+  "genreDocumentary": "Documentary",
+  "genreDrama": "Drama",
+  "genreFamily": "Family",
+  "genreFantasy": "Fantasy",
+  "genreHistory": "History",
+  "genreHorror": "Horror",
+  "genreMusic": "Music",
+  "genreMystery": "Mystery",
+  "genreRomance": "Romance",
+  "genreSciFi": "Sci-Fi",
+  "genreTvMovie": "TV Movie",
+  "genreThriller": "Thriller",
+  "genreWar": "War",
+  "genreWestern": "Western",
+  "genreActionAdventure": "Action & Adventure",
+  "genreKids": "Kids",
+  "genreNews": "News",
+  "genreReality": "Reality",
+  "genreSciFiFantasy": "Sci-Fi & Fantasy",
+  "genreSoap": "Soap",
+  "genreTalk": "Talk",
+  "genreWarPolitics": "War & Politics",
+  "discoveryFiltersTitle": "Discovery Filters",
+  "discoveryBoth": "Both",
+  "discoveryReleaseYear": "Release Year",
+  "discoveryAnyYear": "Any",
+  "discoveryMinRating": "Min Rating: {rating}",
+  "@discoveryMinRating": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryGenres": "Genres",
+  "discoveryReset": "Reset",
+  "discoveryApply": "Apply",
+  "commonRetry": "Retry",
+  "discoverySearchHint": "Search within Discovery...",
+  "discoveryTitle": "Discover",
+  "discoveryNoResults": "No results found",
+  "discoveryClearFilters": "Clear Filters",
+  "releaseEpisodeTba": "Episode — date TBA",
+  "releaseReturning": "Returning — new season planned",
+  "releasePlanned": "Planned — no release date",
+  "notifTitle": "Notification Center",
+  "notifForceRefresh": "Force Refresh",
+  "notifTabReleases": "Releases",
+  "notifTabQuickAdd": "Quick Add",
+  "notifSyncing": "Syncing releases...",
+  "notifNoReleases": "No upcoming or recent releases.",
+  "notifReleaseDate": "{released, select, true{Released} other{Releases}}: {date}",
+  "@notifReleaseDate": {
+    "placeholders": {
+      "released": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "commonMarkAsSeen": "Mark as seen",
+  "notifMarkedAsSeen": "Marked {title} as seen",
+  "@notifMarkedAsSeen": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNoNextEpisodes": "No next episodes to track.",
+  "commonUnknown": "Unknown",
+  "notifNextEpisode": "Next: Season {season}, Episode {episode}",
+  "@notifNextEpisode": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
+  "notifStreakOptedOut": "Streak opted out of Quick Add",
+  "commonUndo": "Undo",
+  "notifEpisode": "episode",
+  "detailOfflineSeason": "Cannot load season details while offline.",
+  "detailNoHistoryToExport": "No history to export for this item.",
+  "detailHistoryShareText": "Seen history for {title}",
+  "@detailHistoryShareText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "detailSaveHistoryDialog": "Save History",
+  "detailSaveFailed": "Save failed: {error}",
+  "@detailSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "detailCreator": "Creator",
+  "detailDirector": "Director",
+  "detailExportHistory": "Export history for this item",
+  "detailProgress": "Progress: {seen} / {total} episodes seen",
+  "@detailProgress": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "detailOfflineMode": "Offline Mode",
+  "detailOfflineMessage": "Detailed information is unavailable without internet.",
+  "commonTryAgain": "Try Again",
+  "detailSeasonCount": "{count, plural, =1{1 Season} other{{count} Seasons}}",
+  "@detailSeasonCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailEpisodeCount": "{count, plural, =1{1 Episode} other{{count} Episodes}}",
+  "@detailEpisodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailCreditLine": "{role}: {name}",
+  "@detailCreditLine": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailOverview": "Overview",
+  "detailSeasons": "Seasons",
+  "detailSeasonName": "Season {number}",
+  "@detailSeasonName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "detailSeasonProgress": "{seen} / {total} episodes seen",
+  "@detailSeasonProgress": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "detailCast": "Cast",
+  "detailSimilar": "Similar",
+  "detailRecommendations": "Recommendations",
+  "detailWatchOn": "Watch on:",
+  "detailTrailers": "Trailers",
+  "statusReleased": "Released",
+  "statusReturning": "Returning Series",
+  "statusEnded": "Ended",
+  "statusCanceled": "Canceled",
+  "statusInProduction": "In Production",
+  "statusPostProduction": "Post Production",
+  "statusPlanned": "Planned",
+  "statusRumored": "Rumored",
+  "statusPilot": "Pilot",
+  "seenOpenHistory": "View History",
+  "seenEpisodesSeenTitle": "Episodes Seen",
+  "seenSeen": "Seen",
+  "seenEpisodeCount": "{count, plural, =1{1 episode} other{{count} episodes}}",
+  "@seenEpisodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commonYes": "Yes",
+  "commonNo": "No",
+  "seenClearHistory": "Clear History",
+  "seenClearHistoryMessage": "Are you sure you want to clear all viewing history for \"{title}\"?",
+  "@seenClearHistoryMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "seenClearAll": "Clear All",
+  "seenViewingHistory": "Viewing History",
+  "seenAddViewing": "Add New Viewing",
+  "seenNoHistory": "No viewing history found for this item.",
+  "seenRemoveAllHistory": "Remove All History",
+  "seenUseCalendar": "Use Calendar",
+  "seenTypeDate": "Type Date",
+  "seenDateLabel": "Date (DD/MM/YYYY)",
+  "seenTimeLabel": "Time: {time}",
+  "@seenTimeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "seenCancelCaps": "CANCEL",
+  "seenInvalidDate": "Please enter a valid date (DD/MM/YYYY)",
+  "seenLogViewing": "LOG VIEWING",
+  "likeUnlike": "Unlike",
+  "likeLike": "Like",
+  "notifyDisable": "Disable notifications",
+  "notifyEnable": "Notify me on release",
+  "watchlistRemove": "Remove from watchlist",
+  "watchlistAdd": "Add to watchlist",
+  "watchNext": "Watch Next: S{season} E{episode}",
+  "@watchNext": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
+  "actorLoadFailed": "Failed to load actor details: {error}",
+  "@actorLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "actorBiography": "Biography",
+  "actorKnownFor": "Known For",
+  "achievementsOverall": "Overall Progress",
+  "achievementsUnlockedCount": "You've unlocked {unlocked} out of {total} badges",
+  "@achievementsUnlockedCount": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsUnlockedOn": "Unlocked on {date}",
+  "@achievementsUnlockedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "progressImportingAll": "Importing all data...",
+  "progressDone": "Done!",
+  "progressError": "Error: {error}",
+  "@progressError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "progressRefetchingRuntimes": "Refetching missing runtimes...",
+  "progressRefetchingItem": "Refetching {title}...",
+  "@progressRefetchingItem": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "progressRefetchDone": "Done refetching data!",
+  "progressProcessingItem": "Processing {title}...",
+  "@progressProcessingItem": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "progressSavingEntries": "Saving entries...",
+  "progressImportComplete": "Import complete"
+}

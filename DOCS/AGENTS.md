@@ -7,6 +7,8 @@ For project-wide rules, see the root [`AGENTS.md`](../AGENTS.md).
 - `DOCS/export-format.md` is the **authoritative spec** for the ZIP-of-CSV export/import
   format. It must stay in sync with `lib/core/utils/export_import_serializer.dart` — see
   `.ai/rules/export-format.md` for the full schema and `ImportMode` semantics.
+- `DOCS/i18n.md` describes how the app/TMDB language is resolved and how to add a
+  language or a string. Update it when `lib/core/l10n/` or the l10n setup changes.
 - `DOCS/ai-guidelines.md` is the blueprint for this repo's AI-enablement files (root
   `AGENTS.md`, `.ai/rules/`, `.ai/agents/`, etc.).
 

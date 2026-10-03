@@ -15,6 +15,7 @@ void main() {
     dataSource = MediaRemoteDataSource(
       dio: mockDio,
       credentials: FakeTmdbCredentialStore('mock_token'),
+      locale: FakeLocaleService(),
     );
   });
 
@@ -117,7 +118,13 @@ void main() {
     };
 
     test('getSimilarMedia should return List<MediaItem>', () async {
-      when(() => mockDio.get(any(), options: any(named: 'options'))).thenAnswer(
+      when(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
         (_) async => Response(
           requestOptions: RequestOptions(path: ''),
           data: tMediaListResponse,
@@ -131,6 +138,7 @@ void main() {
       verify(
         () => mockDio.get(
           'https://api.themoviedb.org/3/movie/1/similar',
+          queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
         ),
       ).called(1);
@@ -142,7 +150,13 @@ void main() {
           'US': {'flatrate': []},
         },
       };
-      when(() => mockDio.get(any(), options: any(named: 'options'))).thenAnswer(
+      when(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
         (_) async => Response(
           requestOptions: RequestOptions(path: ''),
           data: tProviders,
@@ -161,7 +175,13 @@ void main() {
           {'key': 'xyz', 'type': 'Trailer'},
         ],
       };
-      when(() => mockDio.get(any(), options: any(named: 'options'))).thenAnswer(
+      when(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
         (_) async => Response(
           requestOptions: RequestOptions(path: ''),
           data: tVideos,
@@ -182,6 +202,7 @@ void main() {
       final ds = MediaRemoteDataSource(
         dio: mockDio,
         credentials: FakeTmdbCredentialStore(credential),
+        locale: FakeLocaleService(),
       );
       when(
         () => mockDio.get(
@@ -226,6 +247,7 @@ void main() {
       final ds = MediaRemoteDataSource(
         dio: mockDio,
         credentials: FakeTmdbCredentialStore(),
+        locale: FakeLocaleService(),
       );
 
       expect(
@@ -353,6 +375,7 @@ void main() {
             final unconfigured = MediaRemoteDataSource(
               dio: mockDio,
               credentials: FakeTmdbCredentialStore(),
+              locale: FakeLocaleService(),
             );
             await expectLater(
               entry.value(unconfigured),
@@ -362,5 +385,111 @@ void main() {
         );
       });
     }
+  });
+
+  group('app language', () {
+    late MediaRemoteDataSource frenchDataSource;
+
+    void stubGet(Map<String, dynamic> Function(Map<String, dynamic>) data) {
+      when(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((inv) async {
+        final params = Map<String, dynamic>.from(
+          inv.namedArguments[#queryParameters] as Map,
+        );
+        return Response(
+          requestOptions: RequestOptions(path: ''),
+          data: data(params),
+          statusCode: 200,
+        );
+      });
+    }
+
+    List<Map<String, dynamic>> capturedParams() => verify(
+      () => mockDio.get(
+        any(),
+        queryParameters: captureAny(named: 'queryParameters'),
+        options: any(named: 'options'),
+      ),
+    ).captured.map((p) => Map<String, dynamic>.from(p as Map)).toList();
+
+    setUp(() {
+      frenchDataSource = MediaRemoteDataSource(
+        dio: mockDio,
+        credentials: FakeTmdbCredentialStore('mock_token'),
+        locale: FakeLocaleService('fr-FR'),
+      );
+    });
+
+    test('should send the app language on every request', () async {
+      stubGet((_) => {'id': 1, 'title': 'T', 'overview': 'O'});
+
+      await frenchDataSource.getMediaItem(1);
+      await frenchDataSource.getSeasonDetails(1, 1);
+
+      final params = capturedParams();
+      expect(params, hasLength(2));
+      for (final p in params) {
+        expect(p['language'], 'fr-FR');
+      }
+    });
+
+    test('should map the original-language filter for discover', () async {
+      stubGet((_) => {'results': []});
+
+      await frenchDataSource.discoverMedia(originalLanguage: 'ja');
+
+      final params = capturedParams().single;
+      expect(params['with_original_language'], 'ja');
+      expect(params['language'], 'fr-FR');
+    });
+
+    test('should filter search results by original language', () async {
+      stubGet(
+        (_) => {
+          'results': [
+            {'id': 1, 'title': 'A', 'original_language': 'ja'},
+            {'id': 2, 'title': 'B', 'original_language': 'en'},
+          ],
+        },
+      );
+
+      final result = await frenchDataSource.searchMedia(
+        'q',
+        originalLanguage: 'ja',
+        type: MediaType.movie,
+      );
+
+      expect(result.map((m) => m.id), [1]);
+      expect(capturedParams().single['language'], 'fr-FR');
+    });
+
+    test('should fall back to the English overview when missing', () async {
+      stubGet(
+        (params) => {
+          'id': 1,
+          'title': 'Titre',
+          'overview': params['language'] == 'en-US' ? 'English overview' : '',
+        },
+      );
+
+      final item = await frenchDataSource.getMediaItem(1);
+
+      expect(item.title, 'Titre');
+      expect(item.overview, 'English overview');
+      expect(capturedParams().map((p) => p['language']), ['fr-FR', 'en-US']);
+    });
+
+    test('should not refetch the overview in English', () async {
+      stubGet((_) => {'id': 1, 'title': 'T', 'overview': ''});
+
+      await dataSource.getMediaItem(1);
+
+      expect(capturedParams(), hasLength(1));
+    });
   });
 }

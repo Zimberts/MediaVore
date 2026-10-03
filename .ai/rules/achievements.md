@@ -22,8 +22,15 @@ applyTo:
 
 ## Fields
 
-- Entries follow `{ id, title, description, iconPath, type, params }`. `iconPath` points
-  into `assets/achievements/`. Keep icons alongside the JSON.
+- Entries follow `{ id, title, description, iconPath, type, params, translations }`.
+  `iconPath` points into `assets/achievements/`. Keep icons alongside the JSON.
+- `title` / `description` are English. `translations` maps a language code to
+  `{ title, description }` (e.g. `"fr": {...}`); the UI uses
+  `Achievement.titleFor(code)` / `descriptionFor(code)` and falls back to English.
+  Every non-English language in `supportedAppLanguages` needs an entry
+  (enforced by `test/core/l10n/translations_test.dart`).
+- Genre milestones match by TMDB genre id (`GenreUtils.getGenreIdByName`), so a
+  `params.genre` name in any supported language works.
 
 ## Tests
 

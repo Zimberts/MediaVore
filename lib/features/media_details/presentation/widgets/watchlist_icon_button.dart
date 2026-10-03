@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -33,7 +34,9 @@ class WatchlistIconButton extends StatelessWidget {
         color: isInWatchlist ? colors.onWatchlist : null,
       ),
       onPressed: () => provider.toggleInList(item, 'watchlist'),
-      tooltip: isInWatchlist ? 'Remove from watchlist' : 'Add to watchlist',
+      tooltip: isInWatchlist
+          ? context.l10n.watchlistRemove
+          : context.l10n.watchlistAdd,
     );
   }
 }

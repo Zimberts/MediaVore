@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
@@ -48,7 +50,7 @@ class _AchievementsPageState extends State<AchievementsPage> {
     final totalCount = provider.achievements.length;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Achievements')),
+      appBar: AppBar(title: Text(context.l10n.settingsAchievements)),
       body: provider.achievements.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -112,13 +114,16 @@ class _AchievementsSummary extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Overall Progress',
+                    context.l10n.achievementsOverall,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    'You\'ve unlocked $unlockedCount out of $totalCount badges',
+                    context.l10n.achievementsUnlockedCount(
+                      unlockedCount,
+                      totalCount,
+                    ),
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: colors.comments),
@@ -202,14 +207,14 @@ class _AchievementCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      achievement.title,
+                      achievement.titleFor(context.l10n.localeName),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
                     ),
                     Text(
-                      achievement.description,
+                      achievement.descriptionFor(context.l10n.localeName),
                       style: TextStyle(color: colors.comments),
                     ),
                     if (!isUnlocked && achievement.progress > 0) ...[
@@ -232,7 +237,11 @@ class _AchievementCard extends StatelessWidget {
                     if (isUnlocked && achievement.unlockedAt != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'Unlocked on ${achievement.unlockedAt!.toLocal().toString().split(' ')[0]}',
+                        context.l10n.achievementsUnlockedOn(
+                          DateFormat.yMMMd().format(
+                            achievement.unlockedAt!.toLocal(),
+                          ),
+                        ),
                         style: TextStyle(
                           color: colors.success,
                           fontSize: 12,

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -90,7 +91,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to load actor details: $e')),
+              SnackBar(content: Text(context.l10n.actorLoadFailed('$e'))),
             );
           }
         });
@@ -187,8 +188,8 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                     const SizedBox(height: 24),
                     if (_actorDetails?.biography != null &&
                         _actorDetails!.biography!.isNotEmpty) ...[
-                      const Text(
-                        'Biography',
+                      Text(
+                        context.l10n.actorBiography,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -203,8 +204,8 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                     ],
                     if (_actorDetails != null &&
                         _actorDetails!.items.isNotEmpty) ...[
-                      const Text(
-                        'Known For',
+                      Text(
+                        context.l10n.actorKnownFor,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

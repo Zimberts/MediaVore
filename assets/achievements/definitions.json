@@ -8,6 +8,12 @@
         "params": {
             "mediaType": "movie",
             "target": 1
+        },
+        "translations": {
+            "fr": {
+                "title": "Premier film",
+                "description": "Regarder votre premier film"
+            }
         }
     },
     {
@@ -19,6 +25,12 @@
         "params": {
             "mediaType": "movie",
             "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Amateur de films",
+                "description": "Regarder 10 films"
+            }
         }
     },
     {
@@ -30,6 +42,12 @@
         "params": {
             "mediaType": "movie",
             "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Fana de films",
+                "description": "Regarder 50 films"
+            }
         }
     },
     {
@@ -41,6 +59,12 @@
         "params": {
             "mediaType": "movie",
             "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Cinéphile",
+                "description": "Regarder 100 films"
+            }
         }
     },
     {
@@ -52,6 +76,12 @@
         "params": {
             "mediaType": "movie",
             "target": 500
+        },
+        "translations": {
+            "fr": {
+                "title": "Légende du cinéma",
+                "description": "Regarder 500 films"
+            }
         }
     },
     {
@@ -63,6 +93,12 @@
         "params": {
             "mediaType": "movie",
             "target": 1000
+        },
+        "translations": {
+            "fr": {
+                "title": "Gourou du cinéma",
+                "description": "Regarder 1000 films"
+            }
         }
     },
     {
@@ -74,6 +110,12 @@
         "params": {
             "mediaType": "tv",
             "target": 1
+        },
+        "translations": {
+            "fr": {
+                "title": "Premier épisode",
+                "description": "Regarder votre premier épisode"
+            }
         }
     },
     {
@@ -85,6 +127,12 @@
         "params": {
             "mediaType": "tv",
             "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Habitué des séries",
+                "description": "Regarder 50 épisodes"
+            }
         }
     },
     {
@@ -96,6 +144,12 @@
         "params": {
             "mediaType": "tv",
             "target": 250
+        },
+        "translations": {
+            "fr": {
+                "title": "Binge-watcher",
+                "description": "Regarder 250 épisodes"
+            }
         }
     },
     {
@@ -107,6 +161,12 @@
         "params": {
             "mediaType": "tv",
             "target": 1000
+        },
+        "translations": {
+            "fr": {
+                "title": "Maître des séries",
+                "description": "Regarder 1000 épisodes"
+            }
         }
     },
     {
@@ -118,6 +178,12 @@
         "params": {
             "mediaType": "tv",
             "target": 5000
+        },
+        "translations": {
+            "fr": {
+                "title": "Accro aux séries",
+                "description": "Regarder 5000 épisodes"
+            }
         }
     },
     {
@@ -129,6 +195,12 @@
         "params": {
             "isTv": false,
             "target": 2
+        },
+        "translations": {
+            "fr": {
+                "title": "Bis !",
+                "description": "Regarder le même film deux fois"
+            }
         }
     },
     {
@@ -140,6 +212,12 @@
         "params": {
             "isTv": false,
             "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Obsédé",
+                "description": "Regarder le même film 5 fois"
+            }
         }
     },
     {
@@ -151,6 +229,12 @@
         "params": {
             "isTv": false,
             "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Culte",
+                "description": "Regarder le même film 10 fois"
+            }
         }
     },
     {
@@ -162,6 +246,12 @@
         "params": {
             "isTv": true,
             "target": 2
+        },
+        "translations": {
+            "fr": {
+                "title": "Deuxième prise",
+                "description": "Regarder le même épisode deux fois"
+            }
         }
     },
     {
@@ -173,6 +263,12 @@
         "params": {
             "isTv": true,
             "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Déjà-vu",
+                "description": "Regarder le même épisode 5 fois"
+            }
         }
     },
     {
@@ -183,6 +279,12 @@
         "type": "loyalist",
         "params": {
             "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Super fan",
+                "description": "Regarder 100 épisodes de la même série"
+            }
         }
     },
     {
@@ -193,6 +295,12 @@
         "type": "loyalist",
         "params": {
             "target": 500
+        },
+        "translations": {
+            "fr": {
+                "title": "Fan absolu",
+                "description": "Regarder 500 épisodes de la même série"
+            }
         }
     },
     {
@@ -204,6 +312,12 @@
         "params": {
             "genre": "Horror",
             "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Reine/Roi du cri",
+                "description": "Regarder 10 films d'horreur"
+            }
         }
     },
     {
@@ -215,6 +329,12 @@
         "params": {
             "genre": "Horror",
             "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Moissonneur d'horreur",
+                "description": "Regarder 50 films d'horreur"
+            }
         }
     },
     {
@@ -226,6 +346,12 @@
         "params": {
             "genre": "Comedy",
             "target": 20
+        },
+        "translations": {
+            "fr": {
+                "title": "Fou rire",
+                "description": "Regarder 20 comédies"
+            }
         }
     },
     {
@@ -237,6 +363,12 @@
         "params": {
             "genre": "Comedy",
             "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Roi de la comédie",
+                "description": "Regarder 100 comédies"
+            }
         }
     },
     {
@@ -248,6 +380,12 @@
         "params": {
             "genre": "Action",
             "target": 20
+        },
+        "translations": {
+            "fr": {
+                "title": "Accro à l'adrénaline",
+                "description": "Regarder 20 films d'action"
+            }
         }
     },
     {
@@ -259,6 +397,12 @@
         "params": {
             "genre": "Action",
             "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Héros d'action",
+                "description": "Regarder 100 films d'action"
+            }
         }
     },
     {
@@ -270,6 +414,12 @@
         "params": {
             "genre": "Science Fiction",
             "target": 20
+        },
+        "translations": {
+            "fr": {
+                "title": "Explorateur du futur",
+                "description": "Regarder 20 films de science-fiction"
+            }
         }
     },
     {
@@ -281,6 +431,12 @@
         "params": {
             "genre": "Science Fiction",
             "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Voyageur galactique",
+                "description": "Regarder 100 films de science-fiction"
+            }
         }
     },
     {
@@ -292,6 +448,12 @@
         "params": {
             "genre": "Documentary",
             "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Érudit",
+                "description": "Regarder 10 documentaires"
+            }
         }
     },
     {
@@ -303,6 +465,12 @@
         "params": {
             "genre": "Documentary",
             "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Professeur",
+                "description": "Regarder 50 documentaires"
+            }
         }
     },
     {
@@ -314,6 +482,12 @@
         "params": {
             "genre": "Romance",
             "target": 15
+        },
+        "translations": {
+            "fr": {
+                "title": "Romantique incurable",
+                "description": "Regarder 15 films romantiques"
+            }
         }
     },
     {
@@ -325,6 +499,12 @@
         "params": {
             "subtype": "night_owl",
             "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Oiseau de nuit",
+                "description": "Regarder 10 titres entre minuit et 4 h"
+            }
         }
     },
     {
@@ -336,6 +516,12 @@
         "params": {
             "subtype": "night_owl",
             "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Créature de la nuit",
+                "description": "Regarder 100 titres entre minuit et 4 h"
+            }
         }
     },
     {
@@ -347,6 +533,12 @@
         "params": {
             "subtype": "weekend",
             "target": 15
+        },
+        "translations": {
+            "fr": {
+                "title": "Guerrier du week-end",
+                "description": "Regarder 15 titres en un seul week-end"
+            }
         }
     },
     {
@@ -357,6 +549,12 @@
         "type": "marathon",
         "params": {
             "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Marathonien",
+                "description": "Regarder 10 épisodes de la même série en un jour"
+            }
         }
     },
     {
@@ -367,6 +565,12 @@
         "type": "marathon",
         "params": {
             "target": 20
+        },
+        "translations": {
+            "fr": {
+                "title": "Marathonien pro",
+                "description": "Regarder 20 épisodes de la même série en un jour"
+            }
         }
     },
     {
@@ -377,6 +581,12 @@
         "type": "streak",
         "params": {
             "target": 7
+        },
+        "translations": {
+            "fr": {
+                "title": "Régulier",
+                "description": "Regarder quelque chose chaque jour pendant une semaine"
+            }
         }
     },
     {
@@ -387,6 +597,12 @@
         "type": "streak",
         "params": {
             "target": 30
+        },
+        "translations": {
+            "fr": {
+                "title": "Assidu",
+                "description": "Regarder quelque chose chaque jour pendant un mois"
+            }
         }
     },
     {
@@ -397,6 +613,12 @@
         "type": "streak",
         "params": {
             "target": 365
+        },
+        "translations": {
+            "fr": {
+                "title": "Inarrêtable",
+                "description": "Regarder quelque chose chaque jour pendant un an"
+            }
         }
     },
     {
@@ -407,6 +629,12 @@
         "type": "runtime",
         "params": {
             "targetMinutes": 1000
+        },
+        "translations": {
+            "fr": {
+                "title": "Club des 1000 minutes",
+                "description": "Passer 1000 minutes à regarder"
+            }
         }
     },
     {
@@ -417,6 +645,12 @@
         "type": "runtime",
         "params": {
             "targetMinutes": 6000
+        },
+        "translations": {
+            "fr": {
+                "title": "Spectateur aguerri",
+                "description": "Regarder 100 heures au total"
+            }
         }
     },
     {
@@ -427,6 +661,12 @@
         "type": "runtime",
         "params": {
             "targetMinutes": 10000
+        },
+        "translations": {
+            "fr": {
+                "title": "Club des 10 000 minutes",
+                "description": "Passer 10 000 minutes à regarder"
+            }
         }
     },
     {
@@ -437,6 +677,12 @@
         "type": "runtime",
         "params": {
             "targetMinutes": 14400
+        },
+        "translations": {
+            "fr": {
+                "title": "Marathon de dix jours",
+                "description": "Regarder l'équivalent de 10 jours complets"
+            }
         }
     },
     {
@@ -447,6 +693,12 @@
         "type": "runtime",
         "params": {
             "targetMinutes": 60000
+        },
+        "translations": {
+            "fr": {
+                "title": "Le millénaire",
+                "description": "Regarder 1 000 heures au total"
+            }
         }
     },
     {
@@ -457,6 +709,12 @@
         "type": "runtime",
         "params": {
             "targetMinutes": 100000
+        },
+        "translations": {
+            "fr": {
+                "title": "Club des 100 000 minutes",
+                "description": "Passer 100 000 minutes à regarder"
+            }
         }
     },
     {
@@ -467,6 +725,12 @@
         "type": "runtime",
         "params": {
             "targetMinutes": 525600
+        },
+        "translations": {
+            "fr": {
+                "title": "Double vie",
+                "description": "Regarder l'équivalent d'une année complète"
+            }
         }
     }
 ]

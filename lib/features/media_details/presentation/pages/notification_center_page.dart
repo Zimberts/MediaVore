@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/utils/notification_center_filter.dart';
@@ -56,12 +57,12 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notification Center'),
+        title: Text(context.l10n.notifTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: refresh,
-            tooltip: 'Force Refresh',
+            tooltip: context.l10n.notifForceRefresh,
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -70,14 +71,14 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
                 MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
             },
-            tooltip: 'Settings',
+            tooltip: context.l10n.settingsTitle,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Releases'),
-            Tab(text: 'Quick Add'),
+          tabs: [
+            Tab(text: context.l10n.notifTabReleases),
+            Tab(text: context.l10n.notifTabQuickAdd),
           ],
         ),
       ),
@@ -93,7 +94,7 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
           if (context.watch<SearchProvider>().isNotifiedRefreshing)
             Container(
               color: Colors.black26,
-              child: const Center(
+              child: Center(
                 child: Card(
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
@@ -103,7 +104,7 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
                         CircularProgressIndicator(),
                         SizedBox(height: 16),
                         Text(
-                          'Syncing releases...',
+                          context.l10n.notifSyncing,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -151,9 +152,9 @@ class _ReleasesTabState extends State<_ReleasesTab> {
           onRefresh: widget.onRefresh,
           child: (releases.isEmpty && debugChildren.isEmpty)
               ? ListView(
-                  children: const [
+                  children: [
                     SizedBox(height: 100),
-                    Center(child: Text('No upcoming or recent releases.')),
+                    Center(child: Text(context.l10n.notifNoReleases)),
                   ],
                 )
               : ListView.builder(
@@ -178,8 +179,11 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                     final runtimeText = Formatters.formatRuntime(item.runtime);
                     final subtitleText =
                         (item.releaseDate != null
-                            ? '${isReleased ? "Released" : "Releases"}: ${DateFormat.yMMMd().format(item.releaseDate!)}'
-                            : releaseSubtitleForItem(item)) +
+                            ? context.l10n.notifReleaseDate(
+                                '$isReleased',
+                                DateFormat.yMMMd().format(item.releaseDate!),
+                              )
+                            : releaseSubtitleForItem(item, context.l10n)) +
                         (runtimeText.isNotEmpty ? ' · $runtimeText' : '');
                     final subtitleColor = item.releaseDate != null
                         ? (isReleased ? Colors.green : Colors.orange)
@@ -205,7 +209,7 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                                 Icons.visibility_outlined,
                                 color: Colors.green,
                               ),
-                              tooltip: 'Mark as seen',
+                              tooltip: context.l10n.commonMarkAsSeen,
                               onPressed: () async {
                                 if (item.type == MediaType.movie) {
                                   await provider.markAsSeen(
@@ -243,7 +247,9 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Marked ${item.title} as seen',
+                                        context.l10n.notifMarkedAsSeen(
+                                          item.title,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -325,9 +331,9 @@ class _QuickAddTabState extends State<_QuickAddTab> {
           onRefresh: widget.onRefresh,
           child: (items.isEmpty && debugChildren.isEmpty)
               ? ListView(
-                  children: const [
+                  children: [
                     SizedBox(height: 100),
-                    Center(child: Text('No next episodes to track.')),
+                    Center(child: Text(context.l10n.notifNoNextEpisodes)),
                   ],
                 )
               : ListView.builder(
@@ -339,13 +345,15 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                     }
                     final qa = items[index];
                     final tmdbId = qa.tmdbId;
-                    final title = qa.title ?? 'Unknown';
+                    final title = qa.title ?? context.l10n.commonUnknown;
                     final posterPath = qa.posterPath;
 
                     String subtitle = '';
                     if (qa.seasonNumber != null && qa.episodeNumber != null) {
-                      subtitle =
-                          'Next: Season ${qa.seasonNumber}, Episode ${qa.episodeNumber}';
+                      subtitle = context.l10n.notifNextEpisode(
+                        qa.seasonNumber!,
+                        qa.episodeNumber!,
+                      );
                     }
                     final runtimeText = Formatters.formatRuntime(qa.runtime);
                     if (runtimeText.isNotEmpty) {
@@ -383,12 +391,10 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                             messenger.removeCurrentSnackBar();
                             messenger.showSnackBar(
                               SnackBar(
-                                content: const Text(
-                                  'Streak opted out of Quick Add',
-                                ),
+                                content: Text(context.l10n.notifStreakOptedOut),
                                 duration: const Duration(seconds: 4),
                                 action: SnackBarAction(
-                                  label: 'Undo',
+                                  label: context.l10n.commonUndo,
                                   onPressed: () async {
                                     try {
                                       await provider.clearOptOutSeries(
@@ -436,7 +442,9 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Marked ${qa.title ?? 'episode'} as seen',
+                                    context.l10n.notifMarkedAsSeen(
+                                      qa.title ?? context.l10n.notifEpisode,
+                                    ),
                                   ),
                                 ),
                               );

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -148,5 +151,69 @@ void main() {
         expect(provider.darkPalette.runtimeType.toString(), contains('Slate'));
       },
     );
+  });
+
+  group('SettingsProvider - Language', () {
+    late SharedPreferences prefs;
+    late LocaleService localeService;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+      localeService = LocaleService.withDeviceLocales(
+        prefs,
+        () => const [Locale('de')],
+      );
+    });
+
+    test('should follow the device by default', () {
+      final p = SettingsProvider(
+        mockPrefs,
+        FakeTmdbCredentialStore(),
+        localeService: localeService,
+      );
+      expect(p.appLanguageOverride, isNull);
+      expect(p.locale, isNull);
+      expect(localeService.current, fallbackAppLanguage);
+    });
+
+    test('should persist the chosen language across restarts', () async {
+      final p = SettingsProvider(
+        mockPrefs,
+        FakeTmdbCredentialStore(),
+        localeService: localeService,
+      );
+      var notified = false;
+      p.addListener(() => notified = true);
+
+      await p.setAppLanguage(appLanguageForCode('fr'));
+
+      expect(notified, isTrue);
+      expect(p.locale, const Locale('fr'));
+      expect(localeService.tmdbLanguage, 'fr-FR');
+
+      final restarted = SettingsProvider(
+        mockPrefs,
+        FakeTmdbCredentialStore(),
+        localeService: LocaleService.withDeviceLocales(
+          prefs,
+          () => const [Locale('de')],
+        ),
+      );
+      expect(restarted.appLanguageOverride?.code, 'fr');
+    });
+
+    test('should go back to the device language on System', () async {
+      final p = SettingsProvider(
+        mockPrefs,
+        FakeTmdbCredentialStore(),
+        localeService: localeService,
+      );
+      await p.setAppLanguage(appLanguageForCode('fr'));
+      await p.setAppLanguage(null);
+
+      expect(p.locale, isNull);
+      expect(localeService.tmdbLanguage, 'en-US');
+    });
   });
 }

@@ -51,6 +51,7 @@ void main() {
     final remote = MediaRemoteDataSource(
       dio: Dio(),
       credentials: FakeTmdbCredentialStore('mock_token'),
+      locale: FakeLocaleService(),
     );
     repo = MediaRepositoryImpl(
       remoteDataSource: remote,

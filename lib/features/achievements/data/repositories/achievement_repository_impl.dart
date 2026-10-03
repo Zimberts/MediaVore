@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
@@ -55,6 +56,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
         unlockedAt: persistedUnlockDate ?? calculatedUnlockDate,
         progress: progressData.progress,
         progressLabel: progressData.label,
+        translations: _parseTranslations(def['translations']),
       );
     }).toList();
   }
@@ -94,6 +96,20 @@ class AchievementRepositoryImpl implements AchievementRepository {
       _isar.achievementModels.watchLazy(),
       _isar.seenItemModels.watchLazy(),
     ]).asyncMap((_) => getAchievements());
+  }
+
+  /// Parses the optional `translations` block of a definition.
+  static Map<String, Map<String, String>> _parseTranslations(Object? raw) {
+    if (raw is! Map) return const {};
+    return {
+      for (final entry in raw.entries)
+        if (entry.value is Map)
+          entry.key as String: {
+            for (final field in (entry.value as Map).entries)
+              if (field.value is String)
+                field.key as String: field.value as String,
+          },
+    };
   }
 
   static const _definitionsAssetPath = 'assets/achievements/definitions.json';
@@ -305,8 +321,14 @@ class AchievementRepositoryImpl implements AchievementRepository {
     String genre,
     int target,
   ) {
+    // Genre names are stored in the app language at the time they were seen
+    // (TMDB localizes them), so compare by TMDB id.
+    final genreId = GenreUtils.getGenreIdByName(genre);
+    bool matches(String name) =>
+        name == genre ||
+        (genreId != null && GenreUtils.getGenreIdByName(name) == genreId);
     final filtered = items
-        .where((i) => i.genres?.contains(genre) ?? false)
+        .where((i) => i.genres?.any(matches) ?? false)
         .toList();
     final count = filtered.length;
     return _ProgressData(

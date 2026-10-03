@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
@@ -164,20 +165,18 @@ class _MainPageState extends State<MainPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Import List'),
+        title: Text(context.l10n.importListTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'You are about to import a list with ${entries.length} items.',
-            ),
+            Text(context.l10n.importListMessage(entries.length)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'List Name',
-                hintText: 'Enter name',
+              decoration: InputDecoration(
+                labelText: context.l10n.importListNameLabel,
+                hintText: context.l10n.importListNameHint,
               ),
             ),
           ],
@@ -185,7 +184,7 @@ class _MainPageState extends State<MainPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           TextButton(
             onPressed: () async {
@@ -197,7 +196,7 @@ class _MainPageState extends State<MainPage> {
                 setState(() => _selectedIndex = 1);
               }
             },
-            child: const Text('Import'),
+            child: Text(context.l10n.commonImport),
           ),
         ],
       ),
@@ -218,6 +217,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
       floatingActionButton: FloatingActionButton(
@@ -225,22 +225,28 @@ class _MainPageState extends State<MainPage> {
           _onItemTapped(0);
           _discoverSearchTrigger.value += 1;
         },
-        tooltip: 'Search',
+        tooltip: l10n.navSearch,
         child: const Icon(Icons.search),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark),
-            label: 'My Lists',
+            icon: const Icon(Icons.search),
+            label: l10n.navSearch,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Seen'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Alerts',
+            icon: const Icon(Icons.bookmark),
+            label: l10n.navMyLists,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.history),
+            label: l10n.navSeen,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.notifications),
+            label: l10n.navAlerts,
           ),
         ],
         currentIndex: _selectedIndex,
@@ -254,20 +260,19 @@ class _MainPageState extends State<MainPage> {
     showDialog(
       context: context,
       builder: (context) {
+        final l10n = context.l10n;
         return AlertDialog(
-          title: const Text('TMDB Credential Required'),
+          title: Text(l10n.tmdbCredentialRequiredTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.',
-              ),
+              Text(l10n.tmdbCredentialRequiredMessage),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(
-                  hintText: 'Enter TMDB v3 API key or v4 read token',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: l10n.tmdbCredentialHint,
+                  border: const OutlineInputBorder(),
                 ),
                 obscureText: true,
               ),
@@ -279,23 +284,21 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).',
-                      ),
-                      duration: Duration(seconds: 5),
+                    SnackBar(
+                      content: Text(l10n.tmdbCredentialLater),
+                      duration: const Duration(seconds: 5),
                     ),
                   );
                 }
               },
-              child: const Text('Cancel for now'),
+              child: Text(l10n.tmdbCredentialCancelForNow),
             ),
             FilledButton(
               onPressed: () {
                 settings.setTmdbApiKey(controller.text.trim());
                 Navigator.pop(context);
               },
-              child: const Text('Save'),
+              child: Text(l10n.commonSave),
             ),
           ],
         );
@@ -433,8 +436,8 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Achievement Unlocked!',
+                        Text(
+                          context.l10n.achievementUnlocked,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -442,7 +445,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                           ),
                         ),
                         Text(
-                          widget.achievement.title,
+                          widget.achievement.titleFor(context.l10n.localeName),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,

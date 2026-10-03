@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
@@ -11,6 +13,7 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final dropdownStyle = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.primary,
@@ -19,12 +22,42 @@ class SettingsPage extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
-          const _SectionHeader(title: 'Appearance'),
+          _SectionHeader(title: l10n.settingsSectionAppearance),
           ListTile(
-            title: const Text('Theme Mode'),
+            leading: const Icon(Icons.language),
+            title: Text(l10n.settingsLanguage),
+            trailing: DropdownButtonHideUnderline(
+              key: const Key('settings_language_dropdown'),
+              // `null` value = follow the device ("System").
+              child: DropdownButton<AppLanguage?>(
+                value: settings.appLanguageOverride,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: settings.setAppLanguage,
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                items: [
+                  DropdownMenuItem<AppLanguage?>(
+                    value: null,
+                    child: Text(l10n.settingsLanguageSystem),
+                  ),
+                  for (final language in supportedAppLanguages)
+                    DropdownMenuItem<AppLanguage?>(
+                      value: language,
+                      child: Text(language.nativeName),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          ListTile(
+            title: Text(l10n.settingsThemeMode),
             trailing: DropdownButtonHideUnderline(
               child: DropdownButton<ThemeMode>(
                 value: settings.themeMode,
@@ -41,7 +74,7 @@ class SettingsPage extends StatelessWidget {
                 selectedItemBuilder: (context) => ThemeMode.values.map((mode) {
                   return Container(
                     alignment: Alignment.centerRight,
-                    child: Text(_getThemeModeName(mode)),
+                    child: Text(_getThemeModeName(l10n, mode)),
                   );
                 }).toList(),
                 items: ThemeMode.values.map((mode) {
@@ -52,7 +85,7 @@ class SettingsPage extends StatelessWidget {
                       children: [
                         Icon(_getThemeModeIcon(mode), size: 14),
                         const SizedBox(width: 6),
-                        Text(_getThemeModeName(mode)),
+                        Text(_getThemeModeName(l10n, mode)),
                       ],
                     ),
                   );
@@ -61,7 +94,7 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           ListTile(
-            title: const Text('Light Theme'),
+            title: Text(l10n.settingsLightTheme),
             enabled: settings.themeMode != ThemeMode.dark,
             trailing: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -91,7 +124,7 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           ListTile(
-            title: const Text('Dark Theme'),
+            title: Text(l10n.settingsDarkTheme),
             enabled: settings.themeMode != ThemeMode.light,
             trailing: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -119,13 +152,11 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           const Divider(),
-          const _SectionHeader(title: 'Gaming & Milestones'),
+          _SectionHeader(title: l10n.settingsSectionMilestones),
           ListTile(
             leading: const Icon(Icons.emoji_events_outlined),
-            title: const Text('Achievements'),
-            subtitle: const Text(
-              'View your collection of badges and progress.',
-            ),
+            title: Text(l10n.settingsAchievements),
+            subtitle: Text(l10n.settingsAchievementsSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
@@ -137,23 +168,19 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           const Divider(),
-          const _SectionHeader(title: 'Lists Display'),
+          _SectionHeader(title: l10n.settingsSectionListsDisplay),
           SwitchListTile(
-            title: const Text('Hide Non-Released Media'),
-            subtitle: const Text(
-              'Only show movies and episodes that have already aired.',
-            ),
+            title: Text(l10n.settingsHideNonReleased),
+            subtitle: Text(l10n.settingsHideNonReleasedSubtitle),
             value: settings.hideNonReleased,
             onChanged: (val) => settings.setHideNonReleased(val),
           ),
           const Divider(),
-          const _SectionHeader(title: 'Storage & History'),
+          _SectionHeader(title: l10n.settingsSectionStorage),
           ListTile(
             leading: const Icon(Icons.storage),
-            title: const Text('Storage & Data'),
-            subtitle: const Text(
-              'Manage cache, exports, and viewing history database.',
-            ),
+            title: Text(l10n.settingsStorage),
+            subtitle: Text(l10n.settingsStorageSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
@@ -165,13 +192,13 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           const Divider(),
-          const _SectionHeader(title: 'API Configuration'),
+          _SectionHeader(title: l10n.settingsSectionApi),
           ListTile(
             leading: const Icon(Icons.key),
-            title: const Text('TMDB API Credential'),
+            title: Text(l10n.settingsTmdbCredential),
             subtitle: Text(
               settings.tmdbApiKey.isEmpty
-                  ? 'Not set'
+                  ? l10n.settingsNotSet
                   : '••••••••${settings.tmdbApiKey.length > 4 ? settings.tmdbApiKey.substring(settings.tmdbApiKey.length - 4) : ''}',
             ),
             trailing: const Icon(Icons.edit),
@@ -180,26 +207,26 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           const Divider(),
-          const _SectionHeader(title: 'About'),
-          const AboutListTile(
-            icon: Icon(Icons.info_outline),
-            applicationName: 'MediaVore',
+          _SectionHeader(title: l10n.settingsSectionAbout),
+          AboutListTile(
+            icon: const Icon(Icons.info_outline),
+            applicationName: l10n.appTitle,
             applicationVersion: '1.1.0',
-            aboutBoxChildren: [Text('A simple media tracking app using TMDB.')],
+            aboutBoxChildren: [Text(l10n.settingsAboutDescription)],
           ),
         ],
       ),
     );
   }
 
-  String _getThemeModeName(ThemeMode mode) {
+  String _getThemeModeName(AppLocalizations l10n, ThemeMode mode) {
     switch (mode) {
       case ThemeMode.system:
-        return 'System';
+        return l10n.settingsThemeModeSystem;
       case ThemeMode.light:
-        return 'Light';
+        return l10n.settingsThemeModeLight;
       case ThemeMode.dark:
-        return 'Dark';
+        return l10n.settingsThemeModeDark;
     }
   }
 
@@ -208,27 +235,28 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) {
+        final l10n = context.l10n;
         return AlertDialog(
-          title: const Text('TMDB API Credential'),
+          title: Text(l10n.settingsTmdbCredential),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              hintText: 'Enter TMDB v3 API key or v4 read token',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: l10n.tmdbCredentialHint,
+              border: const OutlineInputBorder(),
             ),
             obscureText: true,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () {
                 settings.setTmdbApiKey(controller.text.trim());
                 Navigator.pop(context);
               },
-              child: const Text('Save'),
+              child: Text(l10n.commonSave),
             ),
           ],
         );
