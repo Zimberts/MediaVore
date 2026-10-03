@@ -18,7 +18,7 @@ abstract class MediaRepository {
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
-    String? language,
+    String? originalLanguage,
     MediaType? type,
   });
 
@@ -30,7 +30,7 @@ abstract class MediaRepository {
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
-    String? language,
+    String? originalLanguage,
     MediaType type = MediaType.movie,
     String sortBy = 'popularity.desc',
   });
@@ -126,6 +126,10 @@ abstract class MediaRepository {
 
   /// Manually triggers a full cache fill (pre-caching lists and recent seen).
   Future<void> fillCache();
+
+  /// Drops TMDB data cached in a previous app language and re-fetches saved
+  /// items in the current one. Safe to call when nothing changed.
+  Future<void> applyLanguageChange();
 
   /// Exports all user data (seen, likes, notifications, lists) as a single MDV archive byte list.
   Future<List<int>> exportAllData();

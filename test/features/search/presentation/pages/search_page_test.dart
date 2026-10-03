@@ -86,7 +86,7 @@ void main() {
         genreIds: any(named: 'genreIds'),
         releaseYear: any(named: 'releaseYear'),
         minRating: any(named: 'minRating'),
-        language: any(named: 'language'),
+        originalLanguage: any(named: 'originalLanguage'),
         type: any(named: 'type'),
         sortBy: any(named: 'sortBy'),
       ),
@@ -144,7 +144,7 @@ void main() {
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
-          language: any(named: 'language'),
+          originalLanguage: any(named: 'originalLanguage'),
           sortBy: any(named: 'sortBy'),
         ),
       ).thenAnswer((_) async => movieItems);
@@ -156,7 +156,7 @@ void main() {
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
-          language: any(named: 'language'),
+          originalLanguage: any(named: 'originalLanguage'),
           sortBy: any(named: 'sortBy'),
         ),
       ).thenAnswer((_) async => tvItems);
@@ -199,7 +199,7 @@ void main() {
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
-          language: any(named: 'language'),
+          originalLanguage: any(named: 'originalLanguage'),
           type: MediaType.movie,
         ),
       ).thenAnswer((_) async => movieItems);
@@ -210,7 +210,7 @@ void main() {
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
-          language: any(named: 'language'),
+          originalLanguage: any(named: 'originalLanguage'),
           type: MediaType.tv,
         ),
       ).thenAnswer((_) async => tvItems);
@@ -272,7 +272,7 @@ void main() {
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
-          language: any(named: 'language'),
+          originalLanguage: any(named: 'originalLanguage'),
           sortBy: any(named: 'sortBy'),
         ),
       ).called(1);

@@ -4,6 +4,8 @@ import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/error/exceptions.dart';
+import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 
 /// Handles data fetching from the TMDB API.
@@ -11,6 +13,9 @@ import 'package:mediavore/core/security/tmdb_credential_store.dart';
 class MediaRemoteDataSource {
   final Dio dio;
   final TmdbCredentialStore credentials;
+
+  /// Supplies the `language` sent with every TMDB request.
+  final LocaleService locale;
 
   String get _apiCredential {
     final raw = credentials.credential.trim();
@@ -34,7 +39,10 @@ class MediaRemoteDataSource {
       );
     }
 
-    final params = <String, dynamic>{...?queryParameters};
+    final params = <String, dynamic>{
+      'language': locale.tmdbLanguage,
+      ...?queryParameters,
+    };
     final useV3ApiKey = _isV3ApiKey(credential);
 
     if (useV3ApiKey) {
@@ -54,19 +62,26 @@ class MediaRemoteDataSource {
 
   /// Creates a new instance of [MediaRemoteDataSource].
   ///
-  /// Requires a [Dio] to make network requests and a [TmdbCredentialStore]
-  /// holding the TMDB credential.
+  /// Requires a [Dio] to make network requests, a [TmdbCredentialStore]
+  /// holding the TMDB credential and a [LocaleService] for the response
+  /// language.
   @factoryMethod
   factory MediaRemoteDataSource({
     required Dio dio,
     required TmdbCredentialStore credentials,
+    required LocaleService locale,
   }) {
-    return MediaRemoteDataSource._internal(dio: dio, credentials: credentials);
+    return MediaRemoteDataSource._internal(
+      dio: dio,
+      credentials: credentials,
+      locale: locale,
+    );
   }
 
   MediaRemoteDataSource._internal({
     required this.dio,
     required this.credentials,
+    required this.locale,
   });
 
   /// Maps a [DioException] to the matching [AppException].
@@ -116,7 +131,7 @@ class MediaRemoteDataSource {
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
-    String? language,
+    String? originalLanguage,
     MediaType? type,
   }) {
     final path = (type == MediaType.tv) ? 'tv' : 'movie';
@@ -133,7 +148,6 @@ class MediaRemoteDataSource {
         }
       }
       if (minRating != null) params['vote_average.gte'] = minRating;
-      if (language != null) params['language'] = language;
 
       debugPrint('[Remote] searchMedia -> /search/$path params=$params');
       final response = await _tmdbGet(
@@ -144,11 +158,19 @@ class MediaRemoteDataSource {
       final List results = response.data['results'];
       // Not enriched here: MediaRepositoryImpl enriches cache-first with
       // bounded concurrency.
-      return results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).toList();
+      return results
+          .map((m) => Map<String, dynamic>.from(m))
+          // /search has no `with_original_language`; filter client-side.
+          .where(
+            (data) =>
+                originalLanguage == null ||
+                data['original_language'] == originalLanguage,
+          )
+          .map((data) {
+            if (data['media_type'] == null) data['media_type'] = path;
+            return MediaItem.fromJson(data);
+          })
+          .toList();
     });
   }
 
@@ -156,11 +178,36 @@ class MediaRemoteDataSource {
   Future<MediaItem> getMediaItem(int id, {MediaType type = MediaType.movie}) {
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching details', () async {
-      final response = await _tmdbGet('https://api.themoviedb.org/3/$path/$id');
+      final url = 'https://api.themoviedb.org/3/$path/$id';
+      final response = await _tmdbGet(url);
       final data = Map<String, dynamic>.from(response.data);
       data['media_type'] = path;
+      await _fillMissingOverview(url, data);
       return MediaItem.fromJson(data);
     });
+  }
+
+  /// TMDB returns an empty overview when it has no translation; fall back to
+  /// the English one so the details page isn't blank.
+  Future<void> _fillMissingOverview(
+    String url,
+    Map<String, dynamic> data,
+  ) async {
+    final overview = data['overview'] as String?;
+    if (overview != null && overview.trim().isNotEmpty) return;
+    if (locale.tmdbLanguage == fallbackAppLanguage.tmdbTag) return;
+    try {
+      final fallback = await _tmdbGet(
+        url,
+        queryParameters: {'language': fallbackAppLanguage.tmdbTag},
+      );
+      final fallbackOverview = fallback.data['overview'] as String?;
+      if (fallbackOverview != null && fallbackOverview.isNotEmpty) {
+        data['overview'] = fallbackOverview;
+      }
+    } catch (e) {
+      debugPrint('[Remote] Overview fallback failed for $url: $e');
+    }
   }
 
   /// Fetches the details for a TV season from the TMDB API.
@@ -206,7 +253,7 @@ class MediaRemoteDataSource {
     int? year,
     String? withGenres,
     double? minRating,
-    String? language,
+    String? originalLanguage,
   }) {
     final path = mediaType == 'tv' ? 'tv' : 'movie';
     return _guard('discovering', () async {
@@ -221,7 +268,9 @@ class MediaRemoteDataSource {
       }
       if (withGenres != null) params['with_genres'] = withGenres;
       if (minRating != null) params['vote_average.gte'] = minRating;
-      if (language != null) params['language'] = language;
+      if (originalLanguage != null) {
+        params['with_original_language'] = originalLanguage;
+      }
 
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/discover/$path',
@@ -262,7 +311,7 @@ class MediaRemoteDataSource {
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
-    String? language,
+    String? originalLanguage,
     MediaType type = MediaType.movie,
     String sortBy = 'popularity.desc',
   }) async {
@@ -276,7 +325,7 @@ class MediaRemoteDataSource {
           ? genreIds.join(',')
           : null,
       minRating: minRating,
-      language: language,
+      originalLanguage: originalLanguage,
     );
   }
 

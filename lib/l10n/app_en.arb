@@ -1,0 +1,65 @@
+{
+  "@@locale": "en",
+  "appTitle": "MediaVore",
+  "appLoading": "Loading MediaVore...",
+  "appStartupFailed": "Failed to start app:\n{error}",
+  "@appStartupFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonImport": "Import",
+  "commonOpenSettings": "Open Settings",
+
+  "navSearch": "Search",
+  "navMyLists": "My Lists",
+  "navSeen": "Seen",
+  "navAlerts": "Alerts",
+
+  "importListTitle": "Import List",
+  "importListMessage": "{count, plural, =1{You are about to import a list with 1 item.} other{You are about to import a list with {count} items.}}",
+  "@importListMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importListNameLabel": "List Name",
+  "importListNameHint": "Enter name",
+
+  "tmdbCredentialRequiredTitle": "TMDB Credential Required",
+  "tmdbCredentialRequiredMessage": "To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.",
+  "tmdbCredentialHint": "Enter TMDB v3 API key or v4 read token",
+  "tmdbCredentialLater": "You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).",
+  "tmdbCredentialCancelForNow": "Cancel for now",
+  "achievementUnlocked": "Achievement Unlocked!",
+
+  "searchErrorMissingApiKey": "Add your TMDB API key in Settings to search and discover media.",
+  "searchErrorInvalidApiKey": "Your TMDB API key was rejected. Check it in Settings.",
+  "searchErrorOffline": "You're offline. Check your connection and try again.",
+  "searchErrorServer": "TMDB is unavailable right now. Please try again later.",
+  "searchErrorUnknown": "Something went wrong while loading results.",
+
+  "settingsTitle": "Settings",
+  "settingsSectionAppearance": "Appearance",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System",
+  "settingsThemeMode": "Theme Mode",
+  "settingsThemeModeSystem": "System",
+  "settingsThemeModeLight": "Light",
+  "settingsThemeModeDark": "Dark",
+  "settingsLightTheme": "Light Theme",
+  "settingsDarkTheme": "Dark Theme",
+  "settingsSectionMilestones": "Gaming & Milestones",
+  "settingsAchievements": "Achievements",
+  "settingsAchievementsSubtitle": "View your collection of badges and progress.",
+  "settingsSectionListsDisplay": "Lists Display",
+  "settingsHideNonReleased": "Hide Non-Released Media",
+  "settingsHideNonReleasedSubtitle": "Only show movies and episodes that have already aired.",
+  "settingsSectionStorage": "Storage & History",
+  "settingsStorage": "Storage & Data",
+  "settingsStorageSubtitle": "Manage cache, exports, and viewing history database.",
+  "settingsSectionApi": "API Configuration",
+  "settingsTmdbCredential": "TMDB API Credential",
+  "settingsNotSet": "Not set",
+  "settingsSectionAbout": "About",
+  "settingsAboutDescription": "A simple media tracking app using TMDB."
+}

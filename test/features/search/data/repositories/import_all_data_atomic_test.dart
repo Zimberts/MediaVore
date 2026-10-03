@@ -61,6 +61,7 @@ void main() {
       remoteDataSource: MediaRemoteDataSource(
         dio: Dio(),
         credentials: FakeTmdbCredentialStore('mock_token'),
+        locale: FakeLocaleService(),
       ),
       localDataSource: local,
       cache: MediaCache(isar),

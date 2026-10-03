@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/cache/cache_warmup_policy.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/utils/export_import_serializer.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../helpers/mocks.dart';
 
 class MockCacheWarmupPolicy extends Mock implements CacheWarmupPolicy {}
@@ -80,7 +84,7 @@ void main() {
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
-          language: any(named: 'language'),
+          originalLanguage: any(named: 'originalLanguage'),
           type: any(named: 'type'),
         ),
       ).thenAnswer((_) async => raw);
@@ -235,6 +239,73 @@ void main() {
               ).captured.single
               as List<SeenItemModel>;
       expect(saved, hasLength(5));
+    });
+  });
+
+  group('app language', () {
+    late LocaleService localeService;
+
+    MediaRepositoryImpl buildWithLocale() => MediaRepositoryImpl(
+      remoteDataSource: remote,
+      localDataSource: local,
+      cache: cache,
+      localeService: localeService,
+    );
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      localeService = LocaleService.withDeviceLocales(
+        prefs,
+        () => const [Locale('fr')],
+      );
+    });
+
+    test('should clear a cache filled in another language on init', () async {
+      final repo = buildWithLocale();
+      await repo.applyLanguageChange();
+
+      verify(() => cache.clearAll()).called(1);
+      expect(localeService.isCacheLanguageStale, isFalse);
+    });
+
+    test('should keep a cache filled in the current language', () async {
+      await localeService.markCacheLanguage();
+
+      final repo = buildWithLocale();
+      await repo.applyLanguageChange();
+
+      verifyNever(() => cache.clearAll());
+    });
+
+    test('should clear the cache when the language changes', () async {
+      await localeService.markCacheLanguage();
+      final repo = buildWithLocale();
+      await repo.applyLanguageChange();
+
+      await localeService.setOverride(englishLanguage);
+      await repo.applyLanguageChange();
+
+      verify(() => cache.clearAll()).called(1);
+      expect(localeService.isCacheLanguageStale, isFalse);
+    });
+
+    test('should prefer the cached title for saved items', () async {
+      final repo = build(autoInit: false);
+      when(() => local.getListItems(any())).thenAnswer(
+        (_) async => [
+          MediaListItem(id: 1, type: 'movie', title: 'Stored'),
+          MediaListItem(id: 2, type: 'movie', title: 'Stored 2'),
+        ],
+      );
+      when(() => cache.getItem(1, MediaType.movie)).thenReturn(
+        MediaItem(id: 1, title: 'Titre', overview: '', releaseDate: ''),
+      );
+      when(() => cache.getItem(2, MediaType.movie)).thenReturn(null);
+
+      final previews = await repo.getListPreviews('watchlist');
+
+      expect(previews.map((p) => p.title), ['Titre', 'Stored 2']);
     });
   });
 }

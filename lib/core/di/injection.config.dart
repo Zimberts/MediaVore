@@ -33,6 +33,7 @@ import '../../features/search/domain/repositories/media_repository.dart'
 import '../cache/cache_warmup_policy.dart' as _i356;
 import '../cache/media_cache.dart' as _i384;
 import '../database/app_database.dart' as _i982;
+import '../l10n/locale_service.dart' as _i903;
 import '../security/tmdb_credential_store.dart' as _i1033;
 import 'asset_definitions_loader.dart' as _i719;
 import 'definitions_loader.dart' as _i216;
@@ -61,6 +62,9 @@ Future<_i174.GetIt> init(
   gh.lazySingleton<_i356.CacheWarmupPolicy>(
     () => _i356.CacheWarmupPolicy(gh<_i460.SharedPreferences>()),
   );
+  gh.lazySingleton<_i903.LocaleService>(
+    () => _i903.LocaleService(gh<_i460.SharedPreferences>()),
+  );
   gh.lazySingleton<_i384.MediaCache>(() => _i384.MediaCache(gh<_i214.Isar>()));
   gh.lazySingleton<_i801.MediaListLocalDataSource>(
     () => _i801.MediaListLocalDataSource(gh<_i214.Isar>()),
@@ -75,6 +79,13 @@ Future<_i174.GetIt> init(
     ),
     preResolve: true,
   );
+  gh.lazySingleton<_i763.MediaRemoteDataSource>(
+    () => _i763.MediaRemoteDataSource(
+      dio: gh<_i361.Dio>(),
+      credentials: gh<_i1033.TmdbCredentialStore>(),
+      locale: gh<_i903.LocaleService>(),
+    ),
+  );
   gh.lazySingleton<_i282.AchievementRepository>(
     () => _i445.AchievementRepositoryImpl(
       gh<_i214.Isar>(),
@@ -85,18 +96,13 @@ Future<_i174.GetIt> init(
   gh.lazySingleton<_i393.AchievementProvider>(
     () => _i393.AchievementProvider(gh<_i282.AchievementRepository>()),
   );
-  gh.lazySingleton<_i763.MediaRemoteDataSource>(
-    () => _i763.MediaRemoteDataSource(
-      dio: gh<_i361.Dio>(),
-      credentials: gh<_i1033.TmdbCredentialStore>(),
-    ),
-  );
   gh.lazySingleton<_i386.MediaRepository>(
     () => _i922.MediaRepositoryImpl(
       remoteDataSource: gh<_i763.MediaRemoteDataSource>(),
       localDataSource: gh<_i801.MediaListLocalDataSource>(),
       cache: gh<_i384.MediaCache>(),
       warmupPolicy: gh<_i356.CacheWarmupPolicy>(),
+      localeService: gh<_i903.LocaleService>(),
       autoInit: gh<bool>(),
     ),
   );

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -366,13 +367,16 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
               SearchErrorType.unknown => Icons.cloud_off,
             }, size: 48),
             const SizedBox(height: 16),
-            Text(searchErrorMessage(errorType), textAlign: TextAlign.center),
+            Text(
+              searchErrorMessage(errorType, context.l10n),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
             if (needsApiKey)
               ElevatedButton.icon(
                 key: const Key('discovery_open_settings'),
                 icon: const Icon(Icons.settings),
-                label: const Text('Open Settings'),
+                label: Text(context.l10n.commonOpenSettings),
                 onPressed: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(

@@ -9,6 +9,7 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
@@ -29,6 +30,10 @@ class MediaRepositoryImpl implements MediaRepository {
 
   /// Gates the automatic warm-up started on creation. `null` = always run.
   final CacheWarmupPolicy? warmupPolicy;
+
+  /// App language; the TMDB cache is dropped when it changes so titles are
+  /// never shown in a previous language. `null` disables the check.
+  final LocaleService? localeService;
   final Completer<void> _initCompleter = Completer<void>();
 
   /// Max concurrent `/movie|tv/{id}` requests when enriching a result page.
@@ -49,8 +54,10 @@ class MediaRepositoryImpl implements MediaRepository {
     required this.localDataSource,
     required this.cache,
     this.warmupPolicy,
+    this.localeService,
     bool autoInit = true,
   }) {
+    localeService?.addListener(_onLanguageChanged);
     if (autoInit) {
       _init();
     } else {
@@ -64,6 +71,7 @@ class MediaRepositoryImpl implements MediaRepository {
     try {
       debugPrint('[Repo] Starting Cache Init...');
       await cache.init();
+      await _dropStaleLanguageCache();
       debugPrint('[Repo] Cache Init Done.');
     } catch (e) {
       debugPrint('[Repo] Cache Init Error: $e');
@@ -85,6 +93,50 @@ class MediaRepositoryImpl implements MediaRepository {
     } else {
       debugPrint('[Repo] Skipping automatic cache warm-up (throttled).');
     }
+  }
+
+  /// Clears the TMDB cache if it was filled in another language than the
+  /// current one. Returns whether it was cleared.
+  Future<bool> _dropStaleLanguageCache() async {
+    final locale = localeService;
+    if (locale == null || !locale.isCacheLanguageStale) return false;
+    debugPrint(
+      '[Repo] Cache language differs from ${locale.tmdbLanguage}; clearing.',
+    );
+    cancelCacheWarmup();
+    await cache.clearAll();
+    await locale.markCacheLanguage();
+    return true;
+  }
+
+  void _onLanguageChanged() => unawaited(applyLanguageChange());
+
+  @override
+  Future<void> applyLanguageChange() {
+    return _languageChange ??= _applyLanguageChange().whenComplete(
+      () => _languageChange = null,
+    );
+  }
+
+  Future<void>? _languageChange;
+
+  Future<void> _applyLanguageChange() async {
+    await _ensureInitialized();
+    if (await _dropStaleLanguageCache()) {
+      // Re-fetch saved items so their titles come back in the new language.
+      unawaited(_runWarmup());
+    }
+  }
+
+  /// Title of a saved entry in the current language: the cached TMDB title
+  /// when available, else the one stored when it was saved.
+  T _localizedTitle<T extends String?>(
+    int tmdbId,
+    MediaType type,
+    T storedTitle,
+  ) {
+    final cached = cache.getItem(tmdbId, type)?.title;
+    return (cached == null || cached.isEmpty) ? storedTitle : cached as T;
   }
 
   /// Stops the in-flight cache warm-up after the current item.
@@ -227,7 +279,7 @@ class MediaRepositoryImpl implements MediaRepository {
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
-    String? language,
+    String? originalLanguage,
     MediaType? type,
   }) async {
     await _ensureInitialized();
@@ -239,7 +291,7 @@ class MediaRepositoryImpl implements MediaRepository {
       genreIds: genreIds,
       releaseYear: releaseYear,
       minRating: minRating,
-      language: language,
+      originalLanguage: originalLanguage,
       type: type,
     );
     final enriched = await _enrichItems(results);
@@ -253,7 +305,7 @@ class MediaRepositoryImpl implements MediaRepository {
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
-    String? language,
+    String? originalLanguage,
     MediaType type = MediaType.movie,
     String sortBy = 'popularity.desc',
   }) async {
@@ -263,7 +315,7 @@ class MediaRepositoryImpl implements MediaRepository {
       genreIds: genreIds,
       releaseYear: releaseYear,
       minRating: minRating,
-      language: language,
+      originalLanguage: originalLanguage,
       type: type,
       sortBy: sortBy,
     );
@@ -761,7 +813,7 @@ class MediaRepositoryImpl implements MediaRepository {
       final cachedItem = cache.getItem(item.id, type);
       return MediaItemPreview(
         id: item.id,
-        title: item.title,
+        title: _localizedTitle(item.id, type, item.title),
         posterPath: cachedItem?.posterPath,
         type: item.type,
       );
@@ -1073,7 +1125,7 @@ class MediaRepositoryImpl implements MediaRepository {
           id: m.isarId,
           tmdbId: m.tmdbId,
           type: type,
-          title: m.title,
+          title: _localizedTitle(m.tmdbId, type, m.title),
           posterPath: posterPath,
           seenDate: m.seenDate,
           seasonNumber: m.seasonNumber,
@@ -1107,7 +1159,7 @@ class MediaRepositoryImpl implements MediaRepository {
           id: m.isarId,
           tmdbId: m.tmdbId,
           type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
-          title: m.title,
+          title: _localizedTitle(tmdbId, type, m.title),
           posterPath: posterPath,
           seenDate: m.seenDate,
           seasonNumber: m.seasonNumber,
@@ -1379,21 +1431,20 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<NotifiedItem>> getNotifiedItems() async {
     await _ensureInitialized();
     final items = await localDataSource.getNotifiedItems();
-    return items
-        .map(
-          (m) => NotifiedItem(
-            tmdbId: m.tmdbId,
-            type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
-            title: m.title,
-            posterPath: m.posterPath,
-            releaseDate: m.releaseDate,
-            seasonNumber: m.seasonNumber,
-            episodeNumber: m.episodeNumber,
-            runtime: m.runtime,
-            autoNotify: m.autoNotify,
-          ),
-        )
-        .toList();
+    return items.map((m) {
+      final type = m.type == 'movie' ? MediaType.movie : MediaType.tv;
+      return NotifiedItem(
+        tmdbId: m.tmdbId,
+        type: type,
+        title: _localizedTitle(m.tmdbId, type, m.title),
+        posterPath: m.posterPath,
+        releaseDate: m.releaseDate,
+        seasonNumber: m.seasonNumber,
+        episodeNumber: m.episodeNumber,
+        runtime: m.runtime,
+        autoNotify: m.autoNotify,
+      );
+    }).toList();
   }
 
   @override
@@ -1591,7 +1642,11 @@ class MediaRepositoryImpl implements MediaRepository {
             episodeNumber: m.episodeNumber,
             insertedAt: m.insertedAt,
             airDate: m.airDate,
-            title: m.title,
+            title: _localizedTitle(
+              m.tmdbId,
+              m.type == 'movie' ? MediaType.movie : MediaType.tv,
+              m.title,
+            ),
             posterPath: m.posterPath,
             runtime: m.runtime,
           ),

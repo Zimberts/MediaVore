@@ -77,7 +77,7 @@ void main() {
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
-            language: any(named: 'language'),
+            originalLanguage: any(named: 'originalLanguage'),
             type: any(named: 'type'),
           ),
         ).thenAnswer((_) async => []);
@@ -104,7 +104,7 @@ void main() {
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
-            language: any(named: 'language'),
+            originalLanguage: any(named: 'originalLanguage'),
             type: any(named: 'type'),
           ),
         ).thenAnswer((_) async => []);
@@ -150,7 +150,7 @@ void main() {
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
-          language: any(named: 'language'),
+          originalLanguage: any(named: 'originalLanguage'),
           type: any(named: 'type'),
         ),
       ).thenAnswer((_) async => []);

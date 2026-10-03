@@ -1,6 +1,7 @@
 import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
@@ -153,4 +154,12 @@ class FakeTmdbCredentialStore extends Fake implements TmdbCredentialStore {
 
   @override
   Future<void> save(String value) async => _credential = value.trim();
+}
+
+/// [LocaleService] stand-in exposing only a fixed TMDB language.
+class FakeLocaleService extends Fake implements LocaleService {
+  FakeLocaleService([this.tmdbLanguage = 'en-US']);
+
+  @override
+  String tmdbLanguage;
 }

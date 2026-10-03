@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,8 +10,13 @@ enum DisplayMode { list, grid, swipe }
 class SettingsProvider with ChangeNotifier {
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
+  final LocaleService? _localeService;
 
-  SettingsProvider(this._prefs, this._credentials) {
+  SettingsProvider(
+    this._prefs,
+    this._credentials, {
+    LocaleService? localeService,
+  }) : _localeService = localeService {
     _loadSettings();
   }
 
@@ -33,6 +40,12 @@ class SettingsProvider with ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
 
+  /// Language picked in Settings, or `null` to follow the device.
+  AppLanguage? get appLanguageOverride => _localeService?.override;
+
+  /// Locale forced on the app, or `null` to let Flutter follow the device.
+  Locale? get locale => appLanguageOverride?.locale;
+
   AppPalette get lightPalette => lightThemes[_lightAppThemeIndex].palette;
   AppPalette get darkPalette => darkThemes[_darkAppThemeIndex].palette;
 
@@ -41,7 +54,8 @@ class SettingsProvider with ChangeNotifier {
     final int? storedDisplayModeIndex = _prefs.getInt('displayMode');
     if (storedDisplayModeIndex != null) {
       var displayModeIndex = storedDisplayModeIndex;
-      if (displayModeIndex < 0 || displayModeIndex >= DisplayMode.values.length) {
+      if (displayModeIndex < 0 ||
+          displayModeIndex >= DisplayMode.values.length) {
         displayModeIndex = 0;
       }
       _displayMode = DisplayMode.values[displayModeIndex];
@@ -112,6 +126,14 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setDarkAppTheme(int themeIndex) async {
     _darkAppThemeIndex = themeIndex;
     await _prefs.setInt('darkAppTheme', themeIndex);
+    notifyListeners();
+  }
+
+  /// Forces the app language; `null` follows the device locale again.
+  Future<void> setAppLanguage(AppLanguage? language) async {
+    final localeService = _localeService;
+    if (localeService == null) return;
+    await localeService.setOverride(language);
     notifyListeners();
   }
 
