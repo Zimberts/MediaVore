@@ -118,8 +118,8 @@ Columns: `listName`, `tmdbId`, `type`, `title`, `position`
 
 - The archive is rejected as a whole (nothing is imported) when it is not a
   readable ZIP, contains none of the files above, has more than 64 entries, has
-  an entry larger than 64 MiB, contains a non-UTF-8 or malformed CSV, or has an
-  unsupported `version`.
+  an entry larger than 1 GiB uncompressed, contains a non-UTF-8 or malformed
+  CSV, or has an unsupported `version`.
 - Individual rows are skipped, and reported as warnings in the import preview
   (`<file> row <line>: <reason>`), when `tmdbId` is missing or not a positive
   integer, `type` is not `movie` / `tv`, `seenDate` (seen) is missing or not a

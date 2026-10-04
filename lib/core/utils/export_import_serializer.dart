@@ -31,8 +31,13 @@ class ExportEnvelope {
 
   /// Upper bounds applied when decoding an archive, to fail fast on corrupted
   /// or hostile files instead of exhausting memory.
+  ///
+  /// Exports only hold up to 6 CSVs; the entry cap just rejects junk ZIPs.
   static const int maxArchiveEntries = 64;
-  static const int maxEntryBytes = 64 * 1024 * 1024;
+
+  /// Zip-bomb guard on uncompressed size. Real exports already exceed 100 MB,
+  /// so this only catches genuinely abnormal entries.
+  static const int maxEntryBytes = 1024 * 1024 * 1024;
 
   ExportEnvelope({
     required this.version,
