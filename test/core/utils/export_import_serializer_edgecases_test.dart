@@ -1,6 +1,8 @@
+import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/utils/export_import_serializer.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
@@ -116,6 +118,47 @@ void main() {
       expect(s.genres?.contains('Action'), true);
 
       expect(decoded.likes.first.title, 'Strange, Title');
+    });
+
+    test('should declare UTF-8 byte sizes for non-ASCII titles', () {
+      final date = DateTime.utc(2025, 1, 1);
+      final envelope = ExportEnvelope(
+        version: 1,
+        exportedAt: date,
+        seen: [
+          SeenItemModel(
+            tmdbId: 194,
+            type: 'movie',
+            title: 'Amélie',
+            seenDate: date,
+          ),
+        ],
+        likes: [LikedItem(tmdbId: 10681, type: 'movie', title: 'WALL·E')],
+        lists: {
+          'watchlist': [
+            MediaListItem(
+              id: 185341,
+              type: 'movie',
+              title: '[REC]⁴ Apocalypse',
+              listName: 'watchlist',
+              position: 0,
+            ),
+          ],
+        },
+      );
+
+      final bytes = envelope.toZipBytes();
+      final archive = ZipDecoder().decodeBytes(bytes);
+
+      for (final file in archive) {
+        final content = file.content as List<int>;
+        expect(file.size, content.length, reason: file.name);
+      }
+
+      final decoded = ExportEnvelope.fromZipBytes(bytes);
+      expect(decoded.seen.first.title, 'Amélie');
+      expect(decoded.likes.first.title, 'WALL·E');
+      expect(decoded.lists['watchlist']!.first.title, '[REC]⁴ Apocalypse');
     });
 
     test('Malformed / Missing headers skipped correctly', () {
