@@ -7,6 +7,7 @@ import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'dart:io';
 
 void main() {
@@ -423,5 +424,69 @@ void main() {
         expect(notified.releaseDate, isNull);
       },
     );
+  });
+
+  group('MediaListLocalDataSource - Import modes', () {
+    LikedItem like(int id) =>
+        LikedItem(tmdbId: id, type: 'movie', title: 'M$id');
+    SeenItemModel seenAt(int id, DateTime date) =>
+        SeenItemModel(tmdbId: id, type: 'movie', title: 'M$id', seenDate: date);
+
+    test('should clear existing items in replace mode', () async {
+      await dataSource.importLikedItems([like(1)], mode: ImportMode.append);
+
+      await dataSource.importLikedItems([
+        like(2),
+        like(3),
+      ], mode: ImportMode.replace);
+
+      final ids = (await dataSource.getLikedItems()).map((e) => e.tmdbId);
+      expect(ids, unorderedEquals([2, 3]));
+    });
+
+    test('should only add missing items in merge mode', () async {
+      await dataSource.importLikedItems([like(1)], mode: ImportMode.append);
+      final progress = <String>[];
+
+      await dataSource.importLikedItems(
+        [like(1), like(2), like(2)],
+        mode: ImportMode.merge,
+        onProgress: (_, status) => progress.add(status),
+      );
+
+      final ids = (await dataSource.getLikedItems()).map((e) => e.tmdbId);
+      expect(ids, unorderedEquals([1, 2]));
+      expect(progress, [
+        'Processing like 1',
+        'Processing like 2',
+        'Processing like 3',
+      ]);
+    });
+
+    test('should merge seen entries within one second as duplicates', () async {
+      final date = DateTime(2024, 1, 1, 20);
+      await dataSource.importSeenItems([
+        seenAt(1, date),
+      ], mode: ImportMode.append);
+
+      await dataSource.importSeenItems([
+        seenAt(1, date.add(const Duration(milliseconds: 500))),
+        seenAt(1, date.add(const Duration(days: 1))),
+      ], mode: ImportMode.merge);
+
+      expect(await dataSource.getAllSeenItems(), hasLength(2));
+    });
+
+    test('should keep duplicates in append mode for seen entries', () async {
+      final date = DateTime(2024, 1, 1, 20);
+      final items = [seenAt(1, date)];
+      await dataSource.importSeenItems(items, mode: ImportMode.append);
+
+      await dataSource.importSeenItems([
+        seenAt(1, date),
+      ], mode: ImportMode.append);
+
+      expect(await dataSource.getAllSeenItems(), hasLength(2));
+    });
   });
 }

@@ -175,5 +175,62 @@ void main() {
 
       expect(next, isNull);
     });
+
+    test('should skip episodes rejected by where', () {
+      final next = findNextEpisodeAfterTail(
+        tail: tail,
+        episodes: [
+          ep(4, 6),
+          ep(4, 7, airDate: DateTime(2024, 6, 1)),
+        ],
+        seenEpisodeKeys: const {},
+        where: (e) => e.airDate != null,
+      );
+
+      expect(next?.episodeNumber, 7);
+    });
+  });
+
+  group('seenEpisodeKeys', () {
+    test('should collect episode keys and ignore show-level entries', () {
+      final keys = seenEpisodeKeys([
+        seen(1, 1),
+        seen(1, 1, date: DateTime(2024, 2, 1)),
+        seen(2, 3),
+        SeenItemModel(
+          tmdbId: 1,
+          type: 'tv',
+          title: 'Show',
+          seenDate: DateTime(2024, 1, 1),
+        ),
+      ]);
+
+      expect(keys, {episodeKey(1, 1), episodeKey(2, 3)});
+    });
+
+    test('should keep only entries seen at or after seenSince', () {
+      final since = DateTime(2024, 3, 1);
+      final keys = seenEpisodeKeys([
+        seen(1, 1, date: DateTime(2024, 2, 28)),
+        seen(1, 2, date: since),
+        seen(1, 3, date: DateTime(2024, 3, 2)),
+      ], seenSince: since);
+
+      expect(keys, {episodeKey(1, 2), episodeKey(1, 3)});
+    });
+  });
+
+  group('isAired', () {
+    final now = DateTime(2024, 6, 1);
+
+    test('should be true for an air date at or before now', () {
+      expect(isAired(ep(1, 1, airDate: now), now), isTrue);
+      expect(isAired(ep(1, 1, airDate: DateTime(2024, 5, 1)), now), isTrue);
+    });
+
+    test('should be false for a future or unknown air date', () {
+      expect(isAired(ep(1, 1, airDate: DateTime(2024, 6, 2)), now), isFalse);
+      expect(isAired(ep(1, 1), now), isFalse);
+    });
   });
 }
