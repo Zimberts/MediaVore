@@ -43,6 +43,10 @@ class MediaRepositoryImpl implements MediaRepository {
   /// Generation the in-flight warm-up was started with.
   int _warmupRunGeneration = 0;
 
+  /// In-flight [getMediaDetails] requests keyed by `type_id`, so concurrent
+  /// callers (UI + background cache warm-up) share one set of remote calls.
+  final Map<String, Future<MediaDetails>> _inFlightDetails = {};
+
   /// Creates a new instance of [MediaRepositoryImpl].
   MediaRepositoryImpl({
     required this.remoteDataSource,
@@ -291,22 +295,67 @@ class MediaRepositoryImpl implements MediaRepository {
     final cachedDetails = await cache.getDetails(id, type);
     if (cachedDetails != null) return cachedDetails;
 
-    final itemFuture = remoteDataSource.getMediaItem(id, type: type);
-    final creditsFuture = remoteDataSource.getMediaCredits(id, type: type);
-    final similarFuture = remoteDataSource.getSimilarMedia(id, type);
-    final recommendationsFuture = remoteDataSource.getRecommendedMedia(
-      id,
-      type,
-    );
-    final watchProvidersFuture = remoteDataSource.getWatchProviders(id, type);
-    final videosFuture = remoteDataSource.getVideos(id, type);
+    final key = '${type.name}_$id';
+    final pending = _inFlightDetails[key];
+    if (pending != null) return pending;
 
-    final item = await itemFuture;
-
-    Map<String, dynamic> credits = {'cast': [], 'crew': []};
+    final future = _fetchMediaDetails(id, type);
+    _inFlightDetails[key] = future;
     try {
-      credits = await creditsFuture;
-    } catch (_) {}
+      return await future;
+    } finally {
+      _inFlightDetails.remove(key);
+    }
+  }
+
+  /// Runs [call] and returns [fallback] on any error (sync or async), logging
+  /// it. Used for optional detail endpoints so they never fail the whole page
+  /// nor leak unhandled asynchronous errors.
+  Future<T> _optional<T>(
+    String label,
+    Future<T> Function() call,
+    T fallback,
+  ) async {
+    try {
+      return await call();
+    } catch (e) {
+      debugPrint('[Repo] getMediaDetails optional $label failed: $e');
+      return fallback;
+    }
+  }
+
+  Future<MediaDetails> _fetchMediaDetails(int id, MediaType type) async {
+    // Optional requests are started before awaiting the main item and each
+    // has its error handler attached immediately: if the main item fails,
+    // their failures are still handled. Only the main item is fatal.
+    final creditsFuture = _optional<Map<String, dynamic>>(
+      'credits',
+      () => remoteDataSource.getMediaCredits(id, type: type),
+      {'cast': [], 'crew': []},
+    );
+    final similarFuture = _optional<List<MediaItem>>(
+      'similar',
+      () => remoteDataSource.getSimilarMedia(id, type),
+      [],
+    );
+    final recommendationsFuture = _optional<List<MediaItem>>(
+      'recommendations',
+      () => remoteDataSource.getRecommendedMedia(id, type),
+      [],
+    );
+    final watchProvidersFuture = _optional<Map<String, dynamic>>(
+      'watchProviders',
+      () => remoteDataSource.getWatchProviders(id, type),
+      {},
+    );
+    final videosFuture = _optional<List<Map<String, dynamic>>>(
+      'videos',
+      () => remoteDataSource.getVideos(id, type),
+      [],
+    );
+
+    final item = await remoteDataSource.getMediaItem(id, type: type);
+    final credits = await creditsFuture;
 
     final List castResults = credits['cast'] ?? [];
     final List crewResults = credits['crew'] ?? [];

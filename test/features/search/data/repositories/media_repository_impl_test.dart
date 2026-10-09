@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -321,6 +323,125 @@ void main() {
         ).called(1);
         verify(() => mockRemoteDataSource.getVideos(tId, any())).called(1);
         verify(() => mockCache.cacheDetails(any())).called(1);
+      },
+    );
+
+    void stubOptionalEndpoints({Object? error, Duration? delay}) {
+      Future<T> answer<T>(T value) async {
+        if (delay != null) await Future<void>.delayed(delay);
+        if (error != null) throw error;
+        return value;
+      }
+
+      when(
+        () =>
+            mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')),
+      ).thenAnswer(
+        (_) => answer<Map<String, dynamic>>({'cast': [], 'crew': []}),
+      );
+      when(
+        () => mockRemoteDataSource.getSimilarMedia(tId, any()),
+      ).thenAnswer((_) => answer<List<MediaItem>>([]));
+      when(
+        () => mockRemoteDataSource.getRecommendedMedia(tId, any()),
+      ).thenAnswer((_) => answer<List<MediaItem>>([]));
+      when(
+        () => mockRemoteDataSource.getWatchProviders(tId, any()),
+      ).thenAnswer((_) => answer<Map<String, dynamic>>({}));
+      when(
+        () => mockRemoteDataSource.getVideos(tId, any()),
+      ).thenAnswer((_) => answer<List<Map<String, dynamic>>>([]));
+    }
+
+    test(
+      'should return details with empty optional fields when optional endpoints fail',
+      () async {
+        when(
+          () =>
+              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+        ).thenAnswer((_) async => tMediaItem);
+        stubOptionalEndpoints(error: Exception('optional failure'));
+        // A synchronous throw must be handled too.
+        when(
+          () => mockRemoteDataSource.getWatchProviders(tId, any()),
+        ).thenThrow(TypeError());
+
+        final result = await repository.getMediaDetails(tId);
+
+        expect(result.item, equals(tMediaItem));
+        expect(result.cast, isEmpty);
+        expect(result.similar, isEmpty);
+        expect(result.recommendations, isEmpty);
+        expect(result.watchProviders, isEmpty);
+        expect(result.videos, isEmpty);
+        verify(() => mockCache.cacheDetails(any())).called(1);
+      },
+    );
+
+    test(
+      'should rethrow main item error without leaking optional request errors',
+      () async {
+        when(
+          () =>
+              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+        ).thenAnswer((_) async => throw Exception('item failure'));
+        // Optional requests fail after the main item has already failed.
+        stubOptionalEndpoints(
+          error: Exception('late optional failure'),
+          delay: const Duration(milliseconds: 10),
+        );
+
+        await expectLater(repository.getMediaDetails(tId), throwsException);
+        // Let the late failures complete: an unhandled one would fail the test.
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        verifyNever(() => mockCache.cacheDetails(any()));
+      },
+    );
+
+    test(
+      'should share one in-flight request between concurrent callers',
+      () async {
+        final itemCompleter = Completer<MediaItem>();
+        when(
+          () =>
+              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+        ).thenAnswer((_) => itemCompleter.future);
+        stubOptionalEndpoints();
+
+        final first = repository.getMediaDetails(tId);
+        final second = repository.getMediaDetails(tId);
+        // Let both callers pass initialization and the cache check.
+        await Future<void>.delayed(Duration.zero);
+        itemCompleter.complete(tMediaItem);
+
+        final results = await Future.wait([first, second]);
+
+        expect(identical(results[0], results[1]), isTrue);
+        verify(
+          () =>
+              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+        ).called(1);
+        verify(() => mockRemoteDataSource.getVideos(tId, any())).called(1);
+      },
+    );
+
+    test(
+      'should issue a new request once the previous one has completed',
+      () async {
+        when(
+          () =>
+              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+        ).thenAnswer((_) async => tMediaItem);
+        stubOptionalEndpoints();
+
+        await repository.getMediaDetails(tId);
+        await repository.getMediaDetails(tId);
+
+        verify(
+          () =>
+              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+        ).called(2);
       },
     );
   });
@@ -792,9 +913,9 @@ void main() {
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
         ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
-        when(() => mockRemoteDataSource.getSeasonDetails(1, 1)).thenAnswer(
-          (_) async => season([ep(1, airDate: '2024-01-01')]),
-        );
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 1),
+        ).thenAnswer((_) async => season([ep(1, airDate: '2024-01-01')]));
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 2),
         ).thenThrow(Exception('season not found'));
