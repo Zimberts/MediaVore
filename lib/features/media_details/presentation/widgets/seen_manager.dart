@@ -155,7 +155,9 @@ class _SeenManagerState extends State<SeenManager> {
             await provider.toggleInList(item, 'watchlist');
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[SeenManager] watchlist cleanup after seen failed: $e');
+      }
     }
   }
 
@@ -423,7 +425,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       setState(() {
                         _selectedDate = parsed;
                       });
-                    } catch (_) {}
+                    } catch (_) {
+                      // Intentionally ignored: partial/invalid date while typing.
+                    }
                   },
                 ),
               const SizedBox(height: 16),

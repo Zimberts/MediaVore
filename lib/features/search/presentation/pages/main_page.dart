@@ -138,7 +138,9 @@ class _MainPageState extends State<MainPage> {
       if (initialLink != null) {
         _handleLink(initialLink);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[MainPage] getInitialLink failed: $e');
+    }
 
     // Handle subsequent links
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
@@ -213,7 +215,9 @@ class _MainPageState extends State<MainPage> {
     try {
       final provider = context.read<SearchProvider>();
       provider.setSelectedTab(index);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[MainPage] setSelectedTab failed: $e');
+    }
   }
 
   @override

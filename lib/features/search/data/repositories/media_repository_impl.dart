@@ -134,7 +134,9 @@ class MediaRepositoryImpl implements MediaRepository {
                 await getSeasonDetails(item.id, season.seasonNumber);
               }
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[Repo] _initCache list item refresh failed: $e');
+          }
         }
       }
 
@@ -162,7 +164,9 @@ class MediaRepositoryImpl implements MediaRepository {
             if (isRecent && type == MediaType.tv && seen.seasonNumber != null) {
               await getSeasonDetails(seen.tmdbId, seen.seasonNumber!);
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[Repo] _initCache seen item refresh failed: $e');
+          }
         }
       }
 
@@ -174,7 +178,9 @@ class MediaRepositoryImpl implements MediaRepository {
         final type = liked.type == 'movie' ? MediaType.movie : MediaType.tv;
         try {
           await getMediaDetails(liked.tmdbId, type: type);
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('[Repo] _initCache liked item refresh failed: $e');
+        }
       }
 
       // 4. Refresh notification dates from network in the background
@@ -306,7 +312,9 @@ class MediaRepositoryImpl implements MediaRepository {
     Map<String, dynamic> credits = {'cast': [], 'crew': []};
     try {
       credits = await creditsFuture;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Repo] getMediaDetails credits failed: $e');
+    }
 
     final List castResults = credits['cast'] ?? [];
     final List crewResults = credits['crew'] ?? [];
@@ -677,7 +685,9 @@ class MediaRepositoryImpl implements MediaRepository {
           await getSeasonDetails(item.id, season.seasonNumber);
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Repo] addToList details prefetch failed: $e');
+    }
   }
 
   @override
@@ -797,7 +807,9 @@ class MediaRepositoryImpl implements MediaRepository {
             runtime = episode['runtime'] as int?;
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Repo] markAsSeen runtime lookup failed: $e');
+      }
     }
 
     await localDataSource.markAsSeen(
@@ -837,7 +849,9 @@ class MediaRepositoryImpl implements MediaRepository {
             seasonNumber: item.seasonNumber,
             episodeNumber: item.episodeNumber,
           );
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('[Repo] markAsSeen quick-add removal failed: $e');
+        }
 
         // compute next unseen episode starting after the one just marked
         final seen = await localDataSource.getSeenStatus(item.tmdbId, 'tv');
@@ -928,7 +942,9 @@ class MediaRepositoryImpl implements MediaRepository {
                 foundRuntime = ep['runtime'] as int?;
                 break;
               }
-            } catch (_) {}
+            } catch (e) {
+              debugPrint('[Repo] markAsSeen season scan failed: $e');
+            }
             if (foundSeason != null) break;
           }
 
@@ -957,7 +973,9 @@ class MediaRepositoryImpl implements MediaRepository {
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Repo] markAsSeen next-episode computation failed: $e');
+    }
   }
 
   /// Reconciles the notification for a just-seen episode.
@@ -985,7 +1003,9 @@ class MediaRepositoryImpl implements MediaRepository {
           return;
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Repo] _refreshNotificationAfterSeen failed: $e');
+    }
     await _refreshNotificationDateByTmdbId(item.tmdbId, item.type);
   }
 
@@ -1001,7 +1021,9 @@ class MediaRepositoryImpl implements MediaRepository {
         final details = await getMediaDetails(tmdbId, type: type);
         await _refreshNotificationDate(details.item);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Repo] _refreshNotificationDateByTmdbId failed: $e');
+    }
   }
 
   @override
@@ -1250,7 +1272,9 @@ class MediaRepositoryImpl implements MediaRepository {
               runtime = episode['runtime'] as int?;
             }
           }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('[Repo] _importSeenData runtime enrichment failed: $e');
+        }
       }
 
       items.add(
@@ -1486,7 +1510,9 @@ class MediaRepositoryImpl implements MediaRepository {
       }
 
       await localDataSource.markNotifiedRefreshed(tmdbId, type.name, now);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Repo] refreshNotificationForSeries failed: $e');
+    }
   }
 
   /// Whether a notified entry is missing information and therefore worth a
@@ -1535,7 +1561,9 @@ class MediaRepositoryImpl implements MediaRepository {
             runtime,
           );
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Repo] refreshQuickAddItems runtime update failed: $e');
+      }
     }
   }
 
@@ -1645,7 +1673,9 @@ class MediaRepositoryImpl implements MediaRepository {
               type: MediaType.tv,
             );
             await cache.cacheItem(resolved);
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[Repo] getQuickAddOmissions item resolve failed: $e');
+          }
         }
 
         final seasons = resolved?.seasons;
@@ -1940,7 +1970,9 @@ class MediaRepositoryImpl implements MediaRepository {
       Map<String, dynamic> credits = {'cast': [], 'crew': []};
       try {
         credits = await creditsFuture;
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Repo] refreshReturningSeries credits failed: $e');
+      }
 
       final List castResults = credits['cast'] ?? [];
       final List crewResults = credits['crew'] ?? [];
@@ -2189,7 +2221,9 @@ class MediaRepositoryImpl implements MediaRepository {
                   foundRuntime = ep['runtime'] as int?;
                   break;
                 }
-              } catch (_) {}
+              } catch (e) {
+                debugPrint('[Repo] populateQuickAddFromSeenHistory season scan failed: $e');
+              }
               if (foundSeason != null) break;
             }
 
@@ -2225,7 +2259,9 @@ class MediaRepositoryImpl implements MediaRepository {
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Repo] populateQuickAddFromSeenHistory failed: $e');
+    }
   }
 
   @override

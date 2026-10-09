@@ -90,7 +90,9 @@ void callbackDispatcher() {
                     if (lastAir.weekday == DateTime.now().weekday) {
                       shouldUpdate = true;
                     }
-                  } catch (_) {}
+                  } catch (_) {
+                    // Intentionally ignored: malformed air date, no update.
+                  }
                 }
               } else if (age >= 1) {
                 shouldUpdate = true;
@@ -101,7 +103,9 @@ void callbackDispatcher() {
                 await repo.refreshReturningSeries(tmdbId);
               }
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[Background] refreshReturningSeries($tmdbId) failed: $e');
+          }
         }
 
         // Reconcile Releases entries missing fresh data, one series at a time.
@@ -111,7 +115,9 @@ void callbackDispatcher() {
           for (final n in notified) {
             await repo.refreshNotificationForSeries(n.tmdbId, n.type);
           }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('[Background] notification refresh failed: $e');
+        }
       } else if (task == refreshReturningSeriesTask ||
           task.startsWith(refreshReturningSeriesPrefix)) {
         final int? id = inputData?['tmdbId'];

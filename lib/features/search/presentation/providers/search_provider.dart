@@ -772,15 +772,21 @@ class SearchProvider with ChangeNotifier {
             try {
               final next = await getNextEpisode(item.tmdbId);
               if (next == null) noNext = true;
-            } catch (_) {}
+            } catch (e) {
+              debugPrint('[SearchProvider] markAsSeen getNextEpisode failed: $e');
+            }
 
             if ((isLastEpisode || noNext) && discontinued) {
               await toggleInList(mediaItem, 'watchlist');
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[SearchProvider] markAsSeen watchlist cleanup failed: $e');
+          }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[SearchProvider] markAsSeen post-processing failed: $e');
+    }
 
     await loadAllSeenStatus();
     await loadNotifiedItems();
@@ -878,7 +884,9 @@ class SearchProvider with ChangeNotifier {
           await repository.populateQuickAddFromSeenHistory();
           await loadQuickAddItems();
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[SearchProvider] importAllData quick-add population failed: $e');
+      }
 
       _isImporting = false;
       notifyListeners();

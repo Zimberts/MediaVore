@@ -20,9 +20,6 @@ class DataCacheSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Debug trace for widget tests
-    // ignore: avoid_print
-    print('DataCacheSettingsPage.build');
     final provider = context.watch<SearchProvider>();
     final achievementProvider = context.watch<AchievementProvider>();
     final settings = context.watch<SettingsProvider>();
@@ -332,9 +329,6 @@ class DataCacheSettingsPage extends StatelessWidget {
     BuildContext context,
     SearchProvider provider,
   ) async {
-    // Debug trace for widget tests
-    // ignore: avoid_print
-    print('_importAllDataWithPreview called');
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
       initialDirectory: Platform.isAndroid ? _defaultPath : null,
@@ -358,9 +352,6 @@ class DataCacheSettingsPage extends StatelessWidget {
       final bytes = await file.readAsBytes();
 
       try {
-        // ignore: avoid_print
-        print('File picked, reading content');
-
         // Use serializer to normalize and validate
         final ExportEnvelope envelope = ExportEnvelope.fromZipBytes(bytes);
 
