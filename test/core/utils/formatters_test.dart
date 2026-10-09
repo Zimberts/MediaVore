@@ -26,4 +26,27 @@ void main() {
       },
     );
   });
+
+  group('Formatters.formatWatchTime', () {
+    test('should use hours and minutes below one day', () {
+      expect(Formatters.formatWatchTime(0), '0m');
+      expect(Formatters.formatWatchTime(1000), '16h 40m');
+    });
+
+    test('should use whole hours below ten days', () {
+      expect(Formatters.formatWatchTime(6000), '100h');
+      expect(Formatters.formatWatchTime(10000), '166h');
+    });
+
+    test('should use days below one year', () {
+      expect(Formatters.formatWatchTime(14400), '10 days');
+      expect(Formatters.formatWatchTime(60000), '41 days');
+    });
+
+    test('should use years from one year', () {
+      expect(Formatters.formatWatchTime(525600), '1 year');
+      expect(Formatters.formatWatchTime(525600 * 2), '2 years');
+      expect(Formatters.formatWatchTime(525600 * 3 ~/ 2), '1.5 years');
+    });
+  });
 }

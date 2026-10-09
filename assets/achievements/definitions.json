@@ -5,6 +5,8 @@
         "description": "Watch your first movie",
         "iconPath": "assets/achievements/movie_1.png",
         "type": "count",
+        "group": "movies",
+        "tier": 1,
         "params": {
             "mediaType": "movie",
             "target": 1
@@ -16,6 +18,8 @@
         "description": "Watch 10 movies",
         "iconPath": "assets/achievements/movie_10.png",
         "type": "count",
+        "group": "movies",
+        "tier": 2,
         "params": {
             "mediaType": "movie",
             "target": 10
@@ -27,6 +31,8 @@
         "description": "Watch 50 movies",
         "iconPath": "assets/achievements/movie_50.png",
         "type": "count",
+        "group": "movies",
+        "tier": 3,
         "params": {
             "mediaType": "movie",
             "target": 50
@@ -38,6 +44,8 @@
         "description": "Watch 100 movies",
         "iconPath": "assets/achievements/movie_100.png",
         "type": "count",
+        "group": "movies",
+        "tier": 4,
         "params": {
             "mediaType": "movie",
             "target": 100
@@ -49,6 +57,8 @@
         "description": "Watch 500 movies",
         "iconPath": "assets/achievements/movie_500.png",
         "type": "count",
+        "group": "movies",
+        "tier": 5,
         "params": {
             "mediaType": "movie",
             "target": 500
@@ -60,6 +70,8 @@
         "description": "Watch 1000 movies",
         "iconPath": "assets/achievements/movie_1000.png",
         "type": "count",
+        "group": "movies",
+        "tier": 6,
         "params": {
             "mediaType": "movie",
             "target": 1000
@@ -71,9 +83,24 @@
         "description": "Watch your first episode",
         "iconPath": "assets/achievements/tv_1.png",
         "type": "count",
+        "group": "episodes",
+        "tier": 1,
         "params": {
             "mediaType": "tv",
             "target": 1
+        }
+    },
+    {
+        "id": "tv_10",
+        "title": "Pilot Season",
+        "description": "Watch 10 episodes",
+        "iconPath": "assets/achievements/tv_10.png",
+        "type": "count",
+        "group": "episodes",
+        "tier": 2,
+        "params": {
+            "mediaType": "tv",
+            "target": 10
         }
     },
     {
@@ -82,6 +109,8 @@
         "description": "Watch 50 episodes",
         "iconPath": "assets/achievements/tv_50.png",
         "type": "count",
+        "group": "episodes",
+        "tier": 3,
         "params": {
             "mediaType": "tv",
             "target": 50
@@ -93,6 +122,8 @@
         "description": "Watch 250 episodes",
         "iconPath": "assets/achievements/tv_250.png",
         "type": "count",
+        "group": "episodes",
+        "tier": 4,
         "params": {
             "mediaType": "tv",
             "target": 250
@@ -104,9 +135,24 @@
         "description": "Watch 1000 episodes",
         "iconPath": "assets/achievements/tv_1000.png",
         "type": "count",
+        "group": "episodes",
+        "tier": 5,
         "params": {
             "mediaType": "tv",
             "target": 1000
+        }
+    },
+    {
+        "id": "tv_2500",
+        "title": "Couch Veteran",
+        "description": "Watch 2500 episodes",
+        "iconPath": "assets/achievements/tv_2500.png",
+        "type": "count",
+        "group": "episodes",
+        "tier": 6,
+        "params": {
+            "mediaType": "tv",
+            "target": 2500
         }
     },
     {
@@ -115,6 +161,8 @@
         "description": "Watch 5000 episodes",
         "iconPath": "assets/achievements/tv_5000.png",
         "type": "count",
+        "group": "episodes",
+        "tier": 7,
         "params": {
             "mediaType": "tv",
             "target": 5000
@@ -126,6 +174,8 @@
         "description": "Watch the same movie twice",
         "iconPath": "assets/achievements/rewatch_movie_2.png",
         "type": "rewatch",
+        "group": "rewatch_movie",
+        "tier": 1,
         "params": {
             "isTv": false,
             "target": 2
@@ -137,6 +187,8 @@
         "description": "Watch the same movie 5 times",
         "iconPath": "assets/achievements/rewatch_movie_5.png",
         "type": "rewatch",
+        "group": "rewatch_movie",
+        "tier": 2,
         "params": {
             "isTv": false,
             "target": 5
@@ -148,6 +200,8 @@
         "description": "Watch the same movie 10 times",
         "iconPath": "assets/achievements/rewatch_movie_10.png",
         "type": "rewatch",
+        "group": "rewatch_movie",
+        "tier": 3,
         "params": {
             "isTv": false,
             "target": 10
@@ -159,6 +213,8 @@
         "description": "Watch the same episode twice",
         "iconPath": "assets/achievements/rewatch_ep_2.png",
         "type": "rewatch",
+        "group": "rewatch_episode",
+        "tier": 1,
         "params": {
             "isTv": true,
             "target": 2
@@ -170,9 +226,24 @@
         "description": "Watch the same episode 5 times",
         "iconPath": "assets/achievements/rewatch_ep_5.png",
         "type": "rewatch",
+        "group": "rewatch_episode",
+        "tier": 2,
         "params": {
             "isTv": true,
             "target": 5
+        }
+    },
+    {
+        "id": "rewatch_ep_10",
+        "title": "Broken Record",
+        "description": "Watch the same episode 10 times",
+        "iconPath": "assets/achievements/rewatch_ep_10.png",
+        "type": "rewatch",
+        "group": "rewatch_episode",
+        "tier": 3,
+        "params": {
+            "isTv": true,
+            "target": 10
         }
     },
     {
@@ -181,6 +252,8 @@
         "description": "Watch 100 episodes of the same show",
         "iconPath": "assets/achievements/loyalist_100.png",
         "type": "loyalist",
+        "group": "loyalist",
+        "tier": 1,
         "params": {
             "target": 100
         }
@@ -191,6 +264,8 @@
         "description": "Watch 500 episodes of the same show",
         "iconPath": "assets/achievements/loyalist_500.png",
         "type": "loyalist",
+        "group": "loyalist",
+        "tier": 2,
         "params": {
             "target": 500
         }
@@ -201,8 +276,10 @@
         "description": "Watch 10 horror movies",
         "iconPath": "assets/achievements/horror.png",
         "type": "genre",
+        "group": "genre_horror",
+        "tier": 1,
         "params": {
-            "genre": "Horror",
+            "genreId": 27,
             "target": 10
         }
     },
@@ -212,9 +289,37 @@
         "description": "Watch 50 horror movies",
         "iconPath": "assets/achievements/horror_50.png",
         "type": "genre",
+        "group": "genre_horror",
+        "tier": 2,
         "params": {
-            "genre": "Horror",
+            "genreId": 27,
             "target": 50
+        }
+    },
+    {
+        "id": "genre_horror_100",
+        "title": "Master of Horror",
+        "description": "Watch 100 horror movies",
+        "iconPath": "assets/achievements/genre_horror_100.png",
+        "type": "genre",
+        "group": "genre_horror",
+        "tier": 3,
+        "params": {
+            "genreId": 27,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_comedy_10",
+        "title": "Class Clown",
+        "description": "Watch 10 comedy movies",
+        "iconPath": "assets/achievements/genre_comedy_10.png",
+        "type": "genre",
+        "group": "genre_comedy",
+        "tier": 1,
+        "params": {
+            "genreId": 35,
+            "target": 10
         }
     },
     {
@@ -223,9 +328,24 @@
         "description": "Watch 20 comedy movies",
         "iconPath": "assets/achievements/comedy.png",
         "type": "genre",
+        "group": "genre_comedy",
+        "tier": 2,
         "params": {
-            "genre": "Comedy",
+            "genreId": 35,
             "target": 20
+        }
+    },
+    {
+        "id": "genre_comedy_50",
+        "title": "Stand-Up Star",
+        "description": "Watch 50 comedy movies",
+        "iconPath": "assets/achievements/genre_comedy_50.png",
+        "type": "genre",
+        "group": "genre_comedy",
+        "tier": 3,
+        "params": {
+            "genreId": 35,
+            "target": 50
         }
     },
     {
@@ -234,9 +354,24 @@
         "description": "Watch 100 comedy movies",
         "iconPath": "assets/achievements/comedy_100.png",
         "type": "genre",
+        "group": "genre_comedy",
+        "tier": 4,
         "params": {
-            "genre": "Comedy",
+            "genreId": 35,
             "target": 100
+        }
+    },
+    {
+        "id": "genre_action_10",
+        "title": "Stunt Double",
+        "description": "Watch 10 action movies",
+        "iconPath": "assets/achievements/genre_action_10.png",
+        "type": "genre",
+        "group": "genre_action",
+        "tier": 1,
+        "params": {
+            "genreId": 28,
+            "target": 10
         }
     },
     {
@@ -245,9 +380,24 @@
         "description": "Watch 20 action movies",
         "iconPath": "assets/achievements/action.png",
         "type": "genre",
+        "group": "genre_action",
+        "tier": 2,
         "params": {
-            "genre": "Action",
+            "genreId": 28,
             "target": 20
+        }
+    },
+    {
+        "id": "genre_action_50",
+        "title": "Daredevil",
+        "description": "Watch 50 action movies",
+        "iconPath": "assets/achievements/genre_action_50.png",
+        "type": "genre",
+        "group": "genre_action",
+        "tier": 3,
+        "params": {
+            "genreId": 28,
+            "target": 50
         }
     },
     {
@@ -256,9 +406,24 @@
         "description": "Watch 100 action movies",
         "iconPath": "assets/achievements/action_100.png",
         "type": "genre",
+        "group": "genre_action",
+        "tier": 4,
         "params": {
-            "genre": "Action",
+            "genreId": 28,
             "target": 100
+        }
+    },
+    {
+        "id": "genre_scifi_10",
+        "title": "Stargazer",
+        "description": "Watch 10 science fiction movies",
+        "iconPath": "assets/achievements/genre_scifi_10.png",
+        "type": "genre",
+        "group": "genre_scifi",
+        "tier": 1,
+        "params": {
+            "genreId": 878,
+            "target": 10
         }
     },
     {
@@ -267,9 +432,24 @@
         "description": "Watch 20 sci-fi movies",
         "iconPath": "assets/achievements/scifi.png",
         "type": "genre",
+        "group": "genre_scifi",
+        "tier": 2,
         "params": {
-            "genre": "Science Fiction",
+            "genreId": 878,
             "target": 20
+        }
+    },
+    {
+        "id": "genre_scifi_50",
+        "title": "Space Cadet",
+        "description": "Watch 50 science fiction movies",
+        "iconPath": "assets/achievements/genre_scifi_50.png",
+        "type": "genre",
+        "group": "genre_scifi",
+        "tier": 3,
+        "params": {
+            "genreId": 878,
+            "target": 50
         }
     },
     {
@@ -278,8 +458,10 @@
         "description": "Watch 100 sci-fi movies",
         "iconPath": "assets/achievements/scifi_100.png",
         "type": "genre",
+        "group": "genre_scifi",
+        "tier": 4,
         "params": {
-            "genre": "Science Fiction",
+            "genreId": 878,
             "target": 100
         }
     },
@@ -289,8 +471,10 @@
         "description": "Watch 10 documentaries",
         "iconPath": "assets/achievements/doc.png",
         "type": "genre",
+        "group": "genre_doc",
+        "tier": 1,
         "params": {
-            "genre": "Documentary",
+            "genreId": 99,
             "target": 10
         }
     },
@@ -300,9 +484,37 @@
         "description": "Watch 50 documentaries",
         "iconPath": "assets/achievements/doc_50.png",
         "type": "genre",
+        "group": "genre_doc",
+        "tier": 2,
         "params": {
-            "genre": "Documentary",
+            "genreId": 99,
             "target": 50
+        }
+    },
+    {
+        "id": "genre_doc_100",
+        "title": "Encyclopedist",
+        "description": "Watch 100 documentary movies",
+        "iconPath": "assets/achievements/genre_doc_100.png",
+        "type": "genre",
+        "group": "genre_doc",
+        "tier": 3,
+        "params": {
+            "genreId": 99,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_romance_10",
+        "title": "Butterflies",
+        "description": "Watch 10 romance movies",
+        "iconPath": "assets/achievements/genre_romance_10.png",
+        "type": "genre",
+        "group": "genre_romance",
+        "tier": 1,
+        "params": {
+            "genreId": 10749,
+            "target": 10
         }
     },
     {
@@ -311,9 +523,505 @@
         "description": "Watch 15 romance movies",
         "iconPath": "assets/achievements/romance.png",
         "type": "genre",
+        "group": "genre_romance",
+        "tier": 2,
         "params": {
-            "genre": "Romance",
+            "genreId": 10749,
             "target": 15
+        }
+    },
+    {
+        "id": "genre_romance_50",
+        "title": "Soulmate",
+        "description": "Watch 50 romance movies",
+        "iconPath": "assets/achievements/genre_romance_50.png",
+        "type": "genre",
+        "group": "genre_romance",
+        "tier": 3,
+        "params": {
+            "genreId": 10749,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_romance_100",
+        "title": "Eternal Lover",
+        "description": "Watch 100 romance movies",
+        "iconPath": "assets/achievements/genre_romance_100.png",
+        "type": "genre",
+        "group": "genre_romance",
+        "tier": 4,
+        "params": {
+            "genreId": 10749,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_animation_10",
+        "title": "Toon Fan",
+        "description": "Watch 10 animation movies",
+        "iconPath": "assets/achievements/genre_animation_10.png",
+        "type": "genre",
+        "group": "genre_animation",
+        "tier": 1,
+        "params": {
+            "genreId": 16,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_animation_50",
+        "title": "Frame by Frame",
+        "description": "Watch 50 animation movies",
+        "iconPath": "assets/achievements/genre_animation_50.png",
+        "type": "genre",
+        "group": "genre_animation",
+        "tier": 2,
+        "params": {
+            "genreId": 16,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_animation_100",
+        "title": "Animation Maestro",
+        "description": "Watch 100 animation movies",
+        "iconPath": "assets/achievements/genre_animation_100.png",
+        "type": "genre",
+        "group": "genre_animation",
+        "tier": 3,
+        "params": {
+            "genreId": 16,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_thriller_10",
+        "title": "On the Edge",
+        "description": "Watch 10 thriller movies",
+        "iconPath": "assets/achievements/genre_thriller_10.png",
+        "type": "genre",
+        "group": "genre_thriller",
+        "tier": 1,
+        "params": {
+            "genreId": 53,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_thriller_50",
+        "title": "Nerves of Steel",
+        "description": "Watch 50 thriller movies",
+        "iconPath": "assets/achievements/genre_thriller_50.png",
+        "type": "genre",
+        "group": "genre_thriller",
+        "tier": 2,
+        "params": {
+            "genreId": 53,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_thriller_100",
+        "title": "Suspense Addict",
+        "description": "Watch 100 thriller movies",
+        "iconPath": "assets/achievements/genre_thriller_100.png",
+        "type": "genre",
+        "group": "genre_thriller",
+        "tier": 3,
+        "params": {
+            "genreId": 53,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_drama_10",
+        "title": "Tearjerker",
+        "description": "Watch 10 drama movies",
+        "iconPath": "assets/achievements/genre_drama_10.png",
+        "type": "genre",
+        "group": "genre_drama",
+        "tier": 1,
+        "params": {
+            "genreId": 18,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_drama_50",
+        "title": "Drama Queen/King",
+        "description": "Watch 50 drama movies",
+        "iconPath": "assets/achievements/genre_drama_50.png",
+        "type": "genre",
+        "group": "genre_drama",
+        "tier": 2,
+        "params": {
+            "genreId": 18,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_drama_100",
+        "title": "Method Actor",
+        "description": "Watch 100 drama movies",
+        "iconPath": "assets/achievements/genre_drama_100.png",
+        "type": "genre",
+        "group": "genre_drama",
+        "tier": 3,
+        "params": {
+            "genreId": 18,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_crime_10",
+        "title": "Detective",
+        "description": "Watch 10 crime movies",
+        "iconPath": "assets/achievements/genre_crime_10.png",
+        "type": "genre",
+        "group": "genre_crime",
+        "tier": 1,
+        "params": {
+            "genreId": 80,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_crime_50",
+        "title": "Inspector",
+        "description": "Watch 50 crime movies",
+        "iconPath": "assets/achievements/genre_crime_50.png",
+        "type": "genre",
+        "group": "genre_crime",
+        "tier": 2,
+        "params": {
+            "genreId": 80,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_crime_100",
+        "title": "Mastermind",
+        "description": "Watch 100 crime movies",
+        "iconPath": "assets/achievements/genre_crime_100.png",
+        "type": "genre",
+        "group": "genre_crime",
+        "tier": 3,
+        "params": {
+            "genreId": 80,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_fantasy_10",
+        "title": "Dreamer",
+        "description": "Watch 10 fantasy movies",
+        "iconPath": "assets/achievements/genre_fantasy_10.png",
+        "type": "genre",
+        "group": "genre_fantasy",
+        "tier": 1,
+        "params": {
+            "genreId": 14,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_fantasy_50",
+        "title": "Wizard",
+        "description": "Watch 50 fantasy movies",
+        "iconPath": "assets/achievements/genre_fantasy_50.png",
+        "type": "genre",
+        "group": "genre_fantasy",
+        "tier": 2,
+        "params": {
+            "genreId": 14,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_fantasy_100",
+        "title": "Dragon Rider",
+        "description": "Watch 100 fantasy movies",
+        "iconPath": "assets/achievements/genre_fantasy_100.png",
+        "type": "genre",
+        "group": "genre_fantasy",
+        "tier": 3,
+        "params": {
+            "genreId": 14,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_adventure_10",
+        "title": "Explorer",
+        "description": "Watch 10 adventure movies",
+        "iconPath": "assets/achievements/genre_adventure_10.png",
+        "type": "genre",
+        "group": "genre_adventure",
+        "tier": 1,
+        "params": {
+            "genreId": 12,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_adventure_50",
+        "title": "Adventurer",
+        "description": "Watch 50 adventure movies",
+        "iconPath": "assets/achievements/genre_adventure_50.png",
+        "type": "genre",
+        "group": "genre_adventure",
+        "tier": 2,
+        "params": {
+            "genreId": 12,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_adventure_100",
+        "title": "Treasure Hunter",
+        "description": "Watch 100 adventure movies",
+        "iconPath": "assets/achievements/genre_adventure_100.png",
+        "type": "genre",
+        "group": "genre_adventure",
+        "tier": 3,
+        "params": {
+            "genreId": 12,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_western_10",
+        "title": "Cowpoke",
+        "description": "Watch 10 western movies",
+        "iconPath": "assets/achievements/genre_western_10.png",
+        "type": "genre",
+        "group": "genre_western",
+        "tier": 1,
+        "params": {
+            "genreId": 37,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_western_50",
+        "title": "Gunslinger",
+        "description": "Watch 50 western movies",
+        "iconPath": "assets/achievements/genre_western_50.png",
+        "type": "genre",
+        "group": "genre_western",
+        "tier": 2,
+        "params": {
+            "genreId": 37,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_western_100",
+        "title": "Sheriff",
+        "description": "Watch 100 western movies",
+        "iconPath": "assets/achievements/genre_western_100.png",
+        "type": "genre",
+        "group": "genre_western",
+        "tier": 3,
+        "params": {
+            "genreId": 37,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_war_10",
+        "title": "Recruit",
+        "description": "Watch 10 war movies",
+        "iconPath": "assets/achievements/genre_war_10.png",
+        "type": "genre",
+        "group": "genre_war",
+        "tier": 1,
+        "params": {
+            "genreId": 10752,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_war_50",
+        "title": "Veteran",
+        "description": "Watch 50 war movies",
+        "iconPath": "assets/achievements/genre_war_50.png",
+        "type": "genre",
+        "group": "genre_war",
+        "tier": 2,
+        "params": {
+            "genreId": 10752,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_war_100",
+        "title": "General",
+        "description": "Watch 100 war movies",
+        "iconPath": "assets/achievements/genre_war_100.png",
+        "type": "genre",
+        "group": "genre_war",
+        "tier": 3,
+        "params": {
+            "genreId": 10752,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_music_10",
+        "title": "Groupie",
+        "description": "Watch 10 music movies",
+        "iconPath": "assets/achievements/genre_music_10.png",
+        "type": "genre",
+        "group": "genre_music",
+        "tier": 1,
+        "params": {
+            "genreId": 10402,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_music_50",
+        "title": "Roadie",
+        "description": "Watch 50 music movies",
+        "iconPath": "assets/achievements/genre_music_50.png",
+        "type": "genre",
+        "group": "genre_music",
+        "tier": 2,
+        "params": {
+            "genreId": 10402,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_music_100",
+        "title": "Rock Star",
+        "description": "Watch 100 music movies",
+        "iconPath": "assets/achievements/genre_music_100.png",
+        "type": "genre",
+        "group": "genre_music",
+        "tier": 3,
+        "params": {
+            "genreId": 10402,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_family_10",
+        "title": "Movie Night",
+        "description": "Watch 10 family movies",
+        "iconPath": "assets/achievements/genre_family_10.png",
+        "type": "genre",
+        "group": "genre_family",
+        "tier": 1,
+        "params": {
+            "genreId": 10751,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_family_50",
+        "title": "Family Circle",
+        "description": "Watch 50 family movies",
+        "iconPath": "assets/achievements/genre_family_50.png",
+        "type": "genre",
+        "group": "genre_family",
+        "tier": 2,
+        "params": {
+            "genreId": 10751,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_family_100",
+        "title": "Family Tradition",
+        "description": "Watch 100 family movies",
+        "iconPath": "assets/achievements/genre_family_100.png",
+        "type": "genre",
+        "group": "genre_family",
+        "tier": 3,
+        "params": {
+            "genreId": 10751,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_mystery_10",
+        "title": "Sleuth",
+        "description": "Watch 10 mystery movies",
+        "iconPath": "assets/achievements/genre_mystery_10.png",
+        "type": "genre",
+        "group": "genre_mystery",
+        "tier": 1,
+        "params": {
+            "genreId": 9648,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_mystery_50",
+        "title": "Puzzle Solver",
+        "description": "Watch 50 mystery movies",
+        "iconPath": "assets/achievements/genre_mystery_50.png",
+        "type": "genre",
+        "group": "genre_mystery",
+        "tier": 2,
+        "params": {
+            "genreId": 9648,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_mystery_100",
+        "title": "Enigma",
+        "description": "Watch 100 mystery movies",
+        "iconPath": "assets/achievements/genre_mystery_100.png",
+        "type": "genre",
+        "group": "genre_mystery",
+        "tier": 3,
+        "params": {
+            "genreId": 9648,
+            "target": 100
+        }
+    },
+    {
+        "id": "genre_history_10",
+        "title": "History Buff",
+        "description": "Watch 10 history movies",
+        "iconPath": "assets/achievements/genre_history_10.png",
+        "type": "genre",
+        "group": "genre_history",
+        "tier": 1,
+        "params": {
+            "genreId": 36,
+            "target": 10
+        }
+    },
+    {
+        "id": "genre_history_50",
+        "title": "Chronicler",
+        "description": "Watch 50 history movies",
+        "iconPath": "assets/achievements/genre_history_50.png",
+        "type": "genre",
+        "group": "genre_history",
+        "tier": 2,
+        "params": {
+            "genreId": 36,
+            "target": 50
+        }
+    },
+    {
+        "id": "genre_history_100",
+        "title": "Historian",
+        "description": "Watch 100 history movies",
+        "iconPath": "assets/achievements/genre_history_100.png",
+        "type": "genre",
+        "group": "genre_history",
+        "tier": 3,
+        "params": {
+            "genreId": 36,
+            "target": 100
         }
     },
     {
@@ -322,9 +1030,24 @@
         "description": "Watch 10 items between 12 AM and 4 AM",
         "iconPath": "assets/achievements/night_owl.png",
         "type": "behavioral",
+        "group": "night_owl",
+        "tier": 1,
         "params": {
             "subtype": "night_owl",
             "target": 10
+        }
+    },
+    {
+        "id": "night_owl_50",
+        "title": "Insomniac",
+        "description": "Watch 50 items between midnight and 4 AM",
+        "iconPath": "assets/achievements/night_owl_50.png",
+        "type": "behavioral",
+        "group": "night_owl",
+        "tier": 2,
+        "params": {
+            "subtype": "night_owl",
+            "target": 50
         }
     },
     {
@@ -333,9 +1056,24 @@
         "description": "Watch 100 items between 12 AM and 4 AM",
         "iconPath": "assets/achievements/night_owl_100.png",
         "type": "behavioral",
+        "group": "night_owl",
+        "tier": 3,
         "params": {
             "subtype": "night_owl",
             "target": 100
+        }
+    },
+    {
+        "id": "night_owl_250",
+        "title": "Vampire",
+        "description": "Watch 250 items between midnight and 4 AM",
+        "iconPath": "assets/achievements/night_owl_250.png",
+        "type": "behavioral",
+        "group": "night_owl",
+        "tier": 4,
+        "params": {
+            "subtype": "night_owl",
+            "target": 250
         }
     },
     {
@@ -344,9 +1082,49 @@
         "description": "Watch 15 items in a single weekend",
         "iconPath": "assets/achievements/weekend.png",
         "type": "behavioral",
+        "group": "weekend",
+        "tier": 1,
         "params": {
             "subtype": "weekend",
             "target": 15
+        }
+    },
+    {
+        "id": "weekend_warrior_30",
+        "title": "Weekend Champion",
+        "description": "Watch 30 items within 72 hours",
+        "iconPath": "assets/achievements/weekend_warrior_30.png",
+        "type": "behavioral",
+        "group": "weekend",
+        "tier": 2,
+        "params": {
+            "subtype": "weekend",
+            "target": 30
+        }
+    },
+    {
+        "id": "weekend_warrior_50",
+        "title": "Weekend Legend",
+        "description": "Watch 50 items within 72 hours",
+        "iconPath": "assets/achievements/weekend_warrior_50.png",
+        "type": "behavioral",
+        "group": "weekend",
+        "tier": 3,
+        "params": {
+            "subtype": "weekend",
+            "target": 50
+        }
+    },
+    {
+        "id": "marathon_5",
+        "title": "Warm-Up Lap",
+        "description": "Watch 5 episodes of the same show in one day",
+        "iconPath": "assets/achievements/marathon_5.png",
+        "type": "marathon",
+        "group": "marathon",
+        "tier": 1,
+        "params": {
+            "target": 5
         }
     },
     {
@@ -355,6 +1133,8 @@
         "description": "Watch 10 episodes of the same show in one day",
         "iconPath": "assets/achievements/marathon.png",
         "type": "marathon",
+        "group": "marathon",
+        "tier": 2,
         "params": {
             "target": 10
         }
@@ -365,8 +1145,22 @@
         "description": "Watch 20 episodes of the same show in one day",
         "iconPath": "assets/achievements/marathon_pro.png",
         "type": "marathon",
+        "group": "marathon",
+        "tier": 3,
         "params": {
             "target": 20
+        }
+    },
+    {
+        "id": "marathon_50",
+        "title": "Ultra Marathoner",
+        "description": "Watch 50 episodes of the same show in one day",
+        "iconPath": "assets/achievements/marathon_50.png",
+        "type": "marathon",
+        "group": "marathon",
+        "tier": 4,
+        "params": {
+            "target": 50
         }
     },
     {
@@ -375,6 +1169,8 @@
         "description": "Watch something every day for a week",
         "iconPath": "assets/achievements/streak_7.png",
         "type": "streak",
+        "group": "streak",
+        "tier": 1,
         "params": {
             "target": 7
         }
@@ -385,6 +1181,8 @@
         "description": "Watch something every day for a month",
         "iconPath": "assets/achievements/streak_30.png",
         "type": "streak",
+        "group": "streak",
+        "tier": 2,
         "params": {
             "target": 30
         }
@@ -395,6 +1193,8 @@
         "description": "Watch something every day for a year",
         "iconPath": "assets/achievements/streak_365.png",
         "type": "streak",
+        "group": "streak",
+        "tier": 3,
         "params": {
             "target": 365
         }
@@ -405,6 +1205,8 @@
         "description": "Spend 1000 minutes watching media",
         "iconPath": "assets/achievements/time_1000.png",
         "type": "runtime",
+        "group": "runtime",
+        "tier": 1,
         "params": {
             "targetMinutes": 1000
         }
@@ -415,6 +1217,8 @@
         "description": "Watch for 100 hours total",
         "iconPath": "assets/achievements/time_100h.png",
         "type": "runtime",
+        "group": "runtime",
+        "tier": 2,
         "params": {
             "targetMinutes": 6000
         }
@@ -425,6 +1229,8 @@
         "description": "Spend 10,000 minutes watching media",
         "iconPath": "assets/achievements/time_10000.png",
         "type": "runtime",
+        "group": "runtime",
+        "tier": 3,
         "params": {
             "targetMinutes": 10000
         }
@@ -435,6 +1241,8 @@
         "description": "Watch for 10 full days total",
         "iconPath": "assets/achievements/time_10d.png",
         "type": "runtime",
+        "group": "runtime",
+        "tier": 4,
         "params": {
             "targetMinutes": 14400
         }
@@ -445,6 +1253,8 @@
         "description": "Watch for 1,000 hours total",
         "iconPath": "assets/achievements/time_1000h.png",
         "type": "runtime",
+        "group": "runtime",
+        "tier": 5,
         "params": {
             "targetMinutes": 60000
         }
@@ -455,6 +1265,8 @@
         "description": "Spend 100,000 minutes watching media",
         "iconPath": "assets/achievements/time_100000.png",
         "type": "runtime",
+        "group": "runtime",
+        "tier": 6,
         "params": {
             "targetMinutes": 100000
         }
@@ -465,6 +1277,8 @@
         "description": "Watch for 1 full year total",
         "iconPath": "assets/achievements/time_1y.png",
         "type": "runtime",
+        "group": "runtime",
+        "tier": 7,
         "params": {
             "targetMinutes": 525600
         }

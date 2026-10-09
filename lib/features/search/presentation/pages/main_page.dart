@@ -433,9 +433,11 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Achievement Unlocked!',
-                          style: TextStyle(
+                        Text(
+                          widget.achievement.tier != null
+                              ? 'Level ${widget.achievement.tier} Unlocked!'
+                              : 'Achievement Unlocked!',
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             fontSize: 14,

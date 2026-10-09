@@ -11,6 +11,12 @@ class Achievement extends Equatable {
   final double progress; // 0.0 to 1.0
   final String? progressLabel;
 
+  /// Family id shared by the tiers of the same challenge (null = standalone).
+  final String? group;
+
+  /// 1-based level inside [group].
+  final int? tier;
+
   const Achievement({
     required this.id,
     required this.title,
@@ -21,6 +27,8 @@ class Achievement extends Equatable {
     this.unlockedAt,
     this.progress = 0.0,
     this.progressLabel,
+    this.group,
+    this.tier,
   });
 
   @override
@@ -34,5 +42,7 @@ class Achievement extends Equatable {
     unlockedAt,
     progress,
     progressLabel,
+    group,
+    tier,
   ];
 }

@@ -99,6 +99,66 @@ void main() {
     });
 
     test(
+      'should persist every new tier but notify only the highest per family',
+      () async {
+        final unlockedAt = DateTime(2023, 1, 1);
+        Achievement tier(String id, String group, int tier) => Achievement(
+          id: id,
+          title: id,
+          description: 'D',
+          iconPath: 'I',
+          group: group,
+          tier: tier,
+          isUnlocked: true,
+          unlockedAt: unlockedAt,
+          progress: 1.0,
+        );
+        when(() => mockRepository.getAchievements()).thenAnswer(
+          (_) async => [
+            tier('movie_1', 'movies', 1),
+            tier('movie_10', 'movies', 2),
+            tier('tv_1', 'episodes', 1),
+            Achievement(
+              id: 'tv_10',
+              title: 'tv_10',
+              description: 'D',
+              iconPath: 'I',
+              group: 'episodes',
+              tier: 2,
+              isUnlocked: true,
+              isPersisted: true,
+              unlockedAt: unlockedAt,
+            ),
+          ],
+        );
+        when(
+          () => mockRepository.unlockAchievement(any(), any()),
+        ).thenAnswer((_) async {});
+
+        final notified = <String>[];
+        final sub = provider.onAchievementUnlocked.listen(
+          (a) => notified.add(a.id),
+        );
+        await provider.refresh();
+        await Future<void>.delayed(Duration.zero);
+        await sub.cancel();
+
+        verify(
+          () => mockRepository.unlockAchievement('movie_1', unlockedAt),
+        ).called(1);
+        verify(
+          () => mockRepository.unlockAchievement('movie_10', unlockedAt),
+        ).called(1);
+        verify(
+          () => mockRepository.unlockAchievement('tv_1', unlockedAt),
+        ).called(1);
+        verifyNever(() => mockRepository.unlockAchievement('tv_10', any()));
+        expect(notified, unorderedEquals(['movie_10', 'tv_1']));
+        expect(provider.families.map((f) => f.id), ['movies', 'episodes']);
+      },
+    );
+
+    test(
       'clearAchievements should reset notified set and call repository',
       () async {
         when(() => mockRepository.clearAchievements()).thenAnswer((_) async {});
