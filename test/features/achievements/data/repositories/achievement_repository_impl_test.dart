@@ -102,6 +102,36 @@ void main() {
       expect(nightOwl.progress, 1.0);
     });
 
+    test('should not count date-only (midnight) views as Night Owl', () async {
+      // 00:00:00.000 = no time recorded; 00:30 is a real night view
+      final seenItems = [
+        ...List.generate(
+          10,
+          (index) => SeenItemModel(
+            tmdbId: index,
+            type: 'movie',
+            title: 'M',
+            seenDate: DateTime(2023, 1, 1),
+          ),
+        ),
+        SeenItemModel(
+          tmdbId: 100,
+          type: 'movie',
+          title: 'M',
+          seenDate: DateTime(2023, 1, 2, 0, 30),
+        ),
+      ];
+      when(
+        () => mockDataSource.getAllSeenItems(),
+      ).thenAnswer((_) async => seenItems);
+
+      final achievements = await repository.getAchievements();
+      final nightOwl = achievements.firstWhere((a) => a.id == 'night_owl');
+
+      expect(nightOwl.isUnlocked, isFalse);
+      expect(nightOwl.progress, closeTo(0.1, 1e-9));
+    });
+
     test('unlockAchievement should persist to DB', () async {
       final date = DateTime(2023, 1, 1);
       await repository.unlockAchievement('test_id', date);
