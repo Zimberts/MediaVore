@@ -160,7 +160,9 @@ class AchievementRepositoryImpl implements AchievementRepository {
         switch (params['subtype']) {
           case 'night_owl':
             return _countMilestone(
-              seenItems.where((i) => i.seenDate.hour < 4).toList(),
+              seenItems
+                  .where((i) => i.seenDate.hour < 4 && !_isDateOnly(i.seenDate))
+                  .toList(),
               target,
             );
           case 'weekend':
@@ -185,6 +187,15 @@ class AchievementRepositoryImpl implements AchievementRepository {
     debugPrint('Achievement ${def['id']}: cannot evaluate type "$type"');
     return _ProgressData(0.0, '0/$target');
   }
+
+  /// Views recorded without a time (e.g. imported history) land at exactly
+  /// 00:00:00.000; they must not count as night-time views.
+  bool _isDateOnly(DateTime d) =>
+      d.hour == 0 &&
+      d.minute == 0 &&
+      d.second == 0 &&
+      d.millisecond == 0 &&
+      d.microsecond == 0;
 
   _ProgressData _countMilestone(List<SeenItemModel> items, int target) {
     final count = items.length;
