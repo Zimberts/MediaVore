@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
+import 'package:mediavore/features/books/presentation/providers/book_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -17,6 +18,7 @@ void main() {
   late MockMediaRepository mockRepository;
   late MockSharedPreferences mockSharedPreferences;
   late MockAchievementProvider mockAchievementProvider;
+  late MockBookRepository mockBookRepository;
   late SearchProvider searchProvider;
   late SettingsProvider settingsProvider;
 
@@ -28,6 +30,9 @@ void main() {
     mockRepository = MockMediaRepository();
     mockSharedPreferences = MockSharedPreferences();
     mockAchievementProvider = MockAchievementProvider();
+    mockBookRepository = MockBookRepository();
+    when(() => mockBookRepository.getAllBooks()).thenAnswer((_) async => []);
+    when(() => mockBookRepository.getAllLists()).thenAnswer((_) async => []);
 
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
@@ -90,6 +95,9 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
         ChangeNotifierProvider<AchievementProvider>.value(
           value: mockAchievementProvider,
+        ),
+        ChangeNotifierProvider<BookProvider>(
+          create: (_) => BookProvider(mockBookRepository),
         ),
       ],
       child: MaterialApp(
