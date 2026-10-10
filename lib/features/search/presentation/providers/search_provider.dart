@@ -4,41 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_error.dart';
+import 'package:mediavore/features/search/presentation/providers/search_relevance.dart';
 
-/// Why the last search/discover request failed, so the UI can react to it.
-enum SearchErrorType { missingApiKey, invalidApiKey, offline, server, unknown }
-
-/// Maps an error thrown by [MediaRepository.searchMedia] / `discoverMedia`
-/// to a [SearchErrorType].
-SearchErrorType classifySearchError(Object error) {
-  if (error is ConfigurationException) return SearchErrorType.missingApiKey;
-  if (error is NetworkException) return SearchErrorType.offline;
-  if (error is ServerException) {
-    final code = error.statusCode;
-    if (code == 401 || code == 403) return SearchErrorType.invalidApiKey;
-    return SearchErrorType.server;
-  }
-  return SearchErrorType.unknown;
-}
-
-/// User-facing message for a [SearchErrorType].
-String searchErrorMessage(SearchErrorType type) {
-  switch (type) {
-    case SearchErrorType.missingApiKey:
-      return 'Add your TMDB API key in Settings to search and discover media.';
-    case SearchErrorType.invalidApiKey:
-      return 'Your TMDB API key was rejected. Check it in Settings.';
-    case SearchErrorType.offline:
-      return "You're offline. Check your connection and try again.";
-    case SearchErrorType.server:
-      return 'TMDB is unavailable right now. Please try again later.';
-    case SearchErrorType.unknown:
-      return 'Something went wrong while loading results.';
-  }
-}
+export 'package:mediavore/features/search/presentation/providers/search_error.dart';
 
 class SearchProvider with ChangeNotifier {
   final MediaRepository repository;
@@ -126,36 +97,8 @@ class SearchProvider with ChangeNotifier {
   bool get isDiscoverMode => _isDiscoverMode;
   String get currentQuery => _currentQuery;
 
-  int _titleSimilarityScore(String query, String title) {
-    final normalizedQuery = query.trim().toLowerCase();
-    if (normalizedQuery.isEmpty) return 0;
-    final normalizedTitle = title.trim().toLowerCase();
-    if (normalizedTitle == normalizedQuery) return 4;
-    if (normalizedTitle.startsWith(normalizedQuery)) return 3;
-    if (normalizedTitle.contains(normalizedQuery)) return 2;
-    final queryWords = normalizedQuery
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
-        .toSet();
-    if (queryWords.isEmpty) return 0;
-    final titleWords = normalizedTitle
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
-        .toSet();
-    final overlap = queryWords.intersection(titleWords).length;
-    return overlap > 0 ? 1 : 0;
-  }
-
-  void _sortByRelevance(List<MediaItem> items) {
-    items.sort((a, b) {
-      final scoreA = _titleSimilarityScore(_currentQuery, a.title);
-      final scoreB = _titleSimilarityScore(_currentQuery, b.title);
-      if (scoreA != scoreB) return scoreB.compareTo(scoreA);
-      final ratingA = a.voteAverage ?? 0;
-      final ratingB = b.voteAverage ?? 0;
-      return ratingB.compareTo(ratingA);
-    });
-  }
+  void _sortByRelevance(List<MediaItem> items) =>
+      sortMediaByRelevance(items, _currentQuery);
 
   Future<void> _init() async {
     await loadListNames();

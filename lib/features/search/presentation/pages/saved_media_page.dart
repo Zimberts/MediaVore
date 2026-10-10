@@ -10,7 +10,6 @@ import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/media_details/presentation/widgets/like_button.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
@@ -21,6 +20,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
+import 'package:mediavore/features/search/presentation/widgets/saved_media_list_tile.dart';
+import 'package:mediavore/features/search/presentation/widgets/saved_media_grid_item.dart';
+import 'package:mediavore/features/search/presentation/widgets/saved_media_swipe_item.dart';
 
 class SavedMediaPage extends StatefulWidget {
   const SavedMediaPage({super.key});
@@ -269,8 +271,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     // below reconciles with the persisted state.
     setState(() {
       _currentItems.removeWhere(
-        (item) =>
-            _selectedItems.contains('${item.id}:${item.mediaType.name}'),
+        (item) => _selectedItems.contains('${item.id}:${item.mediaType.name}'),
       );
       _isEditMode = false;
       _selectedItems.clear();
@@ -1067,7 +1068,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             '${item.id}:${item.mediaType.name}',
           );
 
-          return _MediaListTile(
+          return MediaListTile(
             key: ValueKey('${item.id}_${item.mediaType.name}'),
             index: index,
             item: item,
@@ -1151,7 +1152,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           '${item.id}:${item.mediaType.name}',
         );
 
-        return _MediaListTile(
+        return MediaListTile(
           key: ValueKey('${item.id}_${item.mediaType.name}'),
           index: index,
           item: item,
@@ -1205,7 +1206,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             '${item.id}:${item.mediaType.name}',
           );
 
-          return _MediaGridItem(
+          return MediaGridItem(
             key: ValueKey('${item.id}_${item.mediaType.name}'),
             item: item,
             provider: provider,
@@ -1314,7 +1315,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           '${item.id}:${item.mediaType.name}',
         );
 
-        final mediaTile = _MediaGridItem(
+        final mediaTile = MediaGridItem(
           key: ValueKey('${item.id}_${item.mediaType.name}'),
           item: item,
           provider: provider,
@@ -1346,7 +1347,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return _MediaSwipeItem(
+        return MediaSwipeItem(
           key: ValueKey('${item.id}_${item.mediaType.name}'),
           item: item,
           provider: provider,
@@ -1580,470 +1581,6 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             child: Text('Delete', style: TextStyle(color: colors.error)),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MediaListTile extends StatelessWidget {
-  final MediaItem item;
-  final int index;
-  final SearchProvider provider;
-  final SettingsProvider settings;
-  final bool isEditMode;
-  final bool isSelected;
-  final bool isManualSort;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-
-  const _MediaListTile({
-    super.key,
-    required this.index,
-    required this.item,
-    required this.provider,
-    required this.settings,
-    required this.isEditMode,
-    required this.isSelected,
-    required this.isManualSort,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isTv = item.mediaType == MediaType.tv;
-    final isLiked = provider.isLiked(item);
-
-    String lengthText = '';
-    if (isTv) {
-      lengthText = '${item.numberOfSeasons ?? "?"} seasons';
-    } else if (item.runtime != null) {
-      lengthText = '${item.runtime} min';
-    }
-
-    final colors = context.appColors;
-
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Container(
-        color: isSelected ? colors.logicFlow.withValues(alpha: 0.1) : null,
-        child: ListTile(
-          leading: _PosterWithBadge(item: item, provider: provider),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (isLiked)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: Icon(
-                    Icons.favorite,
-                    size: 16,
-                    color: colors.likeHeart,
-                  ),
-                ),
-            ],
-          ),
-          subtitle: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(isTv ? Icons.tv : Icons.movie, size: 12, color: Colors.grey),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  '${item.releaseDate.isNotEmpty == true && item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : "?"} • $lengthText',
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-              if (item.voteAverage != null && item.voteAverage! > 0) ...[
-                const Text(' • '),
-                const Icon(Icons.star, color: Colors.amber, size: 12),
-                const SizedBox(width: 2),
-                Text(item.voteAverage!.toStringAsFixed(1)),
-              ],
-            ],
-          ),
-          trailing: isEditMode
-              ? Checkbox(value: isSelected, onChanged: (_) => onTap())
-              : isManualSort
-              ? ReorderableDragStartListener(
-                  index: index,
-                  child: const Icon(Icons.drag_handle),
-                )
-              : null,
-        ),
-      ),
-    );
-  }
-}
-
-class _MediaGridItem extends StatelessWidget {
-  final MediaItem item;
-  final SearchProvider provider;
-  final bool isSelected;
-  final bool isEditMode;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-
-  const _MediaGridItem({
-    super.key,
-    required this.item,
-    required this.provider,
-    required this.isSelected,
-    required this.isEditMode,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final isTv = item.mediaType == MediaType.tv;
-
-    String lengthText = '';
-    if (isTv) {
-      lengthText = '${item.numberOfSeasons ?? "?"} S';
-    } else if (item.runtime != null) {
-      lengthText = '${item.runtime}m';
-    }
-
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _PosterWithBadge(
-                  item: item,
-                  provider: provider,
-                  width: double.infinity,
-                  height: double.infinity,
-                  showBadge: false,
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [Colors.black87, Colors.transparent],
-                      ),
-                    ),
-                    padding: const EdgeInsets.only(
-                      left: 6,
-                      top: 24,
-                      bottom: 6,
-                      right: 18,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                item.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            if (provider.isLiked(item))
-                              Padding(
-                                padding: const EdgeInsets.only(left: 4.0),
-                                child: Icon(
-                                  Icons.favorite,
-                                  size: 10,
-                                  color: colors.likeHeart,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${item.releaseDate.isNotEmpty == true && item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : ""} • $lengthText',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 9,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 4,
-            right: 4,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (item.voteAverage != null && item.voteAverage! > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    margin: const EdgeInsets.only(right: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black87,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 10),
-                        const SizedBox(width: 2),
-                        Text(
-                          item.voteAverage!.toStringAsFixed(1),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 4,
-            left: 4,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Icon(
-                item.mediaType == MediaType.tv ? Icons.tv : Icons.movie,
-                color: Colors.white,
-                size: 10,
-              ),
-            ),
-          ),
-          if (isSelected)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: colors.logicFlow, width: 3),
-                ),
-              ),
-            ),
-          _PosterBadgeOnly(item: item, provider: provider),
-          if (isEditMode)
-            Positioned(
-              top: 6,
-              left: 6,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(1),
-                child: Icon(
-                  isSelected
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  color: isSelected ? colors.logicFlow : colors.placeholder,
-                  size: 20,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MediaSwipeItem extends StatelessWidget {
-  final MediaItem item;
-  final SearchProvider provider;
-  final VoidCallback onReturn;
-
-  const _MediaSwipeItem({
-    super.key,
-    required this.item,
-    required this.provider,
-    required this.onReturn,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Card(
-        elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () async {
-                  await MediaDetailPage.show(context, item);
-                  onReturn();
-                },
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: _PosterWithBadge(
-                    item: item,
-                    provider: provider,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Row(
-                children: [
-                  const SizedBox(width: 56), // Balances the larger LikeButton
-                  Expanded(
-                    child: InkWell(
-                      onTap: () async {
-                        await MediaDetailPage.show(context, item);
-                        onReturn();
-                      },
-                      child: Text(
-                        item.title,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                      ),
-                    ),
-                  ),
-                  LikeButton(item: item, iconSize: 32),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PosterWithBadge extends StatelessWidget {
-  final MediaItem item;
-  final SearchProvider provider;
-  final double? width;
-  final double? height;
-  final bool showBadge;
-
-  const _PosterWithBadge({
-    required this.item,
-    required this.provider,
-    this.width = 50,
-    this.height,
-    this.showBadge = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final seenCount = provider.getSeenCount(item);
-    final isSeen = seenCount > 0;
-    final isTv = item.mediaType == MediaType.tv;
-    final colors = context.appColors;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: item.posterPath != null
-              ? CachedNetworkImage(
-                  imageUrl: 'https://image.tmdb.org/t/p/w342${item.posterPath}',
-                  width: width,
-                  height: height,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  errorWidget: (context, url, error) => Icon(
-                    isTv ? Icons.tv : Icons.movie,
-                    size: (width?.isFinite == true) ? width : 48,
-                  ),
-                )
-              : Container(
-                  width: width,
-                  height: height,
-                  color: colors.placeholder,
-                  child: Icon(
-                    isTv ? Icons.tv : Icons.movie,
-                    size: (width?.isFinite == true) ? (width! / 2) : 24,
-                  ),
-                ),
-        ),
-        if (isSeen && showBadge)
-          _PosterBadgeOnly(item: item, provider: provider),
-      ],
-    );
-  }
-}
-
-// Extract the badge into its own widget
-class _PosterBadgeOnly extends StatelessWidget {
-  final MediaItem item;
-  final SearchProvider provider;
-
-  const _PosterBadgeOnly({required this.item, required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    final seenCount = provider.getSeenCount(item);
-    if (seenCount <= 0) return const SizedBox.shrink();
-
-    final isTv = item.mediaType == MediaType.tv;
-    bool isFinished = isTv && item.numberOfEpisodes != null
-        ? seenCount >= item.numberOfEpisodes!
-        : !isTv;
-
-    final colors = context.appColors;
-
-    return Positioned(
-      right: -4,
-      bottom: -4,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isFinished ? colors.badgeBgSeen : colors.badgeBg,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 1.5),
-        ),
-        padding: const EdgeInsets.all(2),
-        child: Icon(
-          isFinished ? Icons.done_all : Icons.check,
-          size: 10,
-          color: colors.badgeText,
-        ),
       ),
     );
   }
