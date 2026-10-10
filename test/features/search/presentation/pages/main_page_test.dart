@@ -64,7 +64,7 @@ void main() {
     ).thenAnswer((_) => const Stream<Achievement>.empty());
 
     searchProvider = SearchProvider(mockRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences);
+    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore('fake_api_key'));
 
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
@@ -105,6 +105,9 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
+    // If API key is empty, dialog shows up. The mock returned a fake key, so there shouldn't be a dialog blocking clicks.
+    // If it *does* happen to show up, we might need to close it. But let's assume it didn't box the tap.
+    
     // Initially on Discover (SearchPage)
     expect(
       find.text('Discover'),
@@ -112,14 +115,14 @@ void main() {
     ); // Tab bar label and AppBar title
 
     // Tap My Lists
-    await tester.tap(find.byIcon(Icons.bookmark));
+    await tester.tap(find.text('My Lists').last);
     await tester.pumpAndSettle();
 
     expect(searchProvider.selectedTab, 1);
     expect(find.text('My Lists'), findsWidgets);
 
     // Tap Seen
-    await tester.tap(find.byIcon(Icons.history));
+    await tester.tap(find.text('Seen').last);
     await tester.pumpAndSettle();
 
     expect(searchProvider.selectedTab, 2);
@@ -132,7 +135,7 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.bookmark));
+    await tester.tap(find.text('My Lists').last);
     await tester.pumpAndSettle();
 
     expect(searchProvider.selectedTab, 1);

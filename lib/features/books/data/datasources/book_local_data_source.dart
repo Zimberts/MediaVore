@@ -1,5 +1,5 @@
 import 'package:injectable/injectable.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mediavore/features/books/data/models/book_model.dart';
 import 'package:mediavore/features/books/data/models/book_list_model.dart';
 import 'package:mediavore/features/books/data/models/book_list_item_model.dart';

@@ -39,13 +39,26 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   SortMethod _sortMethod = SortMethod.manual;
   bool _isReversed = false;
   List<MediaItem> _currentItems = [];
+
+  /// The list name [_currentItems] currently reflects. Used to keep the
+  /// scrollable mounted (preserving scroll offset) while a refresh is in
+  /// flight instead of tearing it down behind a loading spinner.
+  String? _currentItemsList;
   final GlobalKey _qrKey = GlobalKey();
   Uint8List? _croppedLogoBytes;
   Color? _lastThemeColor;
 
+  // Sync state tracking for external list mutations
+  String _lastSelectedList = 'watchlist';
+  Set<String> _lastListSet = {};
+
   // Edit Mode State
   bool _isEditMode = false;
   final Set<String> _selectedItems = {};
+
+  /// Accumulated movement of the current grid drag. A long-press with little
+  /// movement is treated as a request to enter edit mode.
+  double _gridDragDistance = 0;
 
   @override
   void initState() {
@@ -149,6 +162,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     if (_selectedList != 'watchlist') {
       setState(() {
         _selectedList = 'watchlist';
+        _currentItems.clear();
+        _currentItemsList = null;
+        _sortMethod = SortMethod.manual;
+        _isReversed = false;
         _isEditMode = false;
         _selectedItems.clear();
       });
@@ -157,10 +174,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   }
 
   Future<List<MediaItem>> _fetchSavedMedia() async {
+    final requestedList = _selectedList;
     final provider = context.read<SearchProvider>();
-    final entries = await _mediaRepository.getListEntries(_selectedList);
+    final entries = await _mediaRepository.getListEntries(requestedList);
     final localItems = await _mediaRepository.getListPreviews(
-      _selectedList,
+      requestedList,
       limit: 1000,
     );
 
@@ -230,7 +248,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     if (mounted) {
       provider.loadAllSeenStatus();
     }
-    _currentItems = items;
+    // Ignore results that arrive after the user switched to another list.
+    if (requestedList == _selectedList) {
+      _currentItems = items;
+      _currentItemsList = requestedList;
+    }
     return items;
   }
 
@@ -243,14 +265,21 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         )
         .toList();
 
-    for (final item in itemsToRemove) {
-      await provider.toggleInList(item, _selectedList);
-    }
-
+    // Drop the rows immediately so the viewport does not jump; the refetch
+    // below reconciles with the persisted state.
     setState(() {
+      _currentItems.removeWhere(
+        (item) =>
+            _selectedItems.contains('${item.id}:${item.mediaType.name}'),
+      );
       _isEditMode = false;
       _selectedItems.clear();
     });
+
+    for (final item in itemsToRemove) {
+      await provider.removeFromList(item, _selectedList);
+    }
+
     loadSavedMedia();
   }
 
@@ -879,6 +908,18 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     final settings = Provider.of<SettingsProvider>(context);
     final colors = context.appColors;
 
+    final currentListSet = provider.getListEntriesCached(_selectedList).toSet();
+    if (_lastSelectedList != _selectedList) {
+      _lastSelectedList = _selectedList;
+      _lastListSet = currentListSet;
+    } else if (currentListSet.length != _lastListSet.length ||
+        !currentListSet.containsAll(_lastListSet)) {
+      _lastListSet = currentListSet;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) loadSavedMedia();
+      });
+    }
+
     return PopScope(
       canPop: !_isEditMode,
       onPopInvokedWithResult: (didPop, result) {
@@ -907,12 +948,15 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _isEditMode
-                      ? '${_selectedItems.length} selected'
-                      : (_selectedList == 'watchlist'
-                            ? 'Watchlist'
-                            : _selectedList),
+                Flexible(
+                  child: Text(
+                    _isEditMode
+                        ? '${_selectedItems.length} selected'
+                        : (_selectedList == 'watchlist'
+                              ? 'Watchlist'
+                              : _selectedList),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 if (!_isEditMode) const Icon(Icons.arrow_drop_down),
               ],
@@ -974,16 +1018,22 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         body: FutureBuilder<List<MediaItem>>(
           future: _savedMediaFuture,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                _savedMediaFuture != null) {
+            // Prefer fresh data, but fall back to the last loaded items for the
+            // same list so the scrollable is not torn down (losing its scroll
+            // offset) while a refresh is in flight.
+            final List<MediaItem>? displayItems = snapshot.hasData
+                ? snapshot.data
+                : (_currentItemsList == _selectedList ? _currentItems : null);
+
+            if (displayItems == null && !snapshot.hasError) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            if (displayItems == null || displayItems.isEmpty) {
               return const Center(child: Text('No items in this list.'));
             }
 
             final sortedItems = _getFilteredAndSortedItems(
-              snapshot.data!,
+              displayItems,
               settings,
             );
 
@@ -1005,12 +1055,53 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     SearchProvider provider,
     SettingsProvider settings,
   ) {
+    // Keep a single scrollable type for the manual sort so toggling edit mode
+    // does not dispose the viewport and reset the scroll offset.
+    if (_sortMethod != SortMethod.manual) {
+      return ListView.builder(
+        itemCount: items.length,
+        clipBehavior: Clip.none,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final isSelected = _selectedItems.contains(
+            '${item.id}:${item.mediaType.name}',
+          );
+
+          return _MediaListTile(
+            key: ValueKey('${item.id}_${item.mediaType.name}'),
+            index: index,
+            item: item,
+            provider: provider,
+            settings: settings,
+            isEditMode: _isEditMode,
+            isSelected: isSelected,
+            isManualSort: false,
+            onTap: () async {
+              if (_isEditMode) {
+                _toggleItemSelection(item);
+              } else {
+                await MediaDetailPage.show(context, item);
+                loadSavedMedia();
+              }
+            },
+            onLongPress: () {
+              if (!_isEditMode) {
+                setState(() {
+                  _isEditMode = true;
+                  _selectedItems.add('${item.id}:${item.mediaType.name}');
+                });
+              }
+            },
+          );
+        },
+      );
+    }
+
     return ReorderableListView.builder(
       itemCount: items.length,
       clipBehavior: Clip.none,
+      buildDefaultDragHandles: false,
       onReorder: (oldIndex, newIndex) async {
-        if (_sortMethod != SortMethod.manual) return;
-
         setState(() {
           if (newIndex > oldIndex) newIndex -= 1;
           final item = items.removeAt(oldIndex);
@@ -1018,16 +1109,34 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
           // Map indices to _currentItems to handle filtering correctly
           final oldPersistentIndex = _currentItems.indexOf(item);
-          _currentItems.removeAt(oldPersistentIndex);
+          if (oldPersistentIndex != -1) {
+            _currentItems.removeAt(oldPersistentIndex);
+          }
 
           if (newIndex < items.length - 1) {
             final nextItemInFiltered = items[newIndex + 1];
             final nextPersistentIndex = _currentItems.indexOf(
               nextItemInFiltered,
             );
-            _currentItems.insert(nextPersistentIndex, item);
+            if (nextPersistentIndex != -1) {
+              _currentItems.insert(nextPersistentIndex, item);
+            } else {
+              _currentItems.add(item);
+            }
           } else {
-            _currentItems.add(item);
+            if (items.length > 1 && newIndex > 0) {
+              final previousItemInFiltered = items[newIndex - 1];
+              final prevPersistentIndex = _currentItems.indexOf(
+                previousItemInFiltered,
+              );
+              if (prevPersistentIndex != -1) {
+                _currentItems.insert(prevPersistentIndex + 1, item);
+              } else {
+                _currentItems.add(item);
+              }
+            } else {
+              _currentItems.add(item);
+            }
           }
         });
 
@@ -1050,11 +1159,13 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           settings: settings,
           isEditMode: _isEditMode,
           isSelected: isSelected,
-          onTap: () {
+          isManualSort: true,
+          onTap: () async {
             if (_isEditMode) {
               _toggleItemSelection(item);
             } else {
-              MediaDetailPage.show(context, item);
+              await MediaDetailPage.show(context, item);
+              loadSavedMedia();
             }
           },
           onLongPress: () {
@@ -1075,9 +1186,63 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     SearchProvider provider,
     SettingsProvider settings,
   ) {
+    // Keep a single scrollable type for the manual sort so toggling edit mode
+    // does not dispose the viewport and reset the scroll offset.
+    if (_sortMethod != SortMethod.manual) {
+      return GridView.builder(
+        padding: const EdgeInsets.all(8),
+        clipBehavior: Clip.none,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: settings.gridSize.round(),
+          childAspectRatio: 0.66,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final isSelected = _selectedItems.contains(
+            '${item.id}:${item.mediaType.name}',
+          );
+
+          return _MediaGridItem(
+            key: ValueKey('${item.id}_${item.mediaType.name}'),
+            item: item,
+            provider: provider,
+            isSelected: isSelected,
+            isEditMode: _isEditMode,
+            onTap: () async {
+              if (_isEditMode) {
+                _toggleItemSelection(item);
+              } else {
+                await MediaDetailPage.show(context, item);
+                loadSavedMedia();
+              }
+            },
+            onLongPress: _isEditMode
+                ? null
+                : () {
+                    setState(() {
+                      _isEditMode = true;
+                      _selectedItems.add('${item.id}:${item.mediaType.name}');
+                    });
+                  },
+          );
+        },
+      );
+    }
+
     return ReorderableGridView.builder(
       padding: const EdgeInsets.all(8),
       clipBehavior: Clip.none,
+      // Drag only outside edit mode; a long-press that does not move is used to
+      // enter edit mode (see onReorder below).
+      dragEnabled: !_isEditMode,
+      // Suppress edge auto-scroll until the user actually drags. The drag also
+      // starts on a stationary long-press (used for edit mode) and would
+      // otherwise nudge the list by up to 5px the moment it starts.
+      scrollSpeedController: (elapsed, overSize, itemSize) =>
+          _gridDragDistance < 12 ? 0 : 5,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: settings.gridSize.round(),
         childAspectRatio: 0.66,
@@ -1085,25 +1250,56 @@ class SavedMediaPageState extends State<SavedMediaPage> {
         mainAxisSpacing: 4,
       ),
       itemCount: items.length,
+      onDragStart: (index) => _gridDragDistance = 0,
+      onDragUpdate: (index, position, delta) =>
+          _gridDragDistance += delta.distance,
       onReorder: (oldIndex, newIndex) async {
-        if (_sortMethod != SortMethod.manual) return;
-
+        // A long-press without meaningful movement enters edit mode; otherwise
+        // the drag reorders. This keeps the tile's long-press (edit mode) from
+        // competing with the grid's long-press (drag), which previously made
+        // reordering impossible.
+        if (_gridDragDistance < 12) {
+          final pressed = items[oldIndex];
+          setState(() {
+            _isEditMode = true;
+            _selectedItems.add('${pressed.id}:${pressed.mediaType.name}');
+          });
+          return;
+        }
         setState(() {
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
 
           // Map indices to _currentItems to handle filtering correctly
           final oldPersistentIndex = _currentItems.indexOf(item);
-          _currentItems.removeAt(oldPersistentIndex);
+          if (oldPersistentIndex != -1) {
+            _currentItems.removeAt(oldPersistentIndex);
+          }
 
           if (newIndex < items.length - 1) {
             final nextItemInFiltered = items[newIndex + 1];
             final nextPersistentIndex = _currentItems.indexOf(
               nextItemInFiltered,
             );
-            _currentItems.insert(nextPersistentIndex, item);
+            if (nextPersistentIndex != -1) {
+              _currentItems.insert(nextPersistentIndex, item);
+            } else {
+              _currentItems.add(item);
+            }
           } else {
-            _currentItems.add(item);
+            if (items.length > 1 && newIndex > 0) {
+              final previousItemInFiltered = items[newIndex - 1];
+              final prevPersistentIndex = _currentItems.indexOf(
+                previousItemInFiltered,
+              );
+              if (prevPersistentIndex != -1) {
+                _currentItems.insert(prevPersistentIndex + 1, item);
+              } else {
+                _currentItems.add(item);
+              }
+            } else {
+              _currentItems.add(item);
+            }
           }
         });
 
@@ -1118,31 +1314,29 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           '${item.id}:${item.mediaType.name}',
         );
 
-        return ReorderableDelayedDragStartListener(
+        final mediaTile = _MediaGridItem(
           key: ValueKey('${item.id}_${item.mediaType.name}'),
-          index: index,
-          child: _MediaGridItem(
-            item: item,
-            provider: provider,
-            isSelected: isSelected,
-            isEditMode: _isEditMode,
-            onTap: () {
-              if (_isEditMode) {
-                _toggleItemSelection(item);
-              } else {
-                MediaDetailPage.show(context, item);
-              }
-            },
-            onLongPress: _isEditMode
-                ? null
-                : () {
-                    setState(() {
-                      _isEditMode = true;
-                      _selectedItems.add('${item.id}:${item.mediaType.name}');
-                    });
-                  },
-          ),
+          item: item,
+          provider: provider,
+          isSelected: isSelected,
+          isEditMode: _isEditMode,
+          onTap: () async {
+            if (_isEditMode) {
+              _toggleItemSelection(item);
+            } else {
+              await MediaDetailPage.show(context, item);
+              loadSavedMedia();
+            }
+          },
+          // Long-press is handled by the grid drag: holding without moving
+          // enters edit mode (see onReorder), so the tile must not also grab it.
+          onLongPress: null,
         );
+
+        // The reorderable grid drives the drag itself. Wrapping the tile in a
+        // Flutter drag listener here is redundant and would steal the gesture,
+        // so the keyed tile is returned directly.
+        return mediaTile;
       },
     );
   }
@@ -1152,7 +1346,12 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return _MediaSwipeItem(item: item, provider: provider);
+        return _MediaSwipeItem(
+          key: ValueKey('${item.id}_${item.mediaType.name}'),
+          item: item,
+          provider: provider,
+          onReturn: loadSavedMedia,
+        );
       },
     );
   }
@@ -1185,24 +1384,41 @@ class SavedMediaPageState extends State<SavedMediaPage> {
 
                     return ListTile(
                       leading: _buildListPreviewIcon(previews, provider),
-                      title: Text(name == 'watchlist' ? 'Watchlist' : name),
+                      title: Text(
+                        name == 'watchlist' ? 'Watchlist' : name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       subtitle: Text('$count items'),
                       selected: name == _selectedList,
                       trailing: (name != 'watchlist')
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.delete_outline,
-                                color: colors.error,
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _showDeleteListConfirm(context, provider, name);
-                              },
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: colors.error,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    _showDeleteListConfirm(
+                                      context,
+                                      provider,
+                                      name,
+                                    );
+                                  },
+                                ),
+                              ],
                             )
                           : null,
                       onTap: () {
                         setState(() {
                           _selectedList = name;
+                          _currentItems.clear();
+                          _currentItemsList = null;
+                          _sortMethod = SortMethod.manual;
+                          _isReversed = false;
                           _isEditMode = false;
                           _selectedItems.clear();
                         });
@@ -1302,10 +1518,16 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ),
           TextButton(
             onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                await provider.createList(controller.text);
+              final trimmedName = controller.text.trim();
+              if (trimmedName.isNotEmpty &&
+                  trimmedName.toLowerCase() != 'watchlist') {
+                await provider.createList(trimmedName);
                 setState(() {
-                  _selectedList = controller.text;
+                  _selectedList = trimmedName;
+                  _currentItems.clear();
+                  _currentItemsList = null;
+                  _sortMethod = SortMethod.manual;
+                  _isReversed = false;
                   _isEditMode = false;
                   _selectedItems.clear();
                 });
@@ -1340,9 +1562,13 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           ),
           TextButton(
             onPressed: () async {
-              if (_selectedList == listName) {
+              if (mounted && _selectedList == listName) {
                 setState(() {
                   _selectedList = 'watchlist';
+                  _currentItems.clear();
+                  _currentItemsList = null;
+                  _sortMethod = SortMethod.manual;
+                  _isReversed = false;
                   _isEditMode = false;
                   _selectedItems.clear();
                 });
@@ -1366,6 +1592,7 @@ class _MediaListTile extends StatelessWidget {
   final SettingsProvider settings;
   final bool isEditMode;
   final bool isSelected;
+  final bool isManualSort;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -1377,6 +1604,7 @@ class _MediaListTile extends StatelessWidget {
     required this.settings,
     required this.isEditMode,
     required this.isSelected,
+    required this.isManualSort,
     required this.onTap,
     required this.onLongPress,
   });
@@ -1403,8 +1631,9 @@ class _MediaListTile extends StatelessWidget {
         child: ListTile(
           leading: _PosterWithBadge(item: item, provider: provider),
           title: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
+              Flexible(
                 child: Text(
                   item.title,
                   maxLines: 1,
@@ -1412,16 +1641,44 @@ class _MediaListTile extends StatelessWidget {
                 ),
               ),
               if (isLiked)
-                Icon(Icons.favorite, size: 16, color: colors.likeHeart),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                  child: Icon(
+                    Icons.favorite,
+                    size: 16,
+                    color: colors.likeHeart,
+                  ),
+                ),
             ],
           ),
-          subtitle: Text('${item.releaseDate} • $lengthText'),
+          subtitle: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(isTv ? Icons.tv : Icons.movie, size: 12, color: Colors.grey),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  '${item.releaseDate.isNotEmpty == true && item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : "?"} • $lengthText',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              if (item.voteAverage != null && item.voteAverage! > 0) ...[
+                const Text(' • '),
+                const Icon(Icons.star, color: Colors.amber, size: 12),
+                const SizedBox(width: 2),
+                Text(item.voteAverage!.toStringAsFixed(1)),
+              ],
+            ],
+          ),
           trailing: isEditMode
               ? Checkbox(value: isSelected, onChanged: (_) => onTap())
-              : ReorderableDragStartListener(
+              : isManualSort
+              ? ReorderableDragStartListener(
                   index: index,
                   child: const Icon(Icons.drag_handle),
-                ),
+                )
+              : null,
         ),
       ),
     );
@@ -1437,6 +1694,7 @@ class _MediaGridItem extends StatelessWidget {
   final VoidCallback? onLongPress;
 
   const _MediaGridItem({
+    super.key,
     required this.item,
     required this.provider,
     required this.isSelected,
@@ -1448,18 +1706,145 @@ class _MediaGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final isTv = item.mediaType == MediaType.tv;
+
+    String lengthText = '';
+    if (isTv) {
+      lengthText = '${item.numberOfSeasons ?? "?"} S';
+    } else if (item.runtime != null) {
+      lengthText = '${item.runtime}m';
+    }
+
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          _PosterWithBadge(
-            item: item,
-            provider: provider,
-            width: double.infinity,
-            height: double.infinity,
-            showBadge: false,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _PosterWithBadge(
+                  item: item,
+                  provider: provider,
+                  width: double.infinity,
+                  height: double.infinity,
+                  showBadge: false,
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black87, Colors.transparent],
+                      ),
+                    ),
+                    padding: const EdgeInsets.only(
+                      left: 6,
+                      top: 24,
+                      bottom: 6,
+                      right: 18,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (provider.isLiked(item))
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4.0),
+                                child: Icon(
+                                  Icons.favorite,
+                                  size: 10,
+                                  color: colors.likeHeart,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${item.releaseDate.isNotEmpty == true && item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : ""} • $lengthText',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 9,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (item.voteAverage != null && item.voteAverage! > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    margin: const EdgeInsets.only(right: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 10),
+                        const SizedBox(width: 2),
+                        Text(
+                          item.voteAverage!.toStringAsFixed(1),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 4,
+            left: 4,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                item.mediaType == MediaType.tv ? Icons.tv : Icons.movie,
+                color: Colors.white,
+                size: 10,
+              ),
+            ),
           ),
           if (isSelected)
             Positioned.fill(
@@ -1499,8 +1884,14 @@ class _MediaGridItem extends StatelessWidget {
 class _MediaSwipeItem extends StatelessWidget {
   final MediaItem item;
   final SearchProvider provider;
+  final VoidCallback onReturn;
 
-  const _MediaSwipeItem({required this.item, required this.provider});
+  const _MediaSwipeItem({
+    super.key,
+    required this.item,
+    required this.provider,
+    required this.onReturn,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1513,7 +1904,10 @@ class _MediaSwipeItem extends StatelessWidget {
           children: [
             Expanded(
               child: InkWell(
-                onTap: () => MediaDetailPage.show(context, item),
+                onTap: () async {
+                  await MediaDetailPage.show(context, item);
+                  onReturn();
+                },
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
@@ -1534,8 +1928,11 @@ class _MediaSwipeItem extends StatelessWidget {
                 children: [
                   const SizedBox(width: 56), // Balances the larger LikeButton
                   Expanded(
-                      child: InkWell(
-                      onTap: () => MediaDetailPage.show(context, item),
+                    child: InkWell(
+                      onTap: () async {
+                        await MediaDetailPage.show(context, item);
+                        onReturn();
+                      },
                       child: Text(
                         item.title,
                         style: Theme.of(context).textTheme.headlineSmall,
@@ -1591,8 +1988,10 @@ class _PosterWithBadge extends StatelessWidget {
                   placeholder: (context, url) => const Center(
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  errorWidget: (context, url, error) =>
-                      Icon(isTv ? Icons.tv : Icons.movie, size: width),
+                  errorWidget: (context, url, error) => Icon(
+                    isTv ? Icons.tv : Icons.movie,
+                    size: (width?.isFinite == true) ? width : 48,
+                  ),
                 )
               : Container(
                   width: width,
@@ -1600,7 +1999,7 @@ class _PosterWithBadge extends StatelessWidget {
                   color: colors.placeholder,
                   child: Icon(
                     isTv ? Icons.tv : Icons.movie,
-                    size: width != null ? width! / 2 : 24,
+                    size: (width?.isFinite == true) ? (width! / 2) : 24,
                   ),
                 ),
         ),

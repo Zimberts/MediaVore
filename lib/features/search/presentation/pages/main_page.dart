@@ -12,6 +12,7 @@ import 'package:mediavore/features/books/presentation/pages/book_library_page.da
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 
@@ -55,6 +56,12 @@ class _MainPageState extends State<MainPage> {
       ) {
         _queueAchievementNotification(achievement);
       });
+
+      // Check if TMDB API key is missing
+      final settings = context.read<SettingsProvider>();
+      if (settings.tmdbApiKey.isEmpty) {
+        _showApiKeyDialog(context, settings);
+      }
     });
   }
 
@@ -245,6 +252,60 @@ class _MainPageState extends State<MainPage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
+    );
+  }
+
+  void _showApiKeyDialog(BuildContext context, SettingsProvider settings) {
+    final controller = TextEditingController(text: settings.tmdbApiKey);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('TMDB Credential Required'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.',
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: 'Enter TMDB v3 API key or v4 read token',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).',
+                      ),
+                      duration: Duration(seconds: 5),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Cancel for now'),
+            ),
+            FilledButton(
+              onPressed: () {
+                settings.setTmdbApiKey(controller.text.trim());
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:mediavore/core/domain/entities/actor_details.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -8,6 +9,9 @@ enum ImportMode { append, replace, merge }
 /// Abstract class for a repository that handles media (movies and series) data.
 abstract class MediaRepository {
   /// Searches for media based on a query with optional filters.
+  ///
+  /// Throws an [AppException] (configuration, network, server or parsing
+  /// error) instead of returning an empty list when the request fails.
   Future<List<MediaItem>> searchMedia(
     String query, {
     int page = 1,
@@ -19,6 +23,8 @@ abstract class MediaRepository {
   });
 
   /// Discovers media using TMDb's discovery endpoint.
+  ///
+  /// Throws an [AppException] on failure, like [searchMedia].
   Future<List<MediaItem>> discoverMedia({
     int page = 1,
     List<int>? genreIds,
@@ -93,6 +99,9 @@ abstract class MediaRepository {
     int? episodeNumber,
   });
 
+  /// Updates an existing seen entry.
+  Future<void> updateSeenEntry(SeenItem item);
+
   /// Deletes a specific viewing entry by its local ID.
   Future<void> deleteSeenEntry(int id);
 
@@ -118,17 +127,12 @@ abstract class MediaRepository {
   /// Manually triggers a full cache fill (pre-caching lists and recent seen).
   Future<void> fillCache();
 
-  /// Exports seen data as a list of maps.
-  Future<List<Map<String, dynamic>>> exportSeenData({
-    DateTime? start,
-    DateTime? end,
-    int? tmdbId,
-    MediaType? type,
-  });
+  /// Exports all user data (seen, likes, notifications, lists) as a single MDV archive byte list.
+  Future<List<int>> exportAllData();
 
-  /// Imports seen data.
-  Future<void> importSeenData(
-    List<Map<String, dynamic>> data, {
+  /// Imports an export archive produced by `exportAllData`.
+  Future<void> importAllData(
+    List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
     Function(double progress, String status)? onProgress,
   });
@@ -151,8 +155,26 @@ abstract class MediaRepository {
   /// Gets all notified media entries.
   Future<List<NotifiedItem>> getNotifiedItems();
 
-  /// Force refreshes all notified items from network.
-  Future<void> refreshNotifiedItems();
+  /// Watches for changes in notified items.
+  Stream<void> watchNotifiedItems();
+
+  /// Refreshes notified items from the network, series by series.
+  ///
+  /// Only entries missing information (no release date, or one already in the
+  /// past) are reconciled, and each series is throttled to at most once per day
+  /// unless [force] is set.
+  Future<void> refreshNotifiedItems({bool force = false});
+
+  /// Reconciles a single notified series/movie with the network, throttled to at
+  /// most once per day unless [force] is set.
+  Future<void> refreshNotificationForSeries(
+    int tmdbId,
+    MediaType type, {
+    bool force = false,
+  });
+
+  /// Backfills missing runtime metadata for existing quick-add entries from network.
+  Future<void> refreshQuickAddItems();
 
   /// Gets similar media items.
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type);
@@ -169,10 +191,25 @@ abstract class MediaRepository {
   /// QuickAdd: returns current quick-add entries (next episodes the user can quickly mark seen)
   Future<List<QuickAddItem>> getQuickAddItems();
 
+  /// QuickAdd: diagnostic list of expected next episodes that are NOT shown.
+  ///
+  /// Read-only; never persists. Uses runtime/cached data only unless
+  /// [allowFetch] is true, in which case missing season data is fetched from
+  /// the network.
+  Future<List<QuickAddOmission>> getQuickAddOmissions({
+    bool allowFetch = false,
+  });
+
+  /// Refreshes a Returning Series specifically for background syncing
+  Future<void> refreshReturningSeries(int tmdbId);
+
+  /// Gets the last cache update date for a specific media item.
+  Future<DateTime?> getCacheUpdateDate(int tmdbId, MediaType type);
+
   /// Removes a quick-add entry by its isar id.
   Future<void> removeQuickAddItemById(int isarId);
 
-  /// User opts out of automatic quick-add for a specific streak.
+  /// User opts out of automatic quick-add for a specific episode.
   /// If `seasonNumber`/`episodeNumber` are omitted, behavior defaults to opt-out for the series.
   Future<void> optOutSeries(
     int tmdbId, {
@@ -213,6 +250,7 @@ class NotifiedItem {
   final DateTime? releaseDate;
   final int? seasonNumber;
   final int? episodeNumber;
+  final int? runtime;
   final bool autoNotify;
 
   NotifiedItem({
@@ -223,6 +261,7 @@ class NotifiedItem {
     this.releaseDate,
     this.seasonNumber,
     this.episodeNumber,
+    this.runtime,
     this.autoNotify = false,
   });
 }
@@ -251,6 +290,7 @@ class QuickAddItem {
   final DateTime? airDate;
   final String? title;
   final String? posterPath;
+  final int? runtime;
 
   QuickAddItem({
     this.isarId,
@@ -262,5 +302,56 @@ class QuickAddItem {
     this.airDate,
     this.title,
     this.posterPath,
+    this.runtime,
+  });
+}
+
+/// Why an expected next episode is not present in the Quick Add list.
+enum QuickAddOmissionReason {
+  /// The user dismissed this episode, opting out of Quick Add for it.
+  optedOut,
+
+  /// The next episode exists but has not aired yet.
+  notReleased,
+
+  /// The next episode has no known air date.
+  noAirDate,
+
+  /// Season/episode data is not cached and fetching was not allowed.
+  noCacheData,
+
+  /// A valid aired next episode exists but is missing from Quick Add.
+  notPopulated,
+}
+
+/// A diagnostic entry describing an expected Quick Add episode that is absent.
+class QuickAddOmission {
+  final int tmdbId;
+  final String title;
+  final String? posterPath;
+
+  /// Season/episode of the next episode the omission refers to, when known.
+  final int? seasonNumber;
+  final int? episodeNumber;
+
+  /// Air date of the next episode (used for [QuickAddOmissionReason.notReleased]).
+  final DateTime? airDate;
+
+  /// The seen streak (tail) this omission was computed from, when known.
+  final int? tailSeason;
+  final int? tailEpisode;
+
+  final QuickAddOmissionReason reason;
+
+  QuickAddOmission({
+    required this.tmdbId,
+    required this.title,
+    this.posterPath,
+    this.seasonNumber,
+    this.episodeNumber,
+    this.airDate,
+    this.tailSeason,
+    this.tailEpisode,
+    required this.reason,
   });
 }

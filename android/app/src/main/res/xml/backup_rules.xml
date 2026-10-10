@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup rules for Android 11 and lower (android:fullBackupContent).
+     Secure storage values are encrypted with a device-bound Keystore key that
+     is not backed up, and SharedPreferences may hold a legacy plain-text TMDB
+     credential: neither is included in backups. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
+    <exclude domain="sharedpref" path="FlutterSharedPreferences.xml" />
+</full-backup-content>

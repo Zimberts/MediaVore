@@ -8,10 +8,10 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/top_scrim_gradient.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
@@ -57,9 +57,8 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences);
-    dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-
+    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
+    
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
@@ -76,16 +75,6 @@ void main() {
       () => mockMediaRepository.getListPreviews(
         any(),
         limit: any(named: 'limit'),
-      ),
-    ).thenAnswer((_) async => []);
-
-    // Default mock for exportSeenData to avoid Null check error
-    when(
-      () => mockMediaRepository.exportSeenData(
-        start: any(named: 'start'),
-        end: any(named: 'end'),
-        tmdbId: any(named: 'tmdbId'),
-        type: any(named: 'type'),
       ),
     ).thenAnswer((_) async => []);
   });
@@ -147,6 +136,9 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump(); // Run post-frame callbacks
       await tester.pumpAndSettle(); // Finish loading
+
+      // The header artwork is topped with a readability scrim.
+      expect(find.byType(TopScrimGradient), findsOneWidget);
 
       expect(find.text('Inception'), findsAtLeast(1));
       expect(find.text('2010-07-16'), findsOneWidget);
@@ -282,92 +274,6 @@ void main() {
 
       // Check the season list tile subtitle
       expect(find.text('1 / 7 episodes seen'), findsOneWidget);
-    });
-
-    group('Export Feature', () {
-      testWidgets(
-        'tapping export button shows bottom sheet with options if data exists',
-        (WidgetTester tester) async {
-          when(
-            () => mockMediaRepository.getMediaDetails(
-              tItem.id,
-              type: any(named: 'type'),
-            ),
-          ).thenAnswer((_) async => tMediaDetails);
-
-          // Mock data to exist so export sheet opens
-          when(
-            () => mockMediaRepository.exportSeenData(
-              tmdbId: any(named: 'tmdbId'),
-              type: any(named: 'type'),
-            ),
-          ).thenAnswer(
-            (_) async => [
-              {'tmdbId': 1},
-            ],
-          );
-
-          await tester.pumpWidget(createWidgetUnderTest());
-          await tester.pump();
-          await tester.pumpAndSettle();
-
-          // Scroll until the export button is visible.
-          await tester.scrollUntilVisible(
-            find.text('Export history'),
-            500.0,
-            scrollable: find.byType(Scrollable),
-          );
-          await tester.pumpAndSettle();
-
-          final exportButtonText = find.text('Export history');
-          expect(exportButtonText, findsOneWidget);
-
-          await tester.tap(exportButtonText);
-          await tester.pumpAndSettle();
-
-          expect(find.text('Save to device'), findsOneWidget);
-          expect(find.text('Share via System'), findsOneWidget);
-        },
-      );
-
-      testWidgets('tapping export button shows snackbar if no data exists', (
-        WidgetTester tester,
-      ) async {
-        when(
-          () => mockMediaRepository.getMediaDetails(
-            tItem.id,
-            type: any(named: 'type'),
-          ),
-        ).thenAnswer((_) async => tMediaDetails);
-
-        // Mock no data
-        when(
-          () => mockMediaRepository.exportSeenData(
-            tmdbId: any(named: 'tmdbId'),
-            type: any(named: 'type'),
-          ),
-        ).thenAnswer((_) async => []);
-
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump();
-        await tester.pumpAndSettle();
-
-        // Scroll until the export button is visible.
-        await tester.scrollUntilVisible(
-          find.text('Export history'),
-          500.0,
-          scrollable: find.byType(Scrollable),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Export history'));
-        await tester.pumpAndSettle();
-
-        expect(
-          find.text('No history to export for this item.'),
-          findsOneWidget,
-        );
-      });
     });
   });
 }

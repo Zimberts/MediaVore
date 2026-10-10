@@ -1,11 +1,48 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/error/exceptions.dart';
+import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+
+/// Why the last search/discover request failed, so the UI can react to it.
+enum SearchErrorType { missingApiKey, invalidApiKey, offline, server, unknown }
+
+/// Maps an error thrown by [MediaRepository.searchMedia] / `discoverMedia`
+/// to a [SearchErrorType].
+SearchErrorType classifySearchError(Object error) {
+  if (error is ConfigurationException) return SearchErrorType.missingApiKey;
+  if (error is NetworkException) return SearchErrorType.offline;
+  if (error is ServerException) {
+    final code = error.statusCode;
+    if (code == 401 || code == 403) return SearchErrorType.invalidApiKey;
+    return SearchErrorType.server;
+  }
+  return SearchErrorType.unknown;
+}
+
+/// User-facing message for a [SearchErrorType].
+String searchErrorMessage(SearchErrorType type) {
+  switch (type) {
+    case SearchErrorType.missingApiKey:
+      return 'Add your TMDB API key in Settings to search and discover media.';
+    case SearchErrorType.invalidApiKey:
+      return 'Your TMDB API key was rejected. Check it in Settings.';
+    case SearchErrorType.offline:
+      return "You're offline. Check your connection and try again.";
+    case SearchErrorType.server:
+      return 'TMDB is unavailable right now. Please try again later.';
+    case SearchErrorType.unknown:
+      return 'Something went wrong while loading results.';
+  }
+}
 
 class SearchProvider with ChangeNotifier {
   final MediaRepository repository;
+  StreamSubscription<void>? _notifiedItemsSubscription;
 
   SearchProvider(this.repository) {
     _init();
@@ -17,6 +54,7 @@ class SearchProvider with ChangeNotifier {
   bool _isDbSizeLoading = false;
   bool _isNotifiedRefreshing = false;
   String? _error;
+  SearchErrorType? _errorType;
   bool _isOffline = false;
   List<String> _listNames = ['watchlist'];
   final Map<String, List<String>> _listEntries = {}; // listName -> ["id:type"]
@@ -48,6 +86,8 @@ class SearchProvider with ChangeNotifier {
   List<String> _likedIds = []; // "id:type"
   List<NotifiedItem> _notifiedItems = [];
   List<QuickAddItem> _quickAddItems = [];
+  List<QuickAddOmission> _quickAddOmissions = [];
+  bool _isQuickAddOmissionsLoading = false;
 
   List<MediaItem> get items => _searchResults; // For SearchPage
   bool get isLoading => _isLoading;
@@ -55,6 +95,9 @@ class SearchProvider with ChangeNotifier {
   bool get isDbSizeLoading => _isDbSizeLoading;
   bool get isNotifiedRefreshing => _isNotifiedRefreshing;
   String? get error => _error;
+
+  /// Kind of the last search/discover failure, or `null` if it succeeded.
+  SearchErrorType? get errorType => _errorType;
   bool get isOffline => _isOffline;
   List<String> get listNames => _listNames;
   int get cacheSize => _cacheSize;
@@ -66,6 +109,8 @@ class SearchProvider with ChangeNotifier {
   List<String> get likedIds => _likedIds;
   List<NotifiedItem> get notifiedItems => _notifiedItems;
   List<QuickAddItem> get quickAddItems => _quickAddItems;
+  List<QuickAddOmission> get quickAddOmissions => _quickAddOmissions;
+  bool get isQuickAddOmissionsLoading => _isQuickAddOmissionsLoading;
   int get selectedTab => _selectedTab;
 
   double get importProgress => _importProgress;
@@ -122,6 +167,16 @@ class SearchProvider with ChangeNotifier {
     await loadLikedStatus();
     await loadNotifiedItems();
     await loadQuickAddItems();
+
+    _notifiedItemsSubscription = repository.watchNotifiedItems().listen((_) {
+      loadNotifiedItems();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifiedItemsSubscription?.cancel();
+    super.dispose();
   }
 
   void setSelectedTab(int index) {
@@ -231,9 +286,33 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Loads the Quick Add diagnostics (why expected episodes are missing).
+  ///
+  /// Cache/runtime only by default; set [allowFetch] to permit fetching missing
+  /// season data from the network. Never throws.
+  Future<void> loadQuickAddOmissions({bool allowFetch = false}) async {
+    _isQuickAddOmissionsLoading = true;
+    notifyListeners();
+    try {
+      _quickAddOmissions = await repository.getQuickAddOmissions(
+        allowFetch: allowFetch,
+      );
+    } catch (e) {
+      debugPrint('[SearchProvider] loadQuickAddOmissions error: $e');
+      _quickAddOmissions = [];
+    } finally {
+      _isQuickAddOmissionsLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> clearQuickAddItems() async {
     await repository.clearQuickAddItems();
     await loadQuickAddItems();
+  }
+
+  List<String> getListEntriesCached(String listName) {
+    return _listEntries[listName] ?? [];
   }
 
   int getSeenCount(MediaItem item) {
@@ -276,13 +355,31 @@ class SearchProvider with ChangeNotifier {
       _listEntries[listName] = [...currentEntries, entry];
       if (listName == 'watchlist') {
         _watchlistIds.add(item.id.toString());
-        await repository.toggleNotification(item, autoNotify: true);
+        if (item.canBeNotified) {
+          await repository.toggleNotification(item, autoNotify: true);
+        }
         await loadNotifiedItems();
       }
     }
     _listPreviews[listName] = await repository.getListPreviews(listName);
     await updateCacheSize();
     notifyListeners();
+  }
+
+  Future<void> removeFromList(MediaItem item, String listName) async {
+    final entry = '${item.id}:${item.mediaType.name}';
+    final currentEntries = _listEntries[listName] ?? [];
+
+    if (currentEntries.contains(entry)) {
+      await repository.removeFromList(item.id, item.mediaType, listName);
+      _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
+      if (listName == 'watchlist') {
+        _watchlistIds.remove(item.id.toString());
+      }
+      _listPreviews[listName] = await repository.getListPreviews(listName);
+      await updateCacheSize();
+      notifyListeners();
+    }
   }
 
   Future<void> toggleWatchlist(MediaItem item) async {
@@ -298,8 +395,8 @@ class SearchProvider with ChangeNotifier {
   Future<void> createList(String name) async {
     await repository.createList(name);
     await loadListNames();
-    _listEntries[name] = [];
-    _listPreviews[name] = [];
+    _listEntries[name] = await repository.getListEntries(name);
+    _listPreviews[name] = await repository.getListPreviews(name);
     notifyListeners();
   }
 
@@ -392,7 +489,7 @@ class SearchProvider with ChangeNotifier {
     }
 
     _isLoading = true;
-    _error = null;
+    _clearSearchError();
     _currentPage = 1;
     _hasMore = true;
     notifyListeners();
@@ -468,8 +565,8 @@ class SearchProvider with ChangeNotifier {
       }
       _isOffline = false;
     } catch (e) {
-      _error = e.toString();
-      _isOffline = true;
+      _searchResults = [];
+      _setSearchError(e, 'searchMedia');
     } finally {
       _isLoading = false;
       await updateCacheSize();
@@ -478,7 +575,9 @@ class SearchProvider with ChangeNotifier {
   }
 
   Future<void> fetchNextPage() async {
-    if (_isLoading || !_hasMore) return;
+    // While a page load is failing, don't re-trigger it on every scroll event:
+    // the user retries explicitly via [retryNextPage] or a refresh.
+    if (_isLoading || !_hasMore || _errorType != null) return;
 
     _isLoading = true;
     notifyListeners();
@@ -563,8 +662,7 @@ class SearchProvider with ChangeNotifier {
       }
       _isOffline = false;
     } catch (e) {
-      _error = e.toString();
-      _isOffline = true;
+      _setSearchError(e, 'fetchNextPage');
       _currentPage--;
     } finally {
       _isLoading = false;
@@ -572,12 +670,30 @@ class SearchProvider with ChangeNotifier {
     }
   }
 
+  /// Retries the page load that failed in [fetchNextPage].
+  Future<void> retryNextPage() {
+    _clearSearchError();
+    return fetchNextPage();
+  }
+
+  void _setSearchError(Object e, String from) {
+    debugPrint('[SearchProvider] $from error: $e');
+    _errorType = classifySearchError(e);
+    _error = searchErrorMessage(_errorType!);
+    _isOffline = _errorType == SearchErrorType.offline;
+  }
+
+  void _clearSearchError() {
+    _error = null;
+    _errorType = null;
+  }
+
   void clearSearch() {
     _searchResults = [];
     _currentQuery = '';
     _currentPage = 1;
     _hasMore = true;
-    _error = null;
+    _clearSearchError();
     _isDiscoverMode = false;
     notifyListeners();
   }
@@ -632,6 +748,25 @@ class SearchProvider with ChangeNotifier {
                 mediaItem.lastEpisodeNumber != null &&
                 mediaItem.lastSeasonNumber == item.seasonNumber &&
                 mediaItem.lastEpisodeNumber == item.episodeNumber;
+
+            // Trigger background sync if they just watched the last episode of a returning series
+            // and the cache is older than 2 days.
+            if (isLastEpisode &&
+                mediaItem.status != null &&
+                mediaItem.status!.toLowerCase() == 'returning series') {
+              final cacheDate = await repository.getCacheUpdateDate(
+                item.tmdbId,
+                MediaType.tv,
+              );
+              if (cacheDate == null ||
+                  DateTime.now().difference(cacheDate).inDays >= 2) {
+                try {
+                  BackgroundTaskService.dispatchOneOffRefresh(item.tmdbId);
+                } catch (e) {
+                  debugPrint('Failed to dispatch background task: $e');
+                }
+              }
+            }
 
             bool noNext = false;
             try {
@@ -700,36 +835,26 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> loadLists() => loadListNames();
 
-  Future<List<Map<String, dynamic>>> exportSeenData({
-    DateTime? start,
-    DateTime? end,
-    int? tmdbId,
-    MediaType? type,
-  }) {
-    return repository.exportSeenData(
-      start: start,
-      end: end,
-      tmdbId: tmdbId,
-      type: type,
-    );
+  Future<List<int>> exportAllData() {
+    return repository.exportAllData();
   }
 
-  Future<void> importSeenData(
-    List<Map<String, dynamic>> data, {
+  Future<void> importAllData(
+    List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
   }) async {
     _isImporting = true;
     _importProgress = 0.0;
-    _importStatus = 'Starting import...';
+    _importStatus = 'Importing all data...';
     notifyListeners();
 
     try {
-      await repository.importSeenData(
-        data,
+      await repository.importAllData(
+        zipBytes,
         mode: mode,
-        onProgress: (progress, status) {
-          _importProgress = progress;
-          _importStatus = status;
+        onProgress: (p, s) {
+          _importProgress = p;
+          _importStatus = s;
           notifyListeners();
         },
       );
@@ -740,15 +865,99 @@ class SearchProvider with ChangeNotifier {
       _importStatus = 'Error: $e';
     } finally {
       await loadAllSeenStatus();
+      await loadLikedStatus();
       await loadNotifiedItems();
+      await loadListNames();
+      await _loadAllListEntries();
       await updateCacheSize();
       await updateSeenDbSize();
-
-      // After importing seen history, populate quick-add based on the new data
+      // If quick add was not part of import, populate from seen history
       try {
-        await repository.populateQuickAddFromSeenHistory();
+        final qaItems = await repository.getQuickAddItems();
+        if (qaItems.isEmpty) {
+          await repository.populateQuickAddFromSeenHistory();
+          await loadQuickAddItems();
+        }
       } catch (_) {}
 
+      _isImporting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> refetchMissingData() async {
+    _isImporting = true;
+    _importProgress = 0.0;
+    _importStatus = 'Refetching missing runtimes...';
+    notifyListeners();
+
+    try {
+      final seenItems = await repository.getSeenItems();
+      final itemsToUpdate = seenItems
+          .where((i) => i.id != null && (i.runtime == null || i.runtime == 0))
+          .toList();
+
+      int processed = 0;
+      for (final item in itemsToUpdate) {
+        _importProgress = processed / itemsToUpdate.length;
+        _importStatus = 'Refetching ${item.title}...';
+        notifyListeners();
+
+        try {
+          final details = await repository.getMediaDetails(
+            item.tmdbId,
+            type: item.type,
+          );
+
+          List<String>? newGenres = item.genres;
+          if (newGenres == null || newGenres.isEmpty) {
+            newGenres = details.item.genres;
+          }
+          int? newRuntime = item.runtime;
+
+          if (item.type == MediaType.movie) {
+            newRuntime = details.item.runtime;
+          } else if (item.seasonNumber != null && item.episodeNumber != null) {
+            // For TV episodes, runtime comes from season/episode
+            final seasonDetails = await repository.getSeasonDetails(
+              item.tmdbId,
+              item.seasonNumber!,
+            );
+            final episodes = seasonDetails['episodes'] as List?;
+            final episode = episodes?.firstWhere(
+              (e) => e['episode_number'] == item.episodeNumber,
+              orElse: () => null,
+            );
+            if (episode != null && episode['runtime'] != null) {
+              newRuntime = episode['runtime'] as int;
+            } else {
+              // fallback to tv show runtime
+              newRuntime = details.item.runtime;
+            }
+          }
+
+          if ((newRuntime != null && newRuntime > 0) ||
+              (newGenres != null && newGenres.isNotEmpty)) {
+            final updatedItem = item.copyWith(
+              runtime: newRuntime,
+              genres: newGenres,
+            );
+            await repository.updateSeenEntry(updatedItem);
+          }
+        } catch (e) {
+          // Ignore individual failures to not interrupt the whole batch
+        }
+
+        processed++;
+      }
+
+      _importProgress = 1.0;
+      _importStatus = 'Done refetching data!';
+    } catch (e) {
+      _importStatus = 'Error: $e';
+    } finally {
+      await loadAllSeenStatus();
+      await updateSeenDbSize();
       _isImporting = false;
       notifyListeners();
     }
@@ -895,12 +1104,20 @@ class SearchProvider with ChangeNotifier {
     _isNotifiedRefreshing = true;
     notifyListeners();
     try {
+      // Show the locally stored data immediately, then reconcile with the
+      // network series by series (throttled to at most once a day per series).
+      await loadNotifiedItems();
       await repository.refreshNotifiedItems();
       await loadNotifiedItems();
     } finally {
       _isNotifiedRefreshing = false;
       notifyListeners();
     }
+  }
+
+  Future<void> refreshQuickAddItems() async {
+    await repository.refreshQuickAddItems();
+    await loadQuickAddItems();
   }
 
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) =>

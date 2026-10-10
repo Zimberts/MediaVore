@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
@@ -85,9 +85,8 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences);
-    dotenv.testLoad(fileInput: 'TMDB_API_TOKEN=mock_token');
-  });
+    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
+      });
 
   Widget createWidgetUnderTest() {
     return MultiProvider(
@@ -194,7 +193,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.grid_on));
     await tester.pumpAndSettle();
 
-    expect(find.text('Adjust Grid Size'), findsOneWidget);
+    // The UI shows 'Grid Size' inside the display options sheet
+    expect(find.text('Grid Size'), findsOneWidget);
 
     final slider = find.byType(Slider);
     await tester.drag(slider, const Offset(100, 0));
@@ -209,5 +209,74 @@ void main() {
     final delegate =
         gridView.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
     expect(delegate.crossAxisCount, settingsProvider.gridSize.round());
+  });
+
+  void stubDiscoverThrows(Object error) {
+    when(
+      () => mockMediaRepository.discoverMedia(
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        type: any(named: 'type'),
+        sortBy: any(named: 'sortBy'),
+      ),
+    ).thenThrow(error);
+  }
+
+  testWidgets('DiscoveryPage shows Settings action when TMDB key is missing', (
+    WidgetTester tester,
+  ) async {
+    stubDiscoverThrows(const ConfigurationException('missing key'));
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    expect(
+      find.text(searchErrorMessage(SearchErrorType.missingApiKey)),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('discovery_open_settings')), findsOneWidget);
+    expect(find.text('No results found'), findsNothing);
+  });
+
+  testWidgets('DiscoveryPage shows offline message with a retry button', (
+    WidgetTester tester,
+  ) async {
+    stubDiscoverThrows(const NetworkException('offline'));
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    expect(
+      find.text(searchErrorMessage(SearchErrorType.offline)),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('discovery_retry')), findsOneWidget);
+
+    // Back online: retry loads results and clears the error state.
+    when(
+      () => mockMediaRepository.discoverMedia(
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        language: any(named: 'language'),
+        type: any(named: 'type'),
+        sortBy: any(named: 'sortBy'),
+      ),
+    ).thenAnswer((_) async => []);
+    await tester.tap(find.byKey(const Key('discovery_retry')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    expect(find.byKey(const Key('discovery_retry')), findsNothing);
+    expect(find.text('No results found'), findsOneWidget);
   });
 }

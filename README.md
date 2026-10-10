@@ -16,7 +16,7 @@ Content:
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.example.mediavore",
+      "package_name": "fr.zimberts.mediavore",
       "sha256_cert_fingerprints": [
         "YOUR_APP_SHA256_FINGERPRINT"
       ]
@@ -80,6 +80,19 @@ Additional features:
 
 MediaVore includes a gamified achievement system to track your viewing habits and milestones. Check out the [Achievements documentation](ACHIEVEMENTS.md) for a full list of available badges.
 
+## Key Features
+
+### Notification Center
+- **Releases Tab**: Track upcoming movie releases and TV episode air dates. Releases are sorted by air date, with unplanned/future releases grouped at the bottom. TV episodes older than 30 days are hidden from view to reduce clutter while remaining tracked for notifications.
+- **Quick Add Tab**: Get AI-suggested next episodes for your favorite TV series based on your watch history. Easily add new series to track with a single tap.
+
+### Data Management
+- **Export/Import**: Full backup and restore of your media library including seen history, likes, notifications, quick add items, and custom lists. Supports three import modes: append, replace, and merge.
+- **Auto-population**: Quick Add is automatically populated from your seen history after importing data, ensuring you don't lose tracking of your viewing streaks.
+
+### Gamification
+- **Achievements**: Unlock badges as you progress through your media journey. Track genre milestones, viewing streaks, runtime records, and more.
+
 ## Project Setup on a New Machine
 
 If you have cloned this project on a new machine, you may encounter errors when trying to run it for the first time. This is often due to missing dependencies or stale auto-generated files that are specific to the previous development environment (like Windows).
@@ -104,7 +117,7 @@ Follow these steps in your terminal to set up the project correctly on your new 
     Your project uses code generation. This command will delete old files and create new ones that are compatible with your current setup. This is a crucial step.
 
     ```sh
-    flutter pub run build_runner build --delete-conflicting-outputs
+    dart run build_runner build
     ```
 
 After completing these three steps, the project should build and run correctly.

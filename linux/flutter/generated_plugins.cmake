@@ -3,8 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  flutter_secure_storage_linux
   gtk
-  isar_flutter_libs
+  isar_community_flutter_libs
   url_launcher_linux
 )
 

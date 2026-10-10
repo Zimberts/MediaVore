@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 part 'notified_item_model.g.dart';
 
@@ -21,7 +21,15 @@ class NotifiedItemModel {
 
   final int? episodeNumber;
 
+  final int? runtime;
+
   final bool autoNotify; // If it was added automatically via watchlist
+
+  /// When this entry's release data was last reconciled with TMDB.
+  ///
+  /// Used to throttle network refreshes (at most once per day per series) so
+  /// the Releases list stays fresh without hammering the API.
+  final DateTime? lastRefreshedAt;
 
   NotifiedItemModel({
     required this.tmdbId,
@@ -31,6 +39,8 @@ class NotifiedItemModel {
     this.releaseDate,
     this.seasonNumber,
     this.episodeNumber,
+    this.runtime,
     this.autoNotify = false,
+    this.lastRefreshedAt,
   });
 }

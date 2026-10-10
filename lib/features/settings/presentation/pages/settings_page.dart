@@ -165,11 +165,26 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           const Divider(),
+          const _SectionHeader(title: 'API Configuration'),
+          ListTile(
+            leading: const Icon(Icons.key),
+            title: const Text('TMDB API Credential'),
+            subtitle: Text(
+              settings.tmdbApiKey.isEmpty
+                  ? 'Not set'
+                  : '••••••••${settings.tmdbApiKey.length > 4 ? settings.tmdbApiKey.substring(settings.tmdbApiKey.length - 4) : ''}',
+            ),
+            trailing: const Icon(Icons.edit),
+            onTap: () {
+              _showApiKeyDialog(context, settings);
+            },
+          ),
+          const Divider(),
           const _SectionHeader(title: 'About'),
           const AboutListTile(
             icon: Icon(Icons.info_outline),
             applicationName: 'MediaVore',
-            applicationVersion: '1.0.0',
+            applicationVersion: '1.1.0',
             aboutBoxChildren: [Text('A simple media tracking app using TMDB.')],
           ),
         ],
@@ -186,6 +201,39 @@ class SettingsPage extends StatelessWidget {
       case ThemeMode.dark:
         return 'Dark';
     }
+  }
+
+  void _showApiKeyDialog(BuildContext context, SettingsProvider settings) {
+    final controller = TextEditingController(text: settings.tmdbApiKey);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('TMDB API Credential'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'Enter TMDB v3 API key or v4 read token',
+              border: OutlineInputBorder(),
+            ),
+            obscureText: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                settings.setTmdbApiKey(controller.text.trim());
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   IconData _getThemeModeIcon(ThemeMode mode) {

@@ -13,23 +13,7 @@ class NotifyButton extends StatelessWidget {
     return Consumer<SearchProvider>(
       builder: (context, provider, child) {
         final isNotified = provider.isNotified(item);
-
-        // Only show if not released or if it's a TV show (could have new episodes)
-        bool shouldShow = false;
-        if (item.mediaType == MediaType.tv) {
-          shouldShow = item.status != 'Ended' && item.status != 'Canceled';
-        } else if (item.mediaType == MediaType.movie) {
-          if (item.releaseDate.isEmpty) {
-            shouldShow = true;
-          } else {
-            try {
-              final releaseDate = DateTime.parse(item.releaseDate);
-              shouldShow = releaseDate.isAfter(DateTime.now());
-            } catch (_) {
-              shouldShow = true;
-            }
-          }
-        }
+        final shouldShow = item.canBeNotified;
 
         if (!shouldShow && !isNotified) return const SizedBox.shrink();
 

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mediavore"
+    namespace = "fr.zimberts.mediavore"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mediavore"
+        applicationId = "fr.zimberts.mediavore"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -36,6 +36,19 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+}
+
+// 16 KB page size (Android 15+ / Google Play): `androidx.datastore` 1.2.0 ships a
+// `libdatastore_shared_counter.so` whose RELRO segment is not 16 KB aligned
+// (flutter/flutter#182744), which fails Play's ELF alignment check. Version 1.1.7
+// is the known-good release, and `shared_preferences_android` already requests it —
+// force it across the graph so a transitive bump cannot silently regress us.
+configurations.all {
+    resolutionStrategy {
+        force("androidx.datastore:datastore:1.1.7")
+        force("androidx.datastore:datastore-core:1.1.7")
+        force("androidx.datastore:datastore-preferences:1.1.7")
     }
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
@@ -153,6 +153,46 @@ void main() {
       expect(lists, isNot(contains('Custom List')));
     });
 
+    test('should add to list and prevent position gaps on deletion', () async {
+      await dataSource.addToList(
+        id: 1,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'A',
+      );
+      await dataSource.addToList(
+        id: 2,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'B',
+      );
+      await dataSource.addToList(
+        id: 3,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'C',
+      );
+
+      final itemsBeforeDelete = await dataSource.getListItems('watchlist');
+      expect(itemsBeforeDelete.map((e) => e.position).toList(), [0, 1, 2]);
+
+      // Remove middle item
+      await dataSource.removeFromList(2, 'movie', 'watchlist');
+
+      // Add a new item
+      await dataSource.addToList(
+        id: 4,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'D',
+      );
+
+      final itemsAfterAdd = await dataSource.getListItems('watchlist');
+      // Positions should be preserved for existing items, and D appended to max + 1
+      expect(itemsAfterAdd.map((e) => e.position).toList(), [0, 2, 3]);
+      expect(itemsAfterAdd.map((e) => e.title).toList(), ['A', 'C', 'D']);
+    });
+
     test('should add to list and update position', () async {
       await dataSource.addToList(
         id: 1,
@@ -267,6 +307,120 @@ void main() {
         final notified = await dataSource.getNotifiedItems();
         expect(notified.first.releaseDate, newDate);
         expect(notified.length, 1); // Should not have been deleted
+      },
+    );
+
+    test('should persist runtime on toggleNotification', () async {
+      await dataSource.toggleNotification(
+        tmdbId: 1,
+        type: 'movie',
+        title: 'A',
+        runtime: 135,
+      );
+
+      final notified = await dataSource.getNotifiedItems();
+      expect(notified.length, 1);
+      expect(notified.first.runtime, 135);
+    });
+
+    test(
+      'should update runtime via updateNotificationDate and preserve it when null',
+      () async {
+        await dataSource.toggleNotification(
+          tmdbId: 1,
+          type: 'movie',
+          title: 'A',
+          runtime: 135,
+        );
+
+        await dataSource.updateNotificationDate(
+          1,
+          'movie',
+          DateTime(2023, 10, 2),
+          runtime: 90,
+        );
+        var notified = await dataSource.getNotifiedItems();
+        expect(notified.first.runtime, 90);
+
+        // Omitting runtime preserves the existing value (runtime ?? existing.runtime)
+        await dataSource.updateNotificationDate(
+          1,
+          'movie',
+          DateTime(2023, 10, 3),
+        );
+        notified = await dataSource.getNotifiedItems();
+        expect(notified.first.runtime, 90);
+      },
+    );
+
+    test('should stamp and preserve lastRefreshedAt', () async {
+      await dataSource.toggleNotification(
+        tmdbId: 1,
+        type: 'tv',
+        title: 'Show',
+        releaseDate: DateTime(2024, 1, 1),
+      );
+
+      final stamp = DateTime(2024, 6, 1);
+      await dataSource.markNotifiedRefreshed(1, 'tv', stamp);
+
+      await dataSource.updateNotificationDate(1, 'tv', DateTime(2024, 2, 2));
+
+      final notified = await dataSource.getNotifiedItem(1, 'tv');
+      expect(notified, isNotNull);
+      expect(notified!.lastRefreshedAt, stamp);
+      expect(notified.releaseDate, DateTime(2024, 2, 2));
+    });
+
+    test('should clear episode info via markNotificationAsReturning', () async {
+      await dataSource.toggleNotification(
+        tmdbId: 1,
+        type: 'tv',
+        title: 'Show',
+        posterPath: '/p.jpg',
+        releaseDate: DateTime(2024, 1, 1),
+        seasonNumber: 2,
+        episodeNumber: 3,
+        runtime: 40,
+        autoNotify: true,
+      );
+
+      await dataSource.markNotificationAsReturning(1, 'tv');
+
+      final notified = await dataSource.getNotifiedItem(1, 'tv');
+      expect(notified, isNotNull);
+      expect(notified!.releaseDate, isNull);
+      expect(notified.seasonNumber, isNull);
+      expect(notified.episodeNumber, isNull);
+      expect(notified.runtime, isNull);
+      expect(notified.posterPath, '/p.jpg');
+      expect(notified.autoNotify, isTrue);
+    });
+
+    test(
+      'should store an undated episode via setNotificationEpisode',
+      () async {
+        await dataSource.toggleNotification(
+          tmdbId: 1,
+          type: 'tv',
+          title: 'Show',
+          releaseDate: DateTime(2024, 1, 1),
+          seasonNumber: 1,
+          episodeNumber: 1,
+        );
+
+        await dataSource.setNotificationEpisode(
+          1,
+          'tv',
+          seasonNumber: 5,
+          episodeNumber: 1,
+          releaseDate: null,
+        );
+
+        final notified = await dataSource.getNotifiedItem(1, 'tv');
+        expect(notified!.seasonNumber, 5);
+        expect(notified.episodeNumber, 1);
+        expect(notified.releaseDate, isNull);
       },
     );
   });
