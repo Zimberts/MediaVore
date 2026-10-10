@@ -22,6 +22,15 @@ import '../../features/achievements/domain/repositories/achievement_repository.d
     as _i282;
 import '../../features/achievements/presentation/providers/achievement_provider.dart'
     as _i393;
+import '../../features/books/data/datasources/book_local_data_source.dart'
+    as _i120;
+import '../../features/books/data/datasources/book_remote_data_source.dart'
+    as _i906;
+import '../../features/books/data/repositories/book_repository_impl.dart'
+    as _i661;
+import '../../features/books/domain/repositories/book_repository.dart' as _i674;
+import '../../features/books/presentation/providers/book_provider.dart'
+    as _i714;
 import '../../features/media_details/data/datasources/media_list_local_data_source.dart'
     as _i801;
 import '../../features/search/data/datasources/media_remote_data_source.dart'
@@ -62,11 +71,17 @@ Future<_i174.GetIt> init(
     () => _i356.CacheWarmupPolicy(gh<_i460.SharedPreferences>()),
   );
   gh.lazySingleton<_i384.MediaCache>(() => _i384.MediaCache(gh<_i214.Isar>()));
+  gh.lazySingleton<_i120.BookLocalDataSource>(
+    () => _i120.BookLocalDataSource(gh<_i214.Isar>()),
+  );
   gh.lazySingleton<_i801.MediaListLocalDataSource>(
     () => _i801.MediaListLocalDataSource(gh<_i214.Isar>()),
   );
   gh.lazySingleton<_i216.DefinitionsLoader>(
     () => _i719.AssetDefinitionsLoader(),
+  );
+  gh.lazySingleton<_i906.BookRemoteDataSource>(
+    () => _i906.BookRemoteDataSource(gh<_i361.Dio>()),
   );
   await gh.singletonAsync<_i1033.TmdbCredentialStore>(
     () => registerModule.tmdbCredentialStore(
@@ -74,6 +89,12 @@ Future<_i174.GetIt> init(
       gh<_i460.SharedPreferences>(),
     ),
     preResolve: true,
+  );
+  gh.lazySingleton<_i674.BookRepository>(
+    () => _i661.BookRepositoryImpl(
+      localDataSource: gh<_i120.BookLocalDataSource>(),
+      remoteDataSource: gh<_i906.BookRemoteDataSource>(),
+    ),
   );
   gh.lazySingleton<_i282.AchievementRepository>(
     () => _i445.AchievementRepositoryImpl(
@@ -90,6 +111,9 @@ Future<_i174.GetIt> init(
       dio: gh<_i361.Dio>(),
       credentials: gh<_i1033.TmdbCredentialStore>(),
     ),
+  );
+  gh.factory<_i714.BookProvider>(
+    () => _i714.BookProvider(gh<_i674.BookRepository>()),
   );
   gh.lazySingleton<_i386.MediaRepository>(
     () => _i922.MediaRepositoryImpl(

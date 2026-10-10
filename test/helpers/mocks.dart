@@ -12,6 +12,7 @@ import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
+import 'package:mediavore/features/books/domain/repositories/book_repository.dart';
 
 class MockDio extends Mock implements Dio {}
 
@@ -133,6 +134,8 @@ class MockMediaCache extends Mock implements MediaCache {}
 class MockAchievementRepository extends Mock implements AchievementRepository {}
 
 class MockAchievementProvider extends Mock implements AchievementProvider {}
+
+class MockBookRepository extends Mock implements BookRepository {}
 
 class FakeSeenItem extends Fake implements SeenItem {}
 

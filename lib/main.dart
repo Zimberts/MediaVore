@@ -5,6 +5,7 @@ import 'package:mediavore/features/achievements/presentation/providers/achieveme
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/books/presentation/providers/book_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
@@ -126,6 +127,9 @@ class MediaVoreApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => locator<AchievementProvider>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => locator<BookProvider>(),
         ),
       ],
       builder: (context, child) {
