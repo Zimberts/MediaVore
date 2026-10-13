@@ -68,6 +68,32 @@ void main() {
       expect(tail!.seasonNumber, 3);
       expect(tail.episodeNumber, 1);
     });
+
+    test('should follow the furthest position, not the latest date', () {
+      // Marking an older episode later (a rewatch) must not pull the tail back.
+      final items = [
+        seen(1, 1, date: DateTime(2024, 6, 1)),
+        seen(2, 1, date: DateTime(2024, 1, 1)),
+      ];
+
+      final tail = findLatestTail(items);
+
+      expect(tail!.seasonNumber, 2);
+      expect(tail.episodeNumber, 1);
+    });
+
+    test('should keep the most recent rewatch for the same episode', () {
+      final items = [
+        seen(2, 3, date: DateTime(2024, 1, 1)),
+        seen(2, 3, date: DateTime(2024, 5, 1)),
+      ];
+
+      final tail = findLatestTail(items);
+
+      expect(tail!.seasonNumber, 2);
+      expect(tail.episodeNumber, 3);
+      expect(tail.seenDate, DateTime(2024, 5, 1));
+    });
   });
 
   group('findNextEpisodeAfterTail', () {
@@ -174,6 +200,104 @@ void main() {
       );
 
       expect(next, isNull);
+    });
+  });
+
+  /// Adds the new helpers that back the notification anchor.
+  group('aired-unseen anchor helpers', () {
+    test('should return the earliest aired unseen episode after the tail', () {
+      final now = DateTime(2024, 6, 10);
+      final tail = WatchTail(
+        seasonNumber: 2,
+        episodeNumber: 1,
+        seenDate: DateTime(2024, 5, 1),
+      );
+
+      final next = findFirstAiredUnseenAfterTail(
+        tail: tail,
+        episodes: [
+          ep(2, 1, airDate: DateTime(2024, 5, 1)),
+          ep(2, 2, airDate: DateTime(2024, 5, 8)),
+          ep(2, 3, airDate: DateTime(2024, 5, 15)),
+        ],
+        seenEpisodeKeys: const {},
+        now: now,
+      );
+
+      expect(next!.seasonNumber, 2);
+      expect(next.episodeNumber, 2);
+    });
+
+    test('should skip not-yet-aired and undated episodes', () {
+      final now = DateTime(2024, 6, 10);
+      final tail = WatchTail(
+        seasonNumber: 1,
+        episodeNumber: 0,
+        seenDate: DateTime(2024, 1, 1),
+      );
+
+      final next = findFirstAiredUnseenAfterTail(
+        tail: tail,
+        episodes: [
+          ep(1, 1, airDate: DateTime(2024, 6, 20)),
+          ep(1, 2),
+          ep(1, 3, airDate: DateTime(2024, 6, 10)),
+        ],
+        seenEpisodeKeys: const {},
+        now: now,
+      );
+
+      expect(next!.episodeNumber, 3);
+    });
+
+    test('should skip seen episodes and season 0 specials', () {
+      final now = DateTime(2024, 6, 10);
+      final tail = WatchTail(
+        seasonNumber: 1,
+        episodeNumber: 1,
+        seenDate: DateTime(2024, 1, 1),
+      );
+
+      final next = findFirstAiredUnseenAfterTail(
+        tail: tail,
+        episodes: [
+          ep(0, 1, airDate: DateTime(2024, 2, 1)),
+          ep(1, 2, airDate: DateTime(2024, 2, 1)),
+          ep(1, 3, airDate: DateTime(2024, 3, 1)),
+        ],
+        seenEpisodeKeys: {episodeKey(1, 2)},
+        now: now,
+      );
+
+      expect(next!.episodeNumber, 3);
+    });
+
+    test('should return null when everything aired is seen', () {
+      final now = DateTime(2024, 6, 10);
+      final tail = WatchTail(
+        seasonNumber: 1,
+        episodeNumber: 1,
+        seenDate: DateTime(2024, 1, 1),
+      );
+
+      final next = findFirstAiredUnseenAfterTail(
+        tail: tail,
+        episodes: [
+          ep(1, 2, airDate: DateTime(2024, 2, 1)),
+          ep(1, 3, airDate: DateTime(2024, 7, 1)),
+        ],
+        seenEpisodeKeys: {episodeKey(1, 2)},
+        now: now,
+      );
+
+      expect(next, isNull);
+    });
+
+    test('seriesStartTail should sit before the first episode', () {
+      final tail = seriesStartTail();
+
+      expect(isEpisodeAfterTail(ep(1, 1), tail), isTrue);
+      expect(isEpisodeAfterTail(EpisodeRef(seasonNumber: 0, episodeNumber: 1), tail), isTrue);
     });
   });
 }

@@ -19,5 +19,9 @@ TMDB search/discovery and the central `MediaRepository`. Full `data` + `domain` 
   (v3 key or v4 bearer token). Throws `ConfigurationException` when missing.
 - `ImportMode` enum (`append|replace|merge`) is declared here — see
   `.ai/rules/export-format.md`.
+- Notification anchoring (`MediaRepositoryImpl._refreshNotificationDate`) prefers the first
+  *aired* unseen episode after the viewer's tail over TMDB's `next_episode_to_air`, so an
+  announced episode never hides the aired backlog. Season data is cache-first; a stale cached
+  season is re-fetched from the network when `last_episode_to_air` is aired and unseen.
 
 Parent: [`lib/AGENTS.md`](../../AGENTS.md) · Root: [`AGENTS.md`](../../../AGENTS.md)

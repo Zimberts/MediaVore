@@ -355,13 +355,17 @@ class MediaRepositoryImpl implements MediaRepository {
     return details;
   }
 
-  /// Reconciles a notified item's stored release with the viewer's latest
-  /// watching streak.
+  /// Reconciles a notified item's stored release with the viewer's progress.
   ///
-  /// For TV this anchors Releases to the next unseen episode after the most
-  /// recently watched episode (never an older gap), removes the series when it
-  /// is finished and fully watched, and downgrades it to "Returning" when a new
-  /// season is planned without a date. Movies keep their 30-day stale rule.
+  /// For TV this anchors Releases to the first episode after the viewer's tail
+  /// (the furthest-along seen episode) that has already aired and has not been
+  /// seen, so an episode that is merely announced can never shadow the aired
+  /// backlog. Only once everything aired is seen does it surface TMDB's
+  /// `next_episode_to_air`. With no episode history at all, every aired episode
+  /// counts as unwatched and the series starts from its first aired episode.
+  /// Finished, fully watched series are removed and ones whose next season is
+  /// planned without a date are downgraded to "Returning". Movies keep their
+  /// 30-day stale rule.
   ///
   /// Set [forceRemoteSeasons] to bypass the season cache so newly released
   /// episodes are discovered.
@@ -383,22 +387,37 @@ class MediaRepositoryImpl implements MediaRepository {
       item.id,
       MediaType.tv.name,
     );
-    final tail = findLatestTail(seen);
 
-    // No watch history yet: fall back to TMDB's next-episode metadata.
-    if (tail == null) {
-      await _applyNextEpisodeFallback(item);
-      return;
-    }
+    // The tail is the furthest-along seen episode; without episode history the
+    // series starts before its first episode, so every aired episode counts as
+    // unwatched.
+    final tail = findLatestTail(seen) ?? seriesStartTail();
+    final now = DateTime.now();
 
     final detailsItem = await _detailsItemWithSeasons(item);
-
-    final scan = await _scanForNextEpisode(
+    var scan = await _scanForNextEpisode(
       detailsItem,
       tail,
       seen,
       forceRemote: forceRemoteSeasons,
+      now: now,
     );
+
+    // A stale season cache (an old season payload kept from before the episodes
+    // aired) hides aired candidates. When TMDB metadata says an aired episode
+    // after the tail is still unseen, re-scan from the network so the aired
+    // backlog wins over the announced next episode.
+    if (scan.episode == null &&
+        !forceRemoteSeasons &&
+        _hasAiredUnseenEpisode(item, tail, seen)) {
+      scan = await _scanForNextEpisode(
+        detailsItem,
+        tail,
+        seen,
+        forceRemote: true,
+        now: now,
+      );
+    }
 
     final nextEpisode = scan.episode;
     if (nextEpisode != null) {
@@ -413,8 +432,10 @@ class MediaRepositoryImpl implements MediaRepository {
       return;
     }
 
-    // Prefer TMDB's explicit next-episode metadata when it is available.
-    if (await _applyNextEpisodeFallback(item)) return;
+    // Everything aired is seen: TMDB's upcoming episode anchors next, and only
+    // when there is none does the series become "Returning" or stop being
+    // tracked.
+    if (await _applyNextEpisodeFallback(item, seen: seen, tail: tail)) return;
 
     final status = (detailsItem?.status ?? item.status)?.toLowerCase();
     final isFinished = status == 'ended' || status == 'canceled';
@@ -498,8 +519,14 @@ class MediaRepositoryImpl implements MediaRepository {
 
   /// Applies TMDB's `next_episode_to_air` metadata when present.
   ///
-  /// Returns `true` when a release date was written.
-  Future<bool> _applyNextEpisodeFallback(MediaItem item) async {
+  /// Only used once everything aired has been seen: the episode must sit after
+  /// [tail] and not already be in the seen history. Returns `true` when a
+  /// release date was written.
+  Future<bool> _applyNextEpisodeFallback(
+    MediaItem item, {
+    required List<SeenItemModel> seen,
+    required WatchTail tail,
+  }) async {
     final raw = item.nextEpisodeAirDate;
     if (raw == null || raw.isEmpty) return false;
 
@@ -510,21 +537,82 @@ class MediaRepositoryImpl implements MediaRepository {
       return false;
     }
 
+    final seasonNumber = item.nextSeasonNumber;
+    final episodeNumber = item.nextEpisodeNumber;
+    if (seasonNumber != null && episodeNumber != null) {
+      final candidate = EpisodeRef(
+        seasonNumber: seasonNumber,
+        episodeNumber: episodeNumber,
+      );
+      if (!isEpisodeAfterTail(candidate, tail)) return false;
+      final seenKeys = _seenEpisodeKeys(seen);
+      if (seenKeys.contains(episodeKey(seasonNumber, episodeNumber))) {
+        return false;
+      }
+    }
+
     await localDataSource.setNotificationEpisode(
       item.id,
       item.mediaType.name,
-      seasonNumber: item.nextSeasonNumber,
-      episodeNumber: item.nextEpisodeNumber,
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
       releaseDate: next,
     );
     return true;
   }
 
-  /// Cache-first details fetch that guarantees a season list when possible.
+  /// Whether TMDB's `last_episode_to_air` is an aired episode after [tail] that
+  /// is still missing from the seen history.
   ///
-  /// Callers that need freshly aired episodes force the *season* fetch instead
-  /// (see `_seasonDetailsForRefresh`); the item itself is acceptable from cache.
+  /// A cheap, network-free signal that the series has an aired backlog waiting,
+  /// used to retry a stale season-cache scan.
+  bool _hasAiredUnseenEpisode(
+    MediaItem item,
+    WatchTail tail,
+    List<SeenItemModel> seen,
+  ) {
+    final seasonNumber = item.lastSeasonNumber;
+    final episodeNumber = item.lastEpisodeNumber;
+    if (seasonNumber == null || episodeNumber == null) return false;
+
+    final aired = EpisodeRef(
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
+      airDate: _parseAirDate(item.lastEpisodeAirDate),
+    );
+    if (aired.airDate == null || !isEpisodeAfterTail(aired, tail)) {
+      return false;
+    }
+
+    return !_seenEpisodeKeys(
+      seen,
+    ).contains(episodeKey(seasonNumber, episodeNumber));
+  }
+
+  /// Episode keys (season:episode) present in [seen].
+  Set<String> _seenEpisodeKeys(List<SeenItemModel> seen) => {
+    for (final s in seen)
+      if (s.seasonNumber != null && s.episodeNumber != null)
+        episodeKey(s.seasonNumber!, s.episodeNumber!),
+  };
+
+  DateTime? _parseAirDate(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  /// Details fetch that keeps a usable season list, preferring the caller's
+  /// [item] (which the notification paths fetch from the network first) so a
+  /// stale cached copy cannot shadow it.
+  ///
+  /// Callers that need freshly aired *episodes* force the season fetch instead
+  /// (see `_seasonDetailsForRefresh`).
   Future<MediaItem?> _detailsItemWithSeasons(MediaItem item) async {
+    if (item.seasons != null && item.seasons!.isNotEmpty) {
+      await cache.cacheItem(item);
+      return item;
+    }
+
     final cached = await cache.getItem(item.id, MediaType.tv);
     if (cached?.seasons != null) return cached;
 
@@ -540,15 +628,20 @@ class MediaRepositoryImpl implements MediaRepository {
     }
   }
 
-  /// Finds the next unseen episode after [tail] using season/episode data.
+  /// Finds the episode to anchor a notified series to.
   ///
-  /// [complete] is `false` when a season could not be evaluated, so the caller
-  /// can avoid destructive reconciliation on partial data.
+  /// [episode] is the first episode after [tail] that aired and has not been
+  /// seen; when every aired episode is seen it falls back to the first unseen
+  /// episode regardless of air date (an announced or undated one, rendered as
+  /// "date TBA" when it has no air date). [complete] is `false` when a season
+  /// could not be evaluated, so the caller can avoid destructive reconciliation
+  /// on partial data.
   Future<({EpisodeRef? episode, bool complete})> _scanForNextEpisode(
     MediaItem? detailsItem,
     WatchTail tail,
     List<SeenItemModel> seen, {
     required bool forceRemote,
+    required DateTime now,
   }) async {
     final details = detailsItem;
     if (details == null) return (episode: null, complete: false);
@@ -558,17 +651,14 @@ class MediaRepositoryImpl implements MediaRepository {
       return (episode: null, complete: false);
     }
 
-    final seenKeys = <String>{
-      for (final s in seen)
-        if (s.seasonNumber != null && s.episodeNumber != null)
-          episodeKey(s.seasonNumber!, s.episodeNumber!),
-    };
+    final seenKeys = _seenEpisodeKeys(seen);
 
     final sortedSeasons = List<TVSeason>.from(seasons)
       ..sort((a, b) => a.seasonNumber.compareTo(b.seasonNumber));
 
     final episodes = <EpisodeRef>[];
     var complete = true;
+    EpisodeRef? aired;
 
     for (final season in sortedSeasons) {
       if (season.seasonNumber == 0) continue;
@@ -612,15 +702,25 @@ class MediaRepositoryImpl implements MediaRepository {
         );
       }
 
-      final next = findNextEpisodeAfterTail(
+      aired = findFirstAiredUnseenAfterTail(
         tail: tail,
         episodes: episodes,
         seenEpisodeKeys: seenKeys,
+        now: now,
       );
-      if (next != null) return (episode: next, complete: true);
+      // The first aired unseen episode is final: any later episode sits after it.
+      if (aired != null) break;
     }
 
-    return (episode: null, complete: complete);
+    return (
+      episode: aired ??
+          findNextEpisodeAfterTail(
+            tail: tail,
+            episodes: episodes,
+            seenEpisodeKeys: seenKeys,
+          ),
+      complete: complete,
+    );
   }
 
   /// Fetches season details, bypassing the cache when [forceRemote] is set so
@@ -1453,7 +1553,7 @@ class MediaRepositoryImpl implements MediaRepository {
     // overloaded; yield between items to keep the UI responsive.
     for (final notified in notifiedItems) {
       final type = notified.type == 'movie' ? MediaType.movie : MediaType.tv;
-      if (!force && !_needsNotificationRefresh(notified, now)) continue;
+      if (!force && !await _shouldRefreshNotification(notified, now)) continue;
       await refreshNotificationForSeries(notified.tmdbId, type, force: force);
       await Future<void>.delayed(Duration.zero);
     }
@@ -1470,7 +1570,7 @@ class MediaRepositoryImpl implements MediaRepository {
     if (notified == null) return;
 
     final now = DateTime.now();
-    if (!force && !_needsNotificationRefresh(notified, now)) return;
+    if (!force && !await _shouldRefreshNotification(notified, now)) return;
 
     try {
       final item = await remoteDataSource.getMediaItem(tmdbId, type: type);
@@ -1489,16 +1589,55 @@ class MediaRepositoryImpl implements MediaRepository {
     } catch (_) {}
   }
 
-  /// Whether a notified entry is missing information and therefore worth a
-  /// network refresh, respecting the once-a-day throttle unless forced.
-  bool _needsNotificationRefresh(NotifiedItemModel notified, DateTime now) {
+  /// Whether a notified entry is worth refreshing from the network, respecting
+  /// the once-a-day throttle unless forced.
+  ///
+  /// Entries with a missing or already aired release date always qualify. TV
+  /// entries pointing at a *future* episode normally do not, but they do when the
+  /// cached series data reports an aired episode that is not in the seen history:
+  /// such an entry is either stale or was anchored to the next announcement while
+  /// an aired backlog was waiting, which is exactly what the anchor must fix.
+  Future<bool> _shouldRefreshNotification(
+    NotifiedItemModel notified,
+    DateTime now,
+  ) async {
     final last = notified.lastRefreshedAt;
     if (last != null && now.difference(last) < const Duration(days: 1)) {
       return false;
     }
 
     final release = notified.releaseDate;
-    return release == null || !release.isAfter(now);
+    if (release == null || !release.isAfter(now)) return true;
+    if (notified.type != MediaType.tv.name) return false;
+
+    return _hasAiredUnseenBacklog(notified);
+  }
+
+  /// Whether the cached series data reports an aired episode the viewer has not
+  /// seen, so the entry's future release date hides aired content.
+  ///
+  /// A missing cache entry is fetched once so the check stays reliable; the
+  /// once-a-day throttle in [_shouldRefreshNotification] bounds the cost.
+  Future<bool> _hasAiredUnseenBacklog(NotifiedItemModel notified) async {
+    try {
+      var item = await cache.getItem(notified.tmdbId, MediaType.tv);
+      if (item == null) {
+        item = await remoteDataSource.getMediaItem(
+          notified.tmdbId,
+          type: MediaType.tv,
+        );
+        await cache.cacheItem(item);
+      }
+
+      final seen = await localDataSource.getSeenStatus(
+        notified.tmdbId,
+        MediaType.tv.name,
+      );
+      final tail = findLatestTail(seen) ?? seriesStartTail();
+      return _hasAiredUnseenEpisode(item, tail, seen);
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
