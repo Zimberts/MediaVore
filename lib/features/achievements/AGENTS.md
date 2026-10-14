@@ -8,6 +8,8 @@ Tracks earned achievements (full `data` + `domain` + `presentation` layering).
 - `lib/features/achievements/domain/repositories/achievement_repository.dart`
 - `lib/features/achievements/data/repositories/achievement_repository_impl.dart`
 - `lib/features/achievements/data/models/achievement_model.dart` (Isar `@collection`)
+- `lib/features/achievements/domain/entities/achievement_family.dart` (tiers grouped by
+  `group`; the page shows one card per family)
 - `lib/features/achievements/presentation/providers/achievement_provider.dart`
 
 ## Gotchas
@@ -15,6 +17,8 @@ Tracks earned achievements (full `data` + `domain` + `presentation` layering).
 - Definitions load at runtime from `assets/achievements/definitions.json` via
   `DefinitionsLoader`; that JSON is the single source of truth (stable ids). See
   `.ai/rules/achievements.md` — never hardcode titles/progress in Dart.
+- `AchievementProvider` persists every newly unlocked tier but notifies only the highest
+  tier per family in a batch.
 - `achievement_model.dart` has a generated `part 'achievement_model.g.dart'`; never
   hand-edit generated files (`.ai/rules/codegen.md`).
 

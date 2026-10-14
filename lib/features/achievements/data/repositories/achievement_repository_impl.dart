@@ -7,7 +7,10 @@ import 'package:mediavore/features/media_details/data/datasources/media_list_loc
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/core/di/definitions_loader.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -55,6 +58,8 @@ class AchievementRepositoryImpl implements AchievementRepository {
         unlockedAt: persistedUnlockDate ?? calculatedUnlockDate,
         progress: progressData.progress,
         progressLabel: progressData.label,
+        group: def['group'] as String?,
+        tier: def['tier'] as int?,
       );
     }).toList();
   }
@@ -117,179 +122,80 @@ class AchievementRepositoryImpl implements AchievementRepository {
     Map<String, dynamic> def,
     List<SeenItemModel> seenItems,
   ) {
-    if (def.containsKey('type')) {
-      final type = def['type'] as String;
-      final params = (def['params'] as Map?)?.cast<String, dynamic>() ?? {};
-
-      switch (type) {
-        case 'count':
-          final mediaType = params['mediaType'] as String? ?? 'movie';
-          final target =
-              params['target'] as int? ??
-              int.tryParse((def['id'] as String).split('_').last) ??
-              0;
-          final items = mediaType == 'tv'
-              ? seenItems.where((i) => i.type == 'tv').toList()
-              : seenItems.where((i) => i.type == 'movie').toList();
-          return _countMilestone(items, target);
-        case 'genre':
-          final genre = params['genre'] as String? ?? '';
-          final targetG = params['target'] as int? ?? 0;
-          final movies = seenItems.where((i) => i.type == 'movie').toList();
-          return _genreMilestone(movies, genre, targetG);
-        case 'rewatch':
-          final isTv = params['isTv'] == true;
-          final targetR = params['target'] as int? ?? 0;
-          final itemsR = isTv
-              ? seenItems.where((i) => i.type == 'tv').toList()
-              : seenItems.where((i) => i.type == 'movie').toList();
-          return _rewatchMilestone(itemsR, targetR, isTv: isTv);
-        case 'loyalist':
-          final targetL = params['target'] as int? ?? 0;
-          final episodes = seenItems.where((i) => i.type == 'tv').toList();
-          return _loyalistMilestone(episodes, targetL);
-        case 'behavioral':
-          final subtype = params['subtype'] as String? ?? '';
-            if (subtype == 'night_owl') {
-              final nightItems = seenItems
-                  .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
-                  .toList();
-              final targetB = params['target'] as int? ?? 0;
-              return _countMilestone(nightItems, targetB);
-            }
-            if (subtype == 'weekend') {
-              final targetB = params['target'] as int? ?? 0;
-              // Sliding 72-hour window
-              return _windowMilestone(seenItems, const Duration(hours: 72), targetB);
-            }
-          break;
-        case 'streak':
-          final targetS = params['target'] as int? ?? 0;
-          return _streakMilestone(seenItems, targetS);
-        case 'runtime':
-          final targetMin = params['targetMinutes'] as int? ?? 0;
-          return _runtimeMilestone(seenItems, targetMin);
-        case 'marathon':
-            final targetM = params['target'] as int? ?? 0;
-            return _marathonMilestone(seenItems.where((i) => i.type == 'tv').toList(), targetM);
-      }
+    final type = def['type'] as String? ?? '';
+    final params = (def['params'] as Map?)?.cast<String, dynamic>() ?? {};
+    final target = (params['target'] ?? params['targetMinutes']) as int? ?? 0;
+    if (target <= 0) {
+      debugPrint('Achievement ${def['id']}: missing or invalid target');
+      return const _ProgressData(0.0, '0/0');
     }
 
-    // Fallback to legacy id-based implementation
-    return _calculateProgress(def['id'] as String, seenItems);
-  }
-
-  _ProgressData _calculateProgress(String id, List<SeenItemModel> seenItems) {
-    final movies = seenItems.where((i) => i.type == 'movie').toList();
-    final episodes = seenItems.where((i) => i.type == 'tv').toList();
-
-    switch (id) {
-      // --- Movies ---
-      case 'movie_1':
-        return _countMilestone(movies, 1);
-      case 'movie_10':
-        return _countMilestone(movies, 10);
-      case 'movie_50':
-        return _countMilestone(movies, 50);
-      case 'movie_100':
-        return _countMilestone(movies, 100);
-      case 'movie_500':
-        return _countMilestone(movies, 500);
-      case 'movie_1000':
-        return _countMilestone(movies, 1000);
-
-      // --- TV ---
-      case 'tv_1':
-        return _countMilestone(episodes, 1);
-      case 'tv_50':
-        return _countMilestone(episodes, 50);
-      case 'tv_250':
-        return _countMilestone(episodes, 250);
-      case 'tv_1000':
-        return _countMilestone(episodes, 1000);
-      case 'tv_5000':
-        return _countMilestone(episodes, 5000);
-
-      // --- Rewatches ---
-      case 'rewatch_movie_2':
-        return _rewatchMilestone(movies, 2);
-      case 'rewatch_movie_5':
-        return _rewatchMilestone(movies, 5);
-      case 'rewatch_movie_10':
-        return _rewatchMilestone(movies, 10);
-      case 'rewatch_ep_2':
-        return _rewatchMilestone(episodes, 2, isTv: true);
-      case 'rewatch_ep_5':
-        return _rewatchMilestone(episodes, 5, isTv: true);
-
-      // --- Loyalists ---
-      case 'loyalist_100':
-        return _loyalistMilestone(episodes, 100);
-      case 'loyalist_500':
-        return _loyalistMilestone(episodes, 500);
-
-      // --- Genres ---
-      case 'genre_horror':
-        return _genreMilestone(movies, 'Horror', 10);
-      case 'genre_horror_50':
-        return _genreMilestone(movies, 'Horror', 50);
-      case 'genre_comedy':
-        return _genreMilestone(movies, 'Comedy', 20);
-      case 'genre_comedy_100':
-        return _genreMilestone(movies, 'Comedy', 100);
-      case 'genre_action':
-        return _genreMilestone(movies, 'Action', 20);
-      case 'genre_action_100':
-        return _genreMilestone(movies, 'Action', 100);
-      case 'genre_scifi':
-        return _genreMilestone(movies, 'Science Fiction', 20);
-      case 'genre_scifi_100':
-        return _genreMilestone(movies, 'Science Fiction', 100);
-      case 'genre_doc':
-        return _genreMilestone(movies, 'Documentary', 10);
-      case 'genre_doc_50':
-        return _genreMilestone(movies, 'Documentary', 50);
-      case 'genre_romance':
-        return _genreMilestone(movies, 'Romance', 15);
-
-      // --- Behavioral ---
-      case 'night_owl':
-        final nightItems = seenItems
-            .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
-            .toList();
-        return _countMilestone(nightItems, 10);
-      case 'night_owl_100':
-        final nightItems = seenItems
-            .where((i) => i.seenDate.hour >= 0 && i.seenDate.hour < 4)
-            .toList();
-        return _countMilestone(nightItems, 100);
-      case 'streak_7':
-        return _streakMilestone(seenItems, 7);
-      case 'streak_30':
-        return _streakMilestone(seenItems, 30);
-      case 'streak_365':
-        return _streakMilestone(seenItems, 365);
-
-      // --- Runtime ---
-      case 'runtime_1000':
-        return _runtimeMilestone(seenItems, 1000);
-      case 'runtime_hour_100':
-        return _runtimeMilestone(seenItems, 100 * 60);
-      case 'runtime_10000':
-        return _runtimeMilestone(seenItems, 10000);
-      case 'runtime_day_10':
-        return _runtimeMilestone(seenItems, 10 * 24 * 60);
-      case 'runtime_hour_1000':
-        return _runtimeMilestone(seenItems, 1000 * 60);
-      case 'runtime_100000':
-        return _runtimeMilestone(seenItems, 100000);
-      case 'runtime_year_1':
-        return _runtimeMilestone(seenItems, 365 * 24 * 60);
-
-      default:
-        return const _ProgressData(0.0, '0/0');
+    switch (type) {
+      case 'count':
+        final mediaType = params['mediaType'] as String? ?? 'movie';
+        return _countMilestone(
+          seenItems.where((i) => i.type == mediaType).toList(),
+          target,
+        );
+      case 'genre':
+        final genreId =
+            params['genreId'] as int? ??
+            GenreUtils.getGenreIdByName(params['genre'] as String? ?? '');
+        if (genreId == null) break;
+        final movies = seenItems.where((i) => i.type == 'movie').toList();
+        return _genreMilestone(movies, genreId, target);
+      case 'rewatch':
+        final isTv = params['isTv'] == true;
+        return _rewatchMilestone(
+          seenItems.where((i) => i.type == (isTv ? 'tv' : 'movie')).toList(),
+          target,
+          isTv: isTv,
+        );
+      case 'loyalist':
+        return _loyalistMilestone(
+          seenItems.where((i) => i.type == 'tv').toList(),
+          target,
+        );
+      case 'behavioral':
+        switch (params['subtype']) {
+          case 'night_owl':
+            return _countMilestone(
+              seenItems
+                  .where((i) => i.seenDate.hour < 4 && !_isDateOnly(i.seenDate))
+                  .toList(),
+              target,
+            );
+          case 'weekend':
+            // Sliding 72-hour window
+            return _windowMilestone(
+              seenItems,
+              const Duration(hours: 72),
+              target,
+            );
+        }
+      case 'streak':
+        return _streakMilestone(seenItems, target);
+      case 'runtime':
+        return _runtimeMilestone(seenItems, target);
+      case 'marathon':
+        return _marathonMilestone(
+          seenItems.where((i) => i.type == 'tv').toList(),
+          target,
+        );
     }
+
+    debugPrint('Achievement ${def['id']}: cannot evaluate type "$type"');
+    return _ProgressData(0.0, '0/$target');
   }
+
+  /// Views recorded without a time (e.g. imported history) land at exactly
+  /// 00:00:00.000; they must not count as night-time views.
+  bool _isDateOnly(DateTime d) =>
+      d.hour == 0 &&
+      d.minute == 0 &&
+      d.second == 0 &&
+      d.millisecond == 0 &&
+      d.microsecond == 0;
 
   _ProgressData _countMilestone(List<SeenItemModel> items, int target) {
     final count = items.length;
@@ -302,11 +208,17 @@ class AchievementRepositoryImpl implements AchievementRepository {
 
   _ProgressData _genreMilestone(
     List<SeenItemModel> items,
-    String genre,
+    int genreId,
     int target,
   ) {
     final filtered = items
-        .where((i) => i.genres?.contains(genre) ?? false)
+        .where(
+          (i) =>
+              i.genres?.any(
+                (name) => GenreUtils.getGenreIdByName(name) == genreId,
+              ) ??
+              false,
+        )
         .toList();
     final count = filtered.length;
     return _ProgressData(
@@ -332,7 +244,8 @@ class AchievementRepositoryImpl implements AchievementRepository {
     }
     return _ProgressData(
       (total / targetMinutes).clamp(0.0, 1.0),
-      '$total/$targetMinutes min',
+      '${Formatters.formatWatchTime(total)} / '
+      '${Formatters.formatWatchTime(targetMinutes)}',
       milestoneReachedAt: reachedAt,
     );
   }
@@ -420,7 +333,11 @@ class AchievementRepositoryImpl implements AchievementRepository {
     );
   }
 
-  _ProgressData _windowMilestone(List<SeenItemModel> items, Duration window, int target) {
+  _ProgressData _windowMilestone(
+    List<SeenItemModel> items,
+    Duration window,
+    int target,
+  ) {
     if (items.isEmpty) return const _ProgressData(0.0, '0/0');
     final dates = items.map((i) => i.seenDate).toList()..sort();
 
@@ -451,14 +368,17 @@ class AchievementRepositoryImpl implements AchievementRepository {
     DateTime? reachedAt;
 
     for (final item in episodes) {
-      final dateKey = '${item.tmdbId}_${item.seenDate.year}-${item.seenDate.month}-${item.seenDate.day}';
+      final dateKey =
+          '${item.tmdbId}_${item.seenDate.year}-${item.seenDate.month}-${item.seenDate.day}';
       counts[dateKey] = (counts[dateKey] ?? 0) + 1;
       if (counts[dateKey]! >= target && reachedAt == null) {
         reachedAt = item.seenDate;
       }
     }
 
-    final maxCount = counts.values.isEmpty ? 0 : counts.values.reduce((a, b) => a > b ? a : b);
+    final maxCount = counts.values.isEmpty
+        ? 0
+        : counts.values.reduce((a, b) => a > b ? a : b);
 
     return _ProgressData(
       (maxCount / target).clamp(0.0, 1.0),
