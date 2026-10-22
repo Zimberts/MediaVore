@@ -50,6 +50,10 @@ class MediaRepositoryImpl implements MediaRepository {
   /// Generation the in-flight warm-up was started with.
   int _warmupRunGeneration = 0;
 
+  /// In-flight [getMediaDetails] requests keyed by `type_id`, so concurrent
+  /// callers (UI + background cache warm-up) share one set of remote calls.
+  final Map<String, Future<MediaDetails>> _inFlightDetails = {};
+
   /// Creates a new instance of [MediaRepositoryImpl].
   MediaRepositoryImpl({
     required this.remoteDataSource,
@@ -137,13 +141,9 @@ class MediaRepositoryImpl implements MediaRepository {
 
   /// Title of a saved entry in the current language: the cached TMDB title
   /// when available, else the one stored when it was saved.
-  T _localizedTitle<T extends String?>(
-    int tmdbId,
-    MediaType type,
-    T storedTitle,
-  ) {
-    final cached = cache.getItem(tmdbId, type)?.title;
-    return (cached == null || cached.isEmpty) ? storedTitle : cached as T;
+  T _preferCachedTitle<T extends String?>(MediaItem? cached, T storedTitle) {
+    final title = cached?.title;
+    return (title == null || title.isEmpty) ? storedTitle : title as T;
   }
 
   /// Stops the in-flight cache warm-up after the current item.
@@ -260,7 +260,7 @@ class MediaRepositoryImpl implements MediaRepository {
   /// failed fetch keeps the original row.
   Future<List<MediaItem>> _enrichItems(List<MediaItem> items) {
     return mapWithConcurrency(items, enrichmentConcurrency, (item) async {
-      final cached = cache.getDetails(item.id, item.mediaType)?.item;
+      final cached = (await cache.getDetails(item.id, item.mediaType))?.item;
       if (cached != null) return cached;
       try {
         return await remoteDataSource.getMediaItem(
@@ -334,9 +334,7 @@ class MediaRepositoryImpl implements MediaRepository {
   /// Caching is an optimisation: a cache failure must not hide fetched results.
   Future<void> _cacheItemsBestEffort(List<MediaItem> items, String from) async {
     try {
-      for (final item in items) {
-        await cache.cacheItem(item);
-      }
+      await cache.cacheItems(items);
     } catch (e) {
       debugPrint('[Repo] $from cache error: $e');
     }
@@ -349,26 +347,70 @@ class MediaRepositoryImpl implements MediaRepository {
   }) async {
     await _ensureInitialized();
 
-    if (cache.areDetailsCached(id, type)) {
-      return cache.getDetails(id, type)!;
-    }
+    final cachedDetails = await cache.getDetails(id, type);
+    if (cachedDetails != null) return cachedDetails;
 
-    final itemFuture = remoteDataSource.getMediaItem(id, type: type);
-    final creditsFuture = remoteDataSource.getMediaCredits(id, type: type);
-    final similarFuture = remoteDataSource.getSimilarMedia(id, type);
-    final recommendationsFuture = remoteDataSource.getRecommendedMedia(
-      id,
-      type,
-    );
-    final watchProvidersFuture = remoteDataSource.getWatchProviders(id, type);
-    final videosFuture = remoteDataSource.getVideos(id, type);
+    final key = '${type.name}_$id';
+    final pending = _inFlightDetails[key];
+    if (pending != null) return pending;
 
-    final item = await itemFuture;
-
-    Map<String, dynamic> credits = {'cast': [], 'crew': []};
+    final future = _fetchMediaDetails(id, type);
+    _inFlightDetails[key] = future;
     try {
-      credits = await creditsFuture;
-    } catch (_) {}
+      return await future;
+    } finally {
+      _inFlightDetails.remove(key);
+    }
+  }
+
+  /// Runs [call] and returns [fallback] on any error (sync or async), logging
+  /// it. Used for optional detail endpoints so they never fail the whole page
+  /// nor leak unhandled asynchronous errors.
+  Future<T> _optional<T>(
+    String label,
+    Future<T> Function() call,
+    T fallback,
+  ) async {
+    try {
+      return await call();
+    } catch (e) {
+      debugPrint('[Repo] getMediaDetails optional $label failed: $e');
+      return fallback;
+    }
+  }
+
+  Future<MediaDetails> _fetchMediaDetails(int id, MediaType type) async {
+    // Optional requests are started before awaiting the main item and each
+    // has its error handler attached immediately: if the main item fails,
+    // their failures are still handled. Only the main item is fatal.
+    final creditsFuture = _optional<Map<String, dynamic>>(
+      'credits',
+      () => remoteDataSource.getMediaCredits(id, type: type),
+      {'cast': [], 'crew': []},
+    );
+    final similarFuture = _optional<List<MediaItem>>(
+      'similar',
+      () => remoteDataSource.getSimilarMedia(id, type),
+      [],
+    );
+    final recommendationsFuture = _optional<List<MediaItem>>(
+      'recommendations',
+      () => remoteDataSource.getRecommendedMedia(id, type),
+      [],
+    );
+    final watchProvidersFuture = _optional<Map<String, dynamic>>(
+      'watchProviders',
+      () => remoteDataSource.getWatchProviders(id, type),
+      {},
+    );
+    final videosFuture = _optional<List<Map<String, dynamic>>>(
+      'videos',
+      () => remoteDataSource.getVideos(id, type),
+      [],
+    );
+
+    final item = await remoteDataSource.getMediaItem(id, type: type);
+    final credits = await creditsFuture;
 
     final List castResults = credits['cast'] ?? [];
     final List crewResults = credits['crew'] ?? [];
@@ -417,13 +459,17 @@ class MediaRepositoryImpl implements MediaRepository {
     return details;
   }
 
-  /// Reconciles a notified item's stored release with the viewer's latest
-  /// watching streak.
+  /// Reconciles a notified item's stored release with the viewer's progress.
   ///
-  /// For TV this anchors Releases to the next unseen episode after the most
-  /// recently watched episode (never an older gap), removes the series when it
-  /// is finished and fully watched, and downgrades it to "Returning" when a new
-  /// season is planned without a date. Movies keep their 30-day stale rule.
+  /// For TV this anchors Releases to the first episode after the viewer's tail
+  /// (the furthest-along seen episode) that has already aired and has not been
+  /// seen, so an episode that is merely announced can never shadow the aired
+  /// backlog. Only once everything aired is seen does it surface TMDB's
+  /// `next_episode_to_air`. With no episode history at all, every aired episode
+  /// counts as unwatched and the series starts from its first aired episode.
+  /// Finished, fully watched series are removed and ones whose next season is
+  /// planned without a date are downgraded to "Returning". Movies keep their
+  /// 30-day stale rule.
   ///
   /// Set [forceRemoteSeasons] to bypass the season cache so newly released
   /// episodes are discovered.
@@ -445,22 +491,37 @@ class MediaRepositoryImpl implements MediaRepository {
       item.id,
       MediaType.tv.name,
     );
-    final tail = findLatestTail(seen);
 
-    // No watch history yet: fall back to TMDB's next-episode metadata.
-    if (tail == null) {
-      await _applyNextEpisodeFallback(item);
-      return;
-    }
+    // The tail is the furthest-along seen episode; without episode history the
+    // series starts before its first episode, so every aired episode counts as
+    // unwatched.
+    final tail = findLatestTail(seen) ?? seriesStartTail();
+    final now = DateTime.now();
 
     final detailsItem = await _detailsItemWithSeasons(item);
-
-    final scan = await _scanForNextEpisode(
+    var scan = await _scanForNextEpisode(
       detailsItem,
       tail,
       seen,
       forceRemote: forceRemoteSeasons,
+      now: now,
     );
+
+    // A stale season cache (an old season payload kept from before the episodes
+    // aired) hides aired candidates. When TMDB metadata says an aired episode
+    // after the tail is still unseen, re-scan from the network so the aired
+    // backlog wins over the announced next episode.
+    if (scan.episode == null &&
+        !forceRemoteSeasons &&
+        _hasAiredUnseenEpisode(item, tail, seen)) {
+      scan = await _scanForNextEpisode(
+        detailsItem,
+        tail,
+        seen,
+        forceRemote: true,
+        now: now,
+      );
+    }
 
     final nextEpisode = scan.episode;
     if (nextEpisode != null) {
@@ -475,8 +536,10 @@ class MediaRepositoryImpl implements MediaRepository {
       return;
     }
 
-    // Prefer TMDB's explicit next-episode metadata when it is available.
-    if (await _applyNextEpisodeFallback(item)) return;
+    // Everything aired is seen: TMDB's upcoming episode anchors next, and only
+    // when there is none does the series become "Returning" or stop being
+    // tracked.
+    if (await _applyNextEpisodeFallback(item, seen: seen, tail: tail)) return;
 
     final status = (detailsItem?.status ?? item.status)?.toLowerCase();
     final isFinished = status == 'ended' || status == 'canceled';
@@ -560,8 +623,14 @@ class MediaRepositoryImpl implements MediaRepository {
 
   /// Applies TMDB's `next_episode_to_air` metadata when present.
   ///
-  /// Returns `true` when a release date was written.
-  Future<bool> _applyNextEpisodeFallback(MediaItem item) async {
+  /// Only used once everything aired has been seen: the episode must sit after
+  /// [tail] and not already be in the seen history. Returns `true` when a
+  /// release date was written.
+  Future<bool> _applyNextEpisodeFallback(
+    MediaItem item, {
+    required List<SeenItemModel> seen,
+    required WatchTail tail,
+  }) async {
     final raw = item.nextEpisodeAirDate;
     if (raw == null || raw.isEmpty) return false;
 
@@ -572,22 +641,83 @@ class MediaRepositoryImpl implements MediaRepository {
       return false;
     }
 
+    final seasonNumber = item.nextSeasonNumber;
+    final episodeNumber = item.nextEpisodeNumber;
+    if (seasonNumber != null && episodeNumber != null) {
+      final candidate = EpisodeRef(
+        seasonNumber: seasonNumber,
+        episodeNumber: episodeNumber,
+      );
+      if (!isEpisodeAfterTail(candidate, tail)) return false;
+      final seenKeys = _seenEpisodeKeys(seen);
+      if (seenKeys.contains(episodeKey(seasonNumber, episodeNumber))) {
+        return false;
+      }
+    }
+
     await localDataSource.setNotificationEpisode(
       item.id,
       item.mediaType.name,
-      seasonNumber: item.nextSeasonNumber,
-      episodeNumber: item.nextEpisodeNumber,
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
       releaseDate: next,
     );
     return true;
   }
 
-  /// Cache-first details fetch that guarantees a season list when possible.
+  /// Whether TMDB's `last_episode_to_air` is an aired episode after [tail] that
+  /// is still missing from the seen history.
   ///
-  /// Callers that need freshly aired episodes force the *season* fetch instead
-  /// (see `_seasonDetailsForRefresh`); the item itself is acceptable from cache.
+  /// A cheap, network-free signal that the series has an aired backlog waiting,
+  /// used to retry a stale season-cache scan.
+  bool _hasAiredUnseenEpisode(
+    MediaItem item,
+    WatchTail tail,
+    List<SeenItemModel> seen,
+  ) {
+    final seasonNumber = item.lastSeasonNumber;
+    final episodeNumber = item.lastEpisodeNumber;
+    if (seasonNumber == null || episodeNumber == null) return false;
+
+    final aired = EpisodeRef(
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
+      airDate: _parseAirDate(item.lastEpisodeAirDate),
+    );
+    if (aired.airDate == null || !isEpisodeAfterTail(aired, tail)) {
+      return false;
+    }
+
+    return !_seenEpisodeKeys(
+      seen,
+    ).contains(episodeKey(seasonNumber, episodeNumber));
+  }
+
+  /// Episode keys (season:episode) present in [seen].
+  Set<String> _seenEpisodeKeys(List<SeenItemModel> seen) => {
+    for (final s in seen)
+      if (s.seasonNumber != null && s.episodeNumber != null)
+        episodeKey(s.seasonNumber!, s.episodeNumber!),
+  };
+
+  DateTime? _parseAirDate(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  /// Details fetch that keeps a usable season list, preferring the caller's
+  /// [item] (which the notification paths fetch from the network first) so a
+  /// stale cached copy cannot shadow it.
+  ///
+  /// Callers that need freshly aired *episodes* force the season fetch instead
+  /// (see `_seasonDetailsForRefresh`).
   Future<MediaItem?> _detailsItemWithSeasons(MediaItem item) async {
-    final cached = cache.getItem(item.id, MediaType.tv);
+    if (item.seasons != null && item.seasons!.isNotEmpty) {
+      await cache.cacheItem(item);
+      return item;
+    }
+
+    final cached = await cache.getItem(item.id, MediaType.tv);
     if (cached?.seasons != null) return cached;
 
     try {
@@ -602,15 +732,20 @@ class MediaRepositoryImpl implements MediaRepository {
     }
   }
 
-  /// Finds the next unseen episode after [tail] using season/episode data.
+  /// Finds the episode to anchor a notified series to.
   ///
-  /// [complete] is `false` when a season could not be evaluated, so the caller
-  /// can avoid destructive reconciliation on partial data.
+  /// [episode] is the first episode after [tail] that aired and has not been
+  /// seen; when every aired episode is seen it falls back to the first unseen
+  /// episode regardless of air date (an announced or undated one, rendered as
+  /// "date TBA" when it has no air date). [complete] is `false` when a season
+  /// could not be evaluated, so the caller can avoid destructive reconciliation
+  /// on partial data.
   Future<({EpisodeRef? episode, bool complete})> _scanForNextEpisode(
     MediaItem? detailsItem,
     WatchTail tail,
     List<SeenItemModel> seen, {
     required bool forceRemote,
+    required DateTime now,
   }) async {
     final details = detailsItem;
     if (details == null) return (episode: null, complete: false);
@@ -620,17 +755,14 @@ class MediaRepositoryImpl implements MediaRepository {
       return (episode: null, complete: false);
     }
 
-    final seenKeys = <String>{
-      for (final s in seen)
-        if (s.seasonNumber != null && s.episodeNumber != null)
-          episodeKey(s.seasonNumber!, s.episodeNumber!),
-    };
+    final seenKeys = _seenEpisodeKeys(seen);
 
     final sortedSeasons = List<TVSeason>.from(seasons)
       ..sort((a, b) => a.seasonNumber.compareTo(b.seasonNumber));
 
     final episodes = <EpisodeRef>[];
     var complete = true;
+    EpisodeRef? aired;
 
     for (final season in sortedSeasons) {
       if (season.seasonNumber == 0) continue;
@@ -674,15 +806,26 @@ class MediaRepositoryImpl implements MediaRepository {
         );
       }
 
-      final next = findNextEpisodeAfterTail(
+      aired = findFirstAiredUnseenAfterTail(
         tail: tail,
         episodes: episodes,
         seenEpisodeKeys: seenKeys,
+        now: now,
       );
-      if (next != null) return (episode: next, complete: true);
+      // The first aired unseen episode is final: any later episode sits after it.
+      if (aired != null) break;
     }
 
-    return (episode: null, complete: complete);
+    return (
+      episode:
+          aired ??
+          findNextEpisodeAfterTail(
+            tail: tail,
+            episodes: episodes,
+            seenEpisodeKeys: seenKeys,
+          ),
+      complete: complete,
+    );
   }
 
   /// Fetches season details, bypassing the cache when [forceRemote] is set so
@@ -814,17 +957,22 @@ class MediaRepositoryImpl implements MediaRepository {
     int limit = 4,
   }) async {
     await _ensureInitialized();
-    final items = await localDataSource.getListItems(listName);
-    return items.take(limit).map((item) {
-      final type = item.type == 'movie' ? MediaType.movie : MediaType.tv;
-      final cachedItem = cache.getItem(item.id, type);
-      return MediaItemPreview(
-        id: item.id,
-        title: _localizedTitle(item.id, type, item.title),
-        posterPath: cachedItem?.posterPath,
-        type: item.type,
-      );
-    }).toList();
+    final items = (await localDataSource.getListItems(
+      listName,
+    )).take(limit).toList();
+    final cachedItems = await cache.getItems([
+      for (final item in items)
+        (item.id, item.type == 'movie' ? MediaType.movie : MediaType.tv),
+    ]);
+    return [
+      for (var i = 0; i < items.length; i++)
+        MediaItemPreview(
+          id: items[i].id,
+          title: _preferCachedTitle(cachedItems[i], items[i].title),
+          posterPath: cachedItems[i]?.posterPath,
+          type: items[i].type,
+        ),
+    ];
   }
 
   @override
@@ -899,7 +1047,7 @@ class MediaRepositoryImpl implements MediaRepository {
         // compute next unseen episode starting after the one just marked
         final seen = await localDataSource.getSeenStatus(item.tmdbId, 'tv');
 
-        MediaItem? detailsItem = cache.getItem(item.tmdbId, MediaType.tv);
+        MediaItem? detailsItem = await cache.getItem(item.tmdbId, MediaType.tv);
         if (detailsItem == null) {
           try {
             detailsItem = await remoteDataSource.getMediaItem(
@@ -1051,7 +1199,7 @@ class MediaRepositoryImpl implements MediaRepository {
     MediaType type,
   ) async {
     try {
-      final item = cache.getItem(tmdbId, type);
+      final item = await cache.getItem(tmdbId, type);
       if (item != null) {
         await _refreshNotificationDate(item);
       } else {
@@ -1114,11 +1262,18 @@ class MediaRepositoryImpl implements MediaRepository {
     final items = await localDataSource.getAllSeenItems();
     final List<SeenItem> results = [];
 
-    for (final m in items) {
+    // One batched cache read: localized titles, and posters for rows
+    // saved without one.
+    final cached = await cache.getItems([
+      for (final m in items)
+        (m.tmdbId, m.type == 'movie' ? MediaType.movie : MediaType.tv),
+    ]);
+
+    for (var i = 0; i < items.length; i++) {
+      final m = items[i];
       final type = m.type == 'movie' ? MediaType.movie : MediaType.tv;
-      final cachedItem = cache.getItem(m.tmdbId, type);
       String? posterPath = m.posterPath;
-      final cachedPoster = cachedItem?.posterPath;
+      final cachedPoster = cached[i]?.posterPath;
 
       if (posterPath == null && cachedPoster != null) {
         posterPath = cachedPoster;
@@ -1132,7 +1287,7 @@ class MediaRepositoryImpl implements MediaRepository {
           id: m.isarId,
           tmdbId: m.tmdbId,
           type: type,
-          title: _localizedTitle(m.tmdbId, type, m.title),
+          title: _preferCachedTitle(cached[i], m.title),
           posterPath: posterPath,
           seenDate: m.seenDate,
           seasonNumber: m.seasonNumber,
@@ -1149,7 +1304,7 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<SeenItem>> getSeenStatus(int tmdbId, MediaType type) async {
     await _ensureInitialized();
     final items = await localDataSource.getSeenStatus(tmdbId, type.name);
-    final cachedItem = cache.getItem(tmdbId, type);
+    final cachedItem = await cache.getItem(tmdbId, type);
 
     final List<SeenItem> results = [];
     for (final m in items) {
@@ -1166,7 +1321,7 @@ class MediaRepositoryImpl implements MediaRepository {
           id: m.isarId,
           tmdbId: m.tmdbId,
           type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
-          title: _localizedTitle(tmdbId, type, m.title),
+          title: _preferCachedTitle(cachedItem, m.title),
           posterPath: posterPath,
           seenDate: m.seenDate,
           seasonNumber: m.seasonNumber,
@@ -1185,9 +1340,8 @@ class MediaRepositoryImpl implements MediaRepository {
     int seasonNumber,
   ) async {
     await _ensureInitialized();
-    if (cache.isSeasonCached(tvId, seasonNumber)) {
-      return cache.getSeason(tvId, seasonNumber)!;
-    }
+    final cachedSeason = await cache.getSeason(tvId, seasonNumber);
+    if (cachedSeason != null) return cachedSeason;
 
     try {
       final details = await remoteDataSource.getSeasonDetails(
@@ -1197,7 +1351,7 @@ class MediaRepositoryImpl implements MediaRepository {
       await cache.cacheSeason(tvId, seasonNumber, details);
       return details;
     } catch (e) {
-      return cache.getSeason(tvId, seasonNumber) ?? (throw e);
+      return await cache.getSeason(tvId, seasonNumber) ?? (throw e);
     }
   }
 
@@ -1438,20 +1592,24 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<NotifiedItem>> getNotifiedItems() async {
     await _ensureInitialized();
     final items = await localDataSource.getNotifiedItems();
-    return items.map((m) {
-      final type = m.type == 'movie' ? MediaType.movie : MediaType.tv;
-      return NotifiedItem(
-        tmdbId: m.tmdbId,
-        type: type,
-        title: _localizedTitle(m.tmdbId, type, m.title),
-        posterPath: m.posterPath,
-        releaseDate: m.releaseDate,
-        seasonNumber: m.seasonNumber,
-        episodeNumber: m.episodeNumber,
-        runtime: m.runtime,
-        autoNotify: m.autoNotify,
-      );
-    }).toList();
+    final cached = await cache.getItems([
+      for (final m in items)
+        (m.tmdbId, m.type == 'movie' ? MediaType.movie : MediaType.tv),
+    ]);
+    return [
+      for (var i = 0; i < items.length; i++)
+        NotifiedItem(
+          tmdbId: items[i].tmdbId,
+          type: items[i].type == 'movie' ? MediaType.movie : MediaType.tv,
+          title: _preferCachedTitle(cached[i], items[i].title),
+          posterPath: items[i].posterPath,
+          releaseDate: items[i].releaseDate,
+          seasonNumber: items[i].seasonNumber,
+          episodeNumber: items[i].episodeNumber,
+          runtime: items[i].runtime,
+          autoNotify: items[i].autoNotify,
+        ),
+    ];
   }
 
   @override
@@ -1497,7 +1655,7 @@ class MediaRepositoryImpl implements MediaRepository {
     // overloaded; yield between items to keep the UI responsive.
     for (final notified in notifiedItems) {
       final type = notified.type == 'movie' ? MediaType.movie : MediaType.tv;
-      if (!force && !_needsNotificationRefresh(notified, now)) continue;
+      if (!force && !await _shouldRefreshNotification(notified, now)) continue;
       await refreshNotificationForSeries(notified.tmdbId, type, force: force);
       await Future<void>.delayed(Duration.zero);
     }
@@ -1514,7 +1672,7 @@ class MediaRepositoryImpl implements MediaRepository {
     if (notified == null) return;
 
     final now = DateTime.now();
-    if (!force && !_needsNotificationRefresh(notified, now)) return;
+    if (!force && !await _shouldRefreshNotification(notified, now)) return;
 
     try {
       final item = await remoteDataSource.getMediaItem(tmdbId, type: type);
@@ -1533,16 +1691,55 @@ class MediaRepositoryImpl implements MediaRepository {
     } catch (_) {}
   }
 
-  /// Whether a notified entry is missing information and therefore worth a
-  /// network refresh, respecting the once-a-day throttle unless forced.
-  bool _needsNotificationRefresh(NotifiedItemModel notified, DateTime now) {
+  /// Whether a notified entry is worth refreshing from the network, respecting
+  /// the once-a-day throttle unless forced.
+  ///
+  /// Entries with a missing or already aired release date always qualify. TV
+  /// entries pointing at a *future* episode normally do not, but they do when the
+  /// cached series data reports an aired episode that is not in the seen history:
+  /// such an entry is either stale or was anchored to the next announcement while
+  /// an aired backlog was waiting, which is exactly what the anchor must fix.
+  Future<bool> _shouldRefreshNotification(
+    NotifiedItemModel notified,
+    DateTime now,
+  ) async {
     final last = notified.lastRefreshedAt;
     if (last != null && now.difference(last) < const Duration(days: 1)) {
       return false;
     }
 
     final release = notified.releaseDate;
-    return release == null || !release.isAfter(now);
+    if (release == null || !release.isAfter(now)) return true;
+    if (notified.type != MediaType.tv.name) return false;
+
+    return _hasAiredUnseenBacklog(notified);
+  }
+
+  /// Whether the cached series data reports an aired episode the viewer has not
+  /// seen, so the entry's future release date hides aired content.
+  ///
+  /// A missing cache entry is fetched once so the check stays reliable; the
+  /// once-a-day throttle in [_shouldRefreshNotification] bounds the cost.
+  Future<bool> _hasAiredUnseenBacklog(NotifiedItemModel notified) async {
+    try {
+      var item = await cache.getItem(notified.tmdbId, MediaType.tv);
+      if (item == null) {
+        item = await remoteDataSource.getMediaItem(
+          notified.tmdbId,
+          type: MediaType.tv,
+        );
+        await cache.cacheItem(item);
+      }
+
+      final seen = await localDataSource.getSeenStatus(
+        notified.tmdbId,
+        MediaType.tv.name,
+      );
+      final tail = findLatestTail(seen) ?? seriesStartTail();
+      return _hasAiredUnseenEpisode(item, tail, seen);
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -1588,9 +1785,7 @@ class MediaRepositoryImpl implements MediaRepository {
     await _ensureInitialized();
     try {
       final results = await remoteDataSource.getSimilarMedia(id, type);
-      for (final item in results) {
-        await cache.cacheItem(item);
-      }
+      await cache.cacheItems(results);
       return results;
     } catch (e) {
       debugPrint('[Repo] getSimilarMedia error: $e');
@@ -1603,9 +1798,7 @@ class MediaRepositoryImpl implements MediaRepository {
     await _ensureInitialized();
     try {
       final results = await remoteDataSource.getRecommendedMedia(id, type);
-      for (final item in results) {
-        await cache.cacheItem(item);
-      }
+      await cache.cacheItems(results);
       return results;
     } catch (e) {
       debugPrint('[Repo] getRecommendedMedia error: $e');
@@ -1639,26 +1832,25 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<QuickAddItem>> getQuickAddItems() async {
     await _ensureInitialized();
     final items = await localDataSource.getQuickAddItems();
-    return items
-        .map(
-          (m) => QuickAddItem(
-            isarId: m.isarId,
-            tmdbId: m.tmdbId,
-            type: m.type == 'movie' ? MediaType.movie : MediaType.tv,
-            seasonNumber: m.seasonNumber,
-            episodeNumber: m.episodeNumber,
-            insertedAt: m.insertedAt,
-            airDate: m.airDate,
-            title: _localizedTitle(
-              m.tmdbId,
-              m.type == 'movie' ? MediaType.movie : MediaType.tv,
-              m.title,
-            ),
-            posterPath: m.posterPath,
-            runtime: m.runtime,
-          ),
-        )
-        .toList();
+    final cached = await cache.getItems([
+      for (final m in items)
+        (m.tmdbId, m.type == 'movie' ? MediaType.movie : MediaType.tv),
+    ]);
+    return [
+      for (var i = 0; i < items.length; i++)
+        QuickAddItem(
+          isarId: items[i].isarId,
+          tmdbId: items[i].tmdbId,
+          type: items[i].type == 'movie' ? MediaType.movie : MediaType.tv,
+          seasonNumber: items[i].seasonNumber,
+          episodeNumber: items[i].episodeNumber,
+          insertedAt: items[i].insertedAt,
+          airDate: items[i].airDate,
+          title: _preferCachedTitle(cached[i], items[i].title),
+          posterPath: items[i].posterPath,
+          runtime: items[i].runtime,
+        ),
+    ];
   }
 
   @override
@@ -1689,7 +1881,7 @@ class MediaRepositoryImpl implements MediaRepository {
         final seen = await localDataSource.getSeenStatus(tmdbId, 'tv');
         if (seen.isEmpty) continue;
 
-        MediaItem? resolved = cache.getItem(tmdbId, MediaType.tv);
+        MediaItem? resolved = await cache.getItem(tmdbId, MediaType.tv);
         if (resolved?.seasons == null && allowFetch) {
           try {
             resolved = await remoteDataSource.getMediaItem(
@@ -1742,7 +1934,10 @@ class MediaRepositoryImpl implements MediaRepository {
           if (seasonMemo.containsKey(seasonNumber)) {
             return seasonMemo[seasonNumber];
           }
-          Map<String, dynamic>? data = cache.getSeason(tmdbId, seasonNumber);
+          Map<String, dynamic>? data = await cache.getSeason(
+            tmdbId,
+            seasonNumber,
+          );
           if (data == null && allowFetch) {
             try {
               data = await getSeasonDetails(tmdbId, seasonNumber);
@@ -2103,7 +2298,7 @@ class MediaRepositoryImpl implements MediaRepository {
       for (final tmdbId in tvIds) {
         final seen = await localDataSource.getSeenStatus(tmdbId, 'tv');
 
-        MediaItem? detailsItem = cache.getItem(tmdbId, MediaType.tv);
+        MediaItem? detailsItem = await cache.getItem(tmdbId, MediaType.tv);
         if (detailsItem == null) {
           try {
             detailsItem = await remoteDataSource.getMediaItem(

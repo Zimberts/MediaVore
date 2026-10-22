@@ -38,13 +38,10 @@ class ExportEnvelope {
     final archive = Archive();
 
     // meta.csv
-    final metaCsv = csv.encode(<List<dynamic>>[
+    _addCsv(archive, 'meta.csv', <List<dynamic>>[
       ['version', 'exportedAt', 'source'],
       [version, exportedAt.toIso8601String(), source ?? ''],
     ]);
-    archive.addFile(
-      ArchiveFile('meta.csv', metaCsv.length, utf8.encode(metaCsv)),
-    );
 
     // seen.csv
     if (seen.isNotEmpty) {
@@ -74,10 +71,7 @@ class ExportEnvelope {
           s.genres?.join('|') ?? '',
         ]);
       }
-      final seenCsv = csv.encode(seenRows);
-      archive.addFile(
-        ArchiveFile('seen.csv', seenCsv.length, utf8.encode(seenCsv)),
-      );
+      _addCsv(archive, 'seen.csv', seenRows);
     }
 
     // likes.csv
@@ -88,10 +82,7 @@ class ExportEnvelope {
       for (final l in likes) {
         likesRows.add([l.tmdbId, l.type, l.title]);
       }
-      final likesCsv = csv.encode(likesRows);
-      archive.addFile(
-        ArchiveFile('likes.csv', likesCsv.length, utf8.encode(likesCsv)),
-      );
+      _addCsv(archive, 'likes.csv', likesRows);
     }
 
     // notifications.csv
@@ -120,14 +111,7 @@ class ExportEnvelope {
           n.autoNotify.toString(),
         ]);
       }
-      final notifCsv = csv.encode(notifRows);
-      archive.addFile(
-        ArchiveFile(
-          'notifications.csv',
-          notifCsv.length,
-          utf8.encode(notifCsv),
-        ),
-      );
+      _addCsv(archive, 'notifications.csv', notifRows);
     }
 
     // lists.csv
@@ -146,10 +130,7 @@ class ExportEnvelope {
           ]);
         }
       }
-      final listsCsv = csv.encode(listsRows);
-      archive.addFile(
-        ArchiveFile('lists.csv', listsCsv.length, utf8.encode(listsCsv)),
-      );
+      _addCsv(archive, 'lists.csv', listsRows);
     }
 
     // quickadd.csv
@@ -178,13 +159,23 @@ class ExportEnvelope {
           q.posterPath ?? '',
         ]);
       }
-      final qaCsv = csv.encode(qaRows);
-      archive.addFile(
-        ArchiveFile('quickadd.csv', qaCsv.length, utf8.encode(qaCsv)),
-      );
+      _addCsv(archive, 'quickadd.csv', qaRows);
     }
 
     return ZipEncoder().encode(archive);
+  }
+
+  /// Adds [rows] as a UTF-8 CSV entry. The declared size must be the encoded
+  /// byte count, not the string length: non-ASCII titles (é, ½, ⁴…) take
+  /// several bytes, and strict extractors such as macOS Archive Utility reject
+  /// entries whose size does not match their content.
+  static void _addCsv(
+    Archive archive,
+    String name,
+    List<List<dynamic>> rows,
+  ) {
+    final bytes = utf8.encode(csv.encode(rows));
+    archive.addFile(ArchiveFile(name, bytes.length, bytes));
   }
 
   static ExportEnvelope fromZipBytes(List<int> bytes) {

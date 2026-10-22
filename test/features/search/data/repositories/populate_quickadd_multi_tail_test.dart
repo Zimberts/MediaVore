@@ -120,18 +120,17 @@ void main() {
         ],
       );
 
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
       when(
         () => remote.getMediaItem(tmdbId, type: MediaType.tv),
       ).thenAnswer((_) async => media);
 
       // Stub cache methods used by the repository
       when(() => cache.cacheItem(any())).thenAnswer((_) async {});
-      when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
       when(
         () => cache.cacheSeason(any(), any(), any()),
       ).thenAnswer((_) async {});
-      when(() => cache.getSeason(any(), any())).thenReturn(null);
+      when(() => cache.getSeason(any(), any())).thenAnswer((_) async => null);
 
       // Season details: episodes with air_date in the past
       List<Map<String, dynamic>> makeEpisodes(int count) => List.generate(
@@ -201,14 +200,13 @@ void main() {
       seasons: [TVSeason(id: 1, seasonNumber: 1, episodeCount: 5)],
     );
 
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
     when(
       () => remote.getMediaItem(tmdbId, type: MediaType.tv),
     ).thenAnswer((_) async => media);
     when(() => cache.cacheItem(any())).thenAnswer((_) async {});
-    when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
     when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
-    when(() => cache.getSeason(any(), any())).thenReturn(null);
+    when(() => cache.getSeason(any(), any())).thenAnswer((_) async => null);
 
     when(() => remote.getSeasonDetails(tmdbId, 1)).thenAnswer(
       (_) async => {
@@ -251,8 +249,7 @@ void main() {
       model.isarId = 7;
 
       when(() => local.getQuickAddItems()).thenAnswer((_) async => [model]);
-      when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
-      when(() => cache.getSeason(any(), any())).thenReturn(null);
+      when(() => cache.getSeason(any(), any())).thenAnswer((_) async => null);
       when(
         () => cache.cacheSeason(any(), any(), any()),
       ).thenAnswer((_) async {});
@@ -324,7 +321,7 @@ void main() {
       when(
         () => local.getSeenStatus(tmdbId, 'tv'),
       ).thenAnswer((_) async => seenItems);
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
         (_) async => MediaItem(
           id: tmdbId,
@@ -335,11 +332,10 @@ void main() {
         ),
       );
       when(() => cache.cacheItem(any())).thenAnswer((_) async {});
-      when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
       when(
         () => cache.cacheSeason(any(), any(), any()),
       ).thenAnswer((_) async {});
-      when(() => cache.getSeason(any(), any())).thenReturn(null);
+      when(() => cache.getSeason(any(), any())).thenAnswer((_) async => null);
       when(() => remote.getSeasonDetails(tmdbId, 1)).thenAnswer(
         (_) async => {
           'episodes': [
@@ -396,7 +392,7 @@ void main() {
             inv.namedArguments[#episodeNumber] == 2,
       );
 
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
         (_) async => MediaItem(
           id: tmdbId,
@@ -407,11 +403,10 @@ void main() {
         ),
       );
       when(() => cache.cacheItem(any())).thenAnswer((_) async {});
-      when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
       when(
         () => cache.cacheSeason(any(), any(), any()),
       ).thenAnswer((_) async {});
-      when(() => cache.getSeason(any(), any())).thenReturn(null);
+      when(() => cache.getSeason(any(), any())).thenAnswer((_) async => null);
       when(() => remote.getSeasonDetails(tmdbId, 1)).thenAnswer(
         (_) async => {
           'episodes': [
@@ -482,7 +477,7 @@ void main() {
         ),
       ).thenAnswer((_) async => false);
 
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
         (_) async => MediaItem(
           id: tmdbId,
@@ -493,11 +488,10 @@ void main() {
         ),
       );
       when(() => cache.cacheItem(any())).thenAnswer((_) async {});
-      when(() => cache.isSeasonCached(any(), any())).thenReturn(false);
       when(
         () => cache.cacheSeason(any(), any(), any()),
       ).thenAnswer((_) async {});
-      when(() => cache.getSeason(any(), any())).thenReturn(null);
+      when(() => cache.getSeason(any(), any())).thenAnswer((_) async => null);
       when(() => remote.getSeasonDetails(tmdbId, 1)).thenAnswer(
         (_) async => {
           'episodes': [

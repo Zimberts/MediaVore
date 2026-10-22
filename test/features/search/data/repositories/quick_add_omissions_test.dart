@@ -72,7 +72,7 @@ void main() {
   }
 
   void stubEpisodesE1AiredE2Aired() {
-    when(() => cache.getSeason(tmdbId, 1)).thenReturn(
+    when(() => cache.getSeason(tmdbId, 1)).thenAnswer((_) async => 
       seasonWith([
         {'episode_number': 1, 'air_date': '2020-01-01'},
         {'episode_number': 2, 'air_date': '2020-01-08'},
@@ -83,7 +83,7 @@ void main() {
   test('should report opted out when the streak was dismissed', () async {
     stubSingleSeenEpisode();
     when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => showItem());
     stubEpisodesE1AiredE2Aired();
     when(
       () => local.isOptedOut(
@@ -104,7 +104,7 @@ void main() {
   test('should report notPopulated when an aired episode is missing', () async {
     stubSingleSeenEpisode();
     when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => showItem());
     stubEpisodesE1AiredE2Aired();
     when(
       () => local.isOptedOut(
@@ -136,7 +136,7 @@ void main() {
           ),
         ],
       );
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => showItem());
       stubEpisodesE1AiredE2Aired();
 
       final omissions = await repository.getQuickAddOmissions();
@@ -150,12 +150,12 @@ void main() {
     () async {
       stubSingleSeenEpisode();
       when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => showItem());
       final futureStr = DateTime.now()
           .add(const Duration(days: 10))
           .toIso8601String()
           .substring(0, 10);
-      when(() => cache.getSeason(tmdbId, 1)).thenReturn(
+      when(() => cache.getSeason(tmdbId, 1)).thenAnswer((_) async => 
         seasonWith([
           {'episode_number': 1, 'air_date': '2020-01-01'},
           {'episode_number': 2, 'air_date': futureStr},
@@ -174,7 +174,7 @@ void main() {
   test('should report noCacheData when show metadata is not cached', () async {
     stubSingleSeenEpisode();
     when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
 
     final omissions = await repository.getQuickAddOmissions();
 
@@ -186,7 +186,7 @@ void main() {
   test('should fetch when allowFetch is true', () async {
     stubSingleSeenEpisode();
     when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(null);
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
     when(
       () => remote.getMediaItem(tmdbId, type: MediaType.tv),
     ).thenAnswer((_) async => showItem());
@@ -231,7 +231,7 @@ void main() {
     when(() => local.getAllSeenItems()).thenAnswer((_) async => seen);
     when(() => local.getSeenStatus(tmdbId, 'tv')).thenAnswer((_) async => seen);
     when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(
+    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => 
       MediaItem(
         id: tmdbId,
         title: 'Show',
@@ -243,13 +243,13 @@ void main() {
         ],
       ),
     );
-    when(() => cache.getSeason(tmdbId, 1)).thenReturn(
+    when(() => cache.getSeason(tmdbId, 1)).thenAnswer((_) async => 
       seasonWith([
         {'episode_number': 1, 'air_date': '2020-01-01'},
         {'episode_number': 2, 'air_date': '2020-01-08'},
       ]),
     );
-    when(() => cache.getSeason(tmdbId, 2)).thenReturn(
+    when(() => cache.getSeason(tmdbId, 2)).thenAnswer((_) async => 
       seasonWith([
         {'episode_number': 1, 'air_date': null},
         {'episode_number': 2, 'air_date': null},
@@ -267,7 +267,7 @@ void main() {
     () async {
       stubSingleSeenEpisode(); // tail = S1E1
       when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenReturn(showItem());
+      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => showItem());
       stubEpisodesE1AiredE2Aired(); // found = S1E2
       when(
         () => local.isOptedOut(

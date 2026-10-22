@@ -83,7 +83,7 @@ MediaVore includes a gamified achievement system to track your viewing habits an
 ## Key Features
 
 ### Notification Center
-- **Releases Tab**: Track upcoming movie releases and TV episode air dates. Releases are sorted by air date, with unplanned/future releases grouped at the bottom. TV episodes older than 30 days are hidden from view to reduce clutter while remaining tracked for notifications.
+- **Releases Tab**: Track upcoming movie releases and TV episode air dates. Releases are sorted by air date, with unplanned/future releases grouped at the bottom. A notified series points at the first episode you have not seen, considering only episodes that have already aired; the next announced episode is shown only once you are caught up on everything aired. TV episodes older than 30 days are hidden from view to reduce clutter while remaining tracked for notifications.
 - **Quick Add Tab**: Get AI-suggested next episodes for your favorite TV series based on your watch history. Easily add new series to track with a single tap.
 
 ### Data Management
