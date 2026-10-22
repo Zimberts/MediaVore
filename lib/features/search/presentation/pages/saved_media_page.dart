@@ -52,6 +52,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   // Sync state tracking for external list mutations
   String _lastSelectedList = 'watchlist';
   Set<String> _lastListSet = {};
+  int? _lastLanguageRevision;
 
   // Edit Mode State
   bool _isEditMode = false;
@@ -270,8 +271,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     // below reconciles with the persisted state.
     setState(() {
       _currentItems.removeWhere(
-        (item) =>
-            _selectedItems.contains('${item.id}:${item.mediaType.name}'),
+        (item) => _selectedItems.contains('${item.id}:${item.mediaType.name}'),
       );
       _isEditMode = false;
       _selectedItems.clear();
@@ -438,7 +438,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               onTap: () {
                 Navigator.pop(context);
                 final link = provider.getShareLinkForList(_selectedList);
-                Share.share(context.l10n.listsShareLinkMessage(_selectedList, link));
+                Share.share(
+                  context.l10n.listsShareLinkMessage(_selectedList, link),
+                );
               },
             ),
             ListTile(
@@ -477,9 +479,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       ], text: context.l10n.listsQrShareMessage(_selectedList));
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.listsQrShareError('$e'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.listsQrShareError('$e'))),
+        );
       }
     }
   }
@@ -744,13 +746,13 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              context.l10n.importListMessage(entries.length),
-            ),
+            Text(context.l10n.importListMessage(entries.length)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: InputDecoration(labelText: context.l10n.importListNameLabel),
+              decoration: InputDecoration(
+                labelText: context.l10n.importListNameLabel,
+              ),
             ),
           ],
         ),
@@ -910,6 +912,16 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     final colors = context.appColors;
 
     final currentListSet = provider.getListEntriesCached(_selectedList).toSet();
+    final languageRevision = provider.tmdbLanguageRevision;
+    if (_lastLanguageRevision == null) {
+      _lastLanguageRevision = languageRevision;
+    } else if (_lastLanguageRevision != languageRevision) {
+      // App language changed: details must be re-fetched in the new one.
+      _lastLanguageRevision = languageRevision;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) loadSavedMedia();
+      });
+    }
     if (_lastSelectedList != _selectedList) {
       _lastSelectedList = _selectedList;
       _lastListSet = currentListSet;
@@ -1386,7 +1398,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     return ListTile(
                       leading: _buildListPreviewIcon(previews, provider),
                       title: Text(
-                        name == 'watchlist' ? context.l10n.listsWatchlist : name,
+                        name == 'watchlist'
+                            ? context.l10n.listsWatchlist
+                            : name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1553,9 +1567,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.listsDeleteList),
-        content: Text(
-          context.l10n.listsDeleteListMessage(listName),
-        ),
+        content: Text(context.l10n.listsDeleteListMessage(listName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1578,7 +1590,10 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               if (context.mounted) Navigator.pop(context);
               loadSavedMedia();
             },
-            child: Text(context.l10n.commonDelete, style: TextStyle(color: colors.error)),
+            child: Text(
+              context.l10n.commonDelete,
+              style: TextStyle(color: colors.error),
+            ),
           ),
         ],
       ),
@@ -1713,7 +1728,9 @@ class _MediaGridItem extends StatelessWidget {
 
     String lengthText = '';
     if (isTv) {
-      lengthText = context.l10n.mediaSeasonShort('${item.numberOfSeasons ?? "?"}');
+      lengthText = context.l10n.mediaSeasonShort(
+        '${item.numberOfSeasons ?? "?"}',
+      );
     } else if (item.runtime != null) {
       lengthText = '${item.runtime}m';
     }

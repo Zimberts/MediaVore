@@ -118,20 +118,20 @@ class MediaRepositoryImpl implements MediaRepository {
   void _onLanguageChanged() => unawaited(applyLanguageChange());
 
   @override
-  Future<void> applyLanguageChange() {
+  Future<bool> applyLanguageChange() {
     return _languageChange ??= _applyLanguageChange().whenComplete(
       () => _languageChange = null,
     );
   }
 
-  Future<void>? _languageChange;
+  Future<bool>? _languageChange;
 
-  Future<void> _applyLanguageChange() async {
+  Future<bool> _applyLanguageChange() async {
     await _ensureInitialized();
-    if (await _dropStaleLanguageCache()) {
-      // Re-fetch saved items so their titles come back in the new language.
-      unawaited(_runWarmup());
-    }
+    if (!await _dropStaleLanguageCache()) return false;
+    // Re-fetch saved items so their titles come back in the new language.
+    unawaited(_runWarmup());
+    return true;
   }
 
   /// Strings for progress messages, in the current app language.

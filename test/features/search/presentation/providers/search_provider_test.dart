@@ -53,7 +53,9 @@ void main() {
     ).thenAnswer((_) async => []);
     when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
-    when(() => mockRepository.watchNotifiedItems()).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockRepository.watchNotifiedItems(),
+    ).thenAnswer((_) => const Stream.empty());
     when(
       () => mockRepository.toggleNotification(
         any(),
@@ -391,5 +393,36 @@ void main() {
         expect(provider.getSeenCount(tvItem), 1);
       },
     );
+  });
+
+  group('SearchProvider - Language change', () {
+    setUp(() {
+      when(() => mockRepository.getQuickAddItems()).thenAnswer((_) async => []);
+      when(() => mockRepository.fillCache()).thenAnswer((_) async {});
+    });
+
+    test('should reload saved titles once the warm-up is done', () async {
+      when(
+        () => mockRepository.applyLanguageChange(),
+      ).thenAnswer((_) async => true);
+
+      await provider.reloadForLanguageChange();
+
+      expect(provider.tmdbLanguageRevision, 1);
+      verify(() => mockRepository.fillCache()).called(1);
+      verify(() => mockRepository.getSeenItems()).called(2);
+    });
+
+    test('should do nothing when the cache language did not change', () async {
+      when(
+        () => mockRepository.applyLanguageChange(),
+      ).thenAnswer((_) async => false);
+
+      await provider.reloadForLanguageChange();
+
+      expect(provider.tmdbLanguageRevision, 0);
+      verifyNever(() => mockRepository.fillCache());
+      verifyNever(() => mockRepository.getSeenItems());
+    });
   });
 }

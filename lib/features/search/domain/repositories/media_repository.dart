@@ -128,8 +128,9 @@ abstract class MediaRepository {
   Future<void> fillCache();
 
   /// Drops TMDB data cached in a previous app language and re-fetches saved
-  /// items in the current one. Safe to call when nothing changed.
-  Future<void> applyLanguageChange();
+  /// items in the current one. Safe to call when nothing changed. Returns
+  /// whether the cache was dropped.
+  Future<bool> applyLanguageChange();
 
   /// Exports all user data (seen, likes, notifications, lists) as a single MDV archive byte list.
   Future<List<int>> exportAllData();

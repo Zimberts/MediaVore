@@ -196,16 +196,31 @@ class SearchProvider with ChangeNotifier {
 
   void _onLanguageChanged() => unawaited(reloadForLanguageChange());
 
+  int _tmdbLanguageRevision = 0;
+
+  /// Bumped once the TMDB cache of the previous language is dropped; pages
+  /// that hold TMDB data reload when it changes.
+  int get tmdbLanguageRevision => _tmdbLanguageRevision;
+
   /// Re-fetches TMDB-sourced titles in the current app language.
   Future<void> reloadForLanguageChange() async {
-    await repository.applyLanguageChange();
+    if (!await repository.applyLanguageChange()) return;
+    _tmdbLanguageRevision++;
+    await _reloadSavedTitles();
+    if (_searchResults.isNotEmpty || _isDiscoverMode) {
+      await searchMedia(_currentQuery);
+    }
+    // Saved titles come from the cache, refilled by the warm-up that the
+    // language change started: reload them once it is done.
+    await repository.fillCache();
+    await _reloadSavedTitles();
+  }
+
+  Future<void> _reloadSavedTitles() async {
     await _loadAllListEntries();
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await loadQuickAddItems();
-    if (_searchResults.isNotEmpty || _isDiscoverMode) {
-      await searchMedia(_currentQuery);
-    }
   }
 
   void setSelectedTab(int index) {
