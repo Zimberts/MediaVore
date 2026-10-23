@@ -441,7 +441,11 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.l10n.achievementUnlocked,
+                          widget.achievement.tier != null
+                              ? context.l10n.achievementLevelUnlocked(
+                                  widget.achievement.tier!,
+                                )
+                              : context.l10n.achievementUnlocked,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

@@ -9,6 +9,22 @@ class Formatters {
     if (remainingMinutes == 0) return '${hours}h';
     return '${hours}h ${remainingMinutes}m';
   }
+
+  /// Cumulative watch time with a unit that stays readable at any scale:
+  /// `16h 40m`, `166h`, `41 days`, `1 year`, `1.5 years`.
+  static String formatWatchTime(int minutes) {
+    const day = 24 * 60;
+    const year = 365 * day;
+    if (minutes < day) return minutes == 0 ? '0m' : formatRuntime(minutes);
+    if (minutes < 10 * day) return '${minutes ~/ 60}h';
+    if (minutes < year) return '${minutes ~/ day} days';
+    final years = minutes / year;
+    if (years == years.truncateToDouble()) {
+      final y = years.toInt();
+      return y == 1 ? '1 year' : '$y years';
+    }
+    return '${years.toStringAsFixed(1)} years';
+  }
 }
 
 class DateTextFormatter extends TextInputFormatter {

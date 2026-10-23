@@ -682,6 +682,59 @@
       }
     }
   },
+  "achievementsChallengesCompleted": "{completed} / {total} challenges completed",
+  "@achievementsChallengesCompleted": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsLevelProgress": "Level {unlocked}/{total}",
+  "@achievementsLevelProgress": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsLevelTitle": "Level {level} · {title}",
+  "@achievementsLevelTitle": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsNextLevel": "Next: {title} · {progress}",
+  "@achievementsNextLevel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsAllLevelsCompleted": "All levels completed",
+  "achievementLevelUnlocked": "Level {level} Unlocked!",
+  "@achievementLevelUnlocked": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "progressImportingAll": "Importing all data...",
   "progressDone": "Done!",
   "progressError": "Error: {error}",
