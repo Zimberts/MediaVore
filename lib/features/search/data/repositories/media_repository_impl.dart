@@ -502,13 +502,14 @@ class MediaRepositoryImpl implements MediaRepository {
     // series starts before its first episode, so every aired episode counts as
     // unwatched.
     final tail = findLatestTail(seen) ?? seriesStartTail();
+    final seenKeys = seenEpisodeKeys(seen);
     final now = DateTime.now();
 
     final detailsItem = await _detailsItemWithSeasons(item);
     var scan = await _scanForNextEpisode(
       detailsItem,
       tail,
-      seen,
+      seenKeys,
       forceRemote: forceRemoteSeasons,
       now: now,
     );
@@ -519,11 +520,11 @@ class MediaRepositoryImpl implements MediaRepository {
     // backlog wins over the announced next episode.
     if (scan.episode == null &&
         !forceRemoteSeasons &&
-        _hasAiredUnseenEpisode(item, tail, seen)) {
+        _hasAiredUnseenEpisode(item, tail, seenKeys)) {
       scan = await _scanForNextEpisode(
         detailsItem,
         tail,
-        seen,
+        seenKeys,
         forceRemote: true,
         now: now,
       );
@@ -655,7 +656,7 @@ class MediaRepositoryImpl implements MediaRepository {
         episodeNumber: episodeNumber,
       );
       if (!isEpisodeAfterTail(candidate, tail)) return false;
-      final seenKeys = _seenEpisodeKeys(seen);
+      final seenKeys = seenEpisodeKeys(seen);
       if (seenKeys.contains(episodeKey(seasonNumber, episodeNumber))) {
         return false;
       }
@@ -679,7 +680,7 @@ class MediaRepositoryImpl implements MediaRepository {
   bool _hasAiredUnseenEpisode(
     MediaItem item,
     WatchTail tail,
-    List<SeenItemModel> seen,
+    Set<String> seenKeys,
   ) {
     final seasonNumber = item.lastSeasonNumber;
     final episodeNumber = item.lastEpisodeNumber;
@@ -694,17 +695,8 @@ class MediaRepositoryImpl implements MediaRepository {
       return false;
     }
 
-    return !_seenEpisodeKeys(
-      seen,
-    ).contains(episodeKey(seasonNumber, episodeNumber));
+    return !seenKeys.contains(episodeKey(seasonNumber, episodeNumber));
   }
-
-  /// Episode keys (season:episode) present in [seen].
-  Set<String> _seenEpisodeKeys(List<SeenItemModel> seen) => {
-    for (final s in seen)
-      if (s.seasonNumber != null && s.episodeNumber != null)
-        episodeKey(s.seasonNumber!, s.episodeNumber!),
-  };
 
   DateTime? _parseAirDate(String? raw) {
     if (raw == null || raw.isEmpty) return null;
@@ -743,15 +735,18 @@ class MediaRepositoryImpl implements MediaRepository {
   /// [episode] is the first episode after [tail] that aired and has not been
   /// seen; when every aired episode is seen it falls back to the first unseen
   /// episode regardless of air date (an announced or undated one, rendered as
-  /// "date TBA" when it has no air date). [complete] is `false` when a season
-  /// could not be evaluated, so the caller can avoid destructive reconciliation
-  /// on partial data.
+  /// "date TBA" when it has no air date). Episodes whose key is in [seenKeys]
+  /// are skipped, as are those rejected by [where] (see
+  /// [findNextEpisodeAfterTail]). [complete] is `false` when a season could not
+  /// be evaluated, so the caller can avoid destructive reconciliation on
+  /// partial data.
   Future<({EpisodeRef? episode, bool complete})> _scanForNextEpisode(
     MediaItem? detailsItem,
     WatchTail tail,
-    List<SeenItemModel> seen, {
+    Set<String> seenKeys, {
     required bool forceRemote,
     required DateTime now,
+    bool Function(EpisodeRef episode)? where,
   }) async {
     final details = detailsItem;
     if (details == null) return (episode: null, complete: false);
@@ -760,8 +755,6 @@ class MediaRepositoryImpl implements MediaRepository {
     if (seasons == null || seasons.isEmpty) {
       return (episode: null, complete: false);
     }
-
-    final seenKeys = _seenEpisodeKeys(seen);
 
     final sortedSeasons = List<TVSeason>.from(seasons)
       ..sort((a, b) => a.seasonNumber.compareTo(b.seasonNumber));
@@ -817,6 +810,7 @@ class MediaRepositoryImpl implements MediaRepository {
         episodes: episodes,
         seenEpisodeKeys: seenKeys,
         now: now,
+        where: where,
       );
       // The first aired unseen episode is final: any later episode sits after it.
       if (aired != null) break;
@@ -829,6 +823,7 @@ class MediaRepositoryImpl implements MediaRepository {
             tail: tail,
             episodes: episodes,
             seenEpisodeKeys: seenKeys,
+            where: where,
           ),
       complete: complete,
     );
@@ -987,33 +982,14 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<void> markAsSeen(SeenItem item) async {
     await _ensureInitialized();
 
-    int? runtime = item.runtime;
-    List<String>? genres = item.genres;
-
-    if (runtime == null || genres == null) {
-      try {
-        final details = await getMediaDetails(item.tmdbId, type: item.type);
-        genres ??= details.item.genres;
-        if (item.type == MediaType.movie) {
-          runtime = details.item.runtime;
-        } else if (item.seasonNumber != null && item.episodeNumber != null) {
-          final seasonDetails = await getSeasonDetails(
-            item.tmdbId,
-            item.seasonNumber!,
-          );
-          final episodes = seasonDetails['episodes'] as List?;
-          final episode = episodes?.firstWhere(
-            (e) => e['episode_number'] == item.episodeNumber,
-            orElse: () => null,
-          );
-          if (episode != null) {
-            runtime = episode['runtime'] as int?;
-          }
-        }
-      } catch (e) {
-        debugPrint('[Repo] markAsSeen runtime lookup failed: $e');
-      }
-    }
+    final enriched = await _resolveRuntimeAndGenres(
+      tmdbId: item.tmdbId,
+      type: item.type,
+      seasonNumber: item.seasonNumber,
+      episodeNumber: item.episodeNumber,
+      runtime: item.runtime,
+      genres: item.genres,
+    );
 
     await localDataSource.markAsSeen(
       SeenItemModel(
@@ -1024,8 +1000,8 @@ class MediaRepositoryImpl implements MediaRepository {
         seenDate: item.seenDate,
         seasonNumber: item.seasonNumber,
         episodeNumber: item.episodeNumber,
-        runtime: runtime,
-        genres: genres,
+        runtime: enriched.runtime,
+        genres: enriched.genres,
       ),
     );
 
@@ -1040,142 +1016,137 @@ class MediaRepositoryImpl implements MediaRepository {
     // awaited so callers reloading notified items observe the reconciled state.
     await _refreshNotificationAfterSeen(item);
 
-    // After marking as seen, for TV items compute next unseen episode for THIS streak
+    await _queueNextQuickAddAfterSeen(item);
+  }
+
+  /// Fills a missing [runtime] / [genres] from TMDB details (episode runtime
+  /// for TV episodes, movie runtime for movies). Lookup failures are ignored and
+  /// the given values are returned unchanged.
+  ///
+  /// [fetchDetails] / [fetchSeason] replace the default lookups (e.g. to share
+  /// one lookup per show/season across an import); a `null` result counts as
+  /// a failed lookup.
+  Future<({int? runtime, List<String>? genres})> _resolveRuntimeAndGenres({
+    required int tmdbId,
+    required MediaType type,
+    int? seasonNumber,
+    int? episodeNumber,
+    int? runtime,
+    List<String>? genres,
+    Future<MediaDetails?> Function(int id, MediaType type)? fetchDetails,
+    Future<Map<String, dynamic>?> Function(int id, int season)? fetchSeason,
+  }) async {
+    if (runtime != null && genres != null) {
+      return (runtime: runtime, genres: genres);
+    }
     try {
-      if (item.type == MediaType.tv &&
-          item.seasonNumber != null &&
-          item.episodeNumber != null) {
-        // remove any quick-add that referred to the episode we just marked as seen
-        try {
-          await localDataSource.removeQuickAddItemByTmdbSeasonEpisode(
-            item.tmdbId,
-            seasonNumber: item.seasonNumber,
-            episodeNumber: item.episodeNumber,
-          );
-        } catch (e) {
-          debugPrint('[Repo] markAsSeen quick-add removal failed: $e');
-        }
-
-        // compute next unseen episode starting after the one just marked
-        final seen = await localDataSource.getSeenStatus(item.tmdbId, 'tv');
-
-        MediaItem? detailsItem = await cache.getItem(item.tmdbId, MediaType.tv);
-        if (detailsItem == null) {
-          try {
-            detailsItem = await remoteDataSource.getMediaItem(
-              item.tmdbId,
-              type: MediaType.tv,
-            );
-            await cache.cacheItem(detailsItem);
-          } catch (_) {
-            detailsItem = null;
-          }
-        }
-
-        if (detailsItem?.seasons != null) {
-          // Build map of last seen timestamp per episode so we can determine
-          // if an episode was seen after the one we just marked (chronological).
-          final Map<int, Map<int, DateTime>> lastSeenMap = {};
-          for (final s in seen) {
-            if (s.seasonNumber == null || s.episodeNumber == null) continue;
-            final season = s.seasonNumber!;
-            final ep = s.episodeNumber!;
-            final mapForSeason = lastSeenMap.putIfAbsent(season, () => {});
-            final prevSeen = mapForSeason[ep];
-            mapForSeason[ep] =
-                (prevSeen == null || prevSeen.isBefore(s.seenDate))
-                ? s.seenDate
-                : prevSeen;
-          }
-
-          final sortedSeasons = List<TVSeason>.from(detailsItem!.seasons!)
-            ..sort((a, b) => a.seasonNumber.compareTo(b.seasonNumber));
-
-          final startSeason = item.seasonNumber!;
-          final startEpisode = item.episodeNumber! + 1;
-          DateTime? foundAirDate;
-          int? foundSeason;
-          int? foundEpisode;
-          int? foundRuntime;
-
-          for (final season in sortedSeasons) {
-            if (season.seasonNumber == 0) continue;
-            if (season.seasonNumber < startSeason) continue;
-
-            try {
-              final seasonDetails = await getSeasonDetails(
-                detailsItem.id,
-                season.seasonNumber,
-              );
-              final episodes = seasonDetails['episodes'] as List?;
-              for (final ep in episodes ?? []) {
-                final epNum = ep['episode_number'] as int;
-
-                if (season.seasonNumber == startSeason &&
-                    epNum < startEpisode) {
-                  continue;
-                }
-
-                final lastSeenForEp = lastSeenMap[season.seasonNumber]?[epNum];
-                final isEpSeenAfterMark =
-                    lastSeenForEp != null &&
-                    // Treat equal timestamps as "after" for tail grouping
-                    !lastSeenForEp.isBefore(item.seenDate);
-                if (isEpSeenAfterMark) {
-                  continue;
-                }
-
-                final airDateStr = ep['air_date'] as String?;
-                if (airDateStr == null || airDateStr.isEmpty) {
-                  continue;
-                }
-
-                try {
-                  final ad = DateTime.parse(airDateStr);
-                  if (ad.isAfter(DateTime.now())) {
-                    continue;
-                  }
-                  foundAirDate = ad;
-                } catch (_) {
-                  continue;
-                }
-
-                foundSeason = season.seasonNumber;
-                foundEpisode = epNum;
-                foundRuntime = ep['runtime'] as int?;
-                break;
-              }
-            } catch (e) {
-              debugPrint('[Repo] markAsSeen season scan failed: $e');
-            }
-            if (foundSeason != null) break;
-          }
-
-          if (foundSeason != null && foundEpisode != null) {
-            // Respect the opt-out recorded when the user dismissed this episode
-            // (the UI keys it by the dismissed episode, not the streak tail).
-            final optedOut = await localDataSource.isOptedOut(
-              item.tmdbId,
-              seasonNumber: foundSeason,
-              episodeNumber: foundEpisode,
-            );
-            if (!optedOut) {
-              final quick = QuickAddItemModel(
-                tmdbId: item.tmdbId,
-                type: 'tv',
-                seasonNumber: foundSeason,
-                episodeNumber: foundEpisode,
-                insertedAt: item.seenDate,
-                airDate: foundAirDate,
-                title: detailsItem.title,
-                runtime: foundRuntime,
-                posterPath: detailsItem.posterPath,
-              );
-              await localDataSource.addQuickAddItem(quick);
-            }
-          }
+      final details = fetchDetails != null
+          ? await fetchDetails(tmdbId, type)
+          : await getMediaDetails(tmdbId, type: type);
+      if (details == null) return (runtime: runtime, genres: genres);
+      genres ??= details.item.genres;
+      if (type == MediaType.movie) {
+        runtime = details.item.runtime;
+      } else if (seasonNumber != null && episodeNumber != null) {
+        final seasonDetails = fetchSeason != null
+            ? await fetchSeason(tmdbId, seasonNumber)
+            : await getSeasonDetails(tmdbId, seasonNumber);
+        final episodes = seasonDetails?['episodes'] as List?;
+        final episode = episodes?.firstWhere(
+          (e) => e['episode_number'] == episodeNumber,
+          orElse: () => null,
+        );
+        if (episode != null) {
+          runtime = episode['runtime'] as int?;
         }
       }
+    } catch (e) {
+      debugPrint('[Repo] runtime/genres lookup failed: $e');
+    }
+    return (runtime: runtime, genres: genres);
+  }
+
+  /// After a TV episode is marked seen, replaces its quick-add entry with the
+  /// next aired episode of the same streak.
+  ///
+  /// The streak starts at [item]: candidates follow it, and episodes already
+  /// seen at or after [SeenItem.seenDate] are skipped. Episodes without an air
+  /// date, or airing in the future, are not proposed. The opt-out recorded when
+  /// the user dismissed an episode is respected.
+  Future<void> _queueNextQuickAddAfterSeen(SeenItem item) async {
+    final seasonNumber = item.seasonNumber;
+    final episodeNumber = item.episodeNumber;
+    if (item.type != MediaType.tv ||
+        seasonNumber == null ||
+        episodeNumber == null) {
+      return;
+    }
+
+    try {
+      // remove any quick-add that referred to the episode we just marked as seen
+      try {
+        await localDataSource.removeQuickAddItemByTmdbSeasonEpisode(
+          item.tmdbId,
+          seasonNumber: seasonNumber,
+          episodeNumber: episodeNumber,
+        );
+      } catch (e) {
+        debugPrint('[Repo] markAsSeen quick-add removal failed: $e');
+      }
+
+      final seen = await localDataSource.getSeenStatus(item.tmdbId, 'tv');
+
+      MediaItem? detailsItem = await cache.getItem(item.tmdbId, MediaType.tv);
+      if (detailsItem == null) {
+        try {
+          detailsItem = await remoteDataSource.getMediaItem(
+            item.tmdbId,
+            type: MediaType.tv,
+          );
+          await cache.cacheItem(detailsItem);
+        } catch (_) {
+          return;
+        }
+      }
+
+      final now = DateTime.now();
+      final scan = await _scanForNextEpisode(
+        detailsItem,
+        WatchTail(
+          seasonNumber: seasonNumber,
+          episodeNumber: episodeNumber,
+          seenDate: item.seenDate,
+        ),
+        seenEpisodeKeys(seen, seenSince: item.seenDate),
+        forceRemote: false,
+        now: now,
+        where: (episode) => isAired(episode, now),
+      );
+      final next = scan.episode;
+      if (next == null) return;
+
+      // Respect the opt-out recorded when the user dismissed this episode
+      // (the UI keys it by the dismissed episode, not the streak tail).
+      final optedOut = await localDataSource.isOptedOut(
+        item.tmdbId,
+        seasonNumber: next.seasonNumber,
+        episodeNumber: next.episodeNumber,
+      );
+      if (optedOut) return;
+
+      await localDataSource.addQuickAddItem(
+        QuickAddItemModel(
+          tmdbId: item.tmdbId,
+          type: 'tv',
+          seasonNumber: next.seasonNumber,
+          episodeNumber: next.episodeNumber,
+          insertedAt: item.seenDate,
+          airDate: next.airDate,
+          title: detailsItem.title,
+          runtime: next.runtime,
+          posterPath: detailsItem.posterPath,
+        ),
+      );
     } catch (e) {
       debugPrint('[Repo] markAsSeen next-episode computation failed: $e');
     }
@@ -1437,8 +1408,6 @@ class MediaRepositoryImpl implements MediaRepository {
 
     for (int i = 0; i < total; i++) {
       final model = data[i];
-      int? runtime = model.runtime;
-      List<String>? genres = model.genres;
       final tmdbId = model.tmdbId;
       final typeStr = model.type;
       final type = typeStr == 'movie' ? MediaType.movie : MediaType.tv;
@@ -1450,29 +1419,16 @@ class MediaRepositoryImpl implements MediaRepository {
         onProgress(i / total, _l10n.progressProcessingItem(title));
       }
 
-      if (runtime == null || genres == null) {
-        try {
-          final details = await detailsOnce(tmdbId, type);
-          genres ??= details?.item.genres;
-          if (type == MediaType.movie) {
-            if (details != null) runtime = details.item.runtime;
-          } else if (details != null &&
-              seasonNumber != null &&
-              episodeNumber != null) {
-            final seasonDetails = await seasonOnce(tmdbId, seasonNumber);
-            final episodes = seasonDetails?['episodes'] as List?;
-            final episode = episodes?.firstWhere(
-              (e) => e['episode_number'] == episodeNumber,
-              orElse: () => null,
-            );
-            if (episode != null) {
-              runtime = episode['runtime'] as int?;
-            }
-          }
-        } catch (e) {
-          debugPrint('[Repo] _importSeenData runtime enrichment failed: $e');
-        }
-      }
+      final enriched = await _resolveRuntimeAndGenres(
+        tmdbId: tmdbId,
+        type: type,
+        seasonNumber: seasonNumber,
+        episodeNumber: episodeNumber,
+        runtime: model.runtime,
+        genres: model.genres,
+        fetchDetails: detailsOnce,
+        fetchSeason: seasonOnce,
+      );
 
       items.add(
         SeenItemModel(
@@ -1483,8 +1439,8 @@ class MediaRepositoryImpl implements MediaRepository {
           seenDate: model.seenDate,
           seasonNumber: seasonNumber,
           episodeNumber: episodeNumber,
-          runtime: runtime,
-          genres: genres,
+          runtime: enriched.runtime,
+          genres: enriched.genres,
         ),
       );
     }
@@ -1760,7 +1716,7 @@ class MediaRepositoryImpl implements MediaRepository {
         MediaType.tv.name,
       );
       final tail = findLatestTail(seen) ?? seriesStartTail();
-      return _hasAiredUnseenEpisode(item, tail, seen);
+      return _hasAiredUnseenEpisode(item, tail, seenEpisodeKeys(seen));
     } catch (_) {
       return false;
     }
