@@ -2083,6 +2083,42 @@ abstract class AppLocalizations {
   /// **'Unlocked on {date}'**
   String achievementsUnlockedOn(String date);
 
+  /// No description provided for @achievementsChallengesCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} / {total} challenges completed'**
+  String achievementsChallengesCompleted(int completed, int total);
+
+  /// No description provided for @achievementsLevelProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {unlocked}/{total}'**
+  String achievementsLevelProgress(int unlocked, int total);
+
+  /// No description provided for @achievementsLevelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} · {title}'**
+  String achievementsLevelTitle(int level, String title);
+
+  /// No description provided for @achievementsNextLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {title} · {progress}'**
+  String achievementsNextLevel(String title, String progress);
+
+  /// No description provided for @achievementsAllLevelsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'All levels completed'**
+  String get achievementsAllLevelsCompleted;
+
+  /// No description provided for @achievementLevelUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} Unlocked!'**
+  String achievementLevelUnlocked(int level);
+
   /// No description provided for @progressImportingAll.
   ///
   /// In en, this message translates to:

@@ -14,6 +14,12 @@ class Achievement extends Equatable {
   /// Per-language overrides: `{languageCode: {title, description}}`.
   final Map<String, Map<String, String>> translations;
 
+  /// Family id shared by the tiers of the same challenge (null = standalone).
+  final String? group;
+
+  /// 1-based level inside [group].
+  final int? tier;
+
   const Achievement({
     required this.id,
     required this.title,
@@ -25,6 +31,8 @@ class Achievement extends Equatable {
     this.progress = 0.0,
     this.progressLabel,
     this.translations = const {},
+    this.group,
+    this.tier,
   });
 
   /// [title] in [languageCode], falling back to the English definition.
@@ -47,5 +55,7 @@ class Achievement extends Equatable {
     progress,
     progressLabel,
     translations,
+    group,
+    tier,
   ];
 }

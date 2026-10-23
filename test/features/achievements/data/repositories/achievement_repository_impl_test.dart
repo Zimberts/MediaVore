@@ -140,6 +140,129 @@ void main() {
       expect(movieStarter.title, 'Movie Starter');
     });
 
+    group('with inline definitions', () {
+      AchievementRepositoryImpl repoWith(List<Map<String, dynamic>> defs) =>
+          AchievementRepositoryImpl(
+            isar,
+            mockDataSource,
+            definitionsLoader: _TestDefinitionsLoader(() async => defs),
+          );
+
+      SeenItemModel movie(int id, List<String> genres, {int? runtime}) =>
+          SeenItemModel(
+            tmdbId: id,
+            type: 'movie',
+            title: 'M$id',
+            seenDate: DateTime(2023, 1, id),
+            genres: genres,
+            runtime: runtime,
+          );
+
+      test(
+        'should match genre achievements by TMDB id in any language',
+        () async {
+          when(() => mockDataSource.getAllSeenItems()).thenAnswer(
+            (_) async => [
+              movie(1, ['Horror']),
+              movie(2, ['Horreur', 'Comédie']),
+              movie(3, ['Comedy']),
+            ],
+          );
+          final achievements = await repoWith([
+            {
+              'id': 'genre_horror',
+              'title': 'T',
+              'description': 'D',
+              'iconPath': 'I',
+              'type': 'genre',
+              'params': {'genreId': 27, 'target': 2},
+            },
+            {
+              'id': 'legacy_comedy_by_name',
+              'title': 'T',
+              'description': 'D',
+              'iconPath': 'I',
+              'type': 'genre',
+              'params': {'genre': 'Comedy', 'target': 3},
+            },
+          ]).getAchievements();
+
+          expect(achievements[0].isUnlocked, isTrue);
+          expect(achievements[0].unlockedAt, DateTime(2023, 1, 2));
+          expect(achievements[1].progressLabel, '2/3');
+        },
+      );
+
+      test('should fill group and tier from the definition', () async {
+        when(
+          () => mockDataSource.getAllSeenItems(),
+        ).thenAnswer((_) async => <SeenItemModel>[]);
+        final achievements = await repoWith([
+          {
+            'id': 'movie_10',
+            'title': 'T',
+            'description': 'D',
+            'iconPath': 'I',
+            'type': 'count',
+            'group': 'movies',
+            'tier': 2,
+            'params': {'mediaType': 'movie', 'target': 10},
+          },
+        ]).getAchievements();
+
+        expect(achievements.single.group, 'movies');
+        expect(achievements.single.tier, 2);
+      });
+
+      test(
+        'should report no progress for unknown types or zero targets',
+        () async {
+          when(
+            () => mockDataSource.getAllSeenItems(),
+          ).thenAnswer((_) async => [movie(1, [])]);
+          final achievements = await repoWith([
+            {
+              'id': 'unknown',
+              'title': 'T',
+              'description': 'D',
+              'iconPath': 'I',
+              'type': 'does_not_exist',
+              'params': {'target': 1},
+            },
+            {
+              'id': 'zero',
+              'title': 'T',
+              'description': 'D',
+              'iconPath': 'I',
+              'type': 'count',
+              'params': {'mediaType': 'movie', 'target': 0},
+            },
+          ]).getAchievements();
+
+          expect(achievements.every((a) => !a.isUnlocked), isTrue);
+          expect(achievements.every((a) => a.progress == 0), isTrue);
+        },
+      );
+
+      test('should format runtime progress with readable units', () async {
+        when(
+          () => mockDataSource.getAllSeenItems(),
+        ).thenAnswer((_) async => [movie(1, [], runtime: 1000)]);
+        final achievements = await repoWith([
+          {
+            'id': 'runtime_day_10',
+            'title': 'T',
+            'description': 'D',
+            'iconPath': 'I',
+            'type': 'runtime',
+            'params': {'targetMinutes': 14400},
+          },
+        ]).getAchievements();
+
+        expect(achievements.single.progressLabel, '16h 40m / 10 days');
+      });
+    });
+
     test('clearAchievements should remove all from DB', () async {
       await isar.writeTxn(() async {
         await isar.achievementModels.put(

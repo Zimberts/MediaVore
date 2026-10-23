@@ -1189,6 +1189,34 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String achievementsChallengesCompleted(int completed, int total) {
+    return '$completed / $total défis terminés';
+  }
+
+  @override
+  String achievementsLevelProgress(int unlocked, int total) {
+    return 'Niveau $unlocked/$total';
+  }
+
+  @override
+  String achievementsLevelTitle(int level, String title) {
+    return 'Niveau $level · $title';
+  }
+
+  @override
+  String achievementsNextLevel(String title, String progress) {
+    return 'Suivant : $title · $progress';
+  }
+
+  @override
+  String get achievementsAllLevelsCompleted => 'Tous les niveaux terminés';
+
+  @override
+  String achievementLevelUnlocked(int level) {
+    return 'Niveau $level débloqué !';
+  }
+
+  @override
   String get progressImportingAll => 'Import de toutes les données...';
 
   @override

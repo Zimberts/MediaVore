@@ -22,17 +22,25 @@ applyTo:
 
 ## Fields
 
-- Entries follow `{ id, title, description, iconPath, type, params, translations }`.
+- Entries follow `{ id, title, description, iconPath, type, group?, tier?, params, translations }`.
   `iconPath` points into `assets/achievements/`. Keep icons alongside the JSON.
 - `title` / `description` are English. `translations` maps a language code to
   `{ title, description }` (e.g. `"fr": {...}`); the UI uses
   `Achievement.titleFor(code)` / `descriptionFor(code)` and falls back to English.
   Every non-English language in `supportedAppLanguages` needs an entry
   (enforced by `test/core/l10n/translations_test.dart`).
-- Genre milestones match by TMDB genre id (`GenreUtils.getGenreIdByName`), so a
-  `params.genre` name in any supported language works.
+- `group` + `tier` mark levels of the same challenge (one card per group on the page).
+  Tiers are 1..n, consecutive, in file order, with increasing targets. `tier` is not
+  persisted, so inserting a level is safe; only `id` is.
+- `genre` achievements use `params.genreId` (TMDB movie genre id), never a genre name.
+  Seen items store genre names in the app language at the time; they are matched by id
+  via `GenreUtils.getGenreIdByName`, which accepts any supported language.
+- Adding an achievement = editing the JSON. Evaluation is generic by `type`/`params`; never
+  add id-specific code in `AchievementRepositoryImpl`.
 
 ## Tests
 
 - In tests, inject a fake `DefinitionsLoader` instead of reading the JSON asset directly;
   do not couple tests to the file contents of `definitions.json`.
+- Exception: `test/features/achievements/data/definitions_test.dart` validates the real
+  file (unique ids, historical ids kept, known types, consistent tiers). Keep it passing.
