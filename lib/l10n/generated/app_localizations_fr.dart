@@ -332,8 +332,14 @@ class AppLocalizationsFr extends AppLocalizations {
     int likes,
     int notifications,
     int lists,
+    String warnings,
   ) {
-    return 'Ce fichier contient :\nVus : $seen\nFavoris : $likes\nNotifications : $notifications\nListes : $lists\n\nChoisissez comment appliquer ces données à votre profil.';
+    return 'Ce fichier contient :\nVus : $seen\nFavoris : $likes\nNotifications : $notifications\nListes : $lists\n$warnings\nChoisissez comment appliquer ces données à votre profil.';
+  }
+
+  @override
+  String dataImportSkippedRows(int count) {
+    return '$count ligne(s) invalide(s) seront ignorée(s) :';
   }
 
   @override
@@ -357,6 +363,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get dataImportFailed =>
       'Échec de l\'import : format de fichier invalide';
+
+  @override
+  String dataImportFailedReason(String reason) {
+    return 'Échec de l\'import : $reason';
+  }
 
   @override
   String get dataReplaceTitle => 'DANGER : remplacer l\'historique';

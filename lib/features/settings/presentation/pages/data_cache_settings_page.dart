@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -338,6 +339,12 @@ class DataCacheSettingsPage extends StatelessWidget {
         final likesCount = envelope.likes.length;
         final notCount = envelope.notifications.length;
         final listsCount = envelope.lists.length;
+        final warnings = envelope.warnings;
+        final warningsText = warnings.isEmpty
+            ? ''
+            : '\n${context.l10n.dataImportSkippedRows(warnings.length)}\n'
+                  '${warnings.take(5).join('\n')}'
+                  '${warnings.length > 5 ? '\n…' : ''}\n';
 
         showDialog(
           context: context,
@@ -349,6 +356,7 @@ class DataCacheSettingsPage extends StatelessWidget {
                 likesCount,
                 notCount,
                 listsCount,
+                warningsText,
               ),
             ),
             actions: [
@@ -408,6 +416,14 @@ class DataCacheSettingsPage extends StatelessWidget {
             ],
           ),
         );
+      } on ParsingException catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.dataImportFailedReason(e.message)),
+            ),
+          );
+        }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

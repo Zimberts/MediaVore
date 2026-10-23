@@ -114,7 +114,7 @@
   },
   "dataInvalidFile": "Please select a valid .mdv or .zip export file.",
   "dataImportPreviewTitle": "Import Preview",
-  "dataImportPreviewMessage": "This file contains:\nSeen: {seen}\nLikes: {likes}\nNotifications: {notifications}\nLists: {lists}\n\nChoose how to apply the data to your current profile.",
+  "dataImportPreviewMessage": "This file contains:\nSeen: {seen}\nLikes: {likes}\nNotifications: {notifications}\nLists: {lists}\n{warnings}\nChoose how to apply the data to your current profile.",
   "@dataImportPreviewMessage": {
     "placeholders": {
       "seen": {
@@ -128,6 +128,17 @@
       },
       "lists": {
         "type": "int"
+      },
+      "warnings": {
+        "type": "String"
+      }
+    }
+  },
+  "dataImportSkippedRows": "{count} invalid row(s) will be skipped:",
+  "@dataImportSkippedRows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -138,6 +149,14 @@
   "dataImportedReplaced": "Imported (Replaced)",
   "dataReplace": "Replace",
   "dataImportFailed": "Import failed: Invalid file format",
+  "dataImportFailedReason": "Import failed: {reason}",
+  "@dataImportFailedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "dataReplaceTitle": "DANGER: Replace History",
   "dataReplaceMessage": "This will delete all your current seen history and replace it with the data from the file. This action cannot be undone. Are you absolutely sure?",
   "dataReplaceConfirm": "Yes, Replace Everything",

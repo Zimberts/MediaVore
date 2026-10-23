@@ -659,13 +659,20 @@ abstract class AppLocalizations {
   /// No description provided for @dataImportPreviewMessage.
   ///
   /// In en, this message translates to:
-  /// **'This file contains:\nSeen: {seen}\nLikes: {likes}\nNotifications: {notifications}\nLists: {lists}\n\nChoose how to apply the data to your current profile.'**
+  /// **'This file contains:\nSeen: {seen}\nLikes: {likes}\nNotifications: {notifications}\nLists: {lists}\n{warnings}\nChoose how to apply the data to your current profile.'**
   String dataImportPreviewMessage(
     int seen,
     int likes,
     int notifications,
     int lists,
+    String warnings,
   );
+
+  /// No description provided for @dataImportSkippedRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} invalid row(s) will be skipped:'**
+  String dataImportSkippedRows(int count);
 
   /// No description provided for @dataImportedAppended.
   ///
@@ -708,6 +715,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import failed: Invalid file format'**
   String get dataImportFailed;
+
+  /// No description provided for @dataImportFailedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {reason}'**
+  String dataImportFailedReason(String reason);
 
   /// No description provided for @dataReplaceTitle.
   ///
