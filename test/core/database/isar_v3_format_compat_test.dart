@@ -124,7 +124,10 @@ void main() {
       expect(seen.type, 'movie');
       expect(seen.runtime, 139);
       expect(seen.genres, ['Drama', 'Thriller']);
-      expect(seen.seenDate, DateTime(2023, 10, 1));
+      // The fixture was generated in Europe/Paris (UTC+2 in October 2023), so
+      // `DateTime(2023, 10, 1)` was stored as this instant. Isar reads it back in
+      // the runner's local zone: compare in UTC so the test is timezone-independent.
+      expect(seen.seenDate.toUtc(), DateTime.utc(2023, 9, 30, 22));
 
       final composite = await isar.mediaListItems
           .getByIdTypeListName(550, 'movie', 'watchlist');
@@ -134,7 +137,7 @@ void main() {
       final achievement = await isar.achievementModels
           .getByAchievementId('first_seen');
       expect(achievement, isNotNull);
-      expect(achievement!.unlockedAt, DateTime(2023, 10, 6));
+      expect(achievement!.unlockedAt.toUtc(), DateTime.utc(2023, 10, 5, 22));
     });
 
     test('should write to a database written by legacy isar', () async {
