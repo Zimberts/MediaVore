@@ -10,6 +10,9 @@ import 'package:mediavore/features/media_details/data/models/quick_add_item_mode
 import 'package:mediavore/features/media_details/data/models/quick_add_opt_out_model.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
+import 'package:mediavore/features/books/data/models/book_model.dart';
+import 'package:mediavore/features/books/data/models/book_list_model.dart';
+import 'package:mediavore/features/books/data/models/book_list_item_model.dart';
 
 @module
 abstract class DatabaseModule {
@@ -29,6 +32,9 @@ abstract class DatabaseModule {
       CachedActorProfileSchema,
       CachedSeasonSchema,
       AchievementModelSchema,
+      BookModelSchema,
+      BookListModelSchema,
+      BookListItemModelSchema,
     ], directory: dir.path);
   }
 }
