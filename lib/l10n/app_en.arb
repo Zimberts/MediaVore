@@ -2,14 +2,9 @@
   "@@locale": "en",
   "appTitle": "MediaVore",
   "appLoading": "Loading MediaVore...",
-  "appStartupFailed": "Failed to start app:\n{error}",
-  "@appStartupFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "appStartupFailedTitle": "MediaVore could not start",
+  "appStartupFailedMessage": "Something went wrong while loading your data. Please try again.",
+  "appStartupTechnicalDetails": "Technical details",
   "commonCancel": "Cancel",
   "commonSave": "Save",
   "commonImport": "Import",

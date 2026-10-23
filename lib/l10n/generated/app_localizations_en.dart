@@ -15,9 +15,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appLoading => 'Loading MediaVore...';
 
   @override
-  String appStartupFailed(String error) {
-    return 'Failed to start app:\n$error';
-  }
+  String get appStartupFailedTitle => 'MediaVore could not start';
+
+  @override
+  String get appStartupFailedMessage =>
+      'Something went wrong while loading your data. Please try again.';
+
+  @override
+  String get appStartupTechnicalDetails => 'Technical details';
 
   @override
   String get commonCancel => 'Cancel';

@@ -110,11 +110,23 @@ abstract class AppLocalizations {
   /// **'Loading MediaVore...'**
   String get appLoading;
 
-  /// No description provided for @appStartupFailed.
+  /// No description provided for @appStartupFailedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Failed to start app:\n{error}'**
-  String appStartupFailed(String error);
+  /// **'MediaVore could not start'**
+  String get appStartupFailedTitle;
+
+  /// No description provided for @appStartupFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while loading your data. Please try again.'**
+  String get appStartupFailedMessage;
+
+  /// No description provided for @appStartupTechnicalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical details'**
+  String get appStartupTechnicalDetails;
 
   /// No description provided for @commonCancel.
   ///
