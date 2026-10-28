@@ -87,6 +87,23 @@ then the APK is attached to that tag's existing GitHub release.
 The IPA is uploaded to TestFlight only if the `testflight` input is checked.
 App Store Connect refuses it if the `pubspec.yaml` version is already released on the App Store
 (bump the version, or test from the open release PR's branch).
+The `play_track` input (`none` by default) also uploads that AAB to the chosen Google Play track.
+
+## Google Play upload (#242, optional)
+
+The `play-store` job of `release.yml` uploads `app-release.aab` of the same run (artifact
+`mediavore-android-release`, checksum verified) to Google Play with
+[`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play). It is opt-in:
+
+- without the secret `PLAY_SERVICE_ACCOUNT_JSON` the job only logs a notice and succeeds;
+- on a release, the AAB goes to the track in the repository variable `PLAY_TRACK`
+  (default `internal`); on a manual run, only if `play_track` is not `none`;
+- release status = variable `PLAY_RELEASE_STATUS` (default `completed`, i.e. rolled out to the
+  track's testers). Set it to `draft` while the app has never been rolled out: the Play API
+  rejects any other status on a draft app.
+
+Google Play refuses a `versionCode` it already holds: the build number (`run_number`, see above)
+must stay above every AAB already uploaded, including manual ones.
 
 ## One-time setup (repository admin)
 
@@ -109,3 +126,17 @@ App Store Connect refuses it if the `pubspec.yaml` version is already released o
    = PR title, so the PR title (checked by CI) is the commit release-please reads.
 4. Android signing secrets: `DOCS/android-release-signing.md`.
 5. iOS signing and App Store Connect secrets: `DOCS/ios-release.md`.
+6. Google Play upload (optional, owner of the Play developer account):
+   1. **App record.** Play Console → *Create app* (package `fr.zimberts.mediavore`). The API
+      cannot create an app nor make its first upload: run *Actions → Release → Run workflow*
+      (`play_track` = `none`), download the AAB from the run's artifact and upload it by hand
+      to *Testing → Internal testing* (this also enrolls the app in Play App Signing, the CI key
+      staying the upload key). Using the CI build keeps its `versionCode` in the CI sequence.
+   2. **Service account.** Google Cloud console, any project: enable the *Google Play Android
+      Developer API*, create a service account (no Cloud role), *Keys → Add key → JSON*.
+   3. **Access.** Play Console → *Users and permissions → Invite new users*: the service
+      account e-mail, app `MediaVore`, permissions *Release to testing tracks* (plus *Release
+      apps to production* only if `PLAY_TRACK` will be `production`). It can take up to 24 h
+      before the API accepts the account.
+   4. **GitHub.** Actions secret `PLAY_SERVICE_ACCOUNT_JSON` = the whole JSON file; optional
+      Actions variables `PLAY_TRACK` and `PLAY_RELEASE_STATUS` (`draft` until the first rollout).

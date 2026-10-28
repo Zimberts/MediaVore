@@ -15,6 +15,11 @@ on:
         description: Upload the iOS build to TestFlight (otherwise it is only built and signed)
         type: boolean
         default: false
+      play_track:
+        description: Also upload the AAB to this Google Play track (needs secret PLAY_SERVICE_ACCOUNT_JSON)
+        type: choice
+        options: [none, internal, alpha, beta]
+        default: none
 
 # One release at a time; a running release is never cancelled.
 concurrency:
@@ -397,3 +402,60 @@ jobs:
           fi
           rm -rf "$HOME/.appstoreconnect/private_keys" "$RUNNER_TEMP/dist.p12" \
                  "$RUNNER_TEMP/profile.mobileprovision" "$RUNNER_TEMP/profile.plist"
+
+  # Optional (#242): upload the AAB of this run to Google Play. Opt-in: does nothing until the
+  # secret PLAY_SERVICE_ACCOUNT_JSON exists (setup: DOCS/releasing.md). Releases go to the track
+  # in variable PLAY_TRACK (default `internal`); a manual run uploads only if `play_track` is set.
+  play-store:
+    name: Upload AAB to Google Play
+    needs: [release-please, android]
+    if: >-
+      !cancelled() && needs.android.result == 'success' &&
+      (needs.release-please.outputs.release_created == 'true' ||
+       (github.event_name == 'workflow_dispatch' && inputs.play_track != 'none'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Secrets cannot be read in a job-level `if`: the gate is this step's output.
+      - name: Check Play credentials
+        id: creds
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::notice::Secret PLAY_SERVICE_ACCOUNT_JSON is not set: Google Play upload skipped (see DOCS/releasing.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Fail early with a readable message rather than an auth error from the Play API.
+          if ! jq -e '.type == "service_account" and (.client_email | length > 0) and (.private_key | length > 0)' \
+              >/dev/null 2>&1 <<< "$PLAY_SERVICE_ACCOUNT_JSON"; then
+            echo "::error::Secret PLAY_SERVICE_ACCOUNT_JSON is not a service account JSON key."
+            exit 1
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Download Android artifacts
+        if: steps.creds.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: mediavore-android-release
+          path: dist
+
+      - name: Verify AAB checksum
+        if: steps.creds.outputs.enabled == 'true'
+        working-directory: dist
+        run: sha256sum -c app-release.aab.sha256
+
+      # Status `completed` rolls the release out to the track's testers. Until the app's first
+      # release has been rolled out from the Play Console, the API only accepts `draft`
+      # (variable PLAY_RELEASE_STATUS=draft).
+      - name: Upload to Google Play
+        if: steps.creds.outputs.enabled == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: fr.zimberts.mediavore
+          releaseFiles: dist/app-release.aab
+          track: ${{ inputs.play_track || vars.PLAY_TRACK || 'internal' }}
+          status: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
