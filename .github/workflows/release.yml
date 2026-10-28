@@ -1,0 +1,222 @@
+name: Release
+
+# A push to `main` runs release-please (DOCS/releasing.md): it keeps the release PR up to
+# date and, once that PR is merged, creates the tag vX.Y.Z and the GitHub release; the build
+# jobs then run in this same workflow (a tag created with GITHUB_TOKEN triggers no other
+# workflow, so there is no `push: tags` trigger). Tags are never pushed by hand. `workflow_dispatch` = manual test build of
+# any ref (a tag ref also gets the pubspec/tag check).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      play_track:
+        description: Also upload the AAB to this Google Play track (needs secret PLAY_SERVICE_ACCOUNT_JSON)
+        type: choice
+        options: [none, internal, alpha, beta]
+        default: none
+
+# One release at a time; a running release is never cancelled.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+    # A called workflow can only narrow the caller's token: grant what ci.yml's
+    # jobs declare (pr-title asks for pull-requests: read, even when skipped).
+    permissions:
+      contents: read
+      pull-requests: read
+
+  release-please:
+    name: Release PR / tag
+    needs: checks # no tag on a red main
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # tag, GitHub release, release branch
+      pull-requests: write # release PR
+      issues: write # `autorelease: *` labels
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - name: Check release token
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_PLEASE_TOKEN" ]; then
+            echo "::warning::Secret RELEASE_PLEASE_TOKEN is missing: falling back to GITHUB_TOKEN, so the release PR gets no CI run (see DOCS/releasing.md)."
+          fi
+
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          # A PR opened with GITHUB_TOKEN triggers no workflow, so its required checks never run.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+
+  android:
+    name: Build Android APK + AAB
+    needs: [checks, release-please]
+    # release-please is skipped on workflow_dispatch: `!cancelled()` keeps this job alive then.
+    if: >-
+      !cancelled() && needs.checks.result == 'success' &&
+      (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    env:
+      # Tag being released, or the dispatched tag; empty for a test build of a branch.
+      RELEASE_TAG: ${{ needs.release-please.outputs.tag_name || (github.ref_type == 'tag' && github.ref_name || '') }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # The release tag points at the merged release PR, which may be older than this run's commit.
+          ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
+
+      - name: Check pubspec version against tag
+        run: |
+          if [ -n "$RELEASE_TAG" ]; then
+            tool/check_release_version.sh "$RELEASE_TAG"
+          else
+            echo "Not a tag build: version check skipped."
+          fi
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6 # keep in sync with ci.yml
+          channel: stable
+          cache: true
+
+      # `.env` is declared as an asset in pubspec.yaml but is not committed.
+      - name: Create placeholder .env
+        run: touch .env
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # Release signing: see DOCS/android-release-signing.md (secrets from tool/generate_android_upload_key.sh).
+      - name: Decode upload keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 is missing (see DOCS/android-release-signing.md)."
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload-keystore.jks"
+
+      # Unique, increasing build number (versionCode / CFBundleVersion); the +N in pubspec.yaml is ignored.
+      # APK = GitHub release download (#239), AAB = Play Store upload (#242). Same build number.
+      - name: Build APK and AAB
+        run: |
+          flutter build apk --release --build-number "$BUILD_NUMBER"
+          flutter build appbundle --release --build-number "$BUILD_NUMBER"
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          MEDIAVORE_KEYSTORE_PATH: ${{ runner.temp }}/upload-keystore.jks
+          MEDIAVORE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MEDIAVORE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MEDIAVORE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      # Android 15+ / Google Play: native libraries must support 16 KB pages.
+      - name: Check 16 KB page alignment
+        run: |
+          tool/check_16kb_alignment.sh build/app/outputs/flutter-apk/app-release.apk
+          tool/check_16kb_alignment.sh build/app/outputs/bundle/release/app-release.aab
+
+      - name: Collect artifacts and SHA-256
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/bundle/release/app-release.aab dist/
+          cd dist
+          # Bare file names, so `sha256sum -c app-release.apk.sha256` works next to the download.
+          for f in app-release.apk app-release.aab; do sha256sum "$f" > "$f.sha256"; done
+          {
+            echo "### Android release artifacts (build ${{ github.run_number }})"
+            echo '```'
+            cat ./*.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Consumed by the GitHub release job (#239) and the Play Store job (#242) of this run.
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mediavore-android-release
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # Optional (#242): upload the AAB of this run to Google Play. Opt-in: does nothing until the
+  # secret PLAY_SERVICE_ACCOUNT_JSON exists (setup: DOCS/releasing.md). Releases go to the track
+  # in variable PLAY_TRACK (default `internal`); a manual run uploads only if `play_track` is set.
+  play-store:
+    name: Upload AAB to Google Play
+    needs: [release-please, android]
+    if: >-
+      !cancelled() && needs.android.result == 'success' &&
+      (needs.release-please.outputs.release_created == 'true' ||
+       (github.event_name == 'workflow_dispatch' && inputs.play_track != 'none'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Secrets cannot be read in a job-level `if`: the gate is this step's output.
+      - name: Check Play credentials
+        id: creds
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::notice::Secret PLAY_SERVICE_ACCOUNT_JSON is not set: Google Play upload skipped (see DOCS/releasing.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Fail early with a readable message rather than an auth error from the Play API.
+          if ! jq -e '.type == "service_account" and (.client_email | length > 0) and (.private_key | length > 0)' \
+              >/dev/null 2>&1 <<< "$PLAY_SERVICE_ACCOUNT_JSON"; then
+            echo "::error::Secret PLAY_SERVICE_ACCOUNT_JSON is not a service account JSON key."
+            exit 1
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Download Android artifacts
+        if: steps.creds.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: mediavore-android-release
+          path: dist
+
+      - name: Verify AAB checksum
+        if: steps.creds.outputs.enabled == 'true'
+        working-directory: dist
+        run: sha256sum -c app-release.aab.sha256
+
+      # Status `completed` rolls the release out to the track's testers. Until the app's first
+      # release has been rolled out from the Play Console, the API only accepts `draft`
+      # (variable PLAY_RELEASE_STATUS=draft).
+      - name: Upload to Google Play
+        if: steps.creds.outputs.enabled == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: fr.zimberts.mediavore
+          releaseFiles: dist/app-release.aab
+          track: ${{ inputs.play_track || vars.PLAY_TRACK || 'internal' }}
+          status: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
