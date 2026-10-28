@@ -7,9 +7,13 @@ on:
   push:
     branches:
       - main
+  # Reused by release.yml so that no release is built from a red commit.
+  workflow_call:
 
+# In a called workflow `github.workflow` is the caller's name, so a release run
+# never shares (and cancels) the group of the plain CI run on the same ref.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
