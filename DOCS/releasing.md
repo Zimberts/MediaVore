@@ -22,8 +22,8 @@ pushes a tag by hand.
    A commit footer `Release-As: 1.3.0` forces a version. A non-conforming commit is ignored.
    The `bump` type is obsolete: only the release PR changes the version.
 3. **To release, merge the release PR** (squash). The run on that merge creates the tag `vX.Y.Z`
-   and the GitHub release (notes = the changelog section), then builds the Android APK from
-   the tag in the same workflow.
+   and the GitHub release (notes = the changelog section), then builds the Android APK and AAB
+   from the tag in the same workflow.
 
 Config: `release-please-config.json` (release type `dart`, tags `vX.Y.Z` without component,
 changelog sections) and `.release-please-manifest.json` (current version, bootstrapped at
@@ -42,10 +42,28 @@ found; it is ignored afterwards.
 - `run_number` restarts at 1 for a new workflow file (`release.yml` replaced `android-build.yml`).
   If a store already holds a higher build number, add a fixed offset in the build step.
 
+## Android artifacts (#238)
+
+The `android` job of `release.yml` builds, with the upload key (`DOCS/android-release-signing.md`)
+and the same build number:
+
+- `app-release.apk` (direct download from the GitHub release) and `app-release.aab` (Play Store);
+- `app-release.apk.sha256` and `app-release.aab.sha256` (`sha256sum` format with bare file names:
+  check a download with `sha256sum -c app-release.apk.sha256`); the hashes are also printed in
+  the run summary.
+
+They are uploaded as the workflow artifact `mediavore-android-release` (7 days), which later jobs
+of the same run attach to the release. Before that, `tool/check_16kb_alignment.sh` fails the job
+unless the artifacts support 16 KB memory pages (Android 15+, required by Google Play): every
+`LOAD` segment of the 64-bit native libraries (`arm64-v8a`, `x86_64`) has an alignment ≥ 16 KB,
+and, for the APK, `zipalign -c -P 16` passes (uncompressed libraries start on a 16 KB boundary).
+Run it locally on a build with `tool/check_16kb_alignment.sh build/app/outputs/flutter-apk/app-release.apk`
+(needs `readelf`, `unzip`, and `ANDROID_HOME` with build-tools ≥ 35, or `ZIPALIGN=/path/to/zipalign`).
+
 ## Manual test build
 
 *Actions → Release → Run workflow* on any branch or tag: runs analyze/test then builds the APK
-(artifact `mediavore-release-apk`), without release-please. On a tag ref the pubspec/tag check
+and AAB (artifact `mediavore-android-release`), without release-please. On a tag ref the pubspec/tag check
 runs too.
 
 ## One-time setup (repository admin)
