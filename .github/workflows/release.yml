@@ -1,17 +1,27 @@
-name: Android APK Build
+name: Release
 
 on:
   push:
     tags:
-      - 'v*'
-  workflow_dispatch:
+      - 'v*.*.*'
+  workflow_dispatch: # manual test build
+
+# One release at a time; a running release is never cancelled.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+
+  android:
     name: Build Android APK
+    needs: checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

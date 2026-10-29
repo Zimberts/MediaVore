@@ -89,4 +89,5 @@ Write Conventional Commit messages and PR titles per the rules above. Install th
 hook once: `pip install pre-commit && pre-commit install --hook-type commit-msg`.
 Verify with `flutter analyze` and `flutter test` before considering a change done.
 CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `dart format --set-exit-if-changed lib test` (non-blocking for now), `flutter test --coverage`. `pr-title.yml` checks the PR title and every commit subject
-against Conventional Commits. `android-build.yml` builds the release APK on `v*` tags.
+against Conventional Commits. `release.yml` builds the release APK on `v*.*.*` tags (or manually), only after the `ci.yml`
+analyze/test job passes on the same commit.
