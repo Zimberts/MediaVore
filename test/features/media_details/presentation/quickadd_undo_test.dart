@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
@@ -92,6 +93,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        theme: DefaultLightPalette().toThemeData(),
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<SearchProvider>.value(value: provider),

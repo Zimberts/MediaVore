@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/utils/genres.dart';
@@ -56,8 +57,8 @@ class DistributionTab extends StatelessWidget {
                 centerSpaceRadius: 40,
                 sections: typeData.entries.map((e) {
                   final color = e.key == MediaType.movie
-                      ? Colors.blue
-                      : Colors.orange;
+                      ? context.appColors.logicFlow
+                      : context.appColors.functions;
                   final percentage = totalValue > 0
                       ? (e.value / totalValue * 100).toStringAsFixed(1)
                       : '0';
@@ -69,10 +70,10 @@ class DistributionTab extends StatelessWidget {
                       percentage,
                     ),
                     radius: 70,
-                    titleStyle: const TextStyle(
+                    titleStyle: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: contrastingForeground(color),
                     ),
                   );
                 }).toList(),
