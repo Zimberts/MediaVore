@@ -1625,7 +1625,7 @@
     {
         "id": "weekend_warrior",
         "title": "Weekend Warrior",
-        "description": "Watch 15 items in a single weekend",
+        "description": "Watch 15 items within 72 hours",
         "iconPath": "assets/achievements/weekend.png",
         "type": "behavioral",
         "group": "weekend",
@@ -1639,7 +1639,7 @@
             "fr": {
                 "groupTitle": "Guerrier du week-end",
                 "title": "Guerrier du week-end",
-                "description": "Regarder 15 titres en un seul week-end"
+                "description": "Regarder 15 titres en 72 heures"
             }
         }
     },
@@ -1678,6 +1678,25 @@
             "fr": {
                 "title": "Légende du week-end",
                 "description": "Regarder 50 titres en 72 heures"
+            }
+        }
+    },
+    {
+        "id": "weekend_warrior_100",
+        "title": "Weekend Overlord",
+        "description": "Watch 100 items within 72 hours",
+        "iconPath": "assets/achievements/weekend_warrior_100.png",
+        "type": "behavioral",
+        "group": "weekend",
+        "tier": 4,
+        "params": {
+            "subtype": "weekend",
+            "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Seigneur du week-end",
+                "description": "Regarder 100 titres en 72 heures"
             }
         }
     },
