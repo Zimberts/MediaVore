@@ -119,6 +119,12 @@ void main() {
         'up_to_date',
         'saga_complete',
         'watchlist_clear',
+        'distinct_genres',
+        'distinct_countries',
+        'distinct_decades',
+        'released_before',
+        'tmdb_rating',
+        'day_one',
       };
       for (final def in defs) {
         final params = Map<String, dynamic>.from(def['params'] as Map);
@@ -128,6 +134,20 @@ void main() {
           expect(
             ['night_owl', 'weekend'],
             contains(params['subtype']),
+            reason: def['id'] as String,
+          );
+        }
+        if (def['type'] == 'released_before') {
+          expect(params['year'], isA<int>(), reason: def['id'] as String);
+        }
+        if (def['type'] == 'tmdb_rating') {
+          expect(
+            params.keys.toSet().intersection({
+              'minRating',
+              'minVotes',
+              'maxVotes',
+            }),
+            isNotEmpty,
             reason: def['id'] as String,
           );
         }
