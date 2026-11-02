@@ -114,6 +114,11 @@ void main() {
         'streak',
         'runtime',
         'marathon',
+        'season_complete',
+        'series_complete',
+        'up_to_date',
+        'saga_complete',
+        'watchlist_clear',
       };
       for (final def in defs) {
         final params = Map<String, dynamic>.from(def['params'] as Map);

@@ -38,6 +38,9 @@ void main() {
       name: 'test_achievements_db',
     );
     mockDataSource = MockMediaListLocalDataSource();
+    when(
+      () => mockDataSource.getListItems('watchlist'),
+    ).thenAnswer((_) async => []);
     // loader that reads the JSON definitions file from disk for tests
     final assetPath =
         '${Directory.current.path.replaceAll('\\', '/')}/assets/achievements/definitions.json';
