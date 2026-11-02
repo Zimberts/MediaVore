@@ -49,6 +49,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navAlerts => 'Alerts';
 
   @override
+  String get emptyStateSearchAction => 'Search for a movie';
+
+  @override
   String get importListTitle => 'Import List';
 
   @override
@@ -503,6 +506,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listsEmpty => 'No items in this list.';
 
   @override
+  String get listsEmptyHint =>
+      'Search for a movie or a series, then add it to this list.';
+
+  @override
   String get listsSwitchList => 'Switch List';
 
   @override
@@ -623,6 +630,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenEmpty => 'No items seen yet.';
+
+  @override
+  String get seenEmptyHint =>
+      'Mark a movie or an episode as seen to start your history.';
 
   @override
   String get seenNoMatches => 'No matches found.';
@@ -901,6 +912,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifNoReleases => 'No upcoming or recent releases.';
+
+  @override
+  String get notifNoReleasesHint =>
+      'Turn on alerts for a movie or a series to follow its upcoming releases.';
 
   @override
   String notifReleaseDate(String released, String date) {

@@ -74,7 +74,7 @@ void main() {
     locator.reset();
   });
 
-  Widget createWidgetUnderTest() {
+  Widget createWidgetUnderTest({VoidCallback? onSearch}) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
@@ -82,7 +82,7 @@ void main() {
       ],
       child: MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
-        home: const SeenHistoryPage(),
+        home: SeenHistoryPage(onSearch: onSearch),
       ),
     );
   }
@@ -94,6 +94,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No items seen yet.'), findsOneWidget);
+  });
+
+  testWidgets('empty state offers a search action that calls onSearch', (
+    WidgetTester tester,
+  ) async {
+    var searches = 0;
+    await tester.pumpWidget(createWidgetUnderTest(onSearch: () => searches++));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Mark a movie or an episode as seen to start your history.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Search for a movie'));
+    expect(searches, 1);
   });
 
   testWidgets('displays grouped list of seen items and liked status', (

@@ -37,9 +37,9 @@ class _MainPageState extends State<MainPage> {
 
   late final List<Widget> _pages = [
     SearchPage(searchTrigger: _discoverSearchTrigger),
-    const SavedMediaPage(),
-    const SeenHistoryPage(),
-    const NotificationCenterPage(),
+    SavedMediaPage(onSearch: _openSearch),
+    SeenHistoryPage(onSearch: _openSearch),
+    NotificationCenterPage(onSearch: _openSearch),
   ];
 
   @override
@@ -219,16 +219,19 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  /// Switches to Discover and opens its search field.
+  void _openSearch() {
+    _onItemTapped(0);
+    _discoverSearchTrigger.value += 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _onItemTapped(0);
-          _discoverSearchTrigger.value += 1;
-        },
+        onPressed: _openSearch,
         tooltip: l10n.navSearch,
         child: const Icon(Icons.search),
       ),
