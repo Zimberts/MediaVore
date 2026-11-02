@@ -61,6 +61,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
         translations: _parseTranslations(def['translations']),
         group: def['group'] as String?,
         tier: def['tier'] as int?,
+        groupTitle: def['groupTitle'] as String?,
       );
     }).toList();
   }

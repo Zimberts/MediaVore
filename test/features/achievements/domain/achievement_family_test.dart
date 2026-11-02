@@ -2,16 +2,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement_family.dart';
 
-Achievement _a(String id, {String? group, int? tier, bool unlocked = false}) =>
-    Achievement(
-      id: id,
-      title: id,
-      description: '',
-      iconPath: '',
-      group: group,
-      tier: tier,
-      isUnlocked: unlocked,
-    );
+Achievement _a(
+  String id, {
+  String? group,
+  int? tier,
+  bool unlocked = false,
+  String? groupTitle,
+  Map<String, Map<String, String>> translations = const {},
+}) => Achievement(
+  id: id,
+  title: id,
+  description: '',
+  iconPath: '',
+  group: group,
+  tier: tier,
+  isUnlocked: unlocked,
+  groupTitle: groupTitle,
+  translations: translations,
+);
 
 void main() {
   group('groupAchievements', () {
@@ -64,6 +72,33 @@ void main() {
 
       expect(family.isCompleted, isTrue);
       expect(family.next, isNull);
+    });
+
+    test('should use the translated family name declared on a tier', () {
+      final family = groupAchievements([
+        _a(
+          'm1',
+          group: 'movies',
+          tier: 1,
+          unlocked: true,
+          groupTitle: 'Movies',
+          translations: {
+            'fr': {'groupTitle': 'Films', 'title': 'Premier film'},
+          },
+        ),
+        _a('m2', group: 'movies', tier: 2, unlocked: true),
+      ]).single;
+
+      expect(family.current.id, 'm2');
+      expect(family.titleFor('en'), 'Movies');
+      expect(family.titleFor('fr'), 'Films');
+      expect(family.titleFor('xx'), 'Movies');
+    });
+
+    test('should fall back to the current tier title without a name', () {
+      final family = groupAchievements([_a('solo', unlocked: true)]).single;
+
+      expect(family.titleFor('en'), 'solo');
     });
   });
 }
