@@ -2723,5 +2723,507 @@
                 "description": "Voir 100 titres notés 8+ sur TMDB (au moins 1 000 votes)"
             }
         }
+    },
+    {
+        "id": "early_bird_10",
+        "title": "Early Bird",
+        "description": "Watch 10 items between 5 AM and 9 AM",
+        "iconPath": "assets/achievements/early_bird_10.png",
+        "type": "behavioral",
+        "group": "early_bird",
+        "groupTitle": "Early bird",
+        "tier": 1,
+        "params": {
+            "subtype": "early_bird",
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Lève-tôt",
+                "title": "Lève-tôt",
+                "description": "Regarder 10 titres entre 5 h et 9 h"
+            }
+        }
+    },
+    {
+        "id": "early_bird_50",
+        "title": "Dawn Watcher",
+        "description": "Watch 50 items between 5 AM and 9 AM",
+        "iconPath": "assets/achievements/early_bird_50.png",
+        "type": "behavioral",
+        "group": "early_bird",
+        "tier": 2,
+        "params": {
+            "subtype": "early_bird",
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Guetteur de l'aube",
+                "description": "Regarder 50 titres entre 5 h et 9 h"
+            }
+        }
+    },
+    {
+        "id": "early_bird_100",
+        "title": "First Light",
+        "description": "Watch 100 items between 5 AM and 9 AM",
+        "iconPath": "assets/achievements/early_bird_100.png",
+        "type": "behavioral",
+        "group": "early_bird",
+        "tier": 3,
+        "params": {
+            "subtype": "early_bird",
+            "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Aux aurores",
+                "description": "Regarder 100 titres entre 5 h et 9 h"
+            }
+        }
+    },
+    {
+        "id": "double_feature_1",
+        "title": "Double Feature",
+        "description": "Watch 2 different movies on the same day",
+        "iconPath": "assets/achievements/double_feature_1.png",
+        "type": "double_feature",
+        "group": "double_feature",
+        "groupTitle": "Double feature",
+        "tier": 1,
+        "params": {
+            "minMovies": 2,
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Séance double",
+                "title": "Séance double",
+                "description": "Regarder 2 films différents le même jour"
+            }
+        }
+    },
+    {
+        "id": "double_feature_10",
+        "title": "Movie Day",
+        "description": "Watch 2 different movies on the same day, on 10 days",
+        "iconPath": "assets/achievements/double_feature_10.png",
+        "type": "double_feature",
+        "group": "double_feature",
+        "tier": 2,
+        "params": {
+            "minMovies": 2,
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Journée ciné",
+                "description": "Regarder 2 films différents le même jour, sur 10 journées"
+            }
+        }
+    },
+    {
+        "id": "double_feature_50",
+        "title": "Film Festival",
+        "description": "Watch 2 different movies on the same day, on 50 days",
+        "iconPath": "assets/achievements/double_feature_50.png",
+        "type": "double_feature",
+        "group": "double_feature",
+        "tier": 3,
+        "params": {
+            "minMovies": 2,
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Festival de cinéma",
+                "description": "Regarder 2 films différents le même jour, sur 50 journées"
+            }
+        }
+    },
+    {
+        "id": "every_weekday_1",
+        "title": "Seven Days",
+        "description": "Watch something on each day of the week",
+        "iconPath": "assets/achievements/every_weekday_1.png",
+        "type": "every_weekday",
+        "group": "every_weekday",
+        "groupTitle": "Every day of the week",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Tous les jours de la semaine",
+                "title": "Sept jours",
+                "description": "Regarder un titre chaque jour de la semaine"
+            }
+        }
+    },
+    {
+        "id": "every_weekday_10",
+        "title": "Weekly Ritual",
+        "description": "Watch 10 items on each day of the week",
+        "iconPath": "assets/achievements/every_weekday_10.png",
+        "type": "every_weekday",
+        "group": "every_weekday",
+        "tier": 2,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Rituel hebdomadaire",
+                "description": "Regarder 10 titres chaque jour de la semaine"
+            }
+        }
+    },
+    {
+        "id": "every_weekday_50",
+        "title": "Round the Week",
+        "description": "Watch 50 items on each day of the week",
+        "iconPath": "assets/achievements/every_weekday_50.png",
+        "type": "every_weekday",
+        "group": "every_weekday",
+        "tier": 3,
+        "params": {
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Toute la semaine",
+                "description": "Regarder 50 titres chaque jour de la semaine"
+            }
+        }
+    },
+    {
+        "id": "monthly_3",
+        "title": "Regular",
+        "description": "Watch something every month for 3 consecutive months",
+        "iconPath": "assets/achievements/monthly_3.png",
+        "type": "monthly_streak",
+        "group": "monthly",
+        "groupTitle": "Monthly regular",
+        "tier": 1,
+        "params": {
+            "target": 3
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Habitué mensuel",
+                "title": "Habitué",
+                "description": "Regarder un titre chaque mois pendant 3 mois consécutifs"
+            }
+        }
+    },
+    {
+        "id": "monthly_6",
+        "title": "Half-Year Habit",
+        "description": "Watch something every month for 6 consecutive months",
+        "iconPath": "assets/achievements/monthly_6.png",
+        "type": "monthly_streak",
+        "group": "monthly",
+        "tier": 2,
+        "params": {
+            "target": 6
+        },
+        "translations": {
+            "fr": {
+                "title": "Habitude semestrielle",
+                "description": "Regarder un titre chaque mois pendant 6 mois consécutifs"
+            }
+        }
+    },
+    {
+        "id": "monthly_12",
+        "title": "Year-Round",
+        "description": "Watch something every month for 12 consecutive months",
+        "iconPath": "assets/achievements/monthly_12.png",
+        "type": "monthly_streak",
+        "group": "monthly",
+        "tier": 3,
+        "params": {
+            "target": 12
+        },
+        "translations": {
+            "fr": {
+                "title": "Toute l'année",
+                "description": "Regarder un titre chaque mois pendant 12 mois consécutifs"
+            }
+        }
+    },
+    {
+        "id": "monthly_24",
+        "title": "Two-Year Run",
+        "description": "Watch something every month for 24 consecutive months",
+        "iconPath": "assets/achievements/monthly_24.png",
+        "type": "monthly_streak",
+        "group": "monthly",
+        "tier": 4,
+        "params": {
+            "target": 24
+        },
+        "translations": {
+            "fr": {
+                "title": "Deux ans d'affilée",
+                "description": "Regarder un titre chaque mois pendant 24 mois consécutifs"
+            }
+        }
+    },
+    {
+        "id": "anniversary_1",
+        "title": "First Anniversary",
+        "description": "Track your views for 1 year",
+        "iconPath": "assets/achievements/anniversary_1.png",
+        "type": "anniversary",
+        "group": "anniversary",
+        "groupTitle": "Anniversary",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Anniversaire",
+                "title": "Premier anniversaire",
+                "description": "Suivre ses visionnages depuis 1 an"
+            }
+        }
+    },
+    {
+        "id": "anniversary_2",
+        "title": "Two Years Together",
+        "description": "Track your views for 2 years",
+        "iconPath": "assets/achievements/anniversary_2.png",
+        "type": "anniversary",
+        "group": "anniversary",
+        "tier": 2,
+        "params": {
+            "target": 2
+        },
+        "translations": {
+            "fr": {
+                "title": "Deux ans ensemble",
+                "description": "Suivre ses visionnages depuis 2 ans"
+            }
+        }
+    },
+    {
+        "id": "anniversary_5",
+        "title": "Five-Year Veteran",
+        "description": "Track your views for 5 years",
+        "iconPath": "assets/achievements/anniversary_5.png",
+        "type": "anniversary",
+        "group": "anniversary",
+        "tier": 3,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Vétéran de cinq ans",
+                "description": "Suivre ses visionnages depuis 5 ans"
+            }
+        }
+    },
+    {
+        "id": "christmas_1",
+        "title": "Christmas Movie",
+        "description": "Watch something on 24 or 25 December",
+        "iconPath": "assets/achievements/christmas_1.png",
+        "type": "calendar_date",
+        "group": "christmas",
+        "groupTitle": "Christmas",
+        "tier": 1,
+        "params": {
+            "dates": [
+                "12-24",
+                "12-25"
+            ],
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Noël",
+                "title": "Film de Noël",
+                "description": "Regarder un titre le 24 ou le 25 décembre"
+            }
+        }
+    },
+    {
+        "id": "christmas_3",
+        "title": "Christmas Tradition",
+        "description": "Watch something on 24 or 25 December, 3 different years",
+        "iconPath": "assets/achievements/christmas_3.png",
+        "type": "calendar_date",
+        "group": "christmas",
+        "tier": 2,
+        "params": {
+            "dates": [
+                "12-24",
+                "12-25"
+            ],
+            "target": 3
+        },
+        "translations": {
+            "fr": {
+                "title": "Tradition de Noël",
+                "description": "Regarder un titre le 24 ou le 25 décembre, 3 années différentes"
+            }
+        }
+    },
+    {
+        "id": "christmas_5",
+        "title": "Christmas Spirit",
+        "description": "Watch something on 24 or 25 December, 5 different years",
+        "iconPath": "assets/achievements/christmas_5.png",
+        "type": "calendar_date",
+        "group": "christmas",
+        "tier": 3,
+        "params": {
+            "dates": [
+                "12-24",
+                "12-25"
+            ],
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Esprit de Noël",
+                "description": "Regarder un titre le 24 ou le 25 décembre, 5 années différentes"
+            }
+        }
+    },
+    {
+        "id": "halloween_1",
+        "title": "Trick or Treat",
+        "description": "Watch something on 31 October",
+        "iconPath": "assets/achievements/halloween_1.png",
+        "type": "calendar_date",
+        "group": "halloween",
+        "groupTitle": "Halloween",
+        "tier": 1,
+        "params": {
+            "dates": [
+                "10-31"
+            ],
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Halloween",
+                "title": "Des bonbons ou un sort",
+                "description": "Regarder un titre le 31 octobre"
+            }
+        }
+    },
+    {
+        "id": "halloween_3",
+        "title": "Halloween Tradition",
+        "description": "Watch something on 31 October, 3 different years",
+        "iconPath": "assets/achievements/halloween_3.png",
+        "type": "calendar_date",
+        "group": "halloween",
+        "tier": 2,
+        "params": {
+            "dates": [
+                "10-31"
+            ],
+            "target": 3
+        },
+        "translations": {
+            "fr": {
+                "title": "Tradition d'Halloween",
+                "description": "Regarder un titre le 31 octobre, 3 années différentes"
+            }
+        }
+    },
+    {
+        "id": "halloween_5",
+        "title": "Pumpkin King",
+        "description": "Watch something on 31 October, 5 different years",
+        "iconPath": "assets/achievements/halloween_5.png",
+        "type": "calendar_date",
+        "group": "halloween",
+        "tier": 3,
+        "params": {
+            "dates": [
+                "10-31"
+            ],
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Roi des citrouilles",
+                "description": "Regarder un titre le 31 octobre, 5 années différentes"
+            }
+        }
+    },
+    {
+        "id": "new_years_eve_1",
+        "title": "Countdown",
+        "description": "Watch something on 31 December",
+        "iconPath": "assets/achievements/new_years_eve_1.png",
+        "type": "calendar_date",
+        "group": "new_years_eve",
+        "groupTitle": "New Year's Eve",
+        "tier": 1,
+        "params": {
+            "dates": [
+                "12-31"
+            ],
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Réveillon du Nouvel An",
+                "title": "Compte à rebours",
+                "description": "Regarder un titre le 31 décembre"
+            }
+        }
+    },
+    {
+        "id": "new_years_eve_3",
+        "title": "Midnight Ritual",
+        "description": "Watch something on 31 December, 3 different years",
+        "iconPath": "assets/achievements/new_years_eve_3.png",
+        "type": "calendar_date",
+        "group": "new_years_eve",
+        "tier": 2,
+        "params": {
+            "dates": [
+                "12-31"
+            ],
+            "target": 3
+        },
+        "translations": {
+            "fr": {
+                "title": "Rituel de minuit",
+                "description": "Regarder un titre le 31 décembre, 3 années différentes"
+            }
+        }
+    },
+    {
+        "id": "new_years_eve_5",
+        "title": "Auld Lang Syne",
+        "description": "Watch something on 31 December, 5 different years",
+        "iconPath": "assets/achievements/new_years_eve_5.png",
+        "type": "calendar_date",
+        "group": "new_years_eve",
+        "tier": 3,
+        "params": {
+            "dates": [
+                "12-31"
+            ],
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Ce n'est qu'un au revoir",
+                "description": "Regarder un titre le 31 décembre, 5 années différentes"
+            }
+        }
     }
 ]
