@@ -56,7 +56,7 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `genre` | `genreId` (TMDB movie genre id), `target` | movies of that genre (stored genre names are resolved to ids, English or French) |
 | `rewatch` | `isTv`, `target` | views of the same movie / episode |
 | `loyalist` | `target` | episodes of the same series |
-| `behavioral` | `subtype` (`night_owl`: between midnight and 4 AM; `weekend`: within 72 hours), `target` | matching views |
+| `behavioral` | `subtype` (`night_owl`: between midnight and 4 AM; `early_bird`: between 5 AM and 9 AM; `weekend`: within 72 hours), `target` | matching views |
 | `marathon` | `target` | episodes of the same series in one day |
 | `streak` | `target` | consecutive days with at least one view |
 | `runtime` | `targetMinutes` | cumulative watch time (shown as `16h 40m`, `166h`, `10 days`, `1 year`) |
@@ -71,6 +71,11 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `released_before` | `year`, `target` | titles seen released strictly before `year` |
 | `tmdb_rating` | `minRating`, `minVotes`, `maxVotes` (each optional, inclusive), `target` | titles seen whose TMDB vote average / vote count are within the bounds |
 | `day_one` | `maxDelayDays` (default 0), `target` | movies (first view) and episodes seen on their TMDB release / air day, or at most `maxDelayDays` calendar days later |
+| `double_feature` | `minMovies` (default 2), `target` | calendar days with at least `minMovies` distinct movies |
+| `every_weekday` | `target` | views on each day of the week (progress = least-watched weekday) |
+| `monthly_streak` | `target` | consecutive calendar months with at least one view |
+| `anniversary` | `target` (years) | full years since the first view in the history (imported views included) |
+| `calendar_date` | `dates` (`MM-DD` list), `target` | distinct years with a view on one of the dates |
 
 The last five types read TMDB data from the local cache only (season sizes, last aired
 episode, collection parts): a title absent from the cache does not count until its details
@@ -91,6 +96,14 @@ short-term trending score, not a stable property of a title. `day_one` uses a on
 because TMDB air dates are in the broadcaster's time zone (a US evening airing is the next
 day in Europe); TMDB movie release dates are the primary (often world premiere) date, so a
 theatrical release in the user's country may come later and not count.
+
+The rhythm types (`early_bird`, `double_feature`, `every_weekday`, `monthly_streak`,
+`anniversary`, `calendar_date`) use the history only and are not sticky. Dates and hours
+are the local time of the view. Views recorded without a time (00:00:00.000) count for the
+day-based types but never fall in the `early_bird` window. Several episodes of the same
+series in one day ("binge") is the existing `marathon` type. `anniversary` is dated by the
+anniversary of the first view, so an imported history counts from its first entry (no
+install date is stored).
 
 ## Families (reference)
 
@@ -122,6 +135,12 @@ theatrical release in the user's country may come later and not count.
 | `hidden_gem` | 1, 5, 20 titles rated ≥ 7.5 with 20 to 500 votes |
 | `blockbuster` | 5, 25, 100 titles with ≥ 10,000 votes |
 | `critics_taste` | 5, 25, 100 titles rated ≥ 8.0 with ≥ 1,000 votes |
+| `early_bird` | 10, 50, 100 (5 AM to 9 AM) |
+| `double_feature` | 1, 10, 50 days with 2 distinct movies |
+| `every_weekday` | 1, 10, 50 views on each weekday |
+| `monthly` | 3, 6, 12, 24 consecutive months |
+| `anniversary` | 1, 2, 5 years |
+| `christmas` (24–25 Dec), `halloween` (31 Oct), `new_years_eve` (31 Dec) | 1, 3, 5 years |
 
 Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
 kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),

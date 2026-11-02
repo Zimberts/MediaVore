@@ -231,6 +231,13 @@ class AchievementRepositoryImpl implements AchievementRepository {
                   .toList(),
               target,
             );
+          case 'early_bird':
+            return _countMilestone(
+              seenItems
+                  .where((i) => i.seenDate.hour >= 5 && i.seenDate.hour < 9)
+                  .toList(),
+              target,
+            );
           case 'weekend':
             // Sliding 72-hour window
             return _windowMilestone(
@@ -309,6 +316,30 @@ class AchievementRepositoryImpl implements AchievementRepository {
           for (final (release, seen)
               in titles?.releases ?? const <(String, DateTime)>[])
             if (_isWithinDays(release, seen, maxDelay)) seen,
+        ], target);
+      case 'double_feature':
+        return _sameDayMilestone(
+          seenItems.where((i) => i.type == 'movie').toList(),
+          params['minMovies'] as int? ?? 2,
+          target,
+        );
+      case 'every_weekday':
+        return _everyWeekdayMilestone(seenItems, target);
+      case 'monthly_streak':
+        return _monthlyStreakMilestone(seenItems, target);
+      case 'anniversary':
+        return _anniversaryMilestone(seenItems, target, DateTime.now());
+      case 'calendar_date':
+        final dates = {
+          for (final d in params['dates'] as List? ?? const []) '$d',
+        };
+        String monthDay(DateTime d) =>
+            '${d.month.toString().padLeft(2, '0')}-'
+            '${d.day.toString().padLeft(2, '0')}';
+        return _distinctMilestone([
+          for (final i in seenItems)
+            if (dates.contains(monthDay(i.seenDate)))
+              (i.seenDate, [i.seenDate.year]),
         ], target);
     }
 
@@ -514,6 +545,110 @@ class AchievementRepositoryImpl implements AchievementRepository {
       (maxCount / target).clamp(0.0, 1.0),
       '$maxCount/$target',
       milestoneReachedAt: reachedAt,
+    );
+  }
+
+  /// [target] calendar days with at least [minTitles] distinct titles among
+  /// [items] (chronological); a day is dated by the view reaching
+  /// [minTitles].
+  _ProgressData _sameDayMilestone(
+    List<SeenItemModel> items,
+    int minTitles,
+    int target,
+  ) {
+    final titlesByDay = <DateTime, Set<int>>{};
+    final days = <DateTime>[];
+    for (final i in items) {
+      final d = i.seenDate;
+      final titles = titlesByDay.putIfAbsent(
+        DateTime(d.year, d.month, d.day),
+        () => {},
+      );
+      if (titles.add(i.tmdbId) && titles.length == minTitles) days.add(d);
+    }
+    return _datesMilestone(days, target);
+  }
+
+  /// At least [target] views on each of the seven days of the week.
+  _ProgressData _everyWeekdayMilestone(List<SeenItemModel> items, int target) {
+    final counts = List.filled(7, 0);
+    DateTime? reachedAt;
+    for (final i in items) {
+      counts[i.seenDate.weekday - 1]++;
+      if (reachedAt == null && counts.every((c) => c >= target)) {
+        reachedAt = i.seenDate;
+      }
+    }
+    final min = counts.reduce((a, b) => a < b ? a : b);
+    return _ProgressData(
+      (min / target).clamp(0.0, 1.0),
+      '$min/$target',
+      milestoneReachedAt: reachedAt,
+    );
+  }
+
+  /// [target] consecutive calendar months with at least one view, reached at
+  /// the first view of the [target]-th month of the run.
+  _ProgressData _monthlyStreakMilestone(List<SeenItemModel> items, int target) {
+    // First view of each month, keyed by a month index (items are
+    // chronological, so keys are inserted in increasing order).
+    final months = <int, DateTime>{};
+    for (final i in items) {
+      months.putIfAbsent(
+        i.seenDate.year * 12 + i.seenDate.month - 1,
+        () => i.seenDate,
+      );
+    }
+    var run = 0;
+    var maxRun = 0;
+    int? previous;
+    DateTime? reachedAt;
+    for (final MapEntry(key: month, value: date) in months.entries) {
+      run = previous != null && month == previous + 1 ? run + 1 : 1;
+      previous = month;
+      if (run > maxRun) maxRun = run;
+      if (reachedAt == null && run >= target) reachedAt = date;
+    }
+    return _ProgressData(
+      (maxRun / target).clamp(0.0, 1.0),
+      '$maxRun/$target',
+      milestoneReachedAt: reachedAt,
+    );
+  }
+
+  /// [targetYears] years since the first view in the history (imported views
+  /// included), dated at that anniversary.
+  static _ProgressData _anniversaryMilestone(
+    List<SeenItemModel> items,
+    int targetYears,
+    DateTime now,
+  ) {
+    if (items.isEmpty) return _ProgressData(0.0, '0/$targetYears');
+    final first = items.first.seenDate;
+    final anniversary = DateTime(
+      first.year + targetYears,
+      first.month,
+      first.day,
+      first.hour,
+      first.minute,
+    );
+    var years = now.year - first.year;
+    if (DateTime(
+      now.year,
+      first.month,
+      first.day,
+      first.hour,
+      first.minute,
+    ).isAfter(now)) {
+      years--;
+    }
+    final reached = !anniversary.isAfter(now);
+    final total = anniversary.difference(first).inMinutes;
+    final elapsed = now.difference(first).inMinutes;
+    return _ProgressData(
+      total <= 0 ? 0.0 : (elapsed / total).clamp(0.0, 1.0),
+      '${years.clamp(0, targetYears)}/$targetYears',
+      milestoneReachedAt: reached ? anniversary : null,
     );
   }
 

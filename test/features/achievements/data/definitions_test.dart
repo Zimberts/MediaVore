@@ -125,6 +125,11 @@ void main() {
         'released_before',
         'tmdb_rating',
         'day_one',
+        'double_feature',
+        'every_weekday',
+        'monthly_streak',
+        'anniversary',
+        'calendar_date',
       };
       for (final def in defs) {
         final params = Map<String, dynamic>.from(def['params'] as Map);
@@ -132,13 +137,30 @@ void main() {
         expect(targetOf(def), greaterThan(0), reason: def['id'] as String);
         if (def['type'] == 'behavioral') {
           expect(
-            ['night_owl', 'weekend'],
+            ['night_owl', 'early_bird', 'weekend'],
             contains(params['subtype']),
             reason: def['id'] as String,
           );
         }
         if (def['type'] == 'released_before') {
           expect(params['year'], isA<int>(), reason: def['id'] as String);
+        }
+        if (def['type'] == 'calendar_date') {
+          final dates = params['dates'] as List;
+          expect(dates, isNotEmpty, reason: def['id'] as String);
+          for (final d in dates) {
+            // MM-DD, a real day of a leap year.
+            final m = RegExp(r'^(\d{2})-(\d{2})$').firstMatch(d as String);
+            expect(m, isNotNull, reason: '${def['id']}: $d');
+            final month = int.parse(m!.group(1)!);
+            final day = int.parse(m.group(2)!);
+            expect(month, inInclusiveRange(1, 12), reason: '${def['id']}: $d');
+            expect(
+              DateTime(2024, month, day).day,
+              day,
+              reason: '${def['id']}: $d',
+            );
+          }
         }
         if (def['type'] == 'tmdb_rating') {
           expect(
