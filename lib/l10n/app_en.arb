@@ -13,7 +13,7 @@
   "navMyLists": "My Lists",
   "navSeen": "Seen",
   "navAlerts": "Alerts",
-  "emptyStateSearchAction": "Search for a movie",
+  "emptyStateSearchAction": "Search a movie or series",
   "importListTitle": "Import List",
   "importListMessage": "{count, plural, =1{You are about to import a list with 1 item.} other{You are about to import a list with {count} items.}}",
   "@importListMessage": {
@@ -477,7 +477,7 @@
   "notifTabQuickAdd": "Quick Add",
   "notifSyncing": "Syncing releases...",
   "notifNoReleases": "No upcoming or recent releases.",
-  "notifNoReleasesHint": "Turn on alerts for a movie or a series to follow its upcoming releases.",
+  "notifNoReleasesHint": "Movies and series on your watchlist or with alerts on show their releases here.",
   "notifReleaseDate": "{released, select, true{Released} other{Releases}}: {date}",
   "@notifReleaseDate": {
     "placeholders": {

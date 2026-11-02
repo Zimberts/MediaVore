@@ -49,7 +49,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navAlerts => 'Alerts';
 
   @override
-  String get emptyStateSearchAction => 'Search for a movie';
+  String get emptyStateSearchAction => 'Search a movie or series';
 
   @override
   String get importListTitle => 'Import List';
@@ -915,7 +915,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifNoReleasesHint =>
-      'Turn on alerts for a movie or a series to follow its upcoming releases.';
+      'Movies and series on your watchlist or with alerts on show their releases here.';
 
   @override
   String notifReleaseDate(String released, String date) {

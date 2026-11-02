@@ -107,7 +107,7 @@ void main() {
       find.text('Mark a movie or an episode as seen to start your history.'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Search for a movie'));
+    await tester.tap(find.text('Search a movie or series'));
     expect(searches, 1);
   });
 

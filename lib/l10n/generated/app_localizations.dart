@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @emptyStateSearchAction.
   ///
   /// In en, this message translates to:
-  /// **'Search for a movie'**
+  /// **'Search a movie or series'**
   String get emptyStateSearchAction;
 
   /// No description provided for @importListTitle.
@@ -1679,7 +1679,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifNoReleasesHint.
   ///
   /// In en, this message translates to:
-  /// **'Turn on alerts for a movie or a series to follow its upcoming releases.'**
+  /// **'Movies and series on your watchlist or with alerts on show their releases here.'**
   String get notifNoReleasesHint;
 
   /// No description provided for @notifReleaseDate.
