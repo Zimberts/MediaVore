@@ -130,6 +130,8 @@ void main() {
         'monthly_streak',
         'anniversary',
         'calendar_date',
+        'movie_runtime',
+        'series_seasons',
       };
       for (final def in defs) {
         final params = Map<String, dynamic>.from(def['params'] as Map);
@@ -144,6 +146,18 @@ void main() {
         }
         if (def['type'] == 'released_before') {
           expect(params['year'], isA<int>(), reason: def['id'] as String);
+        }
+        if (def['type'] == 'movie_runtime') {
+          final min = params['minMinutes'] as int?;
+          final max = params['maxMinutes'] as int?;
+          expect(
+            min != null || max != null,
+            isTrue,
+            reason: def['id'] as String,
+          );
+          if (min != null && max != null) {
+            expect(min, lessThanOrEqualTo(max), reason: def['id'] as String);
+          }
         }
         if (def['type'] == 'calendar_date') {
           final dates = params['dates'] as List;

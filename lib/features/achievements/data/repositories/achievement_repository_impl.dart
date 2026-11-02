@@ -317,6 +317,25 @@ class AchievementRepositoryImpl implements AchievementRepository {
               in titles?.releases ?? const <(String, DateTime)>[])
             if (_isWithinDays(release, seen, maxDelay)) seen,
         ], target);
+      case 'movie_runtime':
+        final minMinutes = params['minMinutes'] as int?;
+        final maxMinutes = params['maxMinutes'] as int?;
+        // Distinct movies, dated by their first view in the bounds. Views
+        // without a runtime never match.
+        final firstSeen = <int, DateTime>{};
+        for (final i in seenItems) {
+          final runtime = i.runtime;
+          if (i.type != 'movie' || runtime == null || runtime <= 0) continue;
+          if (minMinutes != null && runtime < minMinutes) continue;
+          if (maxMinutes != null && runtime > maxMinutes) continue;
+          firstSeen.putIfAbsent(i.tmdbId, () => i.seenDate);
+        }
+        return _datesMilestone(firstSeen.values.toList(), target);
+      case 'series_seasons':
+        return _seasonsMilestone(
+          seenItems.where((i) => i.type == 'tv').toList(),
+          target,
+        );
       case 'double_feature':
         return _sameDayMilestone(
           seenItems.where((i) => i.type == 'movie').toList(),
@@ -540,6 +559,28 @@ class AchievementRepositoryImpl implements AchievementRepository {
     final maxCount = counts.values.isEmpty
         ? 0
         : counts.values.reduce((a, b) => a > b ? a : b);
+
+    return _ProgressData(
+      (maxCount / target).clamp(0.0, 1.0),
+      '$maxCount/$target',
+      milestoneReachedAt: reachedAt,
+    );
+  }
+
+  /// [target] distinct regular seasons (specials excluded) with at least one
+  /// episode seen, in the same series; progress follows the best series.
+  _ProgressData _seasonsMilestone(List<SeenItemModel> episodes, int target) {
+    final seasons = <int, Set<int>>{};
+    int maxCount = 0;
+    DateTime? reachedAt;
+
+    for (final item in episodes) {
+      final season = item.seasonNumber;
+      if (season == null || season < 1) continue;
+      final seen = seasons.putIfAbsent(item.tmdbId, () => <int>{})..add(season);
+      if (seen.length > maxCount) maxCount = seen.length;
+      if (reachedAt == null && seen.length >= target) reachedAt = item.seenDate;
+    }
 
     return _ProgressData(
       (maxCount / target).clamp(0.0, 1.0),

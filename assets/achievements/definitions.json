@@ -3225,5 +3225,182 @@
                 "description": "Regarder un titre le 31 décembre, 5 années différentes"
             }
         }
+    },
+    {
+        "id": "epic_movie_1",
+        "title": "Epic",
+        "description": "Watch a movie of 3 hours or more",
+        "iconPath": "assets/achievements/epic_movie_1.png",
+        "type": "movie_runtime",
+        "group": "epic_movie",
+        "groupTitle": "Epic movies",
+        "tier": 1,
+        "params": {
+            "minMinutes": 180,
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Films fleuves",
+                "title": "Épopée",
+                "description": "Regarder un film de 3 heures ou plus"
+            }
+        }
+    },
+    {
+        "id": "epic_movie_5",
+        "title": "Iron Bladder",
+        "description": "Watch 5 movies of 3 hours or more",
+        "iconPath": "assets/achievements/epic_movie_5.png",
+        "type": "movie_runtime",
+        "group": "epic_movie",
+        "tier": 2,
+        "params": {
+            "minMinutes": 180,
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Vessie d'acier",
+                "description": "Regarder 5 films de 3 heures ou plus"
+            }
+        }
+    },
+    {
+        "id": "epic_movie_20",
+        "title": "Epic Connoisseur",
+        "description": "Watch 20 movies of 3 hours or more",
+        "iconPath": "assets/achievements/epic_movie_20.png",
+        "type": "movie_runtime",
+        "group": "epic_movie",
+        "tier": 3,
+        "params": {
+            "minMinutes": 180,
+            "target": 20
+        },
+        "translations": {
+            "fr": {
+                "title": "Amateur de fresques",
+                "description": "Regarder 20 films de 3 heures ou plus"
+            }
+        }
+    },
+    {
+        "id": "short_movie_1",
+        "title": "Short and Sweet",
+        "description": "Watch a movie of 40 to 80 minutes",
+        "iconPath": "assets/achievements/short_movie_1.png",
+        "type": "movie_runtime",
+        "group": "short_movie",
+        "groupTitle": "Short movies",
+        "tier": 1,
+        "params": {
+            "minMinutes": 40,
+            "maxMinutes": 80,
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Films courts",
+                "title": "Court mais bon",
+                "description": "Regarder un film de 40 à 80 minutes"
+            }
+        }
+    },
+    {
+        "id": "short_movie_10",
+        "title": "Quick Bites",
+        "description": "Watch 10 movies of 40 to 80 minutes",
+        "iconPath": "assets/achievements/short_movie_10.png",
+        "type": "movie_runtime",
+        "group": "short_movie",
+        "tier": 2,
+        "params": {
+            "minMinutes": 40,
+            "maxMinutes": 80,
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "En-cas cinéma",
+                "description": "Regarder 10 films de 40 à 80 minutes"
+            }
+        }
+    },
+    {
+        "id": "short_movie_50",
+        "title": "Economy of Means",
+        "description": "Watch 50 movies of 40 to 80 minutes",
+        "iconPath": "assets/achievements/short_movie_50.png",
+        "type": "movie_runtime",
+        "group": "short_movie",
+        "tier": 3,
+        "params": {
+            "minMinutes": 40,
+            "maxMinutes": 80,
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Art de la concision",
+                "description": "Regarder 50 films de 40 à 80 minutes"
+            }
+        }
+    },
+    {
+        "id": "long_runner_5",
+        "title": "Long-Runner",
+        "description": "Watch episodes from 5 seasons of the same series",
+        "iconPath": "assets/achievements/long_runner_5.png",
+        "type": "series_seasons",
+        "group": "long_runner",
+        "groupTitle": "Long-running series",
+        "tier": 1,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Séries au long cours",
+                "title": "Au long cours",
+                "description": "Regarder des épisodes de 5 saisons d'une même série"
+            }
+        }
+    },
+    {
+        "id": "long_runner_10",
+        "title": "Old Faithful",
+        "description": "Watch episodes from 10 seasons of the same series",
+        "iconPath": "assets/achievements/long_runner_10.png",
+        "type": "series_seasons",
+        "group": "long_runner",
+        "tier": 2,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Fidèle au poste",
+                "description": "Regarder des épisodes de 10 saisons d'une même série"
+            }
+        }
+    },
+    {
+        "id": "long_runner_20",
+        "title": "Institution",
+        "description": "Watch episodes from 20 seasons of the same series",
+        "iconPath": "assets/achievements/long_runner_20.png",
+        "type": "series_seasons",
+        "group": "long_runner",
+        "tier": 3,
+        "params": {
+            "target": 20
+        },
+        "translations": {
+            "fr": {
+                "title": "Institution",
+                "description": "Regarder des épisodes de 20 saisons d'une même série"
+            }
+        }
     }
 ]
