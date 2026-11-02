@@ -2011,5 +2011,245 @@
                 "description": "Regarder l'équivalent d'une année complète"
             }
         }
+    },
+    {
+        "id": "season_complete_1",
+        "title": "Season Finale",
+        "description": "Watch every episode of a season",
+        "iconPath": "assets/achievements/season_complete_1.png",
+        "type": "season_complete",
+        "group": "season_complete",
+        "groupTitle": "Season finisher",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Saisons terminées",
+                "title": "Final de saison",
+                "description": "Voir tous les épisodes d'une saison"
+            }
+        }
+    },
+    {
+        "id": "season_complete_10",
+        "title": "Season Collector",
+        "description": "Watch every episode of 10 seasons",
+        "iconPath": "assets/achievements/season_complete_10.png",
+        "type": "season_complete",
+        "group": "season_complete",
+        "tier": 2,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Collectionneur de saisons",
+                "description": "Voir tous les épisodes de 10 saisons"
+            }
+        }
+    },
+    {
+        "id": "season_complete_50",
+        "title": "Season Hoarder",
+        "description": "Watch every episode of 50 seasons",
+        "iconPath": "assets/achievements/season_complete_50.png",
+        "type": "season_complete",
+        "group": "season_complete",
+        "tier": 3,
+        "params": {
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Accumulateur de saisons",
+                "description": "Voir tous les épisodes de 50 saisons"
+            }
+        }
+    },
+    {
+        "id": "series_complete_1",
+        "title": "The End",
+        "description": "Watch every episode of an ended series",
+        "iconPath": "assets/achievements/series_complete_1.png",
+        "type": "series_complete",
+        "group": "series_complete",
+        "groupTitle": "Series completed",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Séries terminées",
+                "title": "Le mot de la fin",
+                "description": "Voir tous les épisodes d'une série terminée"
+            }
+        }
+    },
+    {
+        "id": "series_complete_5",
+        "title": "Completionist",
+        "description": "Watch every episode of 5 ended series",
+        "iconPath": "assets/achievements/series_complete_5.png",
+        "type": "series_complete",
+        "group": "series_complete",
+        "tier": 2,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Complétionniste",
+                "description": "Voir tous les épisodes de 5 séries terminées"
+            }
+        }
+    },
+    {
+        "id": "series_complete_25",
+        "title": "Closure Seeker",
+        "description": "Watch every episode of 25 ended series",
+        "iconPath": "assets/achievements/series_complete_25.png",
+        "type": "series_complete",
+        "group": "series_complete",
+        "tier": 3,
+        "params": {
+            "target": 25
+        },
+        "translations": {
+            "fr": {
+                "title": "Jusqu'au bout",
+                "description": "Voir tous les épisodes de 25 séries terminées"
+            }
+        }
+    },
+    {
+        "id": "up_to_date_1",
+        "title": "Caught Up",
+        "description": "Be up to date with a running series",
+        "iconPath": "assets/achievements/up_to_date_1.png",
+        "type": "up_to_date",
+        "group": "up_to_date",
+        "groupTitle": "Up to date",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "À jour",
+                "title": "À jour",
+                "description": "Être à jour sur une série en cours"
+            }
+        }
+    },
+    {
+        "id": "up_to_date_5",
+        "title": "Spoiler Proof",
+        "description": "Be up to date with 5 running series",
+        "iconPath": "assets/achievements/up_to_date_5.png",
+        "type": "up_to_date",
+        "group": "up_to_date",
+        "tier": 2,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Insensible aux spoilers",
+                "description": "Être à jour sur 5 séries en cours"
+            }
+        }
+    },
+    {
+        "id": "up_to_date_10",
+        "title": "Live Viewer",
+        "description": "Be up to date with 10 running series",
+        "iconPath": "assets/achievements/up_to_date_10.png",
+        "type": "up_to_date",
+        "group": "up_to_date",
+        "tier": 3,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "En direct",
+                "description": "Être à jour sur 10 séries en cours"
+            }
+        }
+    },
+    {
+        "id": "saga_complete_1",
+        "title": "Saga Complete",
+        "description": "Watch every released movie of a saga",
+        "iconPath": "assets/achievements/saga_complete_1.png",
+        "type": "saga_complete",
+        "group": "saga_complete",
+        "groupTitle": "Sagas",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Sagas",
+                "title": "Saga bouclée",
+                "description": "Voir tous les films sortis d'une saga"
+            }
+        }
+    },
+    {
+        "id": "saga_complete_5",
+        "title": "Saga Hunter",
+        "description": "Watch every released movie of 5 sagas",
+        "iconPath": "assets/achievements/saga_complete_5.png",
+        "type": "saga_complete",
+        "group": "saga_complete",
+        "tier": 2,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Chasseur de sagas",
+                "description": "Voir tous les films sortis de 5 sagas"
+            }
+        }
+    },
+    {
+        "id": "saga_complete_15",
+        "title": "Franchise Master",
+        "description": "Watch every released movie of 15 sagas",
+        "iconPath": "assets/achievements/saga_complete_15.png",
+        "type": "saga_complete",
+        "group": "saga_complete",
+        "tier": 3,
+        "params": {
+            "target": 15
+        },
+        "translations": {
+            "fr": {
+                "title": "Maître des franchises",
+                "description": "Voir tous les films sortis de 15 sagas"
+            }
+        }
+    },
+    {
+        "id": "watchlist_clear",
+        "title": "Clean Slate",
+        "description": "Have nothing left to watch in your watchlist (after at least 10 titles seen)",
+        "iconPath": "assets/achievements/watchlist_clear.png",
+        "type": "watchlist_clear",
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Table rase",
+                "description": "N'avoir plus rien à voir dans sa watchlist (après au moins 10 titres vus)"
+            }
+        }
     }
 ]

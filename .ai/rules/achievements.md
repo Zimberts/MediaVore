@@ -39,6 +39,9 @@ applyTo:
 - `genre` achievements use `params.genreId` (TMDB movie genre id), never a genre name.
   Seen items store genre names in the app language at the time; they are matched by id
   via `GenreUtils.getGenreIdByName`, which accepts any supported language.
+- `season_complete`, `series_complete`, `up_to_date`, `saga_complete` and
+  `watchlist_clear` read cached TMDB data through `AchievementMediaSource` (never the
+  network) and the watchlist; their persisted unlocks are sticky (see `ACHIEVEMENTS.md`).
 - Adding an achievement = editing the JSON. Evaluation is generic by `type`/`params`; never
   add id-specific code in `AchievementRepositoryImpl`.
 
