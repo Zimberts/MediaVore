@@ -442,6 +442,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
         actions: [
           IconButton(
             icon: Icon(_showSearch ? Icons.close : Icons.search),
+            tooltip: _showSearch
+                ? context.l10n.commonClose
+                : context.l10n.discoverySearchToggle,
             onPressed: () {
               setState(() {
                 if (_showSearch) {
@@ -463,6 +466,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
+            tooltip: context.l10n.discoveryFiltersTitle,
             onPressed: _openFilterDialog,
           ),
         ],
