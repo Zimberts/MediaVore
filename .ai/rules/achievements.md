@@ -22,7 +22,7 @@ applyTo:
 
 ## Fields
 
-- Entries follow `{ id, title, description, iconPath, type, group?, tier?, params, translations }`.
+- Entries follow `{ id, title, description, iconPath, type, group?, groupTitle?, tier?, params, translations }`.
   `iconPath` points into `assets/achievements/`. Keep icons alongside the JSON.
 - `title` / `description` are English. `translations` maps a language code to
   `{ title, description }` (e.g. `"fr": {...}`); the UI uses
@@ -32,6 +32,10 @@ applyTo:
 - `group` + `tier` mark levels of the same challenge (one card per group on the page).
   Tiers are 1..n, consecutive, in file order, with increasing targets. `tier` is not
   persisted, so inserting a level is safe; only `id` is.
+- The first tier of each group carries `groupTitle` (family name shown on the card) and
+  `translations.<code>.groupTitle`; other tiers don't.
+- Never raise the target of an existing id (unlocks are recomputed from history and
+  would be lost); lowering is fine.
 - `genre` achievements use `params.genreId` (TMDB movie genre id), never a genre name.
   Seen items store genre names in the app language at the time; they are matched by id
   via `GenreUtils.getGenreIdByName`, which accepts any supported language.

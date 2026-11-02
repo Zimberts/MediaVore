@@ -34,6 +34,14 @@ JSON example:
   consecutive, and follows increasing targets in file order. Omit both for a standalone
   achievement. `tier` is not persisted, so levels can be inserted (e.g. a new entry tier)
   without affecting existing unlocks.
+- `groupTitle` (first tier of a group only, required there): the family name shown on
+  the card (e.g. `"Horror movies"`), translated as `translations.<code>.groupTitle`.
+  Tier titles stay visible in the levels sheet. When a new first tier is inserted, move
+  `groupTitle` onto it.
+- Never raise an existing target: unlock state is recomputed from the history, so a
+  higher target would re-lock users who earned it. Lowering is safe (checked by the
+  definitions test). Ids are opaque: after a re-spacing a number in an id may no longer
+  match its target (see `runtime` below).
 - `params.target` (or `params.targetMinutes` for `runtime`) must be greater than 0.
 
 The repository loads the JSON at runtime (tests inject a loader during unit tests).
@@ -69,6 +77,11 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `weekend` | 15, 30, 50 |
 | `marathon` | 5, 10, 20, 50 |
 | `streak` | 7, 30, 365 days |
-| `runtime` | 1000 min, 100 h, 10000 min, 10 days, 1000 h, 100000 min, 1 year |
+| `runtime` | 10, 20, 50, 100, 200, 500, 1000, 2000, 5000 h, 1 year |
+
+Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
+kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),
+`runtime_10000` = 50 h (was 10000 min), `runtime_day_10` = 200 h (was 240 h),
+`runtime_100000` = 500 h (was 100000 min).
 
 For the up-to-date list, see the JSON asset.

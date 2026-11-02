@@ -20,6 +20,9 @@ class Achievement extends Equatable {
   /// 1-based level inside [group].
   final int? tier;
 
+  /// English name of the whole [group] (declared on its first tier only).
+  final String? groupTitle;
+
   const Achievement({
     required this.id,
     required this.title,
@@ -33,6 +36,7 @@ class Achievement extends Equatable {
     this.translations = const {},
     this.group,
     this.tier,
+    this.groupTitle,
   });
 
   /// [title] in [languageCode], falling back to the English definition.
@@ -42,6 +46,10 @@ class Achievement extends Equatable {
   /// [description] in [languageCode], falling back to the English definition.
   String descriptionFor(String languageCode) =>
       translations[languageCode]?['description'] ?? description;
+
+  /// [groupTitle] in [languageCode], falling back to the English name.
+  String? groupTitleFor(String languageCode) =>
+      translations[languageCode]?['groupTitle'] ?? groupTitle;
 
   @override
   List<Object?> get props => [
@@ -57,5 +65,6 @@ class Achievement extends Equatable {
     translations,
     group,
     tier,
+    groupTitle,
   ];
 }
