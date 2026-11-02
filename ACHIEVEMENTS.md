@@ -65,6 +65,12 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `up_to_date` | `target` | running series with every aired episode seen (current state) |
 | `saga_complete` | `target` | TMDB collections with every released part seen (2 released parts minimum) |
 | `watchlist_clear` | `target` | watchlist with no unseen title (series: caught up), once `target` titles are in the history |
+| `distinct_genres` | `target` | distinct genres among the views (stored genre names resolved to TMDB ids; movie and series genre ids) |
+| `distinct_countries` | `target` | distinct countries of origin (TMDB `origin_country`, else `production_countries`) among the titles seen |
+| `distinct_decades` | `target` | distinct release decades (first air date for a series) among the titles seen |
+| `released_before` | `year`, `target` | titles seen released strictly before `year` |
+| `tmdb_rating` | `minRating`, `minVotes`, `maxVotes` (each optional, inclusive), `target` | titles seen whose TMDB vote average / vote count are within the bounds |
+| `day_one` | `maxDelayDays` (default 0), `target` | movies (first view) and episodes seen on their TMDB release / air day, or at most `maxDelayDays` calendar days later |
 
 The last five types read TMDB data from the local cache only (season sizes, last aired
 episode, collection parts): a title absent from the cache does not count until its details
@@ -73,6 +79,18 @@ airs, a cache entry is purged, the watchlist grows), so once persisted their unl
 even if the current state no longer meets the target. A completion is dated by the first
 view of its last required episode or movie; `watchlist_clear` has no history and is dated
 when first observed.
+
+The diversity types count **titles** (a movie, or a series as soon as one episode is seen),
+dated by their first view, except `day_one` which also counts each episode. All but
+`distinct_genres` read the cached title (`origin_country`, `vote_count` are cached since
+#226: titles cached earlier count once their details are refreshed) and, for `day_one`
+episodes, the cached season (episode air dates). They are sticky like the collection types,
+since votes drift and the cache can be purged. `distinct_genres` uses the genres stored on
+the views and is recomputed from history only. TMDB `popularity` is not used: it is a
+short-term trending score, not a stable property of a title. `day_one` uses a one-day delay
+because TMDB air dates are in the broadcaster's time zone (a US evening airing is the next
+day in Europe); TMDB movie release dates are the primary (often world premiere) date, so a
+theatrical release in the user's country may come later and not count.
 
 ## Families (reference)
 
@@ -96,6 +114,14 @@ when first observed.
 | `up_to_date` | 1, 5, 10 |
 | `saga_complete` | 1, 5, 15 |
 | `watchlist_clear` (standalone) | 10 titles seen |
+| `countries` | 5, 15, 30 countries |
+| `genres` | 5, 10, 15 genres |
+| `decades` | 3, 5, 8 decades |
+| `classic` | 1, 10, 50 titles released before 1970 |
+| `day_one` | 1, 10, 50 (same day or the day after) |
+| `hidden_gem` | 1, 5, 20 titles rated ≥ 7.5 with 20 to 500 votes |
+| `blockbuster` | 5, 25, 100 titles with ≥ 10,000 votes |
+| `critics_taste` | 5, 25, 100 titles rated ≥ 8.0 with ≥ 1,000 votes |
 
 Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
 kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),

@@ -38,6 +38,13 @@ class _FakeMediaSource implements AchievementMediaSource {
     for (final id in movieIds)
       if (sagaData[id] != null) id: sagaData[id]!,
   };
+
+  @override
+  Future<Map<(int, String), TitleInfo>> titles(Set<(int, String)> keys) async =>
+      const {};
+
+  @override
+  Future<Map<int, String>?> episodeAirDates(int tvId, int season) async => null;
 }
 
 Map<String, dynamic> _def(String type, int target, {String? id}) => {

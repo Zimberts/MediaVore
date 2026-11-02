@@ -2251,5 +2251,477 @@
                 "description": "N'avoir plus rien à voir dans sa watchlist (après au moins 10 titres vus)"
             }
         }
+    },
+    {
+        "id": "countries_5",
+        "title": "Tourist",
+        "description": "Watch movies or series from 5 different countries",
+        "iconPath": "assets/achievements/countries_5.png",
+        "type": "distinct_countries",
+        "group": "countries",
+        "groupTitle": "Globetrotter",
+        "tier": 1,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Globe-trotteur",
+                "title": "Touriste",
+                "description": "Voir des films ou séries de 5 pays différents"
+            }
+        }
+    },
+    {
+        "id": "countries_15",
+        "title": "Globetrotter",
+        "description": "Watch movies or series from 15 different countries",
+        "iconPath": "assets/achievements/countries_15.png",
+        "type": "distinct_countries",
+        "group": "countries",
+        "tier": 2,
+        "params": {
+            "target": 15
+        },
+        "translations": {
+            "fr": {
+                "title": "Globe-trotteur",
+                "description": "Voir des films ou séries de 15 pays différents"
+            }
+        }
+    },
+    {
+        "id": "countries_30",
+        "title": "Citizen of the World",
+        "description": "Watch movies or series from 30 different countries",
+        "iconPath": "assets/achievements/countries_30.png",
+        "type": "distinct_countries",
+        "group": "countries",
+        "tier": 3,
+        "params": {
+            "target": 30
+        },
+        "translations": {
+            "fr": {
+                "title": "Citoyen du monde",
+                "description": "Voir des films ou séries de 30 pays différents"
+            }
+        }
+    },
+    {
+        "id": "genres_5",
+        "title": "Curious",
+        "description": "Watch movies or series of 5 different genres",
+        "iconPath": "assets/achievements/genres_5.png",
+        "type": "distinct_genres",
+        "group": "genres",
+        "groupTitle": "Eclectic",
+        "tier": 1,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Éclectique",
+                "title": "Curieux",
+                "description": "Voir des films ou séries de 5 genres différents"
+            }
+        }
+    },
+    {
+        "id": "genres_10",
+        "title": "Eclectic",
+        "description": "Watch movies or series of 10 different genres",
+        "iconPath": "assets/achievements/genres_10.png",
+        "type": "distinct_genres",
+        "group": "genres",
+        "tier": 2,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Éclectique",
+                "description": "Voir des films ou séries de 10 genres différents"
+            }
+        }
+    },
+    {
+        "id": "genres_15",
+        "title": "Omnivore",
+        "description": "Watch movies or series of 15 different genres",
+        "iconPath": "assets/achievements/genres_15.png",
+        "type": "distinct_genres",
+        "group": "genres",
+        "tier": 3,
+        "params": {
+            "target": 15
+        },
+        "translations": {
+            "fr": {
+                "title": "Omnivore",
+                "description": "Voir des films ou séries de 15 genres différents"
+            }
+        }
+    },
+    {
+        "id": "decades_3",
+        "title": "Time Tourist",
+        "description": "Watch movies or series released in 3 different decades",
+        "iconPath": "assets/achievements/decades_3.png",
+        "type": "distinct_decades",
+        "group": "decades",
+        "groupTitle": "Time Traveller",
+        "tier": 1,
+        "params": {
+            "target": 3
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Voyageur temporel",
+                "title": "Touriste du temps",
+                "description": "Voir des films ou séries sortis sur 3 décennies différentes"
+            }
+        }
+    },
+    {
+        "id": "decades_5",
+        "title": "Time Traveller",
+        "description": "Watch movies or series released in 5 different decades",
+        "iconPath": "assets/achievements/decades_5.png",
+        "type": "distinct_decades",
+        "group": "decades",
+        "tier": 2,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Voyageur temporel",
+                "description": "Voir des films ou séries sortis sur 5 décennies différentes"
+            }
+        }
+    },
+    {
+        "id": "decades_8",
+        "title": "Chronicler",
+        "description": "Watch movies or series released in 8 different decades",
+        "iconPath": "assets/achievements/decades_8.png",
+        "type": "distinct_decades",
+        "group": "decades",
+        "tier": 3,
+        "params": {
+            "target": 8
+        },
+        "translations": {
+            "fr": {
+                "title": "Chroniqueur",
+                "description": "Voir des films ou séries sortis sur 8 décennies différentes"
+            }
+        }
+    },
+    {
+        "id": "classic_1",
+        "title": "Old School",
+        "description": "Watch a movie or series released before 1970",
+        "iconPath": "assets/achievements/classic_1.png",
+        "type": "released_before",
+        "group": "classic",
+        "groupTitle": "Classics",
+        "tier": 1,
+        "params": {
+            "year": 1970,
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Classiques",
+                "title": "Old school",
+                "description": "Voir un film ou une série sorti avant 1970"
+            }
+        }
+    },
+    {
+        "id": "classic_10",
+        "title": "Classic Lover",
+        "description": "Watch 10 movies or series released before 1970",
+        "iconPath": "assets/achievements/classic_10.png",
+        "type": "released_before",
+        "group": "classic",
+        "tier": 2,
+        "params": {
+            "year": 1970,
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Amateur de classiques",
+                "description": "Voir 10 films ou séries sortis avant 1970"
+            }
+        }
+    },
+    {
+        "id": "classic_50",
+        "title": "Cinematheque",
+        "description": "Watch 50 movies or series released before 1970",
+        "iconPath": "assets/achievements/classic_50.png",
+        "type": "released_before",
+        "group": "classic",
+        "tier": 3,
+        "params": {
+            "year": 1970,
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Cinémathèque",
+                "description": "Voir 50 films ou séries sortis avant 1970"
+            }
+        }
+    },
+    {
+        "id": "day_one_1",
+        "title": "Day One",
+        "description": "Watch a movie or an episode on its release day (or the day after)",
+        "iconPath": "assets/achievements/day_one_1.png",
+        "type": "day_one",
+        "group": "day_one",
+        "groupTitle": "Day One",
+        "tier": 1,
+        "params": {
+            "maxDelayDays": 1,
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Jour J",
+                "title": "Jour J",
+                "description": "Voir un film ou un épisode le jour de sa sortie (ou le lendemain)"
+            }
+        }
+    },
+    {
+        "id": "day_one_10",
+        "title": "Early Bird",
+        "description": "Watch 10 movies or episodes on their release day (or the day after)",
+        "iconPath": "assets/achievements/day_one_10.png",
+        "type": "day_one",
+        "group": "day_one",
+        "tier": 2,
+        "params": {
+            "maxDelayDays": 1,
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "Lève-tôt",
+                "description": "Voir 10 films ou épisodes le jour de leur sortie (ou le lendemain)"
+            }
+        }
+    },
+    {
+        "id": "day_one_50",
+        "title": "Front Row",
+        "description": "Watch 50 movies or episodes on their release day (or the day after)",
+        "iconPath": "assets/achievements/day_one_50.png",
+        "type": "day_one",
+        "group": "day_one",
+        "tier": 3,
+        "params": {
+            "maxDelayDays": 1,
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Premier rang",
+                "description": "Voir 50 films ou épisodes le jour de leur sortie (ou le lendemain)"
+            }
+        }
+    },
+    {
+        "id": "hidden_gem_1",
+        "title": "Gem Finder",
+        "description": "Watch a title rated 7.5+ on TMDB with at most 500 votes",
+        "iconPath": "assets/achievements/hidden_gem_1.png",
+        "type": "tmdb_rating",
+        "group": "hidden_gem",
+        "groupTitle": "Hidden Gems",
+        "tier": 1,
+        "params": {
+            "minRating": 7.5,
+            "minVotes": 20,
+            "maxVotes": 500,
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Pépites cachées",
+                "title": "Dénicheur",
+                "description": "Voir un titre noté 7,5+ sur TMDB avec au plus 500 votes"
+            }
+        }
+    },
+    {
+        "id": "hidden_gem_5",
+        "title": "Gem Hunter",
+        "description": "Watch 5 titles rated 7.5+ on TMDB with at most 500 votes",
+        "iconPath": "assets/achievements/hidden_gem_5.png",
+        "type": "tmdb_rating",
+        "group": "hidden_gem",
+        "tier": 2,
+        "params": {
+            "minRating": 7.5,
+            "minVotes": 20,
+            "maxVotes": 500,
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Chasseur de pépites",
+                "description": "Voir 5 titres notés 7,5+ sur TMDB avec au plus 500 votes"
+            }
+        }
+    },
+    {
+        "id": "hidden_gem_20",
+        "title": "Treasure Keeper",
+        "description": "Watch 20 titles rated 7.5+ on TMDB with at most 500 votes",
+        "iconPath": "assets/achievements/hidden_gem_20.png",
+        "type": "tmdb_rating",
+        "group": "hidden_gem",
+        "tier": 3,
+        "params": {
+            "minRating": 7.5,
+            "minVotes": 20,
+            "maxVotes": 500,
+            "target": 20
+        },
+        "translations": {
+            "fr": {
+                "title": "Gardien du trésor",
+                "description": "Voir 20 titres notés 7,5+ sur TMDB avec au plus 500 votes"
+            }
+        }
+    },
+    {
+        "id": "blockbuster_5",
+        "title": "Crowd Pleaser",
+        "description": "Watch 5 titles with 10,000+ votes on TMDB",
+        "iconPath": "assets/achievements/blockbuster_5.png",
+        "type": "tmdb_rating",
+        "group": "blockbuster",
+        "groupTitle": "Blockbusters",
+        "tier": 1,
+        "params": {
+            "minVotes": 10000,
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Blockbusters",
+                "title": "Grand public",
+                "description": "Voir 5 titres avec au moins 10 000 votes sur TMDB"
+            }
+        }
+    },
+    {
+        "id": "blockbuster_25",
+        "title": "Blockbuster Fan",
+        "description": "Watch 25 titles with 10,000+ votes on TMDB",
+        "iconPath": "assets/achievements/blockbuster_25.png",
+        "type": "tmdb_rating",
+        "group": "blockbuster",
+        "tier": 2,
+        "params": {
+            "minVotes": 10000,
+            "target": 25
+        },
+        "translations": {
+            "fr": {
+                "title": "Fan de blockbusters",
+                "description": "Voir 25 titres avec au moins 10 000 votes sur TMDB"
+            }
+        }
+    },
+    {
+        "id": "blockbuster_100",
+        "title": "Box Office",
+        "description": "Watch 100 titles with 10,000+ votes on TMDB",
+        "iconPath": "assets/achievements/blockbuster_100.png",
+        "type": "tmdb_rating",
+        "group": "blockbuster",
+        "tier": 3,
+        "params": {
+            "minVotes": 10000,
+            "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Box-office",
+                "description": "Voir 100 titres avec au moins 10 000 votes sur TMDB"
+            }
+        }
+    },
+    {
+        "id": "critics_taste_5",
+        "title": "Discerning",
+        "description": "Watch 5 titles rated 8+ on TMDB (1,000+ votes)",
+        "iconPath": "assets/achievements/critics_taste_5.png",
+        "type": "tmdb_rating",
+        "group": "critics_taste",
+        "groupTitle": "Critic's Taste",
+        "tier": 1,
+        "params": {
+            "minRating": 8.0,
+            "minVotes": 1000,
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Goût du critique",
+                "title": "Exigeant",
+                "description": "Voir 5 titres notés 8+ sur TMDB (au moins 1 000 votes)"
+            }
+        }
+    },
+    {
+        "id": "critics_taste_25",
+        "title": "Connoisseur",
+        "description": "Watch 25 titles rated 8+ on TMDB (1,000+ votes)",
+        "iconPath": "assets/achievements/critics_taste_25.png",
+        "type": "tmdb_rating",
+        "group": "critics_taste",
+        "tier": 2,
+        "params": {
+            "minRating": 8.0,
+            "minVotes": 1000,
+            "target": 25
+        },
+        "translations": {
+            "fr": {
+                "title": "Connaisseur",
+                "description": "Voir 25 titres notés 8+ sur TMDB (au moins 1 000 votes)"
+            }
+        }
+    },
+    {
+        "id": "critics_taste_100",
+        "title": "Critic",
+        "description": "Watch 100 titles rated 8+ on TMDB (1,000+ votes)",
+        "iconPath": "assets/achievements/critics_taste_100.png",
+        "type": "tmdb_rating",
+        "group": "critics_taste",
+        "tier": 3,
+        "params": {
+            "minRating": 8.0,
+            "minVotes": 1000,
+            "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Critique",
+                "description": "Voir 100 titres notés 8+ sur TMDB (au moins 1 000 votes)"
+            }
+        }
     }
 ]

@@ -41,6 +41,18 @@ class AchievementRepositoryImpl implements AchievementRepository {
     'up_to_date',
     'saga_complete',
     'watchlist_clear',
+    ..._titleTypes,
+  };
+
+  /// Diversity types reading cached title metadata (countries, release date,
+  /// votes, air dates). Votes drift and cache entries can be purged, so they
+  /// are sticky too.
+  static const _titleTypes = {
+    'distinct_countries',
+    'distinct_decades',
+    'released_before',
+    'tmdb_rating',
+    'day_one',
   };
 
   // Definitions moved to `assets/achievements/definitions.json`.
@@ -61,6 +73,13 @@ class AchievementRepositoryImpl implements AchievementRepository {
     final completions = defMaps.any((d) => _stickyTypes.contains(d['type']))
         ? await _buildCompletions(chronologicalItems)
         : null;
+    final types = {for (final d in defMaps) d['type']};
+    final titles = types.any(_titleTypes.contains)
+        ? await _buildTitleData(
+            chronologicalItems,
+            withAirDates: types.contains('day_one'),
+          )
+        : null;
 
     return defMaps.map((def) {
       final id = def['id'] as String;
@@ -68,6 +87,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
         def,
         chronologicalItems,
         completions,
+        titles,
       );
       final persistedUnlockDate = unlockedMap[id];
       final calculatedUnlockDate = progressData.milestoneReachedAt;
@@ -166,6 +186,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
     Map<String, dynamic> def,
     List<SeenItemModel> seenItems,
     _Completions? completions,
+    _TitleData? titles,
   ) {
     final type = def['type'] as String? ?? '';
     final params = (def['params'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -238,6 +259,57 @@ class AchievementRepositoryImpl implements AchievementRepository {
       case 'watchlist_clear':
         if (completions == null) break;
         return _watchlistMilestone(completions, target);
+      case 'distinct_genres':
+        return _distinctMilestone([
+          for (final i in seenItems)
+            (
+              i.seenDate,
+              [
+                for (final name in i.genres ?? const <String>[])
+                  ?GenreUtils.getGenreIdByName(name),
+              ],
+            ),
+        ], target);
+      case 'distinct_countries':
+        return _distinctMilestone([
+          for (final t in titles?.titles ?? const <_SeenTitle>[])
+            (t.firstSeen, t.info.originCountries ?? const <String>[]),
+        ], target);
+      case 'distinct_decades':
+        return _distinctMilestone([
+          for (final t in titles?.titles ?? const <_SeenTitle>[])
+            (t.firstSeen, [if (t.info.year case final y?) y ~/ 10]),
+        ], target);
+      case 'released_before':
+        final year = params['year'] as int?;
+        if (year == null) break;
+        return _datesMilestone([
+          for (final t in titles?.titles ?? const <_SeenTitle>[])
+            if ((t.info.year ?? year) < year) t.firstSeen,
+        ], target);
+      case 'tmdb_rating':
+        final minRating = (params['minRating'] as num?)?.toDouble();
+        final minVotes = params['minVotes'] as int?;
+        final maxVotes = params['maxVotes'] as int?;
+        bool matches(TitleInfo i) {
+          final rating = i.voteAverage;
+          final votes = i.voteCount;
+          if (rating == null || votes == null) return false;
+          return (minRating == null || rating >= minRating) &&
+              (minVotes == null || votes >= minVotes) &&
+              (maxVotes == null || votes <= maxVotes);
+        }
+        return _datesMilestone([
+          for (final t in titles?.titles ?? const <_SeenTitle>[])
+            if (matches(t.info)) t.firstSeen,
+        ], target);
+      case 'day_one':
+        final maxDelay = params['maxDelayDays'] as int? ?? 0;
+        return _datesMilestone([
+          for (final (release, seen)
+              in titles?.releases ?? const <(String, DateTime)>[])
+            if (_isWithinDays(release, seen, maxDelay)) seen,
+        ], target);
     }
 
     debugPrint('Achievement ${def['id']}: cannot evaluate type "$type"');
@@ -538,6 +610,87 @@ class AchievementRepositoryImpl implements AchievementRepository {
     );
   }
 
+  /// Seen titles with their cached metadata and, when [withAirDates], the
+  /// release / air date of each movie and episode seen.
+  Future<_TitleData> _buildTitleData(
+    List<SeenItemModel> items, {
+    required bool withAirDates,
+  }) async {
+    final source = mediaSource;
+    if (source == null) return const _TitleData([], []);
+
+    // First view of each title and episode (items are chronological).
+    final firstSeen = <(int, String), DateTime>{};
+    final episodes = <(int, int, int), DateTime>{};
+    for (final i in items) {
+      firstSeen.putIfAbsent((i.tmdbId, i.type), () => i.seenDate);
+      if (i.type == 'tv' && i.seasonNumber != null && i.episodeNumber != null) {
+        episodes.putIfAbsent((
+          i.tmdbId,
+          i.seasonNumber!,
+          i.episodeNumber!,
+        ), () => i.seenDate);
+      }
+    }
+
+    final infos = await source.titles(firstSeen.keys.toSet());
+    final titles = [
+      for (final MapEntry(key: key, value: date) in firstSeen.entries)
+        if (infos[key] case final info?) _SeenTitle(date, info),
+    ];
+    if (!withAirDates) return _TitleData(titles, const []);
+
+    final releases = <(String, DateTime)>[
+      for (final MapEntry(key: (id, type), value: date) in firstSeen.entries)
+        if (type == 'movie' && infos[(id, type)] != null)
+          (infos[(id, type)]!.releaseDate, date),
+    ];
+    final airDates = <(int, int), Map<int, String>?>{};
+    for (final MapEntry(key: (show, season, episode), value: date)
+        in episodes.entries) {
+      final key = (show, season);
+      final dates = airDates.containsKey(key)
+          ? airDates[key]
+          : airDates[key] = await source.episodeAirDates(show, season);
+      final airDate = dates?[episode];
+      if (airDate != null) releases.add((airDate, date));
+    }
+    return _TitleData(titles, releases);
+  }
+
+  /// [seen] falls on the calendar day of [releaseDate] (`yyyy-mm-dd`) or at
+  /// most [maxDays] days later. Calendar days are compared in UTC so a DST
+  /// change does not shift the difference.
+  static bool _isWithinDays(String releaseDate, DateTime seen, int maxDays) {
+    final release = DateTime.tryParse(releaseDate);
+    if (release == null) return false;
+    final delay = DateTime.utc(
+      seen.year,
+      seen.month,
+      seen.day,
+    ).difference(DateTime.utc(release.year, release.month, release.day)).inDays;
+    return delay >= 0 && delay <= maxDays;
+  }
+
+  /// [target] distinct values, reached when the [target]-th new value appears.
+  /// [entries] are (date, values) pairs in chronological order.
+  static _ProgressData _distinctMilestone(
+    List<(DateTime, Iterable<Object>)> entries,
+    int target,
+  ) {
+    final seen = <Object>{};
+    DateTime? reachedAt;
+    for (final (date, values) in entries) {
+      seen.addAll(values);
+      if (reachedAt == null && seen.length >= target) reachedAt = date;
+    }
+    return _ProgressData(
+      (seen.length / target).clamp(0.0, 1.0),
+      '${seen.length}/$target',
+      milestoneReachedAt: reachedAt,
+    );
+  }
+
   /// Latest of [dates], or null if one is missing.
   static DateTime? _allSeenAt(List<DateTime?> dates) {
     DateTime? latest;
@@ -593,6 +746,22 @@ class _Completions {
     required this.watchlistSize,
     required this.watchlistDone,
   });
+}
+
+class _SeenTitle {
+  final DateTime firstSeen;
+  final TitleInfo info;
+  const _SeenTitle(this.firstSeen, this.info);
+}
+
+class _TitleData {
+  /// Seen titles with cached metadata, by first view.
+  final List<_SeenTitle> titles;
+
+  /// (release or air date, first view) of each movie and episode seen.
+  final List<(String, DateTime)> releases;
+
+  const _TitleData(this.titles, this.releases);
 }
 
 class _ProgressData {

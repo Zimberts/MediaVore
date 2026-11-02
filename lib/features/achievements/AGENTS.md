@@ -12,7 +12,7 @@ Tracks earned achievements (full `data` + `domain` + `presentation` layering).
   `group`; the page shows one card per family)
 - `lib/features/achievements/presentation/providers/achievement_provider.dart`
 - `lib/features/achievements/data/datasources/achievement_media_source.dart` (cached
-  season sizes and sagas for the collection types; local reads only)
+  season sizes, sagas, title metadata and episode air dates; local reads only)
 
 ## Gotchas
 
@@ -24,7 +24,9 @@ Tracks earned achievements (full `data` + `domain` + `presentation` layering).
   A family card shows `family.titleFor(...)` (the `groupTitle` of its first tier).
 - Collection types (`season_complete`, `series_complete`, `up_to_date`, `saga_complete`,
   `watchlist_clear`) can regress, so a persisted unlock of these types stays unlocked
-  (`_stickyTypes` in the repository). Other types are recomputed from history only.
+  (`_stickyTypes` in the repository). So do the cache-based diversity types
+  (`_titleTypes`: countries, decades, release year, TMDB rating, day one). Other types
+  are recomputed from history only.
 - `AchievementProvider` persists every newly unlocked tier but notifies only the highest
   tier per family in a batch.
 - `achievement_model.dart` has a generated `part 'achievement_model.g.dart'`; never
