@@ -150,12 +150,17 @@ class DataCacheSettingsPage extends StatelessWidget {
                               title: Text(context.l10n.dataShareViaSystem),
                               onTap: () async {
                                 Navigator.pop(saveSheetContext);
-                                await Share.shareXFiles([
+                                final shared = await Share.shareXFiles([
                                   XFile(
                                     tempFile.path,
                                     mimeType: 'application/octet-stream',
                                   ),
                                 ], text: context.l10n.dataExportShareText);
+                                // `unavailable`: the platform cannot tell.
+                                if (shared.status !=
+                                    ShareResultStatus.dismissed) {
+                                  await achievementProvider.recordExport();
+                                }
                               },
                             ),
                           ],
@@ -295,6 +300,7 @@ class DataCacheSettingsPage extends StatelessWidget {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(context.l10n.dataFileSaved)));
+        await context.read<AchievementProvider>().recordExport();
       }
     } catch (e) {
       if (context.mounted) {

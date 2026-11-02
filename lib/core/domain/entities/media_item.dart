@@ -56,6 +56,10 @@ class MediaItem extends Equatable {
   /// ISO 3166-1 codes of the countries of origin (TMDB `origin_country`, or
   /// `production_countries` when absent). Null when TMDB did not report them.
   final List<String>? originCountries;
+
+  /// ISO 639-1 code of the original language (TMDB `original_language`;
+  /// `xx` = no linguistic content). Null when TMDB did not report it.
+  final String? originalLanguage;
   final int? runtime;
   final List<TVSeason>? seasons;
   final String? nextEpisodeAirDate;
@@ -81,6 +85,7 @@ class MediaItem extends Equatable {
     this.voteAverage,
     this.voteCount,
     this.originCountries,
+    this.originalLanguage,
     this.runtime,
     this.seasons,
     this.nextEpisodeAirDate,
@@ -154,6 +159,7 @@ class MediaItem extends Equatable {
       voteAverage: (json['vote_average'] as num?)?.toDouble(),
       voteCount: (json['vote_count'] as num?)?.toInt(),
       originCountries: _parseOriginCountries(json),
+      originalLanguage: json['original_language'] as String?,
       runtime: _parseRuntime(json),
       seasons: seasonsList,
       nextEpisodeAirDate: nextAirDate,
@@ -236,6 +242,7 @@ class MediaItem extends Equatable {
       'vote_average': voteAverage,
       'vote_count': voteCount,
       'origin_country': originCountries,
+      'original_language': originalLanguage,
       'runtime': runtime,
       'seasons': seasons?.map((s) => s.toJson()).toList(),
       'next_episode_to_air': nextEpisodeAirDate != null
@@ -269,6 +276,7 @@ class MediaItem extends Equatable {
     double? voteAverage,
     int? voteCount,
     List<String>? originCountries,
+    String? originalLanguage,
     int? runtime,
     List<TVSeason>? seasons,
     String? nextEpisodeAirDate,
@@ -294,6 +302,7 @@ class MediaItem extends Equatable {
       voteAverage: voteAverage ?? this.voteAverage,
       voteCount: voteCount ?? this.voteCount,
       originCountries: originCountries ?? this.originCountries,
+      originalLanguage: originalLanguage ?? this.originalLanguage,
       runtime: runtime ?? this.runtime,
       seasons: seasons ?? this.seasons,
       nextEpisodeAirDate: nextEpisodeAirDate ?? this.nextEpisodeAirDate,
@@ -339,6 +348,7 @@ class MediaItem extends Equatable {
     voteAverage,
     voteCount,
     originCountries,
+    originalLanguage,
     runtime,
     seasons,
     nextEpisodeAirDate,

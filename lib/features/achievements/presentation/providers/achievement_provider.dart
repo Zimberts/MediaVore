@@ -48,6 +48,13 @@ class AchievementProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Logs a completed export (backup) and re-evaluates the achievements; the
+  /// export log is not watched.
+  Future<void> recordExport() async {
+    await _repository.recordExport(DateTime.now());
+    await refresh();
+  }
+
   Future<void> clearAchievements() async {
     _notifiedIds.clear();
     await _repository.clearAchievements();

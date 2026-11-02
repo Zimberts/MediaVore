@@ -132,6 +132,9 @@ void main() {
         'calendar_date',
         'movie_runtime',
         'series_seasons',
+        'backup_export',
+        'list_items',
+        'distinct_languages',
       };
       for (final def in defs) {
         final params = Map<String, dynamic>.from(def['params'] as Map);

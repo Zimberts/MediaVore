@@ -50,6 +50,9 @@ applyTo:
   history only; they are not sticky.
 - Duration types (`movie_runtime` with `params.minMinutes` / `maxMinutes`,
   `series_seasons`) use the history only; they are not sticky.
+- App usage types: `backup_export` reads `ExportLog` (exports logged by the data page,
+  one per day; not sticky), `list_items` counts the titles in every list (sticky, dated
+  when observed), `distinct_languages` reads the cached `original_language` (sticky).
 - Adding an achievement = editing the JSON. Evaluation is generic by `type`/`params`; never
   add id-specific code in `AchievementRepositoryImpl`.
 

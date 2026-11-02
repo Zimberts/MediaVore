@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/features/achievements/data/datasources/achievement_media_source.dart';
+import 'package:mediavore/features/achievements/data/datasources/export_log.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
@@ -25,11 +26,15 @@ class AchievementRepositoryImpl implements AchievementRepository {
   /// Cached TMDB data for the collection types; without it they stay at 0.
   final AchievementMediaSource? mediaSource;
 
+  /// Export dates for `backup_export`; without it that type stays at 0.
+  final ExportLog? exportLog;
+
   AchievementRepositoryImpl(
     this._isar,
     this._localDataSource, {
     this.definitionsLoader,
     this.mediaSource,
+    this.exportLog,
   });
 
   /// Types that depend on cached TMDB data or on the current watchlist rather
@@ -41,6 +46,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
     'up_to_date',
     'saga_complete',
     'watchlist_clear',
+    'list_items',
     ..._titleTypes,
   };
 
@@ -53,6 +59,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
     'released_before',
     'tmdb_rating',
     'day_one',
+    'distinct_languages',
   };
 
   // Definitions moved to `assets/achievements/definitions.json`.
@@ -80,6 +87,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
             withAirDates: types.contains('day_one'),
           )
         : null;
+    final usage = await _buildUsageData(types);
 
     return defMaps.map((def) {
       final id = def['id'] as String;
@@ -88,6 +96,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
         chronologicalItems,
         completions,
         titles,
+        usage,
       );
       final persistedUnlockDate = unlockedMap[id];
       final calculatedUnlockDate = progressData.milestoneReachedAt;
@@ -133,6 +142,11 @@ class AchievementRepositoryImpl implements AchievementRepository {
         );
       }
     });
+  }
+
+  @override
+  Future<void> recordExport(DateTime at) async {
+    await exportLog?.record(at);
   }
 
   @override
@@ -187,6 +201,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
     List<SeenItemModel> seenItems,
     _Completions? completions,
     _TitleData? titles,
+    _UsageData usage,
   ) {
     final type = def['type'] as String? ?? '';
     final params = (def['params'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -317,6 +332,28 @@ class AchievementRepositoryImpl implements AchievementRepository {
               in titles?.releases ?? const <(String, DateTime)>[])
             if (_isWithinDays(release, seen, maxDelay)) seen,
         ], target);
+      case 'distinct_languages':
+        return _distinctMilestone([
+          for (final t in titles?.titles ?? const <_SeenTitle>[])
+            (
+              t.firstSeen,
+              [
+                if (t.info.originalLanguage case final l?)
+                  if (l.isNotEmpty && l != 'xx') l,
+              ],
+            ),
+        ], target);
+      case 'backup_export':
+        return _datesMilestone(usage.exportDays, target);
+      case 'list_items':
+        final count = usage.listTitles;
+        if (count == null) break;
+        // Current state, no history: dated when observed.
+        return _ProgressData(
+          (count / target).clamp(0.0, 1.0),
+          '$count/$target',
+          milestoneReachedAt: count >= target ? DateTime.now() : null,
+        );
       case 'movie_runtime':
         final minMinutes = params['minMinutes'] as int?;
         final maxMinutes = params['maxMinutes'] as int?;
@@ -786,6 +823,29 @@ class AchievementRepositoryImpl implements AchievementRepository {
     );
   }
 
+  /// Export days and distinct titles in the lists, read only when a
+  /// definition of [types] needs them.
+  Future<_UsageData> _buildUsageData(Set<Object?> types) async {
+    final exportDays = types.contains('backup_export')
+        ? await exportLog?.dates() ?? const <DateTime>[]
+        : const <DateTime>[];
+    int? listTitles;
+    if (types.contains('list_items')) {
+      try {
+        final titles = <(int, String)>{};
+        for (final name in await _localDataSource.getAllListNames()) {
+          for (final item in await _localDataSource.getListItems(name)) {
+            titles.add((item.id, item.type));
+          }
+        }
+        listTitles = titles.length;
+      } catch (e) {
+        debugPrint('Achievements: lists unavailable: $e');
+      }
+    }
+    return _UsageData(exportDays, listTitles);
+  }
+
   /// Seen titles with their cached metadata and, when [withAirDates], the
   /// release / air date of each movie and episode seen.
   Future<_TitleData> _buildTitleData(
@@ -938,6 +998,16 @@ class _TitleData {
   final List<(String, DateTime)> releases;
 
   const _TitleData(this.titles, this.releases);
+}
+
+class _UsageData {
+  /// First export of each calendar day with an export.
+  final List<DateTime> exportDays;
+
+  /// Distinct titles over every list (watchlist included); null when unread.
+  final int? listTitles;
+
+  const _UsageData(this.exportDays, this.listTitles);
 }
 
 class _ProgressData {

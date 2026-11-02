@@ -387,6 +387,7 @@ void main() {
           releaseDate: '1999-01-01',
           voteAverage: 7.0,
           voteCount: 50,
+          originalLanguage: 'fr',
         );
         when(() => cache.getItems(any())).thenAnswer((_) async => [listRow]);
         when(() => cache.getDetails(1, MediaType.movie)).thenAnswer(
