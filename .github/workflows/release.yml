@@ -52,7 +52,7 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
 
   android:
-    name: Build Android APK
+    name: Build Android APK + AAB
     needs: [checks, release-please]
     # release-please is skipped on workflow_dispatch: `!cancelled()` keeps this job alive then.
     if: >-
@@ -112,8 +112,11 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload-keystore.jks"
 
       # Unique, increasing build number (versionCode / CFBundleVersion); the +N in pubspec.yaml is ignored.
-      - name: Build APK
-        run: flutter build apk --release --build-number "$BUILD_NUMBER"
+      # APK = GitHub release download (#239), AAB = Play Store upload (#242). Same build number.
+      - name: Build APK and AAB
+        run: |
+          flutter build apk --release --build-number "$BUILD_NUMBER"
+          flutter build appbundle --release --build-number "$BUILD_NUMBER"
         env:
           BUILD_NUMBER: ${{ github.run_number }}
           MEDIAVORE_KEYSTORE_PATH: ${{ runner.temp }}/upload-keystore.jks
@@ -121,9 +124,31 @@ jobs:
           MEDIAVORE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           MEDIAVORE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Upload APK artifact
+      # Android 15+ / Google Play: native libraries must support 16 KB pages.
+      - name: Check 16 KB page alignment
+        run: |
+          tool/check_16kb_alignment.sh build/app/outputs/flutter-apk/app-release.apk
+          tool/check_16kb_alignment.sh build/app/outputs/bundle/release/app-release.aab
+
+      - name: Collect artifacts and SHA-256
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/bundle/release/app-release.aab dist/
+          cd dist
+          # Bare file names, so `sha256sum -c app-release.apk.sha256` works next to the download.
+          for f in app-release.apk app-release.aab; do sha256sum "$f" > "$f.sha256"; done
+          {
+            echo "### Android release artifacts (build ${{ github.run_number }})"
+            echo '```'
+            cat ./*.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Consumed by the GitHub release job (#239) and the Play Store job (#242) of this run.
+      - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mediavore-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: mediavore-android-release
+          path: dist/
+          if-no-files-found: error
           retention-days: 7
