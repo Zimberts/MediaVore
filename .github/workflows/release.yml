@@ -158,7 +158,7 @@ jobs:
 
       # Consumed by the github-release job (#239) and the Play Store job (#242) of this run.
       - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mediavore-android-release
           path: dist/
@@ -369,7 +369,7 @@ jobs:
 
       # Kept so that a failed upload can be retried by hand (Transporter) without rebuilding.
       - name: Upload iOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mediavore-ios-release
           path: dist/
