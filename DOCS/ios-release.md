@@ -80,7 +80,57 @@ already uploaded for the same version; `ExportOptions.plist` sets
 
 ## CI
 
-The release workflow (#241) copies `ios/ExportOptions.plist` and overrides `signingStyle`
-(`manual`), `signingCertificate` and `provisioningProfiles`, using the distribution
-certificate and App Store profile stored as secrets, then uploads the `.ipa` with the
-`ASC_*` key above.
+The `ios` job of `.github/workflows/release.yml` (#241) runs after analyze/test, on the run
+that creates a release tag (and on *Run workflow*, see `DOCS/releasing.md`). It:
+
+1. imports the Apple Distribution certificate into a temporary keychain and installs the App
+   Store profile; `tool/ios_signing.py check-profile` fails the job early if the profile is not
+   an App Store profile for `fr.zimberts.mediavore`, is expired, or does not contain the
+   certificate (warning 30 days before expiry);
+2. switches the `Runner` target's Release configuration to manual signing
+   (`tool/ios_manual_signing.rb`, CI only) and copies `ios/ExportOptions.plist` with
+   `signingStyle = manual`, `signingCertificate` and `provisioningProfiles` overridden
+   (`tool/ios_signing.py export-options`); CI has no Apple ID for automatic signing;
+3. runs `flutter build ipa --release --build-number <run_number>`, publishes the IPA and its
+   SHA-256 as the artifact `mediavore-ios-release` (7 days, for a manual re-upload with
+   Transporter), and uploads it with `xcrun altool` and the `ASC_*` key;
+4. deletes the keychain, profile and API key, even on failure.
+
+The runner must have an Xcode recent enough for App Store Connect (`MIN_XCODE_MAJOR` in the
+job; Apple raises the minimum SDK every spring): bump `runs-on` when the check fails.
+
+### Signing secrets (repository admin, once a year)
+
+| Secret | Value |
+| --- | --- |
+| `IOS_DIST_CERT_P12_BASE64` | Apple Distribution certificate + private key, `.p12`, base64 |
+| `IOS_DIST_CERT_PASSWORD` | password of that `.p12` |
+| `IOS_PROVISIONING_PROFILE_BASE64` | App Store profile (`.mobileprovision`), base64 |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_PRIVATE_KEY` | API key, see step 3 above |
+
+1. **Certificate**: Xcode → *Settings → Accounts* → team `E5L7NC8M9T` → *Manage Certificates*
+   → *+* → *Apple Distribution* (or reuse the existing one; a team has at most 3). In
+   *Keychain Access → My Certificates*, right-click *Apple Distribution: …* (with its key) →
+   *Export* → `.p12` with a strong password.
+2. **Profile**: [Profiles → +](https://developer.apple.com/account/resources/profiles/add) →
+   *Distribution / App Store Connect* → App ID `fr.zimberts.mediavore` → that certificate →
+   name e.g. `MediaVore App Store` → download the `.mobileprovision`.
+3. **Store them** (on a Mac, with `gh` logged in as a repo admin; checks everything locally,
+   with the same checks as CI, before writing anything):
+
+   ```bash
+   tool/setup_ios_signing_secrets.sh dist.p12 MediaVore_App_Store.mobileprovision \
+     AuthKey_XXXXXXXXXX.p8 <issuer-id>
+   ```
+
+4. Test with *Actions → Release → Run workflow* (`testflight` unchecked: build and signing
+   only), then once with `testflight` checked.
+
+The profile expires after one year and the certificate after one year as well: regenerate the
+profile (and the certificate if needed) and run the script again. Never commit these files.
+
+### Build number
+
+TestFlight rejects a build number already uploaded for the same version. The number is the
+`release.yml` run number, shared with Android; if App Store Connect already holds builds with
+a higher number for the current version, add an offset in the *Build IPA* step.
