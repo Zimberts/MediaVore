@@ -235,7 +235,6 @@ jobs:
       BUNDLE_ID: fr.zimberts.mediavore
       # App Store Connect only accepts uploads built with a recent SDK (raised every spring).
       MIN_XCODE_MAJOR: 26
-      KEYCHAIN_PATH: ${{ runner.temp }}/mediavore-signing.keychain-db
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -280,9 +279,11 @@ jobs:
           fi
 
       # Temporary keychain with the Apple Distribution certificate, plus the App Store profile.
-      # Deleted by the last step, even on failure.
+      # Deleted by the last step, even on failure. KEYCHAIN_PATH is set per step: the `runner`
+      # context does not exist in a job-level `env` (the whole workflow file would be rejected).
       - name: Install certificate and provisioning profile
         env:
+          KEYCHAIN_PATH: ${{ runner.temp }}/mediavore-signing.keychain-db
           IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
           IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
@@ -394,6 +395,8 @@ jobs:
 
       - name: Remove signing material
         if: always()
+        env:
+          KEYCHAIN_PATH: ${{ runner.temp }}/mediavore-signing.keychain-db
         run: |
           security delete-keychain "$KEYCHAIN_PATH" 2> /dev/null || true
           if [ -n "${IOS_PROFILE_UUID:-}" ]; then
