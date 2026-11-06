@@ -59,6 +59,8 @@ jobs:
       !cancelled() && needs.checks.result == 'success' &&
       (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ needs.release-please.outputs.tag_name || (github.ref_type == 'tag' && github.ref_name || '') }}
     env:
       # Tag being released, or the dispatched tag; empty for a test build of a branch.
       RELEASE_TAG: ${{ needs.release-please.outputs.tag_name || (github.ref_type == 'tag' && github.ref_name || '') }}
@@ -144,7 +146,7 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Consumed by the GitHub release job (#239) and the Play Store job (#242) of this run.
+      # Consumed by the github-release job (#239) and the Play Store job (#242) of this run.
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -152,3 +154,59 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 7
+
+  github-release:
+    name: Attach APK to GitHub release
+    needs: android
+    # The release itself (tag + notes = changelog section) is created by release-please. A manual
+    # run on a tag re-attaches the APK to that tag's existing release (e.g. after a failed upload).
+    if: needs.android.outputs.release_tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # release assets and notes
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ needs.android.outputs.release_tag }}
+    steps:
+      - name: Download Android artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mediavore-android-release
+          path: dist
+
+      - name: Verify SHA-256
+        working-directory: dist
+        run: sha256sum -c app-release.apk.sha256
+
+      # Named after the tag so downloads of different versions don't collide; the checksum file
+      # keeps the name it hashes (`sha256sum -c` needs the downloaded file name).
+      - name: Upload APK and checksum
+        run: |
+          apk="mediavore-$RELEASE_TAG.apk"
+          cp dist/app-release.apk "dist/$apk"
+          (cd dist && sha256sum "$apk" > "$apk.sha256")
+          # --clobber: a re-run replaces the assets instead of failing.
+          gh release upload "$RELEASE_TAG" "dist/$apk" "dist/$apk.sha256" --clobber
+
+      # Appended once: a re-run finds the marker and leaves the notes alone.
+      - name: Add checksum to release notes
+        run: |
+          marker='<!-- mediavore-android-sha256 -->'
+          gh release view "$RELEASE_TAG" --json body --jq .body > notes.md
+          if grep -qF "$marker" notes.md; then
+            echo "Checksum already in the release notes."
+            exit 0
+          fi
+          {
+            echo
+            echo "$marker"
+            echo "### Android APK"
+            echo
+            echo "SHA-256 (check with \`sha256sum -c mediavore-$RELEASE_TAG.apk.sha256\`):"
+            echo
+            echo '```'
+            cat "dist/mediavore-$RELEASE_TAG.apk.sha256"
+            echo '```'
+          } >> notes.md
+          gh release edit "$RELEASE_TAG" --notes-file notes.md
