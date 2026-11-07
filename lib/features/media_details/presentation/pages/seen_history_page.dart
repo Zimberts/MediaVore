@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -144,7 +145,9 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: Text(context.l10n.commonRemove),
           ),
         ],
@@ -380,10 +383,13 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                   key: Key('seen_${seenItem.id}'),
                   direction: DismissDirection.endToStart,
                   background: Container(
-                    color: Colors.red,
+                    color: context.appColors.error,
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
+                    child: Icon(
+                      Icons.delete,
+                      color: contrastingForeground(context.appColors.error),
+                    ),
                   ),
                   confirmDismiss: (direction) {
                     if (_viewMode == SeenViewMode.library) {
