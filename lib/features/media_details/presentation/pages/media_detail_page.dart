@@ -125,10 +125,36 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   List<SeenItem> _seenStatus = [];
   bool _isOffline = false;
 
+  // The seen counters are derived from [_seenStatus], a per-item snapshot.
+  // Every seen-history mutation in [SearchProvider] (markAsSeen,
+  // deleteSeenEntry, removeFromSeen, ...) ends with loadAllSeenStatus(),
+  // which replaces the `seenItems` list. Listening for that replacement
+  // keeps the counters in sync with every entry point (Watch Next, the
+  // episode SeenManager, history deletion), see #209.
+  late final SearchProvider _searchProvider;
+  List<SeenItem>? _lastSeenItems;
+  int _seenStatusRequest = 0;
+
   @override
   void initState() {
     super.initState();
+    _searchProvider = context.read<SearchProvider>();
+    _lastSeenItems = _searchProvider.seenItems;
+    _searchProvider.addListener(_onSearchProviderChanged);
     _fetchMediaDetails();
+    _fetchSeenStatus();
+  }
+
+  @override
+  void dispose() {
+    _searchProvider.removeListener(_onSearchProviderChanged);
+    super.dispose();
+  }
+
+  void _onSearchProviderChanged() {
+    final seenItems = _searchProvider.seenItems;
+    if (identical(seenItems, _lastSeenItems)) return;
+    _lastSeenItems = seenItems;
     _fetchSeenStatus();
   }
 
@@ -166,12 +192,14 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   }
 
   Future<void> _fetchSeenStatus() async {
-    final provider = context.read<SearchProvider>();
-    final status = await provider.loadSeenStatusForItem(
+    // Only the latest request may write, so overlapping refreshes (e.g. a
+    // quick double tap on Watch Next) cannot leave an older snapshot.
+    final request = ++_seenStatusRequest;
+    final status = await _searchProvider.loadSeenStatusForItem(
       widget.item.id,
       widget.item.mediaType,
     );
-    if (mounted) {
+    if (mounted && request == _seenStatusRequest) {
       setState(() {
         _seenStatus = status;
       });
