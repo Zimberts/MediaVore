@@ -1250,6 +1250,18 @@ abstract class AppLocalizations {
   /// **'Select Period'**
   String get statsSelectPeriod;
 
+  /// No description provided for @statsPreviousPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous period'**
+  String get statsPreviousPeriod;
+
+  /// No description provided for @statsNextPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Next period'**
+  String get statsNextPeriod;
+
   /// No description provided for @statsTotalWatchTime.
   ///
   /// In en, this message translates to:
@@ -1585,6 +1597,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search within Discovery...'**
   String get discoverySearchHint;
+
+  /// No description provided for @discoverySearchToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Discovery'**
+  String get discoverySearchToggle;
 
   /// No description provided for @discoveryTitle.
   ///
