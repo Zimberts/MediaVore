@@ -17,23 +17,29 @@ class MediaRemoteDataSource {
   /// Supplies the `language` sent with every TMDB request.
   final LocaleService locale;
 
-  String get _apiCredential {
-    final raw = credentials.credential.trim();
-    if (raw.toLowerCase().startsWith('bearer ')) {
-      return raw.substring(7).trim();
+  /// Strips an optional `Bearer ` prefix from a pasted credential.
+  static String _normalizeCredential(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.toLowerCase().startsWith('bearer ')) {
+      return trimmed.substring(7).trim();
     }
-    return raw;
+    return trimmed;
   }
 
   bool _isV3ApiKey(String credential) =>
       RegExp(r'^[a-fA-F0-9]{32}$').hasMatch(credential);
 
+  /// GETs [url] authenticated with the stored credential, or with
+  /// [credential] when given (used to check a key before saving it).
   Future<Response<dynamic>> _tmdbGet(
     String url, {
     Map<String, dynamic>? queryParameters,
+    String? credential,
   }) {
-    final credential = _apiCredential;
-    if (credential.isEmpty) {
+    final apiCredential = _normalizeCredential(
+      credential ?? credentials.credential,
+    );
+    if (apiCredential.isEmpty) {
       throw const ConfigurationException(
         'TMDB API credential is missing. Add a v3 API key or v4 read token in Settings.',
       );
@@ -43,15 +49,15 @@ class MediaRemoteDataSource {
       'language': locale.tmdbLanguage,
       ...?queryParameters,
     };
-    final useV3ApiKey = _isV3ApiKey(credential);
+    final useV3ApiKey = _isV3ApiKey(apiCredential);
 
     if (useV3ApiKey) {
-      params['api_key'] = credential;
+      params['api_key'] = apiCredential;
     }
 
     final options = useV3ApiKey
         ? null
-        : Options(headers: {'Authorization': 'Bearer $credential'});
+        : Options(headers: {'Authorization': 'Bearer $apiCredential'});
 
     return dio.get(
       url,
@@ -122,6 +128,21 @@ class MediaRemoteDataSource {
     } catch (e) {
       throw ParsingException('Failed to parse response while $action', e);
     }
+  }
+
+  /// Checks [credential] (v3 API key or v4 read token) against TMDB's
+  /// `/authentication` endpoint without storing it.
+  ///
+  /// Completes when TMDB accepts it. Throws [ConfigurationException] when it
+  /// is empty, [ServerException] with status 401 when TMDB rejects it, and
+  /// [NetworkException] when TMDB can't be reached.
+  Future<void> validateCredential(String credential) {
+    return _guard('validating the TMDB credential', () async {
+      await _tmdbGet(
+        'https://api.themoviedb.org/3/authentication',
+        credential: credential,
+      );
+    });
   }
 
   /// Searches for movies and series on the TMDB API, supporting optional filters.

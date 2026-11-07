@@ -28,11 +28,18 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounce;
   final ScrollController _scrollController = ScrollController();
+  late final SettingsProvider _settings;
+  late String _credential;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // Reload once a TMDB credential is saved (first-launch screen or
+    // Settings), so a stale "missing key" error doesn't stay on screen.
+    _settings = context.read<SettingsProvider>();
+    _credential = _settings.tmdbApiKey;
+    _settings.addListener(_onSettingsChanged);
     widget.searchTrigger?.addListener(_handleSearchTrigger);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshDiscovery();
@@ -55,6 +62,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     _searchFocusNode.dispose();
     _scrollController.dispose();
     widget.searchTrigger?.removeListener(_handleSearchTrigger);
+    _settings.removeListener(_onSettingsChanged);
     super.dispose();
   }
 
@@ -63,6 +71,13 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
         _scrollController.position.maxScrollExtent - 200) {
       context.read<SearchProvider>().fetchNextPage();
     }
+  }
+
+  void _onSettingsChanged() {
+    final credential = _settings.tmdbApiKey;
+    if (credential == _credential) return;
+    _credential = credential;
+    if (credential.isNotEmpty && mounted) _refreshDiscovery();
   }
 
   void _refreshDiscovery([String? query]) {
@@ -382,14 +397,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 key: const Key('discovery_open_settings'),
                 icon: const Icon(Icons.settings),
                 label: Text(context.l10n.commonOpenSettings),
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(),
-                    ),
-                  );
-                  if (mounted) _refreshDiscovery();
-                },
+                // Saving a key reloads via _onSettingsChanged.
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                ),
               )
             else
               ElevatedButton.icon(

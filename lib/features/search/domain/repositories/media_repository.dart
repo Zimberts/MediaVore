@@ -35,6 +35,12 @@ abstract class MediaRepository {
     String sortBy = 'popularity.desc',
   });
 
+  /// Checks a TMDB credential with TMDB before it is saved.
+  ///
+  /// Completes when TMDB accepts [credential]; throws an [AppException]
+  /// otherwise (401 [ServerException] for a rejected key).
+  Future<void> validateTmdbCredential(String credential);
+
   /// Gets the details for a specific media item.
   Future<MediaDetails> getMediaDetails(
     int id, {

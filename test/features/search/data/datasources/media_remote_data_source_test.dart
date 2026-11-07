@@ -492,4 +492,95 @@ void main() {
       expect(capturedParams(), hasLength(1));
     });
   });
+
+  group('validateCredential', () {
+    const v3 = '0123456789abcdef0123456789abcdef';
+    const authUrl = 'https://api.themoviedb.org/3/authentication';
+
+    void stubAuth(Future<Response<dynamic>> Function() answer) {
+      when(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((_) => answer());
+    }
+
+    Future<Response<dynamic>> ok() async => Response(
+      requestOptions: RequestOptions(path: authUrl),
+      data: {'success': true},
+      statusCode: 200,
+    );
+
+    test('should check the candidate key, not the stored one', () async {
+      stubAuth(ok);
+
+      await dataSource.validateCredential(' $v3 ');
+
+      final captured = verify(
+        () => mockDio.get(
+          authUrl,
+          queryParameters: captureAny(named: 'queryParameters'),
+          options: captureAny(named: 'options'),
+        ),
+      ).captured;
+      expect((captured[0] as Map<String, dynamic>)['api_key'], v3);
+      expect(captured[1], isNull);
+    });
+
+    test('should send a v4 token as Bearer header', () async {
+      stubAuth(ok);
+
+      await dataSource.validateCredential('Bearer eyJ.token.sig');
+
+      final captured = verify(
+        () => mockDio.get(
+          authUrl,
+          queryParameters: captureAny(named: 'queryParameters'),
+          options: captureAny(named: 'options'),
+        ),
+      ).captured;
+      expect(
+        (captured[0] as Map<String, dynamic>).containsKey('api_key'),
+        isFalse,
+      );
+      expect(
+        (captured[1] as Options).headers?['Authorization'],
+        'Bearer eyJ.token.sig',
+      );
+    });
+
+    test('should throw ServerException 401 when TMDB rejects the key', () {
+      stubAuth(() async {
+        final options = RequestOptions(path: authUrl);
+        throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.badResponse,
+          response: Response(requestOptions: options, statusCode: 401),
+        );
+      });
+
+      expect(
+        () => dataSource.validateCredential('wrong'),
+        throwsA(
+          isA<ServerException>().having((e) => e.statusCode, 'status', 401),
+        ),
+      );
+    });
+
+    test('should throw ConfigurationException for a blank key', () {
+      expect(
+        () => dataSource.validateCredential('   '),
+        throwsA(isA<ConfigurationException>()),
+      );
+      verifyNever(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      );
+    });
+  });
 }

@@ -176,6 +176,10 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> validateTmdbCredential(String credential) =>
+      remoteDataSource.validateCredential(credential);
+
+  @override
   Future<MediaDetails> getMediaDetails(
     int id, {
     MediaType type = MediaType.movie,
