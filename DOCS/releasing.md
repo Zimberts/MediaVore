@@ -9,7 +9,8 @@ pushes a tag by hand.
 1. Every merge to `main` runs `.github/workflows/release.yml`: first `ci.yml` (analyze + test),
    then release-please. A red `main` never produces a release PR update, a tag or a build.
 2. release-please opens or updates **one** PR, `chore(release): vX.Y.Z`, which edits
-   `pubspec.yaml` (`version:`), `CHANGELOG.md` and `.release-please-manifest.json`.
+   `pubspec.yaml` (`version:`), `lib/core/utils/app_version.dart` (version shown in *About*,
+   line marked `x-release-please-version`), `CHANGELOG.md` and `.release-please-manifest.json`.
    The next version comes from the commits since the last release:
 
    | Commit on `main` (= squashed PR title) | Bump |
@@ -34,6 +35,7 @@ found; it is ignored afterwards.
 
 - `pubspec.yaml` `version: X.Y.Z+N`: `X.Y.Z` is owned by release-please. Before building a tag,
   CI runs `tool/check_release_version.sh vX.Y.Z` and fails if `X.Y.Z` differs from the tag.
+  `appVersion` in `lib/core/utils/app_version.dart` must equal it too: a unit test fails otherwise.
 - The `+N` in `pubspec.yaml` is **not** used for builds (release-please increments it, which is
   harmless). CI passes `--build-number ${{ github.run_number }}`: it grows with every run of
   `release.yml`, so two runs never share a build number (Android `versionCode`, iOS

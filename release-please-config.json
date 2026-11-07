@@ -6,7 +6,8 @@
   "bootstrap-sha": "981a5286f3d61ce496b1ee7d65cf0f0352c845f4",
   "packages": {
     ".": {
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["lib/core/utils/app_version.dart"]
     }
   },
   "changelog-sections": [
