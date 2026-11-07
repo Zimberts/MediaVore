@@ -76,7 +76,7 @@ jobs:
       RELEASE_TAG: ${{ needs.release-please.outputs.tag_name || (github.ref_type == 'tag' && github.ref_name || '') }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # The release tag points at the merged release PR, which may be older than this run's commit.
           ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
@@ -237,7 +237,7 @@ jobs:
       MIN_XCODE_MAJOR: 26
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
 
