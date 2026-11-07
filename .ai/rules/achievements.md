@@ -22,7 +22,7 @@ applyTo:
 
 ## Fields
 
-- Entries follow `{ id, title, description, iconPath, type, group?, tier?, params, translations }`.
+- Entries follow `{ id, title, description, iconPath, type, group?, groupTitle?, tier?, params, translations }`.
   `iconPath` points into `assets/achievements/`. Keep icons alongside the JSON.
 - `title` / `description` are English. `translations` maps a language code to
   `{ title, description }` (e.g. `"fr": {...}`); the UI uses
@@ -32,9 +32,22 @@ applyTo:
 - `group` + `tier` mark levels of the same challenge (one card per group on the page).
   Tiers are 1..n, consecutive, in file order, with increasing targets. `tier` is not
   persisted, so inserting a level is safe; only `id` is.
+- The first tier of each group carries `groupTitle` (family name shown on the card) and
+  `translations.<code>.groupTitle`; other tiers don't.
+- Never raise the target of an existing id (unlocks are recomputed from history and
+  would be lost); lowering is fine.
 - `genre` achievements use `params.genreId` (TMDB movie genre id), never a genre name.
   Seen items store genre names in the app language at the time; they are matched by id
   via `GenreUtils.getGenreIdByName`, which accepts any supported language.
+- `season_complete`, `series_complete`, `up_to_date`, `saga_complete` and
+  `watchlist_clear` read cached TMDB data through `AchievementMediaSource` (never the
+  network) and the watchlist; their persisted unlocks are sticky (see `ACHIEVEMENTS.md`).
+- `distinct_countries`, `distinct_decades`, `released_before`, `tmdb_rating` and `day_one`
+  read cached title metadata / season air dates the same way and are sticky too;
+  `distinct_genres` uses the history only.
+- Rhythm types (`behavioral`/`early_bird`, `double_feature`, `every_weekday`,
+  `monthly_streak`, `anniversary`, `calendar_date` with `params.dates` as `MM-DD`) use the
+  history only; they are not sticky.
 - Adding an achievement = editing the JSON. Evaluation is generic by `type`/`params`; never
   add id-specific code in `AchievementRepositoryImpl`.
 

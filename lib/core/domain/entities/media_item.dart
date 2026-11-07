@@ -49,6 +49,13 @@ class MediaItem extends Equatable {
   final String? status;
   final List<String>? genres;
   final double? voteAverage;
+
+  /// Number of TMDB votes behind [voteAverage].
+  final int? voteCount;
+
+  /// ISO 3166-1 codes of the countries of origin (TMDB `origin_country`, or
+  /// `production_countries` when absent). Null when TMDB did not report them.
+  final List<String>? originCountries;
   final int? runtime;
   final List<TVSeason>? seasons;
   final String? nextEpisodeAirDate;
@@ -72,6 +79,8 @@ class MediaItem extends Equatable {
     this.status,
     this.genres,
     this.voteAverage,
+    this.voteCount,
+    this.originCountries,
     this.runtime,
     this.seasons,
     this.nextEpisodeAirDate,
@@ -143,6 +152,8 @@ class MediaItem extends Equatable {
       status: json['status'] as String?,
       genres: genresList,
       voteAverage: (json['vote_average'] as num?)?.toDouble(),
+      voteCount: (json['vote_count'] as num?)?.toInt(),
+      originCountries: _parseOriginCountries(json),
       runtime: _parseRuntime(json),
       seasons: seasonsList,
       nextEpisodeAirDate: nextAirDate,
@@ -171,6 +182,26 @@ class MediaItem extends Equatable {
       default:
         return MediaType.unknown;
     }
+  }
+
+  /// `origin_country` (list of codes), else the codes of
+  /// `production_countries` (list of `{iso_3166_1, name}`).
+  static List<String>? _parseOriginCountries(Map<String, dynamic> json) {
+    final origin = json['origin_country'];
+    if (origin is List) {
+      return [
+        for (final c in origin)
+          if (c is String) c,
+      ];
+    }
+    final production = json['production_countries'];
+    if (production is List) {
+      return [
+        for (final c in production)
+          if (c is Map && c['iso_3166_1'] is String) c['iso_3166_1'] as String,
+      ];
+    }
+    return null;
   }
 
   /// Resolves the runtime in minutes from either a movie's `runtime` field or
@@ -203,6 +234,8 @@ class MediaItem extends Equatable {
       'status': status,
       'genres': genres,
       'vote_average': voteAverage,
+      'vote_count': voteCount,
+      'origin_country': originCountries,
       'runtime': runtime,
       'seasons': seasons?.map((s) => s.toJson()).toList(),
       'next_episode_to_air': nextEpisodeAirDate != null
@@ -234,6 +267,8 @@ class MediaItem extends Equatable {
     String? status,
     List<String>? genres,
     double? voteAverage,
+    int? voteCount,
+    List<String>? originCountries,
     int? runtime,
     List<TVSeason>? seasons,
     String? nextEpisodeAirDate,
@@ -257,6 +292,8 @@ class MediaItem extends Equatable {
       status: status ?? this.status,
       genres: genres ?? this.genres,
       voteAverage: voteAverage ?? this.voteAverage,
+      voteCount: voteCount ?? this.voteCount,
+      originCountries: originCountries ?? this.originCountries,
       runtime: runtime ?? this.runtime,
       seasons: seasons ?? this.seasons,
       nextEpisodeAirDate: nextEpisodeAirDate ?? this.nextEpisodeAirDate,
@@ -300,6 +337,8 @@ class MediaItem extends Equatable {
     status,
     genres,
     voteAverage,
+    voteCount,
+    originCountries,
     runtime,
     seasons,
     nextEpisodeAirDate,
