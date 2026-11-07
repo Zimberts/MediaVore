@@ -34,6 +34,17 @@ class AchievementFamily extends Equatable {
   /// Tier shown on the family card.
   Achievement get current => highestUnlocked ?? tiers.first;
 
+  /// Name of the challenge in [languageCode]: the family name declared on a
+  /// tier (`groupTitle`), or the current tier's title when there is none
+  /// (standalone achievement).
+  String titleFor(String languageCode) {
+    for (final a in tiers) {
+      final name = a.groupTitleFor(languageCode);
+      if (name != null) return name;
+    }
+    return current.titleFor(languageCode);
+  }
+
   bool contains(String achievementId) =>
       tiers.any((a) => a.id == achievementId);
 
