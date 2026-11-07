@@ -47,6 +47,48 @@ void main() {
       expect(historicalIds.where((id) => !ids.contains(id)), isEmpty);
     });
 
+    test('should never raise a historical threshold (persisted unlocks)', () {
+      // Unlock state is recomputed from history, so raising a target would
+      // re-lock users who already earned it. Lowering is safe.
+      const maxTargets = {
+        'movie_1': 1, 'movie_10': 10, 'movie_50': 50, 'movie_100': 100, //
+        'movie_500': 500, 'movie_1000': 1000, 'tv_1': 1, 'tv_50': 50,
+        'tv_250': 250, 'tv_1000': 1000, 'tv_5000': 5000,
+        'rewatch_movie_2': 2, 'rewatch_movie_5': 5, 'rewatch_movie_10': 10,
+        'rewatch_ep_2': 2, 'rewatch_ep_5': 5, 'loyalist_100': 100,
+        'loyalist_500': 500, 'genre_horror': 10, 'genre_horror_50': 50,
+        'genre_comedy': 20, 'genre_comedy_100': 100, 'genre_action': 20,
+        'genre_action_100': 100, 'genre_scifi': 20, 'genre_scifi_100': 100,
+        'genre_doc': 10, 'genre_doc_50': 50, 'genre_romance': 15,
+        'night_owl': 10, 'night_owl_100': 100, 'weekend_warrior': 15,
+        'marathon': 10, 'marathon_pro': 20, 'streak_7': 7, 'streak_30': 30,
+        'streak_365': 365, 'runtime_1000': 1000, 'runtime_hour_100': 6000,
+        'runtime_10000': 10000, 'runtime_day_10': 14400,
+        'runtime_hour_1000': 60000, 'runtime_100000': 100000,
+        'runtime_year_1': 525600,
+      };
+      for (final def in defs) {
+        final max = maxTargets[def['id']];
+        if (max == null) continue;
+        expect(targetOf(def), lessThanOrEqualTo(max), reason: '${def['id']}');
+      }
+    });
+
+    test('should name every family on its first tier only, in en and fr', () {
+      final seen = <String>{};
+      for (final def in defs) {
+        final group = def['group'] as String?;
+        final fr = (def['translations'] as Map?)?['fr'] as Map?;
+        if (group != null && seen.add(group)) {
+          expect(def['groupTitle'], isA<String>(), reason: group);
+          expect(fr?['groupTitle'], isA<String>(), reason: group);
+        } else {
+          expect(def['groupTitle'], isNull, reason: def['id'] as String);
+          expect(fr?['groupTitle'], isNull, reason: def['id'] as String);
+        }
+      }
+    });
+
     test('should have the required fields on every entry', () {
       for (final def in defs) {
         for (final field in [
@@ -72,6 +114,11 @@ void main() {
         'streak',
         'runtime',
         'marathon',
+        'season_complete',
+        'series_complete',
+        'up_to_date',
+        'saga_complete',
+        'watchlist_clear',
       };
       for (final def in defs) {
         final params = Map<String, dynamic>.from(def['params'] as Map);

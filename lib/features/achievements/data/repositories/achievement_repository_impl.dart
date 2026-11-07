@@ -1,10 +1,12 @@
 import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/utils/genres.dart';
+import 'package:mediavore/features/achievements/data/datasources/achievement_media_source.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'dart:convert';
 
@@ -20,11 +22,26 @@ class AchievementRepositoryImpl implements AchievementRepository {
   final MediaListLocalDataSource _localDataSource;
   final DefinitionsLoader? definitionsLoader;
 
+  /// Cached TMDB data for the collection types; without it they stay at 0.
+  final AchievementMediaSource? mediaSource;
+
   AchievementRepositoryImpl(
     this._isar,
     this._localDataSource, {
     this.definitionsLoader,
+    this.mediaSource,
   });
+
+  /// Types that depend on cached TMDB data or on the current watchlist rather
+  /// than on the history alone: they can regress (new episode aired, cache
+  /// purged), so once persisted their unlock is kept.
+  static const _stickyTypes = {
+    'season_complete',
+    'series_complete',
+    'up_to_date',
+    'saga_complete',
+    'watchlist_clear',
+  };
 
   // Definitions moved to `assets/achievements/definitions.json`.
   // The file is the single source of truth; tests should inject a loader.
@@ -41,26 +58,37 @@ class AchievementRepositoryImpl implements AchievementRepository {
     };
 
     final defMaps = await _loadDefinitionMaps();
+    final completions = defMaps.any((d) => _stickyTypes.contains(d['type']))
+        ? await _buildCompletions(chronologicalItems)
+        : null;
 
     return defMaps.map((def) {
       final id = def['id'] as String;
-      final progressData = _calculateProgressFromDef(def, chronologicalItems);
+      final progressData = _calculateProgressFromDef(
+        def,
+        chronologicalItems,
+        completions,
+      );
       final persistedUnlockDate = unlockedMap[id];
       final calculatedUnlockDate = progressData.milestoneReachedAt;
+      final isUnlocked =
+          calculatedUnlockDate != null ||
+          (persistedUnlockDate != null && _stickyTypes.contains(def['type']));
 
       return Achievement(
         id: id,
         title: def['title'] as String,
         description: def['description'] as String,
         iconPath: def['iconPath'] as String,
-        isUnlocked: calculatedUnlockDate != null,
+        isUnlocked: isUnlocked,
         isPersisted: persistedUnlockDate != null,
         unlockedAt: persistedUnlockDate ?? calculatedUnlockDate,
-        progress: progressData.progress,
+        progress: isUnlocked ? 1.0 : progressData.progress,
         progressLabel: progressData.label,
         translations: _parseTranslations(def['translations']),
         group: def['group'] as String?,
         tier: def['tier'] as int?,
+        groupTitle: def['groupTitle'] as String?,
       );
     }).toList();
   }
@@ -99,6 +127,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
     return Rx.merge([
       _isar.achievementModels.watchLazy(),
       _isar.seenItemModels.watchLazy(),
+      _isar.mediaListItems.watchLazy(), // watchlist_clear
     ]).asyncMap((_) => getAchievements());
   }
 
@@ -136,6 +165,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
   _ProgressData _calculateProgressFromDef(
     Map<String, dynamic> def,
     List<SeenItemModel> seenItems,
+    _Completions? completions,
   ) {
     final type = def['type'] as String? ?? '';
     final params = (def['params'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -197,6 +227,17 @@ class AchievementRepositoryImpl implements AchievementRepository {
           seenItems.where((i) => i.type == 'tv').toList(),
           target,
         );
+      case 'season_complete':
+        return _datesMilestone(completions?.seasons ?? const [], target);
+      case 'series_complete':
+        return _datesMilestone(completions?.endedSeries ?? const [], target);
+      case 'up_to_date':
+        return _datesMilestone(completions?.runningSeries ?? const [], target);
+      case 'saga_complete':
+        return _datesMilestone(completions?.sagas ?? const [], target);
+      case 'watchlist_clear':
+        if (completions == null) break;
+        return _watchlistMilestone(completions, target);
     }
 
     debugPrint('Achievement ${def['id']}: cannot evaluate type "$type"');
@@ -403,6 +444,155 @@ class AchievementRepositoryImpl implements AchievementRepository {
       milestoneReachedAt: reachedAt,
     );
   }
+
+  /// Completion dates of seasons, series and sagas, computed once per
+  /// evaluation from the history and the cached TMDB data.
+  Future<_Completions> _buildCompletions(List<SeenItemModel> items) async {
+    // First view of each episode / movie (items are chronological).
+    final episodes = <int, Map<(int, int), DateTime>>{};
+    final movies = <int, DateTime>{};
+    for (final i in items) {
+      if (i.type == 'movie') {
+        movies.putIfAbsent(i.tmdbId, () => i.seenDate);
+      } else if (i.type == 'tv' &&
+          i.seasonNumber != null &&
+          i.episodeNumber != null) {
+        episodes.putIfAbsent(i.tmdbId, () => {}).putIfAbsent((
+          i.seasonNumber!,
+          i.episodeNumber!,
+        ), () => i.seenDate);
+      }
+    }
+    final seenTitles = {for (final i in items) '${i.type}:${i.tmdbId}'};
+
+    List<MediaListItem> watchlist;
+    try {
+      watchlist = await _localDataSource.getListItems('watchlist');
+    } catch (e) {
+      debugPrint('Achievements: watchlist unavailable: $e');
+      watchlist = const [];
+    }
+
+    final source = mediaSource;
+    final shows = source == null
+        ? const <int, ShowInfo>{}
+        : await source.shows({
+            ...episodes.keys,
+            for (final w in watchlist)
+              if (w.type == 'tv') w.id,
+          });
+    final sagaParts = source == null
+        ? const <int, List<SagaPart>>{}
+        : await source.sagas(movies.keys.toSet());
+
+    final seasons = <DateTime>[];
+    final ended = <DateTime>[];
+    final running = <DateTime>[];
+    final caughtUp = <int>{};
+    for (final MapEntry(key: id, value: info) in shows.entries) {
+      final seen = episodes[id] ?? const {};
+      final aired = info.airedEpisodeCounts;
+      DateTime? showDate;
+      var complete = aired.isNotEmpty;
+      for (final MapEntry(key: season, value: count) in aired.entries) {
+        final date = _allSeenAt([
+          for (var e = 1; e <= count; e++) seen[(season, e)],
+        ]);
+        if (date == null) {
+          complete = false;
+          continue;
+        }
+        if (count == info.episodeCounts[season]) seasons.add(date);
+        if (showDate == null || date.isAfter(showDate)) showDate = date;
+      }
+      if (!complete || showDate == null) continue;
+      caughtUp.add(id);
+      (info.isFinished ? ended : running).add(showDate);
+    }
+
+    final today = DateTime.now();
+    final sagas = <String, DateTime>{};
+    for (final parts in sagaParts.values) {
+      final released = [
+        for (final p in parts)
+          if (DateTime.tryParse(p.releaseDate)?.isAfter(today) == false) p.id,
+      ]..sort();
+      if (released.length < 2) continue; // a single film is not a saga
+      final date = _allSeenAt([for (final id in released) movies[id]]);
+      if (date != null) sagas[released.join(',')] = date;
+    }
+
+    final watchlistDone = watchlist.where((w) {
+      if (w.type == 'movie') return movies.containsKey(w.id);
+      return caughtUp.contains(w.id);
+    }).length;
+
+    return _Completions(
+      seasons: seasons,
+      endedSeries: ended,
+      runningSeries: running,
+      sagas: sagas.values.toList(),
+      seenTitles: seenTitles.length,
+      watchlistSize: watchlist.length,
+      watchlistDone: watchlistDone,
+    );
+  }
+
+  /// Latest of [dates], or null if one is missing.
+  static DateTime? _allSeenAt(List<DateTime?> dates) {
+    DateTime? latest;
+    for (final d in dates) {
+      if (d == null) return null;
+      if (latest == null || d.isAfter(latest)) latest = d;
+    }
+    return latest;
+  }
+
+  /// [target] completions, reached at the [target]-th completion date.
+  _ProgressData _datesMilestone(List<DateTime> dates, int target) {
+    final sorted = [...dates]..sort();
+    final count = sorted.length;
+    return _ProgressData(
+      (count / target).clamp(0.0, 1.0),
+      '$count/$target',
+      milestoneReachedAt: count >= target ? sorted[target - 1] : null,
+    );
+  }
+
+  /// Every watchlist title seen (series: caught up), with at least [target]
+  /// titles in the history so an unused watchlist does not count. The state
+  /// has no history: it is dated when observed.
+  _ProgressData _watchlistMilestone(_Completions c, int target) {
+    final seen = c.seenTitles < target ? c.seenTitles : target;
+    final done = seen >= target && c.watchlistDone == c.watchlistSize;
+    return _ProgressData(
+      (seen + c.watchlistDone) / (target + c.watchlistSize),
+      c.watchlistSize == 0
+          ? '$seen/$target'
+          : '${c.watchlistDone}/${c.watchlistSize}',
+      milestoneReachedAt: done ? DateTime.now() : null,
+    );
+  }
+}
+
+class _Completions {
+  final List<DateTime> seasons;
+  final List<DateTime> endedSeries;
+  final List<DateTime> runningSeries;
+  final List<DateTime> sagas;
+  final int seenTitles;
+  final int watchlistSize;
+  final int watchlistDone;
+
+  const _Completions({
+    required this.seasons,
+    required this.endedSeries,
+    required this.runningSeries,
+    required this.sagas,
+    required this.seenTitles,
+    required this.watchlistSize,
+    required this.watchlistDone,
+  });
 }
 
 class _ProgressData {

@@ -38,6 +38,9 @@ void main() {
       name: 'test_achievements_db',
     );
     mockDataSource = MockMediaListLocalDataSource();
+    when(
+      () => mockDataSource.getListItems('watchlist'),
+    ).thenAnswer((_) async => []);
     // loader that reads the JSON definitions file from disk for tests
     final assetPath =
         '${Directory.current.path.replaceAll('\\', '/')}/assets/achievements/definitions.json';
@@ -341,9 +344,13 @@ void main() {
               'description': 'Watch your first movie',
               'iconPath': 'assets/achievements/movie_1.png',
               'type': 'count',
+              'group': 'movies',
+              'groupTitle': 'Movies',
+              'tier': 1,
               'params': {'mediaType': 'movie', 'target': 1},
               'translations': {
                 'fr': {
+                  'groupTitle': 'Films',
                   'title': 'Premier film',
                   'description': 'Regarder votre premier film',
                 },
@@ -360,6 +367,9 @@ void main() {
       expect(starter.descriptionFor('fr'), 'Regarder votre premier film');
       expect(starter.titleFor('xx'), 'Movie Starter');
       expect(starter.descriptionFor('xx'), 'Watch your first movie');
+      expect(starter.groupTitleFor('en'), 'Movies');
+      expect(starter.groupTitleFor('fr'), 'Films');
+      expect(starter.groupTitleFor('xx'), 'Movies');
     });
   });
 }

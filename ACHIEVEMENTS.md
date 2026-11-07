@@ -34,6 +34,14 @@ JSON example:
   consecutive, and follows increasing targets in file order. Omit both for a standalone
   achievement. `tier` is not persisted, so levels can be inserted (e.g. a new entry tier)
   without affecting existing unlocks.
+- `groupTitle` (first tier of a group only, required there): the family name shown on
+  the card (e.g. `"Horror movies"`), translated as `translations.<code>.groupTitle`.
+  Tier titles stay visible in the levels sheet. When a new first tier is inserted, move
+  `groupTitle` onto it.
+- Never raise an existing target: unlock state is recomputed from the history, so a
+  higher target would re-lock users who earned it. Lowering is safe (checked by the
+  definitions test). Ids are opaque: after a re-spacing a number in an id may no longer
+  match its target (see `runtime` below).
 - `params.target` (or `params.targetMinutes` for `runtime`) must be greater than 0.
 
 The repository loads the JSON at runtime (tests inject a loader during unit tests).
@@ -52,6 +60,19 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `marathon` | `target` | episodes of the same series in one day |
 | `streak` | `target` | consecutive days with at least one view |
 | `runtime` | `targetMinutes` | cumulative watch time (shown as `16h 40m`, `166h`, `10 days`, `1 year`) |
+| `season_complete` | `target` | regular seasons (specials excluded) fully aired and fully seen |
+| `series_complete` | `target` | ended or canceled series with every episode seen |
+| `up_to_date` | `target` | running series with every aired episode seen (current state) |
+| `saga_complete` | `target` | TMDB collections with every released part seen (2 released parts minimum) |
+| `watchlist_clear` | `target` | watchlist with no unseen title (series: caught up), once `target` titles are in the history |
+
+The last five types read TMDB data from the local cache only (season sizes, last aired
+episode, collection parts): a title absent from the cache does not count until its details
+are cached (opening it, or the background cache warm-up). They can regress (a new episode
+airs, a cache entry is purged, the watchlist grows), so once persisted their unlock is kept
+even if the current state no longer meets the target. A completion is dated by the first
+view of its last required episode or movie; `watchlist_clear` has no history and is dated
+when first observed.
 
 ## Families (reference)
 
@@ -66,9 +87,19 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `genre_romance` | 10, 15, 50, 100 |
 | `genre_horror`, `genre_doc`, `genre_animation`, `genre_thriller`, `genre_drama`, `genre_crime`, `genre_fantasy`, `genre_adventure`, `genre_western`, `genre_war`, `genre_music`, `genre_family`, `genre_mystery`, `genre_history` | 10, 50, 100 |
 | `night_owl` | 10, 50, 100, 250 |
-| `weekend` | 15, 30, 50 |
+| `weekend` | 15, 30, 50, 100 (any 72-hour window; a 250 tier was dropped as unrealistic) |
 | `marathon` | 5, 10, 20, 50 |
 | `streak` | 7, 30, 365 days |
-| `runtime` | 1000 min, 100 h, 10000 min, 10 days, 1000 h, 100000 min, 1 year |
+| `runtime` | 10, 20, 50, 100, 200, 500, 1000, 2000, 5000 h, 1 year |
+| `season_complete` | 1, 10, 50 |
+| `series_complete` | 1, 5, 25 |
+| `up_to_date` | 1, 5, 10 |
+| `saga_complete` | 1, 5, 15 |
+| `watchlist_clear` (standalone) | 10 titles seen |
+
+Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
+kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),
+`runtime_10000` = 50 h (was 10000 min), `runtime_day_10` = 200 h (was 240 h),
+`runtime_100000` = 500 h (was 100000 min).
 
 For the up-to-date list, see the JSON asset.
