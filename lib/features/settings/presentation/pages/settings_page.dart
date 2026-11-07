@@ -160,12 +160,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: Text(l10n.settingsAchievementsSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AchievementsPage(),
-                ),
-              );
+              Navigator.push(context, AchievementsPage.route());
             },
           ),
           const Divider(),

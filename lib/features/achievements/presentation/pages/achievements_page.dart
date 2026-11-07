@@ -9,8 +9,37 @@ import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class AchievementsPage extends StatefulWidget {
+  static const routeName = '/achievements';
+
   final String? initialAchievementId;
   const AchievementsPage({super.key, this.initialAchievementId});
+
+  /// Named route, so the page can be found in the navigator stack.
+  static Route<void> route({String? initialAchievementId}) {
+    return MaterialPageRoute<void>(
+      settings: const RouteSettings(name: routeName),
+      builder: (_) =>
+          AchievementsPage(initialAchievementId: initialAchievementId),
+    );
+  }
+
+  /// States of the pages currently mounted, oldest first.
+  static final List<_AchievementsPageState> _mounted = [];
+
+  /// Shows [achievementId] without stacking a second page: if an
+  /// [AchievementsPage] is already in [navigator]'s stack, pops back to it and
+  /// scrolls to (and highlights) the achievement's family; otherwise pushes a
+  /// new page.
+  static void showAchievement(NavigatorState navigator, String achievementId) {
+    if (_mounted.isEmpty) {
+      navigator.push(route(initialAchievementId: achievementId));
+      return;
+    }
+    navigator.popUntil(
+      (route) => route.settings.name == routeName || route.isFirst,
+    );
+    _mounted.last.focusAchievement(achievementId);
+  }
 
   @override
   State<AchievementsPage> createState() => _AchievementsPageState();
@@ -18,18 +47,34 @@ class AchievementsPage extends StatefulWidget {
 
 class _AchievementsPageState extends State<AchievementsPage> {
   final ItemScrollController _itemScrollController = ItemScrollController();
+  String? _focusedId;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialAchievementId != null) {
+    AchievementsPage._mounted.add(this);
+    _focusedId = widget.initialAchievementId;
+    if (_focusedId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToAchievement(widget.initialAchievementId!);
+        if (mounted && _focusedId != null) _scrollToAchievement(_focusedId!);
       });
     }
   }
 
+  @override
+  void dispose() {
+    AchievementsPage._mounted.remove(this);
+    super.dispose();
+  }
+
+  /// Highlights [id]'s family and scrolls to it.
+  void focusAchievement(String id) {
+    setState(() => _focusedId = id);
+    _scrollToAchievement(id);
+  }
+
   void _scrollToAchievement(String id) {
+    if (!_itemScrollController.isAttached) return;
     final provider = context.read<AchievementProvider>();
     final index = provider.families.indexWhere((f) => f.contains(id));
     if (index != -1) {
@@ -71,11 +116,11 @@ class _AchievementsPageState extends State<AchievementsPage> {
                     itemCount: families.length,
                     itemBuilder: (context, index) {
                       final family = families[index];
-                      final initialId = widget.initialAchievementId;
+                      final focusedId = _focusedId;
                       return _FamilyCard(
                         family: family,
                         isHighlighted:
-                            initialId != null && family.contains(initialId),
+                            focusedId != null && family.contains(focusedId),
                       );
                     },
                   ),
