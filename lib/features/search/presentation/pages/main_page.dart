@@ -403,13 +403,9 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
           color: Colors.transparent,
           child: GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AchievementsPage(
-                    initialAchievementId: widget.achievement.id,
-                  ),
-                ),
+              AchievementsPage.showAchievement(
+                Navigator.of(context),
+                widget.achievement.id,
               );
               _handleDismiss();
             },
