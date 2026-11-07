@@ -388,6 +388,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             leading: widget.isSheet
                 ? IconButton(
                     icon: const Icon(Icons.keyboard_arrow_down),
+                    tooltip: context.l10n.commonClose,
                     onPressed: () => Navigator.pop(context),
                   )
                 : null,

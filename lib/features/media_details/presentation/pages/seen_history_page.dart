@@ -281,6 +281,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.tune),
+                  tooltip: context.l10n.seenFilterSort,
                   onPressed: _showFilterOptions,
                 ),
                 border: OutlineInputBorder(

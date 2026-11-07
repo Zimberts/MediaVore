@@ -250,6 +250,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.chevron_left),
+                      tooltip: context.l10n.statsPreviousPeriod,
                       onPressed: () {
                         pageController.previousPage(
                           duration: const Duration(milliseconds: 300),
@@ -263,6 +264,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
+                      tooltip: context.l10n.statsNextPeriod,
                       onPressed: () {
                         pageController.nextPage(
                           duration: const Duration(milliseconds: 300),

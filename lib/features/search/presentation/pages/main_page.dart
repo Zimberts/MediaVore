@@ -462,6 +462,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                       color: onToast.withValues(alpha: 0.7),
                       size: 20,
                     ),
+                    tooltip: context.l10n.commonClose,
                     onPressed: _handleDismiss,
                   ),
                 ],

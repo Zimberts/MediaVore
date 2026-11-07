@@ -261,6 +261,7 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                             ),
                           IconButton(
                             icon: const Icon(Icons.notifications_off_outlined),
+                            tooltip: context.l10n.notifyDisable,
                             onPressed: () {
                               final mediaItem = MediaItem(
                                 id: item.tmdbId,
@@ -435,6 +436,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                             Icons.check_circle_outline,
                             color: context.appColors.success,
                           ),
+                          tooltip: context.l10n.commonMarkAsSeen,
                           onPressed: () async {
                             await provider.markAsSeen(
                               SeenItem(
