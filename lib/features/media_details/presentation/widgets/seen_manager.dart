@@ -495,7 +495,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.logicFlow,
-                      foregroundColor: Colors.white,
+                      foregroundColor: contrastingForeground(colors.logicFlow),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

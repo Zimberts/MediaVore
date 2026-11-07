@@ -559,18 +559,18 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                           width: double.infinity,
                                           placeholder: (context, url) =>
                                               Container(
-                                                color: Colors.grey[800],
+                                                color: colors.placeholder,
                                               ),
                                           errorWidget: (context, url, error) =>
                                               const Icon(Icons.error),
                                         )
                                       : Container(
-                                          color: Colors.grey[800],
+                                          color: colors.placeholder,
                                           height: double.infinity,
                                           width: double.infinity,
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.movie,
-                                            color: Colors.white54,
+                                            color: colors.comments,
                                           ),
                                         ),
                                 ),
@@ -585,7 +585,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                             : colors.badgeBg,
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: Colors.white,
+                                          color: colors.badgeText,
                                           width: 1.5,
                                         ),
                                       ),
@@ -631,7 +631,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                     ? Icons.tv
                                     : Icons.movie,
                                 size: 12,
-                                color: Colors.grey,
+                                color: colors.comments,
                               ),
                               const SizedBox(width: 4),
                               Flexible(
@@ -644,9 +644,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                               if (item.voteAverage != null &&
                                   item.voteAverage! > 0) ...[
                                 const Text(' • '),
-                                const Icon(
+                                Icon(
                                   Icons.star,
-                                  color: Colors.amber,
+                                  color: colors.ratingStar,
                                   size: 12,
                                 ),
                                 const SizedBox(width: 2),
@@ -708,16 +708,16 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                           'https://image.tmdb.org/t/p/w342${item.posterPath}',
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) =>
-                                          Container(color: Colors.grey[800]),
+                                          Container(color: colors.placeholder),
                                       errorWidget: (context, url, error) =>
                                           const Icon(Icons.error),
                                     )
                                   else
                                     Container(
-                                      color: Colors.grey[800],
-                                      child: const Icon(
+                                      color: colors.placeholder,
+                                      child: Icon(
                                         Icons.movie,
-                                        color: Colors.white54,
+                                        color: colors.comments,
                                       ),
                                     ),
                                   Positioned(
@@ -812,9 +812,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                       ),
                                       child: Row(
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.star,
-                                            color: Colors.amber,
+                                            color: colors.ratingStar,
                                             size: 10,
                                           ),
                                           const SizedBox(width: 2),
@@ -875,7 +875,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                         : colors.badgeBg,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: colors.badgeText,
                                       width: 1.5,
                                     ),
                                   ),

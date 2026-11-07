@@ -138,7 +138,7 @@ class MediaGridItem extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 10),
+                        Icon(Icons.star, color: colors.ratingStar, size: 10),
                         const SizedBox(width: 2),
                         Text(
                           item.voteAverage!.toStringAsFixed(1),
