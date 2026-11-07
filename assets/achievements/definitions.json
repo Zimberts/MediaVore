@@ -6,6 +6,7 @@
         "iconPath": "assets/achievements/movie_1.png",
         "type": "count",
         "group": "movies",
+        "groupTitle": "Movies",
         "tier": 1,
         "params": {
             "mediaType": "movie",
@@ -13,6 +14,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films",
                 "title": "Premier film",
                 "description": "Regarder votre premier film"
             }
@@ -120,6 +122,7 @@
         "iconPath": "assets/achievements/tv_1.png",
         "type": "count",
         "group": "episodes",
+        "groupTitle": "Episodes",
         "tier": 1,
         "params": {
             "mediaType": "tv",
@@ -127,6 +130,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Épisodes",
                 "title": "Premier épisode",
                 "description": "Regarder votre premier épisode"
             }
@@ -253,6 +257,7 @@
         "iconPath": "assets/achievements/rewatch_movie_2.png",
         "type": "rewatch",
         "group": "rewatch_movie",
+        "groupTitle": "Movie rewatches",
         "tier": 1,
         "params": {
             "isTv": false,
@@ -260,6 +265,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films revus",
                 "title": "Bis !",
                 "description": "Regarder le même film deux fois"
             }
@@ -310,6 +316,7 @@
         "iconPath": "assets/achievements/rewatch_ep_2.png",
         "type": "rewatch",
         "group": "rewatch_episode",
+        "groupTitle": "Episode rewatches",
         "tier": 1,
         "params": {
             "isTv": true,
@@ -317,6 +324,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Épisodes revus",
                 "title": "Deuxième prise",
                 "description": "Regarder le même épisode deux fois"
             }
@@ -367,12 +375,14 @@
         "iconPath": "assets/achievements/loyalist_100.png",
         "type": "loyalist",
         "group": "loyalist",
+        "groupTitle": "Loyal fan",
         "tier": 1,
         "params": {
             "target": 100
         },
         "translations": {
             "fr": {
+                "groupTitle": "Fan fidèle",
                 "title": "Super fan",
                 "description": "Regarder 100 épisodes de la même série"
             }
@@ -403,6 +413,7 @@
         "iconPath": "assets/achievements/horror.png",
         "type": "genre",
         "group": "genre_horror",
+        "groupTitle": "Horror movies",
         "tier": 1,
         "params": {
             "genreId": 27,
@@ -410,6 +421,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films d'horreur",
                 "title": "Reine/Roi du cri",
                 "description": "Regarder 10 films d'horreur"
             }
@@ -460,6 +472,7 @@
         "iconPath": "assets/achievements/genre_comedy_10.png",
         "type": "genre",
         "group": "genre_comedy",
+        "groupTitle": "Comedies",
         "tier": 1,
         "params": {
             "genreId": 35,
@@ -467,6 +480,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Comédies",
                 "title": "Pitre de la classe",
                 "description": "Regarder 10 comédies"
             }
@@ -536,6 +550,7 @@
         "iconPath": "assets/achievements/genre_action_10.png",
         "type": "genre",
         "group": "genre_action",
+        "groupTitle": "Action movies",
         "tier": 1,
         "params": {
             "genreId": 28,
@@ -543,6 +558,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films d'action",
                 "title": "Cascadeur",
                 "description": "Regarder 10 films d'action"
             }
@@ -612,6 +628,7 @@
         "iconPath": "assets/achievements/genre_scifi_10.png",
         "type": "genre",
         "group": "genre_scifi",
+        "groupTitle": "Science fiction",
         "tier": 1,
         "params": {
             "genreId": 878,
@@ -619,6 +636,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Science-fiction",
                 "title": "Contemplateur d'étoiles",
                 "description": "Regarder 10 films de science-fiction"
             }
@@ -688,6 +706,7 @@
         "iconPath": "assets/achievements/doc.png",
         "type": "genre",
         "group": "genre_doc",
+        "groupTitle": "Documentaries",
         "tier": 1,
         "params": {
             "genreId": 99,
@@ -695,6 +714,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Documentaires",
                 "title": "Érudit",
                 "description": "Regarder 10 documentaires"
             }
@@ -745,6 +765,7 @@
         "iconPath": "assets/achievements/genre_romance_10.png",
         "type": "genre",
         "group": "genre_romance",
+        "groupTitle": "Romance movies",
         "tier": 1,
         "params": {
             "genreId": 10749,
@@ -752,6 +773,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films romantiques",
                 "title": "Papillons dans le ventre",
                 "description": "Regarder 10 films romantiques"
             }
@@ -821,6 +843,7 @@
         "iconPath": "assets/achievements/genre_animation_10.png",
         "type": "genre",
         "group": "genre_animation",
+        "groupTitle": "Animated movies",
         "tier": 1,
         "params": {
             "genreId": 16,
@@ -828,6 +851,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films d'animation",
                 "title": "Fan de dessins animés",
                 "description": "Regarder 10 films d'animation"
             }
@@ -878,6 +902,7 @@
         "iconPath": "assets/achievements/genre_thriller_10.png",
         "type": "genre",
         "group": "genre_thriller",
+        "groupTitle": "Thrillers",
         "tier": 1,
         "params": {
             "genreId": 53,
@@ -885,6 +910,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Thrillers",
                 "title": "Sur le fil",
                 "description": "Regarder 10 thrillers"
             }
@@ -935,6 +961,7 @@
         "iconPath": "assets/achievements/genre_drama_10.png",
         "type": "genre",
         "group": "genre_drama",
+        "groupTitle": "Dramas",
         "tier": 1,
         "params": {
             "genreId": 18,
@@ -942,6 +969,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Drames",
                 "title": "Mouchoirs de rigueur",
                 "description": "Regarder 10 drames"
             }
@@ -992,6 +1020,7 @@
         "iconPath": "assets/achievements/genre_crime_10.png",
         "type": "genre",
         "group": "genre_crime",
+        "groupTitle": "Crime movies",
         "tier": 1,
         "params": {
             "genreId": 80,
@@ -999,6 +1028,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films policiers",
                 "title": "Détective",
                 "description": "Regarder 10 films policiers"
             }
@@ -1049,6 +1079,7 @@
         "iconPath": "assets/achievements/genre_fantasy_10.png",
         "type": "genre",
         "group": "genre_fantasy",
+        "groupTitle": "Fantasy movies",
         "tier": 1,
         "params": {
             "genreId": 14,
@@ -1056,6 +1087,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films fantastiques",
                 "title": "Rêveur",
                 "description": "Regarder 10 films fantastiques"
             }
@@ -1106,6 +1138,7 @@
         "iconPath": "assets/achievements/genre_adventure_10.png",
         "type": "genre",
         "group": "genre_adventure",
+        "groupTitle": "Adventure movies",
         "tier": 1,
         "params": {
             "genreId": 12,
@@ -1113,6 +1146,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films d'aventure",
                 "title": "Explorateur",
                 "description": "Regarder 10 films d'aventure"
             }
@@ -1163,6 +1197,7 @@
         "iconPath": "assets/achievements/genre_western_10.png",
         "type": "genre",
         "group": "genre_western",
+        "groupTitle": "Westerns",
         "tier": 1,
         "params": {
             "genreId": 37,
@@ -1170,6 +1205,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Westerns",
                 "title": "Vacher",
                 "description": "Regarder 10 westerns"
             }
@@ -1220,6 +1256,7 @@
         "iconPath": "assets/achievements/genre_war_10.png",
         "type": "genre",
         "group": "genre_war",
+        "groupTitle": "War movies",
         "tier": 1,
         "params": {
             "genreId": 10752,
@@ -1227,6 +1264,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films de guerre",
                 "title": "Recrue",
                 "description": "Regarder 10 films de guerre"
             }
@@ -1277,6 +1315,7 @@
         "iconPath": "assets/achievements/genre_music_10.png",
         "type": "genre",
         "group": "genre_music",
+        "groupTitle": "Music movies",
         "tier": 1,
         "params": {
             "genreId": 10402,
@@ -1284,6 +1323,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films musicaux",
                 "title": "Groupie",
                 "description": "Regarder 10 films musicaux"
             }
@@ -1334,6 +1374,7 @@
         "iconPath": "assets/achievements/genre_family_10.png",
         "type": "genre",
         "group": "genre_family",
+        "groupTitle": "Family movies",
         "tier": 1,
         "params": {
             "genreId": 10751,
@@ -1341,6 +1382,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films familiaux",
                 "title": "Soirée cinéma",
                 "description": "Regarder 10 films familiaux"
             }
@@ -1391,6 +1433,7 @@
         "iconPath": "assets/achievements/genre_mystery_10.png",
         "type": "genre",
         "group": "genre_mystery",
+        "groupTitle": "Mystery movies",
         "tier": 1,
         "params": {
             "genreId": 9648,
@@ -1398,6 +1441,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films à mystère",
                 "title": "Fin limier",
                 "description": "Regarder 10 films à mystère"
             }
@@ -1448,6 +1492,7 @@
         "iconPath": "assets/achievements/genre_history_10.png",
         "type": "genre",
         "group": "genre_history",
+        "groupTitle": "History movies",
         "tier": 1,
         "params": {
             "genreId": 36,
@@ -1455,6 +1500,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Films historiques",
                 "title": "Passionné d'histoire",
                 "description": "Regarder 10 films historiques"
             }
@@ -1505,6 +1551,7 @@
         "iconPath": "assets/achievements/night_owl.png",
         "type": "behavioral",
         "group": "night_owl",
+        "groupTitle": "Night owl",
         "tier": 1,
         "params": {
             "subtype": "night_owl",
@@ -1512,6 +1559,7 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Oiseau de nuit",
                 "title": "Oiseau de nuit",
                 "description": "Regarder 10 titres entre minuit et 4 h"
             }
@@ -1577,10 +1625,11 @@
     {
         "id": "weekend_warrior",
         "title": "Weekend Warrior",
-        "description": "Watch 15 items in a single weekend",
+        "description": "Watch 15 items within 72 hours",
         "iconPath": "assets/achievements/weekend.png",
         "type": "behavioral",
         "group": "weekend",
+        "groupTitle": "Weekend warrior",
         "tier": 1,
         "params": {
             "subtype": "weekend",
@@ -1588,8 +1637,9 @@
         },
         "translations": {
             "fr": {
+                "groupTitle": "Guerrier du week-end",
                 "title": "Guerrier du week-end",
-                "description": "Regarder 15 titres en un seul week-end"
+                "description": "Regarder 15 titres en 72 heures"
             }
         }
     },
@@ -1632,18 +1682,39 @@
         }
     },
     {
+        "id": "weekend_warrior_100",
+        "title": "Weekend Overlord",
+        "description": "Watch 100 items within 72 hours",
+        "iconPath": "assets/achievements/weekend_warrior_100.png",
+        "type": "behavioral",
+        "group": "weekend",
+        "tier": 4,
+        "params": {
+            "subtype": "weekend",
+            "target": 100
+        },
+        "translations": {
+            "fr": {
+                "title": "Seigneur du week-end",
+                "description": "Regarder 100 titres en 72 heures"
+            }
+        }
+    },
+    {
         "id": "marathon_5",
         "title": "Warm-Up Lap",
         "description": "Watch 5 episodes of the same show in one day",
         "iconPath": "assets/achievements/marathon_5.png",
         "type": "marathon",
         "group": "marathon",
+        "groupTitle": "Binge-watching",
         "tier": 1,
         "params": {
             "target": 5
         },
         "translations": {
             "fr": {
+                "groupTitle": "Marathon de séries",
                 "title": "Tour d'échauffement",
                 "description": "Regarder 5 épisodes de la même série en un jour"
             }
@@ -1710,12 +1781,14 @@
         "iconPath": "assets/achievements/streak_7.png",
         "type": "streak",
         "group": "streak",
+        "groupTitle": "Daily streak",
         "tier": 1,
         "params": {
             "target": 7
         },
         "translations": {
             "fr": {
+                "groupTitle": "Jours consécutifs",
                 "title": "Régulier",
                 "description": "Regarder quelque chose chaque jour pendant une semaine"
             }
@@ -1759,19 +1832,57 @@
     },
     {
         "id": "runtime_1000",
-        "title": "1000 Minutes Club",
-        "description": "Spend 1000 minutes watching media",
-        "iconPath": "assets/achievements/time_1000.png",
+        "title": "Ten Hours In",
+        "description": "Watch for 10 hours total",
+        "iconPath": "assets/achievements/time_10h.png",
         "type": "runtime",
         "group": "runtime",
+        "groupTitle": "Watch time",
         "tier": 1,
         "params": {
-            "targetMinutes": 1000
+            "targetMinutes": 600
         },
         "translations": {
             "fr": {
-                "title": "Club des 1000 minutes",
-                "description": "Passer 1000 minutes à regarder"
+                "groupTitle": "Temps de visionnage",
+                "title": "Dix heures au compteur",
+                "description": "Regarder 10 heures au total"
+            }
+        }
+    },
+    {
+        "id": "runtime_hour_20",
+        "title": "Getting Comfy",
+        "description": "Watch for 20 hours total",
+        "iconPath": "assets/achievements/time_20h.png",
+        "type": "runtime",
+        "group": "runtime",
+        "tier": 2,
+        "params": {
+            "targetMinutes": 1200
+        },
+        "translations": {
+            "fr": {
+                "title": "Bien installé",
+                "description": "Regarder 20 heures au total"
+            }
+        }
+    },
+    {
+        "id": "runtime_10000",
+        "title": "Popcorn Regular",
+        "description": "Watch for 50 hours total",
+        "iconPath": "assets/achievements/time_50h.png",
+        "type": "runtime",
+        "group": "runtime",
+        "tier": 3,
+        "params": {
+            "targetMinutes": 3000
+        },
+        "translations": {
+            "fr": {
+                "title": "Habitué du pop-corn",
+                "description": "Regarder 50 heures au total"
             }
         }
     },
@@ -1782,7 +1893,7 @@
         "iconPath": "assets/achievements/time_100h.png",
         "type": "runtime",
         "group": "runtime",
-        "tier": 2,
+        "tier": 4,
         "params": {
             "targetMinutes": 6000
         },
@@ -1794,38 +1905,38 @@
         }
     },
     {
-        "id": "runtime_10000",
-        "title": "10,000 Minutes Club",
-        "description": "Spend 10,000 minutes watching media",
-        "iconPath": "assets/achievements/time_10000.png",
+        "id": "runtime_day_10",
+        "title": "Screen Dweller",
+        "description": "Watch for 200 hours total",
+        "iconPath": "assets/achievements/time_200h.png",
         "type": "runtime",
         "group": "runtime",
-        "tier": 3,
+        "tier": 5,
         "params": {
-            "targetMinutes": 10000
+            "targetMinutes": 12000
         },
         "translations": {
             "fr": {
-                "title": "Club des 10 000 minutes",
-                "description": "Passer 10 000 minutes à regarder"
+                "title": "Habitant de l'écran",
+                "description": "Regarder 200 heures au total"
             }
         }
     },
     {
-        "id": "runtime_day_10",
-        "title": "Ten Day Marathon",
-        "description": "Watch for 10 full days total",
-        "iconPath": "assets/achievements/time_10d.png",
+        "id": "runtime_100000",
+        "title": "Couch Pillar",
+        "description": "Watch for 500 hours total",
+        "iconPath": "assets/achievements/time_500h.png",
         "type": "runtime",
         "group": "runtime",
-        "tier": 4,
+        "tier": 6,
         "params": {
-            "targetMinutes": 14400
+            "targetMinutes": 30000
         },
         "translations": {
             "fr": {
-                "title": "Marathon de dix jours",
-                "description": "Regarder l'équivalent de 10 jours complets"
+                "title": "Pilier du canapé",
+                "description": "Regarder 500 heures au total"
             }
         }
     },
@@ -1836,7 +1947,7 @@
         "iconPath": "assets/achievements/time_1000h.png",
         "type": "runtime",
         "group": "runtime",
-        "tier": 5,
+        "tier": 7,
         "params": {
             "targetMinutes": 60000
         },
@@ -1848,20 +1959,38 @@
         }
     },
     {
-        "id": "runtime_100000",
-        "title": "100,000 Minutes Club",
-        "description": "Spend 100,000 minutes watching media",
-        "iconPath": "assets/achievements/time_100000.png",
+        "id": "runtime_hour_2000",
+        "title": "Living Room Legend",
+        "description": "Watch for 2,000 hours total",
+        "iconPath": "assets/achievements/time_2000h.png",
         "type": "runtime",
         "group": "runtime",
-        "tier": 6,
+        "tier": 8,
         "params": {
-            "targetMinutes": 100000
+            "targetMinutes": 120000
         },
         "translations": {
             "fr": {
-                "title": "Club des 100 000 minutes",
-                "description": "Passer 100 000 minutes à regarder"
+                "title": "Légende du salon",
+                "description": "Regarder 2 000 heures au total"
+            }
+        }
+    },
+    {
+        "id": "runtime_hour_5000",
+        "title": "Screen Immortal",
+        "description": "Watch for 5,000 hours total",
+        "iconPath": "assets/achievements/time_5000h.png",
+        "type": "runtime",
+        "group": "runtime",
+        "tier": 9,
+        "params": {
+            "targetMinutes": 300000
+        },
+        "translations": {
+            "fr": {
+                "title": "Immortel de l'écran",
+                "description": "Regarder 5 000 heures au total"
             }
         }
     },
@@ -1872,7 +2001,7 @@
         "iconPath": "assets/achievements/time_1y.png",
         "type": "runtime",
         "group": "runtime",
-        "tier": 7,
+        "tier": 10,
         "params": {
             "targetMinutes": 525600
         },

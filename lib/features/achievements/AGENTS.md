@@ -19,6 +19,7 @@ Tracks earned achievements (full `data` + `domain` + `presentation` layering).
   `.ai/rules/achievements.md` — never hardcode titles/progress in Dart.
 - Titles/descriptions are translated in the JSON (`translations.<code>`); display them
   with `achievement.titleFor(context.l10n.localeName)`, never `achievement.title`.
+  A family card shows `family.titleFor(...)` (the `groupTitle` of its first tier).
 - `AchievementProvider` persists every newly unlocked tier but notifies only the highest
   tier per family in a batch.
 - `achievement_model.dart` has a generated `part 'achievement_model.g.dart'`; never

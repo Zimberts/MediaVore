@@ -219,7 +219,7 @@ class _FamilyCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        current.titleFor(languageCode),
+                        family.titleFor(languageCode),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -286,6 +286,15 @@ class _FamilyCard extends StatelessWidget {
           controller: scrollController,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                family.titleFor(context.l10n.localeName),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
             for (final tier in family.tiers) _TierTile(achievement: tier),
           ],
         ),
