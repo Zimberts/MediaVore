@@ -180,7 +180,7 @@ jobs:
       RELEASE_TAG: ${{ needs.android.outputs.release_tag }}
     steps:
       - name: Download Android artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: mediavore-android-release
           path: dist
@@ -440,7 +440,7 @@ jobs:
 
       - name: Download Android artifacts
         if: steps.creds.outputs.enabled == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: mediavore-android-release
           path: dist
