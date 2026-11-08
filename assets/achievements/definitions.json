@@ -1682,25 +1682,6 @@
         }
     },
     {
-        "id": "weekend_warrior_100",
-        "title": "Weekend Overlord",
-        "description": "Watch 100 items within 72 hours",
-        "iconPath": "assets/achievements/weekend_warrior_100.png",
-        "type": "behavioral",
-        "group": "weekend",
-        "tier": 4,
-        "params": {
-            "subtype": "weekend",
-            "target": 100
-        },
-        "translations": {
-            "fr": {
-                "title": "Seigneur du week-end",
-                "description": "Regarder 100 titres en 72 heures"
-            }
-        }
-    },
-    {
         "id": "marathon_5",
         "title": "Warm-Up Lap",
         "description": "Watch 5 episodes of the same show in one day",
