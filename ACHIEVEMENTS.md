@@ -66,7 +66,8 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `saga_complete` | `target` | TMDB collections with every released part seen (2 released parts minimum) |
 | `watchlist_clear` | `target` | watchlist with no unseen title (series: caught up), once `target` titles are in the history |
 
-The last five types read TMDB data from the local cache only (season sizes, last aired
+The collection types (`season_complete`, `series_complete`, `up_to_date`,
+`saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
 episode, collection parts): a title absent from the cache does not count until its details
 are cached (opening it, or the background cache warm-up). They can regress (a new episode
 airs, a cache entry is purged, the watchlist grows), so once persisted their unlock is kept
