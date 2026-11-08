@@ -119,7 +119,12 @@ class NotificationRefreshService {
       final item = await remoteDataSource.getMediaItem(tmdbId, type: type);
       await cache.cacheItem(item);
 
-      await refreshNotificationDate(item, forceRemoteSeasons: force);
+      // TV seasons are cached without expiry, so bypass them here (already
+      // throttled to once a day) to discover newly published episodes.
+      await refreshNotificationDate(
+        item,
+        forceRemoteSeasons: force || type == MediaType.tv,
+      );
 
       // Keep Quick Add in sync in the same pass. populateFromSeenHistory is
       // cache-first and reuses the seasons just fetched above, so returning

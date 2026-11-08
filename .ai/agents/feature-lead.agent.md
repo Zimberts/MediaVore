@@ -41,6 +41,8 @@ delegate, review, test, and iterate until the work is done and green.
 - "Done" means `flutter analyze` + `flutter test` pass AND review is clean — never skip
   the verify step.
 - Keep changes scoped to the requested feature; call out any shared change explicitly.
+- Commits, branch name and PR title follow `.ai/rules/commits.md` (Conventional Commits
+  for messages **and** PR titles; branch `<type>/<issue>-<slug>`).
 
 ## Output Format
 

@@ -89,6 +89,9 @@ class _SeenManagerState extends State<SeenManager> {
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
           color: isSeen ? colors.success : colors.comments,
         ),
+        tooltip: isSeen
+            ? context.l10n.seenOpenHistory
+            : context.l10n.commonMarkAsSeen,
         onPressed: () {
           if (isSeen) {
             _showSeenHistory(context, provider);
@@ -262,6 +265,7 @@ class _SeenManagerState extends State<SeenManager> {
                         ),
                         trailing: IconButton(
                           icon: Icon(Icons.delete_outline, color: colors.error),
+                          tooltip: context.l10n.commonDelete,
                           onPressed: () {
                             provider.deleteSeenEntry(seenEntry.id!);
                             if (history.length <= 1) {
@@ -495,7 +499,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.logicFlow,
-                      foregroundColor: Colors.white,
+                      foregroundColor: contrastingForeground(colors.logicFlow),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

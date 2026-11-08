@@ -11,6 +11,8 @@ For project-wide rules, see the root [`AGENTS.md`](../AGENTS.md).
   language or a string. Update it when `lib/core/l10n/` or the l10n setup changes.
 - `DOCS/ai-guidelines.md` is the blueprint for this repo's AI-enablement files (root
   `AGENTS.md`, `.ai/rules/`, `.ai/agents/`, etc.).
+- `DOCS/ios-release.md` covers the App Store Connect setup, `ios/ExportOptions.plist` and
+  the local `flutter build ipa`. Update it when iOS signing or `Info.plist` keys change.
 
 ## Keep-in-sync rule
 

@@ -43,6 +43,10 @@ void main() {
     when(() => cache.getDetails(any(), any())).thenAnswer((_) async => null);
     when(() => cache.cacheDetails(any())).thenAnswer((_) async {});
     when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
+    when(() => cache.getItem(any(), any())).thenAnswer((_) async => null);
+    when(
+      () => cache.getSeasonUpdateDate(any(), any()),
+    ).thenAnswer((_) async => null);
     when(
       () => remote.getMediaCredits(any(), type: any(named: 'type')),
     ).thenAnswer((_) async => {'cast': [], 'crew': []});
@@ -118,6 +122,82 @@ void main() {
         expect(await service.getSeasonDetails(2, 1), {'episodes': 'late'});
       },
     );
+  });
+
+  group('getSeasonDetails (ongoing series TTL)', () {
+    const staleData = {
+      'episodes': [
+        {'episode_number': 1},
+      ],
+    };
+    const freshData = {
+      'episodes': [
+        {'episode_number': 1},
+        {'episode_number': 2},
+      ],
+    };
+
+    MediaItem tv(String status) => MediaItem(
+      id: 2,
+      title: 'Show',
+      overview: '',
+      releaseDate: '2020-01-01',
+      mediaType: MediaType.tv,
+      status: status,
+    );
+
+    void stubCachedSeason({required String status, required Duration age}) {
+      when(() => cache.getSeason(2, 1)).thenAnswer((_) async => staleData);
+      when(
+        () => cache.getItem(2, MediaType.tv),
+      ).thenAnswer((_) async => tv(status));
+      when(
+        () => cache.getSeasonUpdateDate(2, 1),
+      ).thenAnswer((_) async => DateTime.now().subtract(age));
+    }
+
+    test('should re-fetch a day-old season of a returning series', () async {
+      stubCachedSeason(
+        status: 'Returning Series',
+        age: const Duration(days: 2),
+      );
+      when(
+        () => remote.getSeasonDetails(2, 1),
+      ).thenAnswer((_) async => freshData);
+
+      expect(await service.getSeasonDetails(2, 1), freshData);
+      verify(() => cache.cacheSeason(2, 1, freshData)).called(1);
+    });
+
+    test(
+      'should use a recent season of a returning series from cache',
+      () async {
+        stubCachedSeason(
+          status: 'Returning Series',
+          age: const Duration(hours: 2),
+        );
+
+        expect(await service.getSeasonDetails(2, 1), staleData);
+        verifyNever(() => remote.getSeasonDetails(any(), any()));
+      },
+    );
+
+    test('should never expire seasons of an ended series', () async {
+      stubCachedSeason(status: 'Ended', age: const Duration(days: 90));
+
+      expect(await service.getSeasonDetails(2, 1), staleData);
+      verifyNever(() => remote.getSeasonDetails(any(), any()));
+    });
+
+    test('should fall back to the stale copy when the network fails', () async {
+      stubCachedSeason(
+        status: 'Returning Series',
+        age: const Duration(days: 2),
+      );
+      when(() => remote.getSeasonDetails(2, 1)).thenThrow(Exception('offline'));
+
+      expect(await service.getSeasonDetails(2, 1), staleData);
+    });
   });
 
   group('seasonDetailsForRefresh', () {
