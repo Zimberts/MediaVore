@@ -253,7 +253,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                             height: 120,
                             fit: BoxFit.cover,
                             placeholder: (context, url) =>
-                                Container(color: Colors.grey[200]),
+                                Container(color: context.appColors.placeholder),
                             errorWidget: (context, url, error) => Icon(
                               item.mediaType == MediaType.tv
                                   ? Icons.tv
@@ -262,7 +262,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                           )
                         : Container(
                             height: 120,
-                            color: Colors.grey[300],
+                            color: context.appColors.placeholder,
                             child: Icon(
                               item.mediaType == MediaType.tv
                                   ? Icons.tv

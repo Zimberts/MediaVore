@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +22,7 @@ class NotifyButton extends StatelessWidget {
         return IconButton(
           icon: Icon(
             isNotified ? Icons.notifications_active : Icons.notifications_none,
-            color: isNotified ? Colors.orange : null,
+            color: isNotified ? context.appColors.warning : null,
           ),
           onPressed: () => provider.toggleNotification(item),
           tooltip: isNotified
