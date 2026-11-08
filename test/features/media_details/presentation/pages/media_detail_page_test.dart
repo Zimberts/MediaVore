@@ -25,6 +25,14 @@ void main() {
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
     registerFallbackValue(FakeMediaItem());
+    registerFallbackValue(
+      SeenItem(
+        tmdbId: 0,
+        type: MediaType.tv,
+        title: '',
+        seenDate: DateTime(2000),
+      ),
+    );
   });
 
   setUp(() {
@@ -57,8 +65,11 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
-    
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
+
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
@@ -274,6 +285,156 @@ void main() {
 
       // Check the season list tile subtitle
       expect(find.text('1 / 7 episodes seen'), findsOneWidget);
+    });
+    group('seen counters stay in sync with the seen history (#209)', () {
+      const tvId = 3;
+      final tTvItem = MediaItem(
+        id: tvId,
+        title: 'Dark',
+        mediaType: MediaType.tv,
+        overview: '...',
+        releaseDate: '2017-12-01',
+        numberOfEpisodes: 3,
+        status: 'Ended',
+        seasons: const [
+          TVSeason(id: 1, seasonNumber: 1, episodeCount: 3, name: 'Season 1'),
+        ],
+      );
+      final tTvDetails = MediaDetails(item: tTvItem, cast: []);
+
+      SeenItem episode(int id, int number) => SeenItem(
+        id: id,
+        tmdbId: tvId,
+        type: MediaType.tv,
+        title: 'Dark',
+        seenDate: DateTime(2023, 1, id),
+        seasonNumber: 1,
+        episodeNumber: number,
+      );
+
+      // In-memory seen history shared by every repository read, so the
+      // provider and the page observe the same state as with Isar.
+      late List<SeenItem> seen;
+
+      setUp(() {
+        seen = [episode(1, 1)];
+        when(
+          () => mockMediaRepository.getMediaDetails(
+            tvId,
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => tTvDetails);
+        when(
+          () => mockMediaRepository.getSeenStatus(tvId, any()),
+        ).thenAnswer((_) async => List.of(seen));
+        when(
+          () => mockMediaRepository.getSeenItems(),
+        ).thenAnswer((_) async => List.of(seen));
+        when(() => mockMediaRepository.getSeasonDetails(tvId, 1)).thenAnswer(
+          (_) async => {
+            'episodes': [
+              for (var e = 1; e <= 3; e++)
+                {'episode_number': e, 'air_date': '2017-12-01'},
+            ],
+          },
+        );
+        when(() => mockMediaRepository.markAsSeen(any())).thenAnswer((
+          invocation,
+        ) async {
+          final item = invocation.positionalArguments.first as SeenItem;
+          seen.add(
+            SeenItem(
+              id: seen.length + 1,
+              tmdbId: item.tmdbId,
+              type: item.type,
+              title: item.title,
+              seenDate: item.seenDate,
+              seasonNumber: item.seasonNumber,
+              episodeNumber: item.episodeNumber,
+            ),
+          );
+        });
+      });
+
+      Future<void> pumpPage(WidgetTester tester) async {
+        await searchProvider.loadAllSeenStatus();
+        await tester.pumpWidget(createWidgetUnderTest(item: tTvItem));
+        await tester.pump();
+        await tester.pumpAndSettle();
+      }
+
+      Future<void> expectCounters(WidgetTester tester, int seenCount) async {
+        expect(
+          find.text('Progress: $seenCount / 3 episodes seen'),
+          findsOneWidget,
+        );
+        final progress = tester.widget<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+        expect(progress.value, seenCount / 3);
+        await tester.scrollUntilVisible(
+          find.text('Season 1'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text('$seenCount / 3 episodes seen'), findsOneWidget);
+      }
+
+      testWidgets('Watch Next updates the global and season counters', (
+        WidgetTester tester,
+      ) async {
+        await pumpPage(tester);
+        await expectCounters(tester, 1);
+
+        await tester.scrollUntilVisible(
+          find.text('Watch Next: S1 E2'),
+          -200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.tap(find.text('Watch Next: S1 E2'));
+        await tester.pumpAndSettle();
+
+        await tester.scrollUntilVisible(
+          find.textContaining('Progress:'),
+          -200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await expectCounters(tester, 2);
+      });
+
+      testWidgets('a removal from another entry point updates the counters', (
+        WidgetTester tester,
+      ) async {
+        seen.add(episode(2, 2));
+        when(
+          () => mockMediaRepository.removeFromSeen(
+            tvId,
+            MediaType.tv,
+            seasonNumber: any(named: 'seasonNumber'),
+            episodeNumber: any(named: 'episodeNumber'),
+          ),
+        ).thenAnswer((invocation) async {
+          final e = invocation.namedArguments[#episodeNumber] as int?;
+          seen.removeWhere((s) => s.episodeNumber == e);
+        });
+        await pumpPage(tester);
+        await expectCounters(tester, 2);
+
+        await searchProvider.removeFromSeen(
+          tvId,
+          MediaType.tv,
+          seasonNumber: 1,
+          episodeNumber: 2,
+        );
+        await tester.pumpAndSettle();
+
+        await tester.scrollUntilVisible(
+          find.textContaining('Progress:'),
+          -200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await expectCounters(tester, 1);
+      });
     });
   });
 }

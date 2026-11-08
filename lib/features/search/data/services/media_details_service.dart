@@ -177,7 +177,10 @@ class MediaDetailsService {
     int seasonNumber,
   ) async {
     final cachedSeason = await cache.getSeason(tvId, seasonNumber);
-    if (cachedSeason != null) return cachedSeason;
+    if (cachedSeason != null &&
+        !await _isOngoingSeasonStale(tvId, seasonNumber)) {
+      return cachedSeason;
+    }
 
     try {
       final details = await remoteDataSource.getSeasonDetails(
@@ -189,6 +192,19 @@ class MediaDetailsService {
     } catch (e) {
       return await cache.getSeason(tvId, seasonNumber) ?? (throw e);
     }
+  }
+
+  /// Seasons of ongoing series gain episodes over time, so a cached copy older
+  /// than a day is re-fetched (the stale copy remains the offline fallback).
+  Future<bool> _isOngoingSeasonStale(int tvId, int seasonNumber) async {
+    final item = await cache.getItem(tvId, MediaType.tv);
+    final status = item?.status?.toLowerCase();
+    if (status != 'returning series' && status != 'in production') {
+      return false;
+    }
+    final updatedAt = await cache.getSeasonUpdateDate(tvId, seasonNumber);
+    if (updatedAt == null) return false;
+    return DateTime.now().difference(updatedAt) >= const Duration(days: 1);
   }
 
   /// Fetches season details, bypassing the cache when [forceRemote] is set so

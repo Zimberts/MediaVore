@@ -230,6 +230,14 @@ class MediaCache {
     return row.profilePath;
   }
 
+  Future<DateTime?> getSeasonUpdateDate(int tvId, int seasonNumber) async {
+    final row = await _isar.cachedSeasons.getByTvIdSeasonNumber(
+      tvId,
+      seasonNumber,
+    );
+    return row?.updatedAt;
+  }
+
   Future<DateTime?> getCacheUpdateDate(int tmdbId, MediaType type) async {
     final row = await _isar.cachedMedias.getByTmdbIdType(tmdbId, type.name);
     return row?.updatedAt;

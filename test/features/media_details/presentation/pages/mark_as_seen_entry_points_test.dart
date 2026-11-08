@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
@@ -111,7 +112,10 @@ void main() {
               value: settingsProvider,
             ),
           ],
-          child: const MaterialApp(home: NotificationCenterPage()),
+          child: MaterialApp(
+            theme: DefaultLightPalette().toThemeData(),
+            home: const NotificationCenterPage(),
+          ),
         ),
       );
 
@@ -195,6 +199,7 @@ void main() {
         ChangeNotifierProvider<SearchProvider>.value(
           value: provider,
           child: MaterialApp(
+            theme: DefaultLightPalette().toThemeData(),
             home: Scaffold(
               body: WatchNextButton(
                 item: MediaItem(
@@ -327,7 +332,10 @@ void main() {
               value: settingsProvider,
             ),
           ],
-          child: const MaterialApp(home: NotificationCenterPage()),
+          child: MaterialApp(
+            theme: DefaultLightPalette().toThemeData(),
+            home: const NotificationCenterPage(),
+          ),
         ),
       );
 

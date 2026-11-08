@@ -10,5 +10,5 @@ Required inputs:
 
 Constraints:
 - Do not modify any Dart source, `pubspec.yaml`, or `analysis_options.yaml`.
-- Do not uncomment `.github/workflows/android-build.yml`.
+- Do not modify `.github/workflows/release.yml`.
 - End by running the verifier and reporting PASS/FAIL per the blueprint §8 checklist.

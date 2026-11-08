@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/notify_button.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -55,6 +56,7 @@ void main() {
     return ChangeNotifierProvider<SearchProvider>.value(
       value: searchProvider,
       child: MaterialApp(
+        theme: DefaultLightPalette().toThemeData(),
         home: Scaffold(body: NotifyButton(item: item)),
       ),
     );
