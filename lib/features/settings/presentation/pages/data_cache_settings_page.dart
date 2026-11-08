@@ -49,6 +49,7 @@ class DataCacheSettingsPage extends StatelessWidget {
                       )
                     : IconButton(
                         icon: const Icon(Icons.refresh),
+                        tooltip: context.l10n.commonRefresh,
                         onPressed: () => provider.updateCacheSize(),
                       ),
               ),
@@ -100,6 +101,7 @@ class DataCacheSettingsPage extends StatelessWidget {
                       )
                     : IconButton(
                         icon: const Icon(Icons.refresh),
+                        tooltip: context.l10n.commonRefresh,
                         onPressed: () => provider.updateSeenDbSize(),
                       ),
               ),

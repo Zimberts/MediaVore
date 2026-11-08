@@ -77,7 +77,11 @@ class MediaListTile extends StatelessWidget {
           subtitle: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(isTv ? Icons.tv : Icons.movie, size: 12, color: Colors.grey),
+              Icon(
+                isTv ? Icons.tv : Icons.movie,
+                size: 12,
+                color: colors.comments,
+              ),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
@@ -88,7 +92,7 @@ class MediaListTile extends StatelessWidget {
               ),
               if (item.voteAverage != null && item.voteAverage! > 0) ...[
                 const Text(' • '),
-                const Icon(Icons.star, color: Colors.amber, size: 12),
+                Icon(Icons.star, color: colors.ratingStar, size: 12),
                 const SizedBox(width: 2),
                 Text(item.voteAverage!.toStringAsFixed(1)),
               ],

@@ -318,6 +318,8 @@
   "statsDistribution": "Distribution",
   "statsSelectYear": "Select Year",
   "statsSelectPeriod": "Select Period",
+  "statsPreviousPeriod": "Previous period",
+  "statsNextPeriod": "Next period",
   "statsTotalWatchTime": "Total Watch Time",
   "statsDuration": "{days}d {hours}h {minutes}m",
   "@statsDuration": {
@@ -462,6 +464,7 @@
   "discoveryApply": "Apply",
   "commonRetry": "Retry",
   "discoverySearchHint": "Search within Discovery...",
+  "discoverySearchToggle": "Search Discovery",
   "discoveryTitle": "Discover",
   "discoveryNoResults": "No results found",
   "discoveryClearFilters": "Clear Filters",
