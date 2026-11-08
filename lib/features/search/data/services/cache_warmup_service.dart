@@ -12,6 +12,10 @@ import 'package:mediavore/features/search/data/services/notification_refresh_ser
 class CacheWarmupService {
   final MediaListLocalDataSource localDataSource;
   final MediaCache cache;
+
+  /// Whether a TMDB credential is set; the warm-up is skipped without one
+  /// (every request would fail). `null` = assume one is set.
+  final bool Function()? hasCredential;
   final MediaDetailsService details;
   final NotificationRefreshService notifications;
 
@@ -29,6 +33,7 @@ class CacheWarmupService {
     required this.cache,
     required this.details,
     required this.notifications,
+    this.hasCredential,
   });
 
   /// Stops the in-flight cache warm-up after the current item.
@@ -57,6 +62,10 @@ class CacheWarmupService {
   /// Fills/refreshes the cache. Returns false if cancelled or failed.
   Future<bool> _initCache(int generation) async {
     bool cancelled() => generation != _warmupGeneration;
+    if (hasCredential?.call() == false) {
+      debugPrint('[Repo] No TMDB credential; skipping cache warm-up.');
+      return false;
+    }
     try {
       debugPrint('[Repo] Starting background _initCache...');
       // 1. Populate/Refresh cache with items from all lists

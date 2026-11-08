@@ -8,6 +8,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
+import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/search/data/services/cache_warmup_service.dart';
@@ -39,6 +40,10 @@ class MediaRepositoryImpl implements MediaRepository {
   /// never shown in a previous language. `null` disables the check.
   final LocaleService? localeService;
 
+  /// TMDB credential; the automatic cache warm-up is skipped while none is
+  /// set. `null` = always run.
+  final TmdbCredentialStore? credentialStore;
+
   /// Max concurrent `/movie|tv/{id}` requests when enriching a result page.
   static const int enrichmentConcurrency =
       MediaDetailsService.enrichmentConcurrency;
@@ -58,6 +63,7 @@ class MediaRepositoryImpl implements MediaRepository {
     required this.cache,
     this.warmupPolicy,
     this.localeService,
+    this.credentialStore,
     bool autoInit = true,
   }) {
     _details = MediaDetailsService(
@@ -92,6 +98,9 @@ class MediaRepositoryImpl implements MediaRepository {
       cache: cache,
       details: _details,
       notifications: _notifications,
+      hasCredential: credentialStore == null
+          ? null
+          : () => credentialStore!.hasCredential,
     );
     _importExport = ImportExportService(
       localDataSource: localDataSource,
