@@ -464,6 +464,23 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Checks [credential] with TMDB without saving it.
+  ///
+  /// Returns `null` when TMDB accepts it, otherwise why it failed
+  /// ([SearchErrorType.invalidApiKey] for a rejected key).
+  Future<SearchErrorType?> validateTmdbCredential(String credential) async {
+    try {
+      await repository.validateTmdbCredential(credential);
+      return null;
+    } catch (e) {
+      // Log the type only: the error may carry the request URL (v3 key).
+      debugPrint(
+        '[SearchProvider] TMDB credential check failed: ${e.runtimeType}',
+      );
+      return classifySearchError(e);
+    }
+  }
+
   Future<void> searchMedia(String query) async {
     final normalizedQuery = query.trim();
     _currentQuery = normalizedQuery;
@@ -758,14 +775,18 @@ class SearchProvider with ChangeNotifier {
               final next = await getNextEpisode(item.tmdbId);
               if (next == null) noNext = true;
             } catch (e) {
-              debugPrint('[SearchProvider] markAsSeen getNextEpisode failed: $e');
+              debugPrint(
+                '[SearchProvider] markAsSeen getNextEpisode failed: $e',
+              );
             }
 
             if ((isLastEpisode || noNext) && discontinued) {
               await toggleInList(mediaItem, 'watchlist');
             }
           } catch (e) {
-            debugPrint('[SearchProvider] markAsSeen watchlist cleanup failed: $e');
+            debugPrint(
+              '[SearchProvider] markAsSeen watchlist cleanup failed: $e',
+            );
           }
         }
       }
@@ -870,7 +891,9 @@ class SearchProvider with ChangeNotifier {
           await loadQuickAddItems();
         }
       } catch (e) {
-        debugPrint('[SearchProvider] importAllData quick-add population failed: $e');
+        debugPrint(
+          '[SearchProvider] importAllData quick-add population failed: $e',
+        );
       }
 
       _isImporting = false;
