@@ -8,6 +8,8 @@ import 'package:mediavore/features/achievements/presentation/providers/achieveme
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
@@ -64,7 +66,10 @@ void main() {
     ).thenAnswer((_) => const Stream<Achievement>.empty());
 
     searchProvider = SearchProvider(mockRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore('fake_api_key'));
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore('fake_api_key'),
+    );
 
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
@@ -107,7 +112,7 @@ void main() {
 
     // If API key is empty, dialog shows up. The mock returned a fake key, so there shouldn't be a dialog blocking clicks.
     // If it *does* happen to show up, we might need to close it. But let's assume it didn't box the tap.
-    
+
     // Initially on Discover (SearchPage)
     expect(
       find.text('Discover'),
@@ -151,6 +156,28 @@ void main() {
             widget is TextField &&
             widget.decoration?.hintText == 'Search within Discovery...',
       ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('first launch without a key shows the TMDB onboarding', (
+    WidgetTester tester,
+  ) async {
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TmdbCredentialPage), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('tmdb_credential_skip')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TmdbCredentialPage), findsNothing);
+    expect(
+      find.text(fallbackLocalizations.tmdbCredentialLater),
       findsOneWidget,
     );
   });
