@@ -72,7 +72,8 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `tmdb_rating` | `minRating`, `minVotes`, `maxVotes` (each optional, inclusive), `target` | titles seen whose TMDB vote average / vote count are within the bounds |
 | `day_one` | `maxDelayDays` (default 0), `target` | movies (first view) and episodes seen on their TMDB release / air day, or at most `maxDelayDays` calendar days later |
 
-The last five types read TMDB data from the local cache only (season sizes, last aired
+The collection types (`season_complete`, `series_complete`, `up_to_date`,
+`saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
 episode, collection parts): a title absent from the cache does not count until its details
 are cached (opening it, or the background cache warm-up). They can regress (a new episode
 airs, a cache entry is purged, the watchlist grows), so once persisted their unlock is kept
