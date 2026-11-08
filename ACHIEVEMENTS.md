@@ -77,7 +77,8 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `anniversary` | `target` (years) | full years since the first view in the history (imported views included) |
 | `calendar_date` | `dates` (`MM-DD` list), `target` | distinct years with a view on one of the dates |
 
-The last five types read TMDB data from the local cache only (season sizes, last aired
+The collection types (`season_complete`, `series_complete`, `up_to_date`,
+`saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
 episode, collection parts): a title absent from the cache does not count until its details
 are cached (opening it, or the background cache warm-up). They can regress (a new episode
 airs, a cache entry is purged, the watchlist grows), so once persisted their unlock is kept
