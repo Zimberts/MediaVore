@@ -144,6 +144,15 @@ extension AppThemeContext on BuildContext {
       Theme.of(this).extension<AppThemeExtension>()!;
 }
 
+/// Black or white, whichever reads better on [background].
+///
+/// For palette colors that have no matching `on*` color (success, error,
+/// warning, data-viz colors).
+Color contrastingForeground(Color background) =>
+    ThemeData.estimateBrightnessForColor(background) == Brightness.dark
+    ? Colors.white
+    : Colors.black;
+
 abstract class AppPalette {
   Brightness get brightness;
   Color get primaryBg;
@@ -184,7 +193,9 @@ abstract class AppPalette {
   Color get error => Colors.red;
   Color get success => Colors.green;
   Color get info => Colors.blue;
-  Color get placeholder => Colors.grey.shade300;
+  Color get placeholder => brightness == Brightness.dark
+      ? Colors.grey.shade800
+      : Colors.grey.shade300;
 
   ThemeData toThemeData() {
     return ThemeData(
