@@ -65,6 +65,10 @@ class TmdbCredentialStore {
   /// The stored credential, or an empty string when none is set.
   String get credential => _credential;
 
+  /// Whether a credential is set. TMDB calls fail without one, so automatic
+  /// background fetches check this first instead of failing item by item.
+  bool get hasCredential => _credential.trim().isNotEmpty;
+
   /// Persists [value] (trimmed) in secure storage; an empty value deletes it.
   Future<void> save(String value) async {
     final trimmed = value.trim();

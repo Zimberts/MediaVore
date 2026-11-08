@@ -200,17 +200,41 @@ abstract class AppLocalizations {
   /// **'Enter name'**
   String get importListNameHint;
 
-  /// No description provided for @tmdbCredentialRequiredTitle.
+  /// No description provided for @tmdbOnboardingTitle.
   ///
   /// In en, this message translates to:
-  /// **'TMDB Credential Required'**
-  String get tmdbCredentialRequiredTitle;
+  /// **'Connect to TMDB'**
+  String get tmdbOnboardingTitle;
 
-  /// No description provided for @tmdbCredentialRequiredMessage.
+  /// No description provided for @tmdbOnboardingWhy.
   ///
   /// In en, this message translates to:
-  /// **'To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.'**
-  String get tmdbCredentialRequiredMessage;
+  /// **'MediaVore gets movie and series data (posters, synopses, release dates) from The Movie Database (TMDB). TMDB asks each user for a free personal key.'**
+  String get tmdbOnboardingWhy;
+
+  /// No description provided for @tmdbOnboardingStepGetKey.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Create a free TMDB account, then open its API settings page.'**
+  String get tmdbOnboardingStepGetKey;
+
+  /// No description provided for @tmdbOnboardingOpenTmdb.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the TMDB API page'**
+  String get tmdbOnboardingOpenTmdb;
+
+  /// No description provided for @tmdbOnboardingStepPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Copy the \"API Read Access Token\" (or the \"API Key\") and paste it below.'**
+  String get tmdbOnboardingStepPaste;
+
+  /// No description provided for @tmdbCredentialLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the browser. Link copied: {url}'**
+  String tmdbCredentialLinkCopied(String url);
 
   /// No description provided for @tmdbCredentialHint.
   ///
@@ -218,17 +242,77 @@ abstract class AppLocalizations {
   /// **'Enter TMDB v3 API key or v4 read token'**
   String get tmdbCredentialHint;
 
+  /// No description provided for @tmdbCredentialPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get tmdbCredentialPaste;
+
+  /// No description provided for @tmdbCredentialShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get tmdbCredentialShow;
+
+  /// No description provided for @tmdbCredentialHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get tmdbCredentialHide;
+
+  /// No description provided for @tmdbCredentialVerifyAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and save'**
+  String get tmdbCredentialVerifyAndSave;
+
+  /// No description provided for @tmdbCredentialVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking with TMDB…'**
+  String get tmdbCredentialVerifying;
+
+  /// No description provided for @tmdbCredentialSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'TMDB key verified and saved.'**
+  String get tmdbCredentialSaved;
+
+  /// No description provided for @tmdbCredentialInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'TMDB rejected this key. Check that you copied the whole API key or read access token.'**
+  String get tmdbCredentialInvalid;
+
+  /// No description provided for @tmdbCredentialCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The key could not be verified: {reason}'**
+  String tmdbCredentialCheckFailed(String reason);
+
+  /// No description provided for @tmdbCredentialSaveAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Save without verifying'**
+  String get tmdbCredentialSaveAnyway;
+
+  /// No description provided for @tmdbCredentialRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove key'**
+  String get tmdbCredentialRemove;
+
   /// No description provided for @tmdbCredentialLater.
   ///
   /// In en, this message translates to:
   /// **'You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).'**
   String get tmdbCredentialLater;
 
-  /// No description provided for @tmdbCredentialCancelForNow.
+  /// No description provided for @tmdbCredentialSkip.
   ///
   /// In en, this message translates to:
-  /// **'Cancel for now'**
-  String get tmdbCredentialCancelForNow;
+  /// **'Skip for now'**
+  String get tmdbCredentialSkip;
 
   /// No description provided for @achievementUnlocked.
   ///
