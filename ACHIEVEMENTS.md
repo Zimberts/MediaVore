@@ -79,7 +79,8 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `movie_runtime` | `minMinutes`, `maxMinutes` (at least one, each inclusive), `target` | distinct movies whose stored runtime is within the bounds |
 | `series_seasons` | `target` | regular seasons (specials excluded) of the same series with at least one episode seen |
 
-The last five types read TMDB data from the local cache only (season sizes, last aired
+The collection types (`season_complete`, `series_complete`, `up_to_date`,
+`saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
 episode, collection parts): a title absent from the cache does not count until its details
 are cached (opening it, or the background cache warm-up). They can regress (a new episode
 airs, a cache entry is purged, the watchlist grows), so once persisted their unlock is kept
