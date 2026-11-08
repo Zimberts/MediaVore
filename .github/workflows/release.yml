@@ -55,7 +55,7 @@ jobs:
             echo "::warning::Secret RELEASE_PLEASE_TOKEN is missing: falling back to GITHUB_TOKEN, so the release PR gets no CI run (see DOCS/releasing.md)."
           fi
 
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: rp
         with:
           # A PR opened with GITHUB_TOKEN triggers no workflow, so its required checks never run.
