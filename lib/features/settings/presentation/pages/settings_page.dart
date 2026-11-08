@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/app_version.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
@@ -185,12 +186,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: Text(l10n.settingsAchievementsSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AchievementsPage(),
-                ),
-              );
+              Navigator.push(context, AchievementsPage.route());
             },
           ),
           const Divider(),
@@ -223,7 +219,7 @@ class SettingsPage extends StatelessWidget {
           AboutListTile(
             icon: const Icon(Icons.info_outline),
             applicationName: l10n.appTitle,
-            applicationVersion: '1.1.0',
+            applicationVersion: appVersion,
             aboutBoxChildren: [Text(l10n.settingsAboutDescription)],
           ),
         ],

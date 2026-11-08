@@ -736,6 +736,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsSelectPeriod => 'Choisir la période';
 
   @override
+  String get statsPreviousPeriod => 'Période précédente';
+
+  @override
+  String get statsNextPeriod => 'Période suivante';
+
+  @override
   String get statsTotalWatchTime => 'Temps de visionnage total';
 
   @override
@@ -929,6 +935,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get discoverySearchHint => 'Rechercher...';
+
+  @override
+  String get discoverySearchToggle => 'Rechercher dans Découvrir';
 
   @override
   String get discoveryTitle => 'Découvrir';

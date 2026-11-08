@@ -52,7 +52,12 @@ flutter test                                              # tests
 
 ## Conventions
 
-- **Commits** — Conventional Commits: `<type>(<scope>): <desc>`. Types `feat`/`fix`/`chore`/`bump`; scopes `README`/`back`/`front`.
+- **Commits and PR titles** — Conventional Commits: `<type>(<scope>)!: <desc>`, for every
+  commit message **and** every PR title. Types `feat`/`fix`/`docs`/`style`/`refactor`/`perf`/
+  `test`/`build`/`ci`/`chore`/`revert`/`bump`; scope optional and free (feature name, e.g.
+  `export`, `media_details`, `back`). Details in `.ai/rules/commits.md`.
+- **Branches** — readable, referencing the issue: `<type>/<issue>-<slug>`, e.g.
+  `feat/233-readable-export-filename`.
 - **Tests** — mirror source path + `_test.dart`; `group('...', () { test('should ...', ...) })`.
   Mock with `mocktail`; shared mocks in `test/helpers/mocks.dart`; load fixtures with
   `fixture(name)` from `test/helpers/fixture_reader.dart`. Real Isar tests use `test/tmp_*`
@@ -80,6 +85,8 @@ flutter test                                              # tests
 
 ## Workflow
 
-Write Conventional Commit messages per the rules above (`<type>(<scope>): <desc>`).
+Write Conventional Commit messages and PR titles per the rules above. Install the local
+hook once: `pip install pre-commit && pre-commit install --hook-type commit-msg`.
 Verify with `flutter analyze` and `flutter test` before considering a change done.
-CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `dart format --set-exit-if-changed lib test` (non-blocking for now), `flutter test --coverage`, and a Conventional Commits PR-title check. `android-build.yml` builds the release APK on `v*` tags.
+CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `dart format --set-exit-if-changed lib test` (non-blocking for now), `flutter test --coverage`. `pr-title.yml` checks the PR title and every commit subject
+against Conventional Commits. `release.yml` runs on every push to `main`: `ci.yml` analyze/test, then release-please (release PR `chore(release): vX.Y.Z`; merging it tags and builds the APK + AAB, checked for 16 KB page alignment by `tool/check_16kb_alignment.sh`). Never bump `version:` or push tags by hand; see `DOCS/releasing.md`.

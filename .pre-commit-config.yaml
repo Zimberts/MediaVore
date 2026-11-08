@@ -1,0 +1,14 @@
+# Local git hooks. One-time setup (see README.md):
+#   pip install pre-commit && pre-commit install --hook-type commit-msg
+default_install_hook_types: [commit-msg]
+
+repos:
+  # Conventional Commits on every commit message: `<type>(<scope>)!: <description>`.
+  # Keep the type list in sync with .github/workflows/pr-title.yml and AGENTS.md.
+  # Non-strict mode: `Merge ...`, `fixup!` and `squash!` commits are accepted.
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert, bump]

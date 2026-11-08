@@ -722,6 +722,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsSelectPeriod => 'Select Period';
 
   @override
+  String get statsPreviousPeriod => 'Previous period';
+
+  @override
+  String get statsNextPeriod => 'Next period';
+
+  @override
   String get statsTotalWatchTime => 'Total Watch Time';
 
   @override
@@ -914,6 +920,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverySearchHint => 'Search within Discovery...';
+
+  @override
+  String get discoverySearchToggle => 'Search Discovery';
 
   @override
   String get discoveryTitle => 'Discover';

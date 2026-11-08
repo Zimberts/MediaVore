@@ -330,6 +330,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final onToast = contrastingForeground(colors.logicFlow);
     final statusBarHeight = MediaQuery.of(context).padding.top;
     final appBarHeight = kToolbarHeight;
 
@@ -371,13 +372,9 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
           color: Colors.transparent,
           child: GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AchievementsPage(
-                    initialAchievementId: widget.achievement.id,
-                  ),
-                ),
+              AchievementsPage.showAchievement(
+                Navigator.of(context),
+                widget.achievement.id,
               );
               _handleDismiss();
             },
@@ -401,7 +398,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.emoji_events, color: Colors.white, size: 28),
+                  Icon(Icons.emoji_events, color: onToast, size: 28),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -416,26 +413,24 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                               : context.l10n.achievementUnlocked,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: onToast,
                             fontSize: 14,
                           ),
                         ),
                         Text(
                           widget.achievement.titleFor(context.l10n.localeName),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: onToast, fontSize: 16),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close,
-                      color: Colors.white70,
+                      color: onToast.withValues(alpha: 0.7),
                       size: 20,
                     ),
+                    tooltip: context.l10n.commonClose,
                     onPressed: _handleDismiss,
                   ),
                 ],
