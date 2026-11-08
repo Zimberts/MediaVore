@@ -85,8 +85,11 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
-      });
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
+  });
 
   Widget createWidgetUnderTest() {
     return MultiProvider(
@@ -241,6 +244,56 @@ void main() {
     );
     expect(find.byKey(const Key('discovery_open_settings')), findsOneWidget);
     expect(find.text('No results found'), findsNothing);
+  });
+
+  // Regression test for #245: saving a key (first-launch screen or Settings)
+  // must reload Discover instead of leaving the "missing key" error.
+  testWidgets('DiscoveryPage reloads when a TMDB key is saved', (
+    WidgetTester tester,
+  ) async {
+    stubDiscoverThrows(const ConfigurationException('missing key'));
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    expect(
+      find.text(searchErrorMessage(SearchErrorType.missingApiKey)),
+      findsOneWidget,
+    );
+
+    when(
+      () => mockMediaRepository.discoverMedia(
+        page: any(named: 'page'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        originalLanguage: any(named: 'originalLanguage'),
+        type: any(named: 'type'),
+        sortBy: any(named: 'sortBy'),
+      ),
+    ).thenAnswer(
+      (invocation) async => [
+        MediaItem(
+          id: 1,
+          title: 'Loaded ${invocation.namedArguments[#type]}',
+          overview: '',
+          releaseDate: '2024',
+          mediaType: MediaType.movie,
+        ),
+      ],
+    );
+
+    await settingsProvider.setTmdbApiKey('new_key');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    expect(
+      find.text(searchErrorMessage(SearchErrorType.missingApiKey)),
+      findsNothing,
+    );
+    expect(find.textContaining('Loaded'), findsWidgets);
   });
 
   testWidgets('DiscoveryPage shows offline message with a retry button', (

@@ -69,6 +69,25 @@ void main() {
   });
 
   group('CacheWarmupService.run', () {
+    test('should skip the run without a TMDB credential', () async {
+      final noCredential = CacheWarmupService(
+        localDataSource: warmup.localDataSource,
+        cache: cache,
+        details: warmup.details,
+        notifications: warmup.notifications,
+        hasCredential: () => false,
+      );
+
+      expect(await noCredential.run(), isFalse);
+      verifyNever(() => local.getAllListNames());
+      verifyNever(
+        () => cache.cleanup(
+          keepKeys: any(named: 'keepKeys'),
+          olderThan: any(named: 'olderThan'),
+        ),
+      );
+    });
+
     test('should complete a run and clean up unused entries', () async {
       listNames.complete([]);
 
