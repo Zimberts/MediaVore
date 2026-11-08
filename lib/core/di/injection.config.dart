@@ -16,6 +16,8 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:isar_community/isar.dart' as _i214;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
+import '../../features/achievements/data/datasources/achievement_media_source.dart'
+    as _i248;
 import '../../features/achievements/data/repositories/achievement_repository_impl.dart'
     as _i445;
 import '../../features/achievements/domain/repositories/achievement_repository.dart'
@@ -69,6 +71,14 @@ Future<_i174.GetIt> init(
   gh.lazySingleton<_i801.MediaListLocalDataSource>(
     () => _i801.MediaListLocalDataSource(gh<_i214.Isar>()),
   );
+  gh.lazySingleton<_i282.AchievementRepository>(
+    () => _i445.AchievementRepositoryImpl(
+      gh<_i214.Isar>(),
+      gh<_i801.MediaListLocalDataSource>(),
+      definitionsLoader: gh<_i216.DefinitionsLoader>(),
+      mediaSource: gh<_i248.AchievementMediaSource>(),
+    ),
+  );
   gh.lazySingleton<_i216.DefinitionsLoader>(
     () => _i719.AssetDefinitionsLoader(),
   );
@@ -86,15 +96,11 @@ Future<_i174.GetIt> init(
       locale: gh<_i903.LocaleService>(),
     ),
   );
-  gh.lazySingleton<_i282.AchievementRepository>(
-    () => _i445.AchievementRepositoryImpl(
-      gh<_i214.Isar>(),
-      gh<_i801.MediaListLocalDataSource>(),
-      definitionsLoader: gh<_i216.DefinitionsLoader>(),
-    ),
-  );
   gh.lazySingleton<_i393.AchievementProvider>(
     () => _i393.AchievementProvider(gh<_i282.AchievementRepository>()),
+  );
+  gh.lazySingleton<_i248.AchievementMediaSource>(
+    () => _i248.CachedAchievementMediaSource(gh<_i384.MediaCache>()),
   );
   gh.lazySingleton<_i386.MediaRepository>(
     () => _i922.MediaRepositoryImpl(

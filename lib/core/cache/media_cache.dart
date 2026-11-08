@@ -220,6 +220,31 @@ class MediaCache {
     return _seasonCache.remember(key, season);
   }
 
+  /// Parts of the TMDB collection (saga) of the cached movie [movieId].
+  ///
+  /// Returns null when no details are cached for the movie, and an empty list
+  /// when they are cached without a collection. Reads Isar directly so a bulk
+  /// scan does not evict the in-memory details layer.
+  Future<List<MediaItem>?> getCollectionParts(int movieId) async {
+    final hit = _detailsCache.get(_getKey(movieId, MediaType.movie));
+    if (hit != null) return hit.collection ?? const [];
+
+    final row = await _isar.cachedMedias.getByTmdbIdType(
+      movieId,
+      MediaType.movie.name,
+    );
+    final json = row?.mediaDetailsJson;
+    if (row == null || json == null) return null;
+    return _decodeOrPurge(row, () {
+      final raw = (jsonDecode(json) as Map<String, dynamic>)['collection'];
+      if (raw is! List) return const <MediaItem>[];
+      return [
+        for (final part in raw)
+          MediaItem.fromJson(Map<String, dynamic>.from(part as Map)),
+      ];
+    });
+  }
+
   Future<String?> getActorProfile(int actorId) async {
     if (_actorProfileCache.containsKey(actorId)) {
       return _actorProfileCache.get(actorId);

@@ -60,6 +60,20 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `marathon` | `target` | episodes of the same series in one day |
 | `streak` | `target` | consecutive days with at least one view |
 | `runtime` | `targetMinutes` | cumulative watch time (shown as `16h 40m`, `166h`, `10 days`, `1 year`) |
+| `season_complete` | `target` | regular seasons (specials excluded) fully aired and fully seen |
+| `series_complete` | `target` | ended or canceled series with every episode seen |
+| `up_to_date` | `target` | running series with every aired episode seen (current state) |
+| `saga_complete` | `target` | TMDB collections with every released part seen (2 released parts minimum) |
+| `watchlist_clear` | `target` | watchlist with no unseen title (series: caught up), once `target` titles are in the history |
+
+The collection types (`season_complete`, `series_complete`, `up_to_date`,
+`saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
+episode, collection parts): a title absent from the cache does not count until its details
+are cached (opening it, or the background cache warm-up). They can regress (a new episode
+airs, a cache entry is purged, the watchlist grows), so once persisted their unlock is kept
+even if the current state no longer meets the target. A completion is dated by the first
+view of its last required episode or movie; `watchlist_clear` has no history and is dated
+when first observed.
 
 ## Families (reference)
 
@@ -78,6 +92,11 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `marathon` | 5, 10, 20, 50 |
 | `streak` | 7, 30, 365 days |
 | `runtime` | 10, 20, 50, 100, 200, 500, 1000, 2000, 5000 h, 1 year |
+| `season_complete` | 1, 10, 50 |
+| `series_complete` | 1, 5, 25 |
+| `up_to_date` | 1, 5, 10 |
+| `saga_complete` | 1, 5, 15 |
+| `watchlist_clear` (standalone) | 10 titles seen |
 
 Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
 kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),
