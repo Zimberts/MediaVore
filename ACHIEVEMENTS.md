@@ -118,7 +118,7 @@ install date is stored).
 | `genre_romance` | 10, 15, 50, 100 |
 | `genre_horror`, `genre_doc`, `genre_animation`, `genre_thriller`, `genre_drama`, `genre_crime`, `genre_fantasy`, `genre_adventure`, `genre_western`, `genre_war`, `genre_music`, `genre_family`, `genre_mystery`, `genre_history` | 10, 50, 100 |
 | `night_owl` | 10, 50, 100, 250 |
-| `weekend` | 15, 30, 50, 100 (any 72-hour window; a 250 tier was dropped as unrealistic) |
+| `weekend` | 15, 30, 50 (any 72-hour window; 100 and 250 tiers were dropped as unrealistic) |
 | `marathon` | 5, 10, 20, 50 |
 | `streak` | 7, 30, 365 days |
 | `runtime` | 10, 20, 50, 100, 200, 500, 1000, 2000, 5000 h, 1 year |
