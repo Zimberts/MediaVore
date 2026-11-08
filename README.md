@@ -121,3 +121,11 @@ Follow these steps in your terminal to set up the project correctly on your new 
     ```
 
 After completing these three steps, the project should build and run correctly.
+
+4. **Install the commit-message hook (once per clone):**
+    Commit messages and PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) (`<type>(<scope>): <description>`, see `.ai/rules/commits.md`). This hook rejects non-conforming messages locally.
+
+    ```sh
+    pip install pre-commit
+    pre-commit install --hook-type commit-msg
+    ```

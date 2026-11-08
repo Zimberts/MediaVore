@@ -636,6 +636,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               title: Text(context.l10n.listsScanTitle),
               leading: IconButton(
                 icon: const Icon(Icons.close),
+                tooltip: context.l10n.commonClose,
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -951,6 +952,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           leading: _isEditMode
               ? IconButton(
                   icon: const Icon(Icons.close),
+                  tooltip: context.l10n.commonCancel,
                   onPressed: () => setState(() {
                     _isEditMode = false;
                     _selectedItems.clear();
@@ -1013,6 +1015,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.refresh),
+                    tooltip: context.l10n.commonRefresh,
                     onPressed: _isRefreshing
                         ? null
                         : () async {
@@ -1023,6 +1026,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.settings),
+                    tooltip: context.l10n.settingsTitle,
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const SettingsPage(),
@@ -1418,6 +1422,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                                     Icons.delete_outline,
                                     color: colors.error,
                                   ),
+                                  tooltip: context.l10n.listsDeleteList,
                                   onPressed: () {
                                     Navigator.pop(context);
                                     _showDeleteListConfirm(

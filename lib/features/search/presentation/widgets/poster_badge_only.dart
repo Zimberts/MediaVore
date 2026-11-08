@@ -32,7 +32,7 @@ class PosterBadgeOnly extends StatelessWidget {
         decoration: BoxDecoration(
           color: isFinished ? colors.badgeBgSeen : colors.badgeBg,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 1.5),
+          border: Border.all(color: colors.badgeText, width: 1.5),
         ),
         padding: const EdgeInsets.all(2),
         child: Icon(

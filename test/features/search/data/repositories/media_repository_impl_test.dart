@@ -83,6 +83,9 @@ void main() {
       () => mockCache.getDetails(any(), any()),
     ).thenAnswer((_) async => null);
     when(() => mockCache.getSeason(any(), any())).thenAnswer((_) async => null);
+    when(
+      () => mockCache.getSeasonUpdateDate(any(), any()),
+    ).thenAnswer((_) async => null);
 
     when(
       () => mockLocalDataSource.getAllListNames(),
@@ -1247,6 +1250,50 @@ void main() {
         () => mockLocalDataSource.markNotifiedRefreshed(1, 'tv', any()),
       ).called(1);
     });
+
+    test(
+      'should discover a new episode without force despite a stale season cache',
+      () async {
+        stubNotified();
+        final media = tvItem(
+          status: 'Returning Series',
+          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 5)],
+        );
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer((_) async => media);
+        when(
+          () => mockCache.getItem(1, MediaType.tv),
+        ).thenAnswer((_) async => media);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+        // The cache only knows episode 5; episode 6 was published since.
+        when(
+          () => mockCache.getSeason(1, 4),
+        ).thenAnswer((_) async => season([ep(5, airDate: '2024-05-01')]));
+        when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
+          (_) async => season([
+            ep(5, airDate: '2024-05-01'),
+            ep(6, airDate: '2024-06-08', runtime: 42),
+          ]),
+        );
+
+        await repository.refreshNotificationForSeries(1, MediaType.tv);
+
+        final captured = verify(
+          () => mockLocalDataSource.setNotificationEpisode(
+            1,
+            'tv',
+            seasonNumber: captureAny(named: 'seasonNumber'),
+            episodeNumber: captureAny(named: 'episodeNumber'),
+            releaseDate: any(named: 'releaseDate'),
+            runtime: any(named: 'runtime'),
+          ),
+        ).captured;
+        expect(captured, [4, 6]);
+      },
+    );
 
     test('should repopulate Quick Add for newly aired episodes', () async {
       stubNotified();
