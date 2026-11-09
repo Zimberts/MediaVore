@@ -147,6 +147,7 @@ void main() {
       final policy = MockCacheWarmupPolicy();
       when(() => policy.shouldRunAutomatically()).thenReturn(true);
       when(() => policy.markCompleted()).thenAnswer((_) async {});
+      when(() => policy.reset()).thenAnswer((_) async {});
       final names = Completer<List<String>>();
       when(() => local.getAllListNames()).thenAnswer((_) => names.future);
       when(() => local.getListItems(any())).thenAnswer(
@@ -159,8 +160,12 @@ void main() {
       names.complete(['watchlist']);
       await pumpEventQueue();
 
-      verifyNever(() => remote.getMediaItem(any(), type: any(named: 'type')));
+      verifyNever(
+        () => remote.getMediaDetailsBundle(any(), type: any(named: 'type')),
+      );
       verifyNever(() => policy.markCompleted());
+      // The next start refills the wiped cache without waiting 24 h.
+      verify(() => policy.reset()).called(1);
     });
 
     test(
@@ -204,7 +209,7 @@ void main() {
       ).thenAnswer((_) async {});
       // Synchronous throw: the enrichment lookup fails before other calls.
       when(
-        () => remote.getMediaItem(any(), type: any(named: 'type')),
+        () => remote.getMediaDetailsBundle(any(), type: any(named: 'type')),
       ).thenThrow(Exception('offline'));
 
       final zip = ExportEnvelope(
@@ -221,8 +226,12 @@ void main() {
 
       await repo.importAllData(zip);
 
-      verify(() => remote.getMediaItem(7, type: MediaType.movie)).called(1);
-      verify(() => remote.getMediaItem(8, type: MediaType.tv)).called(1);
+      verify(
+        () => remote.getMediaDetailsBundle(7, type: MediaType.movie),
+      ).called(1);
+      verify(
+        () => remote.getMediaDetailsBundle(8, type: MediaType.tv),
+      ).called(1);
       verifyNever(() => remote.getSeasonDetails(any(), any()));
       final saved =
           verify(

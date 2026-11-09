@@ -46,6 +46,16 @@ void main() {
       expect(clockBack.shouldRunAutomatically(), isTrue);
     });
 
+    test('should run again right after a reset (cache wiped)', () async {
+      final policy = await policyAt(t0);
+      await policy.markCompleted();
+      expect(policy.shouldRunAutomatically(), isFalse);
+
+      await policy.reset();
+
+      expect(policy.shouldRunAutomatically(), isTrue);
+    });
+
     test('should never run in the background isolate', () async {
       CacheWarmupPolicy.isBackgroundIsolate = true;
       expect((await policyAt(t0)).shouldRunAutomatically(), isFalse);

@@ -428,6 +428,8 @@ class MediaRepositoryImpl implements MediaRepository {
       // Otherwise the warm-up would refill what is being cleared.
       cancelCacheWarmup();
       await cache.clearAll();
+      // Refill on the next start instead of waiting out the 24 h throttle.
+      await warmupPolicy?.reset();
     } else {
       await _warmup.run();
     }

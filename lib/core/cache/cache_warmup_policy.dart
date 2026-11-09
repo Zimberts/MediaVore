@@ -38,4 +38,8 @@ class CacheWarmupPolicy {
 
   Future<void> markCompleted() =>
       prefs.setInt(lastRunKey, _now().millisecondsSinceEpoch);
+
+  /// Forgets the last run, so the next start warms the cache up again (used
+  /// after the cache is wiped).
+  Future<void> reset() => prefs.remove(lastRunKey);
 }
