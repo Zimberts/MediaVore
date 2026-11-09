@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/widgets/scrollable_fill.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -18,7 +19,10 @@ enum SeenSort { dateDesc, dateAsc, nameAsc, nameDesc }
 enum SeenViewMode { history, library }
 
 class SeenHistoryPage extends StatefulWidget {
-  const SeenHistoryPage({super.key});
+  const SeenHistoryPage({super.key, this.onSearch});
+
+  /// Opens the search; shown as the empty state's action when set.
+  final VoidCallback? onSearch;
 
   @override
   State<SeenHistoryPage> createState() => SeenHistoryPageState();
@@ -295,10 +299,22 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
       body: RefreshIndicator(
         onRefresh: provider.loadAllSeenStatus,
         child: allSeenItems.isEmpty
-            ? ScrollableFill(child: Center(child: Text(context.l10n.seenEmpty)))
+            ? ScrollableFill(
+                child: EmptyState(
+                  icon: Icons.history,
+                  title: context.l10n.seenEmpty,
+                  message: context.l10n.seenEmptyHint,
+                  actionLabel: context.l10n.emptyStateSearchAction,
+                  actionIcon: Icons.search,
+                  onAction: widget.onSearch,
+                ),
+              )
             : filteredItems.isEmpty
             ? ScrollableFill(
-                child: Center(child: Text(context.l10n.seenNoMatches)),
+                child: EmptyState(
+                  icon: Icons.search_off,
+                  title: context.l10n.seenNoMatches,
+                ),
               )
             : ListView.builder(
                 controller: _scrollController,

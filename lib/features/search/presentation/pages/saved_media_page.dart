@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/widgets/scrollable_fill.dart';
 import 'package:flutter/rendering.dart';
@@ -26,7 +27,10 @@ import 'package:mediavore/features/search/presentation/widgets/saved_media_grid_
 import 'package:mediavore/features/search/presentation/widgets/saved_media_swipe_item.dart';
 
 class SavedMediaPage extends StatefulWidget {
-  const SavedMediaPage({super.key});
+  const SavedMediaPage({super.key, this.onSearch});
+
+  /// Opens the search; shown as the empty state's action when set.
+  final VoidCallback? onSearch;
 
   @override
   State<SavedMediaPage> createState() => SavedMediaPageState();
@@ -975,22 +979,42 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             onTap: _isEditMode
                 ? null
                 : () => _showListPicker(context, provider),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    _isEditMode
-                        ? context.l10n.listsSelectedCount(_selectedItems.length)
-                        : (_selectedList == 'watchlist'
-                              ? context.l10n.listsWatchlist
-                              : _selectedList),
+            child: _isEditMode
+                ? Text(
+                    context.l10n.listsSelectedCount(_selectedItems.length),
                     overflow: TextOverflow.ellipsis,
+                  )
+                // Tab name above the list picker, so the title matches the
+                // "My Lists" tab (#202).
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.navMyLists,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).appBarTheme.foregroundColor,
+                            ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _selectedList == 'watchlist'
+                                  ? context.l10n.listsWatchlist
+                                  : _selectedList,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const Icon(Icons.arrow_drop_down),
+                        ],
+                      ),
+                    ],
                   ),
-                ),
-                if (!_isEditMode) const Icon(Icons.arrow_drop_down),
-              ],
-            ),
           ),
           actions: _isEditMode
               ? [
@@ -1056,7 +1080,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               }
               if (displayItems == null || displayItems.isEmpty) {
                 return ScrollableFill(
-                  child: Center(child: Text(context.l10n.listsEmpty)),
+                  child: EmptyState(
+                    icon: Icons.bookmark_border,
+                    title: context.l10n.listsEmpty,
+                    message: context.l10n.listsEmptyHint,
+                    actionLabel: context.l10n.emptyStateSearchAction,
+                    actionIcon: Icons.search,
+                    onAction: widget.onSearch,
+                  ),
                 );
               }
 

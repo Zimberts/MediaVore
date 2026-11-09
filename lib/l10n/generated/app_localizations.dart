@@ -158,23 +158,35 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get navSearch;
 
+  /// No description provided for @navDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get navDiscover;
+
   /// No description provided for @navMyLists.
   ///
   /// In en, this message translates to:
   /// **'My Lists'**
   String get navMyLists;
 
-  /// No description provided for @navSeen.
+  /// No description provided for @navHistory.
   ///
   /// In en, this message translates to:
-  /// **'Seen'**
-  String get navSeen;
+  /// **'History'**
+  String get navHistory;
 
   /// No description provided for @navAlerts.
   ///
   /// In en, this message translates to:
   /// **'Alerts'**
   String get navAlerts;
+
+  /// No description provided for @emptyStateSearchAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a movie or series'**
+  String get emptyStateSearchAction;
 
   /// No description provided for @importListTitle.
   ///
@@ -1094,6 +1106,12 @@ abstract class AppLocalizations {
   /// **'No items in this list.'**
   String get listsEmpty;
 
+  /// No description provided for @listsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a movie or a series, then add it to this list.'**
+  String get listsEmptyHint;
+
   /// No description provided for @listsSwitchList.
   ///
   /// In en, this message translates to:
@@ -1265,7 +1283,7 @@ abstract class AppLocalizations {
   /// No description provided for @seenTitle.
   ///
   /// In en, this message translates to:
-  /// **'Seen History'**
+  /// **'History'**
   String get seenTitle;
 
   /// No description provided for @seenSearchHint.
@@ -1285,6 +1303,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No items seen yet.'**
   String get seenEmpty;
+
+  /// No description provided for @seenEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark a movie or an episode as seen to start your history.'**
+  String get seenEmptyHint;
 
   /// No description provided for @seenNoMatches.
   ///
@@ -1757,7 +1781,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifTitle.
   ///
   /// In en, this message translates to:
-  /// **'Notification Center'**
+  /// **'Alerts'**
   String get notifTitle;
 
   /// No description provided for @notifTabReleases.
@@ -1783,6 +1807,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No upcoming or recent releases.'**
   String get notifNoReleases;
+
+  /// No description provided for @notifNoReleasesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Movies and series on your watchlist or with alerts on show their releases here.'**
+  String get notifNoReleasesHint;
 
   /// No description provided for @notifReleaseDate.
   ///

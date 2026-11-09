@@ -144,7 +144,7 @@ void main() {
 
   group('MainPage accessibility', () {
     // Bottom navigation labels, in tab order.
-    for (final tab in ['Search', 'My Lists', 'Seen', 'Alerts']) {
+    for (final tab in ['Discover', 'My Lists', 'History', 'Alerts']) {
       testWidgets('should label every tap target on the $tab tab', (
         tester,
       ) async {
@@ -180,7 +180,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      for (final tab in ['Search', 'My Lists', 'Seen', 'Alerts']) {
+      for (final tab in ['Discover', 'My Lists', 'History', 'Alerts']) {
         await tester.tap(find.text(tab).last);
         await tester.pumpAndSettle();
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:intl/intl.dart';
@@ -14,7 +15,10 @@ import 'package:mediavore/features/settings/presentation/providers/settings_prov
 import 'package:provider/provider.dart';
 
 class NotificationCenterPage extends StatefulWidget {
-  const NotificationCenterPage({super.key});
+  const NotificationCenterPage({super.key, this.onSearch});
+
+  /// Opens the search; shown as the empty state's action when set.
+  final VoidCallback? onSearch;
 
   @override
   State<NotificationCenterPage> createState() => NotificationCenterPageState();
@@ -71,7 +75,11 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
           TabBarView(
             controller: _tabController,
             children: [
-              _ReleasesTab(key: _releasesKey, onRefresh: refresh),
+              _ReleasesTab(
+                key: _releasesKey,
+                onRefresh: refresh,
+                onSearch: widget.onSearch,
+              ),
               _QuickAddTab(key: _quickAddKey, onRefresh: refresh),
             ],
           ),
@@ -105,7 +113,8 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
 
 class _ReleasesTab extends StatefulWidget {
   final Future<void> Function() onRefresh;
-  const _ReleasesTab({super.key, required this.onRefresh});
+  final VoidCallback? onSearch;
+  const _ReleasesTab({super.key, required this.onRefresh, this.onSearch});
 
   @override
   State<_ReleasesTab> createState() => _ReleasesTabState();
@@ -137,8 +146,15 @@ class _ReleasesTabState extends State<_ReleasesTab> {
           child: (releases.isEmpty && debugChildren.isEmpty)
               ? ListView(
                   children: [
-                    SizedBox(height: 100),
-                    Center(child: Text(context.l10n.notifNoReleases)),
+                    const SizedBox(height: 100),
+                    EmptyState(
+                      icon: Icons.notifications_none,
+                      title: context.l10n.notifNoReleases,
+                      message: context.l10n.notifNoReleasesHint,
+                      actionLabel: context.l10n.emptyStateSearchAction,
+                      actionIcon: Icons.search,
+                      onAction: widget.onSearch,
+                    ),
                   ],
                 )
               : ListView.builder(

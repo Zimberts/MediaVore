@@ -39,9 +39,9 @@ class _MainPageState extends State<MainPage> {
 
   late final List<Widget> _pages = [
     SearchPage(searchTrigger: _discoverSearchTrigger),
-    const SavedMediaPage(),
-    const SeenHistoryPage(),
-    const NotificationCenterPage(),
+    SavedMediaPage(onSearch: _openSearch),
+    SeenHistoryPage(onSearch: _openSearch),
+    NotificationCenterPage(onSearch: _openSearch),
     const ProfilePage(),
   ];
 
@@ -222,16 +222,19 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  /// Switches to Discover and opens its search field.
+  void _openSearch() {
+    _onItemTapped(0);
+    _discoverSearchTrigger.value += 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _onItemTapped(0);
-          _discoverSearchTrigger.value += 1;
-        },
+        onPressed: _openSearch,
         tooltip: l10n.navSearch,
         child: const Icon(Icons.search),
       ),
@@ -240,8 +243,8 @@ class _MainPageState extends State<MainPage> {
         type: BottomNavigationBarType.fixed,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: const Icon(Icons.search),
-            label: l10n.navSearch,
+            icon: const Icon(Icons.explore),
+            label: l10n.navDiscover,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.bookmark),
@@ -249,7 +252,7 @@ class _MainPageState extends State<MainPage> {
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.history),
-            label: l10n.navSeen,
+            label: l10n.navHistory,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.notifications),
