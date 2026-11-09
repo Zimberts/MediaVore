@@ -248,9 +248,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           );
         }
       });
-      items = (await Future.wait(itemFutures))
-          .where((item) => item.id != 0)
-          .toList();
+      items = (await Future.wait(
+        itemFutures,
+      )).where((item) => item.id != 0).toList();
     }
 
     if (mounted) {
@@ -815,8 +815,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                   ),
                   Text(
                     context.l10n.listsSortOptions,
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _buildSortItem(
@@ -967,22 +968,42 @@ class SavedMediaPageState extends State<SavedMediaPage> {
             onTap: _isEditMode
                 ? null
                 : () => _showListPicker(context, provider),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    _isEditMode
-                        ? context.l10n.listsSelectedCount(_selectedItems.length)
-                        : (_selectedList == 'watchlist'
-                              ? context.l10n.listsWatchlist
-                              : _selectedList),
+            child: _isEditMode
+                ? Text(
+                    context.l10n.listsSelectedCount(_selectedItems.length),
                     overflow: TextOverflow.ellipsis,
+                  )
+                // Tab name above the list picker, so the title matches the
+                // "My Lists" tab (#202).
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.navMyLists,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).appBarTheme.foregroundColor,
+                            ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _selectedList == 'watchlist'
+                                  ? context.l10n.listsWatchlist
+                                  : _selectedList,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const Icon(Icons.arrow_drop_down),
+                        ],
+                      ),
+                    ],
                   ),
-                ),
-                if (!_isEditMode) const Icon(Icons.arrow_drop_down),
-              ],
-            ),
           ),
           actions: _isEditMode
               ? [

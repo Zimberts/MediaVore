@@ -158,17 +158,23 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get navSearch;
 
+  /// No description provided for @navDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get navDiscover;
+
   /// No description provided for @navMyLists.
   ///
   /// In en, this message translates to:
   /// **'My Lists'**
   String get navMyLists;
 
-  /// No description provided for @navSeen.
+  /// No description provided for @navHistory.
   ///
   /// In en, this message translates to:
-  /// **'Seen'**
-  String get navSeen;
+  /// **'History'**
+  String get navHistory;
 
   /// No description provided for @navAlerts.
   ///
@@ -1241,7 +1247,7 @@ abstract class AppLocalizations {
   /// No description provided for @seenTitle.
   ///
   /// In en, this message translates to:
-  /// **'Seen History'**
+  /// **'History'**
   String get seenTitle;
 
   /// No description provided for @seenSearchHint.
@@ -1745,7 +1751,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifTitle.
   ///
   /// In en, this message translates to:
-  /// **'Notification Center'**
+  /// **'Alerts'**
   String get notifTitle;
 
   /// No description provided for @notifForceRefresh.

@@ -241,8 +241,8 @@ class _MainPageState extends State<MainPage> {
         type: BottomNavigationBarType.fixed,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: const Icon(Icons.search),
-            label: l10n.navSearch,
+            icon: const Icon(Icons.explore),
+            label: l10n.navDiscover,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.bookmark),
@@ -250,7 +250,7 @@ class _MainPageState extends State<MainPage> {
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.history),
-            label: l10n.navSeen,
+            label: l10n.navHistory,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.notifications),

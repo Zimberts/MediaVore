@@ -223,6 +223,9 @@ abstract class AppPalette {
         backgroundColor: surface,
         foregroundColor: statusAccent,
         elevation: 0,
+        // Same title alignment on every screen (#202): Flutter centers the
+        // title on iOS/macOS when the bar has fewer than two actions.
+        centerTitle: false,
         surfaceTintColor: Colors.transparent,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(

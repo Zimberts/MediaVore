@@ -40,10 +40,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSearch => 'Search';
 
   @override
+  String get navDiscover => 'Discover';
+
+  @override
   String get navMyLists => 'My Lists';
 
   @override
-  String get navSeen => 'Seen';
+  String get navHistory => 'History';
 
   @override
   String get navAlerts => 'Alerts';
@@ -666,7 +669,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonTvShows => 'TV Shows';
 
   @override
-  String get seenTitle => 'Seen History';
+  String get seenTitle => 'History';
 
   @override
   String get seenSearchHint => 'Search history...';
@@ -954,7 +957,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get releasePlanned => 'Planned — no release date';
 
   @override
-  String get notifTitle => 'Notification Center';
+  String get notifTitle => 'Alerts';
 
   @override
   String get notifForceRefresh => 'Force Refresh';
