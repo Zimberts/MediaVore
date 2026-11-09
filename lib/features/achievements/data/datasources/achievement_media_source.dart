@@ -52,7 +52,43 @@ class ShowInfo {
   );
 }
 
-/// TMDB data the history alone cannot provide (season sizes, sagas).
+/// Title metadata used by the diversity achievements.
+class TitleInfo {
+  /// `yyyy-mm-dd` (first air date for a series), empty when unknown.
+  final String releaseDate;
+
+  /// ISO 3166-1 codes; null when unknown (cached before they were stored).
+  final List<String>? originCountries;
+  final double? voteAverage;
+  final int? voteCount;
+
+  const TitleInfo({
+    this.releaseDate = '',
+    this.originCountries,
+    this.voteAverage,
+    this.voteCount,
+  });
+
+  factory TitleInfo.fromItem(MediaItem item) => TitleInfo(
+    releaseDate: item.releaseDate,
+    originCountries: item.originCountries,
+    voteAverage: item.voteAverage,
+    voteCount: item.voteCount,
+  );
+
+  /// Release year, or null when the date is unknown or malformed.
+  int? get year => DateTime.tryParse(releaseDate)?.year;
+
+  /// Every field the diversity types read is known.
+  bool get isComplete =>
+      year != null &&
+      originCountries != null &&
+      voteAverage != null &&
+      voteCount != null;
+}
+
+/// TMDB data the history alone cannot provide (season sizes, sagas, title
+/// metadata, air dates).
 ///
 /// Only local data is read: achievements never trigger network calls, so a
 /// title missing from the cache simply does not count yet.
@@ -63,6 +99,13 @@ abstract class AchievementMediaSource {
   /// For each movie of [movieIds] that belongs to a saga, the ids and release
   /// dates of all the saga's parts.
   Future<Map<int, List<SagaPart>>> sagas(Set<int> movieIds);
+
+  /// Known titles among [keys] (`(tmdbId, 'movie' | 'tv')`).
+  Future<Map<(int, String), TitleInfo>> titles(Set<(int, String)> keys);
+
+  /// Air date (`yyyy-mm-dd`) of each episode of the cached [season] of series
+  /// [tvId], by episode number; null when the season is not cached.
+  Future<Map<int, String>?> episodeAirDates(int tvId, int season);
 }
 
 class SagaPart {
@@ -81,6 +124,10 @@ class CachedAchievementMediaSource implements AchievementMediaSource {
   /// Saga membership never changes; decoded once per session per movie.
   final Map<int, List<SagaPart>> _sagaMemo = {};
 
+  /// Complete title metadata, decoded once per session. Votes drift slowly;
+  /// the sticky unlocks make a stale value harmless.
+  final Map<(int, String), TitleInfo> _titleMemo = {};
+
   CachedAchievementMediaSource(this._cache);
 
   @override
@@ -98,6 +145,54 @@ class CachedAchievementMediaSource implements AchievementMediaSource {
     }
     return result;
   }
+
+  @override
+  Future<Map<(int, String), TitleInfo>> titles(Set<(int, String)> keys) async {
+    final missing = [
+      for (final k in keys)
+        if (!_titleMemo.containsKey(k)) k,
+    ];
+    if (missing.isEmpty) return {for (final k in keys) k: _titleMemo[k]!};
+    final items = await _cache.getItems([
+      for (final (id, type) in missing) (id, _mediaType(type)),
+    ]);
+    final partial = <(int, String), TitleInfo>{};
+    for (var i = 0; i < missing.length; i++) {
+      var info = items[i] == null ? null : TitleInfo.fromItem(items[i]!);
+      // A list row (discover movies) lacks the countries: use the details.
+      if (info == null || !info.isComplete) {
+        final (id, type) = missing[i];
+        final details = (await _cache.getDetails(id, _mediaType(type)))?.item;
+        if (details != null) info = TitleInfo.fromItem(details);
+      }
+      if (info == null) continue;
+      partial[missing[i]] = info;
+      // Incomplete entries are re-read: a later refresh may fill them.
+      if (info.isComplete) _titleMemo[missing[i]] = info;
+    }
+    return {
+      for (final k in keys)
+        if (_titleMemo[k] ?? partial[k] case final info?) k: info,
+    };
+  }
+
+  @override
+  Future<Map<int, String>?> episodeAirDates(int tvId, int season) async {
+    final json = await _cache.getSeason(tvId, season);
+    final episodes = json?['episodes'];
+    if (episodes is! List) return null;
+    return {
+      for (final e in episodes)
+        if (e is Map &&
+            e['episode_number'] is int &&
+            e['air_date'] is String &&
+            (e['air_date'] as String).isNotEmpty)
+          e['episode_number'] as int: e['air_date'] as String,
+    };
+  }
+
+  static MediaType _mediaType(String type) =>
+      type == 'tv' ? MediaType.tv : MediaType.movie;
 
   @override
   Future<Map<int, List<SagaPart>>> sagas(Set<int> movieIds) async {
