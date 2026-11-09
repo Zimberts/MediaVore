@@ -60,6 +60,7 @@ void main() {
       [AchievementModelSchema, SeenItemModelSchema],
       directory: tempPath,
       name: 'test_rhythm_achievements_db',
+      inspector: false,
     );
     local = MockMediaListLocalDataSource();
     when(() => local.getListItems('watchlist')).thenAnswer((_) async => []);
