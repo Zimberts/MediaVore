@@ -126,12 +126,20 @@ void main() {
     expect(searchProvider.selectedTab, 1);
     expect(find.text('My Lists'), findsWidgets);
 
-    // Tap Seen
-    await tester.tap(find.text('Seen').last);
+    // Tap History
+    await tester.tap(find.text('History').last);
     await tester.pumpAndSettle();
 
     expect(searchProvider.selectedTab, 2);
-    expect(find.text('Seen History'), findsOneWidget);
+    // Tab label and AppBar title share one name (#202).
+    expect(find.text('History'), findsNWidgets(2));
+
+    // Tap Alerts
+    await tester.tap(find.text('Alerts').last);
+    await tester.pumpAndSettle();
+
+    expect(searchProvider.selectedTab, 3);
+    expect(find.text('Alerts'), findsNWidgets(2));
   });
 
   testWidgets('FAB opens discovery search bar and switches to Discover', (

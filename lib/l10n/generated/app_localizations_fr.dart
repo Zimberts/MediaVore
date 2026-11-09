@@ -40,10 +40,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navSearch => 'Recherche';
 
   @override
+  String get navDiscover => 'Découvrir';
+
+  @override
   String get navMyLists => 'Mes listes';
 
   @override
-  String get navSeen => 'Vus';
+  String get navHistory => 'Historique';
 
   @override
   String get navAlerts => 'Alertes';
@@ -958,7 +961,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get releasePlanned => 'Prévu — pas de date de sortie';
 
   @override
-  String get notifTitle => 'Centre de notifications';
+  String get notifTitle => 'Alertes';
 
   @override
   String get notifForceRefresh => 'Forcer l\'actualisation';
