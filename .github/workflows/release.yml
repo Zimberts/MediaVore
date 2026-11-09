@@ -221,12 +221,49 @@ jobs:
           } >> notes.md
           gh release edit "$RELEASE_TAG" --notes-file notes.md
 
+  # Opt-in like play-store: the iOS job runs only once the signing secrets exist (setup:
+  # DOCS/ios-release.md). Secrets cannot be read in a job-level `if`, hence this small gate job,
+  # which also avoids booting a macOS runner for nothing. All secrets absent: notice, iOS skipped.
+  # Only some of them set: error, since that is a half-done setup rather than an opt-out.
+  ios-secrets:
+    name: Check iOS signing secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check signing secrets
+        id: check
+        env:
+          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          names="IOS_DIST_CERT_P12_BASE64 IOS_DIST_CERT_PASSWORD IOS_PROVISIONING_PROFILE_BASE64 ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY"
+          missing=""
+          for name in $names; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ "$missing" = " $names" ]; then
+            echo "::notice::No iOS signing secret is set: iOS build and TestFlight upload skipped (see DOCS/ios-release.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          elif [ -n "$missing" ]; then
+            echo "::error::Missing secrets:$missing (see DOCS/ios-release.md)."
+            exit 1
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
   ios:
     name: Build iOS IPA + TestFlight upload
-    needs: [checks, release-please]
-    # Same gate as the android job.
+    needs: [checks, release-please, ios-secrets]
+    # Same gate as the android job, plus the signing secrets.
     if: >-
       !cancelled() && needs.checks.result == 'success' &&
+      needs.ios-secrets.outputs.enabled == 'true' &&
       (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: macos-26
     timeout-minutes: 60
@@ -247,26 +284,6 @@ jobs:
             tool/check_release_version.sh "$RELEASE_TAG"
           else
             echo "Not a tag build: version check skipped."
-          fi
-
-      # Fail in seconds rather than after the build. Setup: DOCS/ios-release.md.
-      - name: Check signing secrets
-        env:
-          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
-          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
-          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
-        run: |
-          missing=""
-          for name in IOS_DIST_CERT_P12_BASE64 IOS_DIST_CERT_PASSWORD IOS_PROVISIONING_PROFILE_BASE64 \
-                      ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY; do
-            [ -n "${!name}" ] || missing="$missing $name"
-          done
-          if [ -n "$missing" ]; then
-            echo "::error::Missing secrets:$missing (see DOCS/ios-release.md)."
-            exit 1
           fi
 
       - name: Check Xcode version
