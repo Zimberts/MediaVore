@@ -11,3 +11,6 @@ guidance, see `.ai/rules/testing.md` (loaded automatically for `test/**`).
 - Naming: `group('...')` → `test('should … when …')`.
 - Real-Isar tests use disposable `test/tmp_*` scratch dirs.
 - Widget tests guard network access with `Platform.environment.containsKey('FLUTTER_TEST')`.
+- `test/benchmark/` measures a full cache reload against a fake TMDB server
+  (simulated latency, request count). N = 50 runs in CI; N = 200/500 run with
+  `MEDIAVORE_BENCHMARK=1 flutter test test/benchmark/`.
