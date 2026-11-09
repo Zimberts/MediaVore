@@ -13,6 +13,7 @@
   "navMyLists": "My Lists",
   "navSeen": "Seen",
   "navAlerts": "Alerts",
+  "emptyStateSearchAction": "Search a movie or series",
   "importListTitle": "Import List",
   "importListMessage": "{count, plural, =1{You are about to import a list with 1 item.} other{You are about to import a list with {count} items.}}",
   "@importListMessage": {
@@ -258,6 +259,7 @@
   "listsRemoveSelected": "Remove selected",
   "listsDisplayMode": "Display Mode",
   "listsEmpty": "No items in this list.",
+  "listsEmptyHint": "Search for a movie or a series, then add it to this list.",
   "listsSwitchList": "Switch List",
   "listsItemCount": "{count, plural, =1{1 item} other{{count} items}}",
   "@listsItemCount": {
@@ -326,6 +328,7 @@
   "seenStatistics": "Statistics",
   "commonRefresh": "Refresh",
   "seenEmpty": "No items seen yet.",
+  "seenEmptyHint": "Mark a movie or an episode as seen to start your history.",
   "seenNoMatches": "No matches found.",
   "seenEpisodesSeen": "{count, plural, =1{1 episode seen} other{{count} episodes seen}}",
   "@seenEpisodesSeen": {
@@ -505,6 +508,7 @@
   "notifTabQuickAdd": "Quick Add",
   "notifSyncing": "Syncing releases...",
   "notifNoReleases": "No upcoming or recent releases.",
+  "notifNoReleasesHint": "Movies and series on your watchlist or with alerts on show their releases here.",
   "notifReleaseDate": "{released, select, true{Released} other{Releases}}: {date}",
   "@notifReleaseDate": {
     "placeholders": {

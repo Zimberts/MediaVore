@@ -49,6 +49,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navAlerts => 'Alertes';
 
   @override
+  String get emptyStateSearchAction => 'Chercher un film ou une série';
+
+  @override
   String get importListTitle => 'Importer une liste';
 
   @override
@@ -564,6 +567,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listsEmpty => 'Aucun élément dans cette liste.';
 
   @override
+  String get listsEmptyHint =>
+      'Cherchez un film ou une série, puis ajoutez-le à cette liste.';
+
+  @override
   String get listsSwitchList => 'Changer de liste';
 
   @override
@@ -685,6 +692,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get seenEmpty => 'Rien de vu pour l\'instant.';
+
+  @override
+  String get seenEmptyHint =>
+      'Marquez un film ou un épisode comme vu pour commencer votre historique.';
 
   @override
   String get seenNoMatches => 'Aucun résultat.';
@@ -974,6 +985,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notifNoReleases => 'Aucune sortie à venir ou récente.';
+
+  @override
+  String get notifNoReleasesHint =>
+      'Les sorties des films et séries de votre liste À voir ou avec une alerte apparaissent ici.';
 
   @override
   String notifReleaseDate(String released, String date) {
