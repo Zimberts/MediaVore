@@ -6,6 +6,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
@@ -88,7 +89,7 @@ void main() {
     locator.reset();
   });
 
-  Widget createWidgetUnderTest() {
+  Widget createWidgetUnderTest({Locale? locale}) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
@@ -99,6 +100,9 @@ void main() {
       ],
       child: MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const MainPage(),
       ),
     );
@@ -188,5 +192,62 @@ void main() {
       find.text(fallbackLocalizations.tmdbCredentialLater),
       findsOneWidget,
     );
+  });
+
+  group('Profile tab', () {
+    testWidgets(
+      'should group Stats, Achievements and Settings behind the Profile tab',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Profile').last);
+        await tester.pumpAndSettle();
+
+        expect(searchProvider.selectedTab, 4);
+        expect(find.byType(ProfilePage), findsOneWidget);
+        expect(find.byKey(const Key('profile_stats')), findsOneWidget);
+        expect(find.byKey(const Key('profile_achievements')), findsOneWidget);
+        expect(find.byKey(const Key('profile_settings')), findsOneWidget);
+      },
+    );
+
+    testWidgets('should not show a settings gear on any other tab', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      for (final tab in ['Discover', 'My Lists', 'History', 'Alerts']) {
+        await tester.tap(find.text(tab).last);
+        await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.settings), findsNothing, reason: tab);
+      }
+    });
+
+    // Five tabs on the narrowest supported phone (iPhone SE 1st gen, 320 dp).
+    for (final locale in const [Locale('en'), Locale('fr')]) {
+      testWidgets(
+        'should fit the five tabs on a 320 dp wide phone in ${locale.languageCode}',
+        (tester) async {
+          tester.view.physicalSize = const Size(320, 568);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+
+          await tester.pumpWidget(createWidgetUnderTest(locale: locale));
+          await tester.pumpAndSettle();
+
+          final items = tester
+              .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
+              .items;
+          expect(items, hasLength(5));
+          for (var i = 0; i < items.length; i++) {
+            await tester.tap(find.text(items[i].label!).last);
+            await tester.pumpAndSettle();
+            expect(tester.takeException(), isNull, reason: items[i].label);
+          }
+        },
+      );
+    }
   });
 }

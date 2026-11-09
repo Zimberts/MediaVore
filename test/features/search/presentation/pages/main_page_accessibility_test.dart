@@ -160,6 +160,20 @@ void main() {
       });
     }
 
+    testWidgets('should label every tap target on the Profile tab', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Profile').last);
+      await tester.pumpAndSettle();
+
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      handle.dispose();
+    });
+
     testWidgets('should give every IconButton a tooltip on the four tabs', (
       tester,
     ) async {
@@ -171,7 +185,9 @@ void main() {
         await tester.pumpAndSettle();
 
         final buttons = tester.widgetList<IconButton>(find.byType(IconButton));
-        expect(buttons, isNotEmpty, reason: tab);
+        // Alerts has no app bar action left: refresh is pull-to-refresh and
+        // Settings lives in the Profile tab (#204/#205).
+        if (tab != 'Alerts') expect(buttons, isNotEmpty, reason: tab);
         for (final button in buttons) {
           expect(
             button.tooltip,

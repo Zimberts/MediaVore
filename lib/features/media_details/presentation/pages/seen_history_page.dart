@@ -3,15 +3,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/widgets/scrollable_fill.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/media_stats_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -296,198 +295,186 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
             ),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const MediaStatsPage()),
-              );
-            },
-            tooltip: context.l10n.seenStatistics,
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => provider.loadAllSeenStatus(),
-            tooltip: context.l10n.commonRefresh,
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
-            },
-            tooltip: context.l10n.settingsTitle,
-          ),
-        ],
       ),
-      body: allSeenItems.isEmpty
-          ? EmptyState(
-              icon: Icons.history,
-              title: context.l10n.seenEmpty,
-              message: context.l10n.seenEmptyHint,
-              actionLabel: context.l10n.emptyStateSearchAction,
-              actionIcon: Icons.search,
-              onAction: widget.onSearch,
-            )
-          : filteredItems.isEmpty
-          ? EmptyState(
-              icon: Icons.search_off,
-              title: context.l10n.seenNoMatches,
-            )
-          : ListView.builder(
-              controller: _scrollController,
-              itemCount: groupedItems.length,
-              itemBuilder: (context, index) {
-                final item = groupedItems[index];
+      body: RefreshIndicator(
+        onRefresh: provider.loadAllSeenStatus,
+        child: allSeenItems.isEmpty
+            ? ScrollableFill(
+                child: EmptyState(
+                  icon: Icons.history,
+                  title: context.l10n.seenEmpty,
+                  message: context.l10n.seenEmptyHint,
+                  actionLabel: context.l10n.emptyStateSearchAction,
+                  actionIcon: Icons.search,
+                  onAction: widget.onSearch,
+                ),
+              )
+            : filteredItems.isEmpty
+            ? ScrollableFill(
+                child: EmptyState(
+                  icon: Icons.search_off,
+                  title: context.l10n.seenNoMatches,
+                ),
+              )
+            : ListView.builder(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: groupedItems.length,
+                itemBuilder: (context, index) {
+                  final item = groupedItems[index];
 
-                if (item is DateTime) {
-                  return Container(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                    child: Text(
-                      DateFormat.yMMMMEEEEd().format(item),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+                  if (item is DateTime) {
+                    return Container(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.3),
+                      child: Text(
+                        DateFormat.yMMMMEEEEd().format(item),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  }
+
+                  final seenItem = item as SeenItem;
+                  final isTv = seenItem.type == MediaType.tv;
+                  final isLiked = provider.likedIds.contains(
+                    '${seenItem.tmdbId}:${seenItem.type.name}',
+                  );
+
+                  String subtitle = '';
+                  if (_viewMode == SeenViewMode.history &&
+                      isTv &&
+                      seenItem.seasonNumber != null) {
+                    subtitle =
+                        'S${seenItem.seasonNumber} E${seenItem.episodeNumber}';
+                  } else if (_viewMode == SeenViewMode.library && isTv) {
+                    final count = provider.getSeenCount(
+                      MediaItem(
+                        id: seenItem.tmdbId,
+                        title: seenItem.title,
+                        overview: '',
+                        releaseDate: '',
+                        mediaType: seenItem.type,
+                      ),
+                    );
+                    subtitle = context.l10n.seenEpisodesSeen(count);
+                  }
+
+                  if (_currentSort == SeenSort.nameAsc ||
+                      _currentSort == SeenSort.nameDesc) {
+                    subtitle +=
+                        (subtitle.isNotEmpty ? ' • ' : '') +
+                        DateFormat.yMd().format(seenItem.seenDate);
+                  }
+
+                  final runtimeText = Formatters.formatRuntime(
+                    seenItem.runtime,
+                  );
+                  if (runtimeText.isNotEmpty) {
+                    subtitle +=
+                        (subtitle.isNotEmpty ? ' • ' : '') + runtimeText;
+                  }
+
+                  return Dismissible(
+                    key: Key('seen_${seenItem.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      color: context.appColors.error,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: Icon(
+                        Icons.delete,
+                        color: contrastingForeground(context.appColors.error),
                       ),
                     ),
-                  );
-                }
-
-                final seenItem = item as SeenItem;
-                final isTv = seenItem.type == MediaType.tv;
-                final isLiked = provider.likedIds.contains(
-                  '${seenItem.tmdbId}:${seenItem.type.name}',
-                );
-
-                String subtitle = '';
-                if (_viewMode == SeenViewMode.history &&
-                    isTv &&
-                    seenItem.seasonNumber != null) {
-                  subtitle =
-                      'S${seenItem.seasonNumber} E${seenItem.episodeNumber}';
-                } else if (_viewMode == SeenViewMode.library && isTv) {
-                  final count = provider.getSeenCount(
-                    MediaItem(
-                      id: seenItem.tmdbId,
-                      title: seenItem.title,
-                      overview: '',
-                      releaseDate: '',
-                      mediaType: seenItem.type,
-                    ),
-                  );
-                  subtitle = context.l10n.seenEpisodesSeen(count);
-                }
-
-                if (_currentSort == SeenSort.nameAsc ||
-                    _currentSort == SeenSort.nameDesc) {
-                  subtitle +=
-                      (subtitle.isNotEmpty ? ' • ' : '') +
-                      DateFormat.yMd().format(seenItem.seenDate);
-                }
-
-                final runtimeText = Formatters.formatRuntime(seenItem.runtime);
-                if (runtimeText.isNotEmpty) {
-                  subtitle += (subtitle.isNotEmpty ? ' • ' : '') + runtimeText;
-                }
-
-                return Dismissible(
-                  key: Key('seen_${seenItem.id}'),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    color: context.appColors.error,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: Icon(
-                      Icons.delete,
-                      color: contrastingForeground(context.appColors.error),
-                    ),
-                  ),
-                  confirmDismiss: (direction) {
-                    if (_viewMode == SeenViewMode.library) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(context.l10n.seenCannotDeleteLibrary),
-                        ),
-                      );
-                      return Future.value(false);
-                    }
-                    return _confirmDeletion(context);
-                  },
-                  onDismissed: (direction) {
-                    provider.deleteSeenEntry(seenItem.id!);
-                  },
-                  child: ListTile(
-                    leading:
-                        seenItem.posterPath != null &&
-                            !Platform.environment.containsKey('FLUTTER_TEST')
-                        ? CachedNetworkImage(
-                            imageUrl:
-                                'https://image.tmdb.org/t/p/w92${seenItem.posterPath}',
-                            width: 50,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => const SizedBox(
+                    confirmDismiss: (direction) {
+                      if (_viewMode == SeenViewMode.library) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(context.l10n.seenCannotDeleteLibrary),
+                          ),
+                        );
+                        return Future.value(false);
+                      }
+                      return _confirmDeletion(context);
+                    },
+                    onDismissed: (direction) {
+                      provider.deleteSeenEntry(seenItem.id!);
+                    },
+                    child: ListTile(
+                      leading:
+                          seenItem.posterPath != null &&
+                              !Platform.environment.containsKey('FLUTTER_TEST')
+                          ? CachedNetworkImage(
+                              imageUrl:
+                                  'https://image.tmdb.org/t/p/w92${seenItem.posterPath}',
                               width: 50,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const SizedBox(
+                                width: 50,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               ),
+                              errorWidget: (context, url, error) {
+                                provider.notifyNetworkError();
+                                return SizedBox(
+                                  width: 50,
+                                  child: Icon(isTv ? Icons.tv : Icons.movie),
+                                );
+                              },
+                            )
+                          : SizedBox(
+                              width: 50,
+                              child: Icon(isTv ? Icons.tv : Icons.movie),
                             ),
-                            errorWidget: (context, url, error) {
-                              provider.notifyNetworkError();
-                              return SizedBox(
-                                width: 50,
-                                child: Icon(isTv ? Icons.tv : Icons.movie),
-                              );
-                            },
-                          )
-                        : SizedBox(
-                            width: 50,
-                            child: Icon(isTv ? Icons.tv : Icons.movie),
-                          ),
-                    title: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            seenItem.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isLiked)
-                          Padding(
-                            padding: EdgeInsets.only(left: 4.0),
-                            child: Icon(
-                              Icons.favorite,
-                              size: 16,
-                              color: palette.likeHeart,
+                      title: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              seenItem.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                      ],
+                          if (isLiked)
+                            Padding(
+                              padding: EdgeInsets.only(left: 4.0),
+                              child: Icon(
+                                Icons.favorite,
+                                size: 16,
+                                color: palette.likeHeart,
+                              ),
+                            ),
+                        ],
+                      ),
+                      subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
+                      onTap: () {
+                        MediaDetailPage.show(
+                          context,
+                          MediaItem(
+                            id: seenItem.tmdbId,
+                            title: seenItem.title,
+                            overview: '',
+                            releaseDate: '',
+                            mediaType: seenItem.type,
+                            posterPath: seenItem.posterPath,
+                          ),
+                        );
+                      },
                     ),
-                    subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
-                    onTap: () {
-                      MediaDetailPage.show(
-                        context,
-                        MediaItem(
-                          id: seenItem.tmdbId,
-                          title: seenItem.title,
-                          overview: '',
-                          releaseDate: '',
-                          mediaType: seenItem.type,
-                          posterPath: seenItem.posterPath,
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+      ),
     );
   }
 }

@@ -98,7 +98,7 @@ class _AchievementsPageState extends State<AchievementsPage> {
     final completedFamilies = families.where((f) => f.isCompleted).length;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.settingsAchievements)),
+      appBar: AppBar(title: Text(context.l10n.profileAchievements)),
       body: families.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Column(

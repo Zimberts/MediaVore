@@ -194,14 +194,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDarkTheme => 'Dark Theme';
 
   @override
-  String get settingsSectionMilestones => 'Gaming & Milestones';
+  String get navProfile => 'Profile';
 
   @override
-  String get settingsAchievements => 'Achievements';
+  String get profileTitle => 'Profile';
 
   @override
-  String get settingsAchievementsSubtitle =>
+  String get profileStats => 'Statistics';
+
+  @override
+  String get profileStatsSubtitle => 'Watch time, top genres and activity.';
+
+  @override
+  String get profileAchievements => 'Achievements';
+
+  @override
+  String get profileAchievementsSubtitle =>
       'View your collection of badges and progress.';
+
+  @override
+  String get profileSettings => 'Settings';
+
+  @override
+  String get profileSettingsSubtitle =>
+      'Appearance, TMDB key, data and notifications.';
 
   @override
   String get settingsSectionListsDisplay => 'Lists Display';
@@ -520,6 +536,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listsSortOptions => 'Sort Options';
 
   @override
+  String get listsMoreActions => 'More actions';
+
+  @override
   String get listsSortManual => 'Manual Order';
 
   @override
@@ -673,9 +692,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenSearchHint => 'Search history...';
-
-  @override
-  String get seenStatistics => 'Statistics';
 
   @override
   String get commonRefresh => 'Refresh';
@@ -958,9 +974,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifTitle => 'Alerts';
-
-  @override
-  String get notifForceRefresh => 'Force Refresh';
 
   @override
   String get notifTabReleases => 'Releases';

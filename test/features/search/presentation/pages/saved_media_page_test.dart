@@ -33,18 +33,18 @@ void main() {
     when(() => mockSharedPreferences.getInt(any())).thenReturn(null);
     when(() => mockSharedPreferences.getDouble(any())).thenReturn(null);
     when(() => mockSharedPreferences.getBool(any())).thenReturn(null);
-    when(() => mockSharedPreferences.setInt(any(), any())).thenAnswer(
-      (_) async => true,
-    );
-    when(() => mockSharedPreferences.setBool(any(), any())).thenAnswer(
-      (_) async => true,
-    );
-    when(() => mockSharedPreferences.setDouble(any(), any())).thenAnswer(
-      (_) async => true,
-    );
-    when(() => mockSharedPreferences.setString(any(), any())).thenAnswer(
-      (_) async => true,
-    );
+    when(
+      () => mockSharedPreferences.setInt(any(), any()),
+    ).thenAnswer((_) async => true);
+    when(
+      () => mockSharedPreferences.setBool(any(), any()),
+    ).thenAnswer((_) async => true);
+    when(
+      () => mockSharedPreferences.setDouble(any(), any()),
+    ).thenAnswer((_) async => true);
+    when(
+      () => mockSharedPreferences.setString(any(), any()),
+    ).thenAnswer((_) async => true);
 
     // Default mocks for SearchProvider init
     when(
@@ -76,7 +76,10 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
 
     if (!locator.isRegistered<SearchProvider>()) {
       locator.registerSingleton<SearchProvider>(searchProvider);
@@ -217,10 +220,8 @@ void main() {
       () => mockMediaRepository.getListEntries('watchlist'),
     ).thenAnswer((_) async => List<String>.from(entries));
     when(
-      () => mockMediaRepository.getMediaDetails(
-        any(),
-        type: any(named: 'type'),
-      ),
+      () =>
+          mockMediaRepository.getMediaDetails(any(), type: any(named: 'type')),
     ).thenAnswer((invocation) async {
       final id = invocation.positionalArguments[0] as int;
       return MediaDetails(
@@ -370,9 +371,9 @@ void main() {
     await settingsProvider.setDisplayMode(DisplayMode.list);
 
     List<String>? reordered;
-    when(
-      () => mockMediaRepository.updateListOrder(any(), any()),
-    ).thenAnswer((invocation) async {
+    when(() => mockMediaRepository.updateListOrder(any(), any())).thenAnswer((
+      invocation,
+    ) async {
       reordered = (invocation.positionalArguments[1] as List).cast<String>();
     });
 
@@ -395,9 +396,9 @@ void main() {
     stubWatchlist(count: 6);
 
     List<String>? reordered;
-    when(
-      () => mockMediaRepository.updateListOrder(any(), any()),
-    ).thenAnswer((invocation) async {
+    when(() => mockMediaRepository.updateListOrder(any(), any())).thenAnswer((
+      invocation,
+    ) async {
       reordered = (invocation.positionalArguments[1] as List).cast<String>();
     });
 
@@ -432,5 +433,62 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('1 selected'), findsOneWidget);
+  });
+
+  group('app bar', () {
+    testWidgets('should show at most three actions', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final appBar = tester.widget<AppBar>(find.byType(AppBar));
+      expect(appBar.actions, hasLength(lessThanOrEqualTo(3)));
+      expect(find.byIcon(Icons.refresh), findsNothing);
+      expect(find.byIcon(Icons.settings), findsNothing);
+    });
+
+    testWidgets('should group share and sort in the overflow menu', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.share), findsNothing);
+      await tester.tap(find.byKey(const Key('lists_more_actions')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sharing & Importing'), findsOneWidget);
+      expect(find.text('Sort Options'), findsOneWidget);
+    });
+
+    testWidgets('should reload the list on pull-to-refresh when empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+      clearInteractions(mockMediaRepository);
+
+      await tester.fling(
+        find.text('No items in this list.'),
+        const Offset(0, 300),
+        1000,
+      );
+      await tester.pumpAndSettle();
+
+      verify(() => mockMediaRepository.getListEntries('watchlist')).called(1);
+    });
+
+    testWidgets('should reload the list on pull-to-refresh with items', (
+      tester,
+    ) async {
+      stubWatchlist(count: 3);
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+      clearInteractions(mockMediaRepository);
+
+      await tester.fling(find.text('Item 1'), const Offset(0, 300), 1000);
+      await tester.pumpAndSettle();
+
+      verify(() => mockMediaRepository.getListEntries('watchlist')).called(1);
+    });
   });
 }

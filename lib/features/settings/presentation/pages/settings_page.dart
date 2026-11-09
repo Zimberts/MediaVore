@@ -3,7 +3,6 @@ import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/app_version.dart';
-import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -177,17 +176,6 @@ class SettingsPage extends StatelessWidget {
                 }).toList(),
               ),
             ),
-          ),
-          const Divider(),
-          _SectionHeader(title: l10n.settingsSectionMilestones),
-          ListTile(
-            leading: const Icon(Icons.emoji_events_outlined),
-            title: Text(l10n.settingsAchievements),
-            subtitle: Text(l10n.settingsAchievementsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(context, AchievementsPage.route());
-            },
           ),
           const Divider(),
           _SectionHeader(title: l10n.settingsSectionListsDisplay),

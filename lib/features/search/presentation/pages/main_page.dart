@@ -9,6 +9,7 @@ import 'package:mediavore/features/achievements/presentation/providers/achieveme
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
+import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -41,6 +42,7 @@ class _MainPageState extends State<MainPage> {
     SavedMediaPage(onSearch: _openSearch),
     SeenHistoryPage(onSearch: _openSearch),
     NotificationCenterPage(onSearch: _openSearch),
+    const ProfilePage(),
   ];
 
   @override
@@ -255,6 +257,11 @@ class _MainPageState extends State<MainPage> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.notifications),
             label: l10n.navAlerts,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline),
+            activeIcon: const Icon(Icons.person),
+            label: l10n.navProfile,
           ),
         ],
         currentIndex: _selectedIndex,

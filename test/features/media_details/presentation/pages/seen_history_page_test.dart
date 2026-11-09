@@ -58,7 +58,10 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
 
     if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
@@ -203,5 +206,23 @@ void main() {
 
     verify(() => mockMediaRepository.deleteSeenEntry(1)).called(1);
     expect(find.text('Movie A'), findsNothing);
+  });
+
+  testWidgets('should reload seen items on pull-to-refresh when empty', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+    clearInteractions(mockMediaRepository);
+
+    await tester.fling(
+      find.text('No items seen yet.'),
+      const Offset(0, 300),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    verify(() => mockMediaRepository.getSeenItems()).called(1);
+    expect(find.byIcon(Icons.refresh), findsNothing);
   });
 }
