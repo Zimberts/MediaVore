@@ -81,7 +81,10 @@ already uploaded for the same version; `ExportOptions.plist` sets
 ## CI
 
 The `ios` job of `.github/workflows/release.yml` (#241) runs after analyze/test, on the run
-that creates a release tag (and on *Run workflow*, see `DOCS/releasing.md`). It:
+that creates a release tag (and on *Run workflow*, see `DOCS/releasing.md`).
+It is opt-in, like the Google Play upload: the small `ios-secrets` job checks the six secrets
+first. None set: a notice, the `ios` job is skipped and the release stays green (Android only).
+Some but not all set: the run fails, listing the missing ones. All set, the `ios` job:
 
 1. imports the Apple Distribution certificate into a temporary keychain and installs the App
    Store profile; `tool/ios_signing.py check-profile` fails the job early if the profile is not
