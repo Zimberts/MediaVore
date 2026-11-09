@@ -10,7 +10,6 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -59,22 +58,6 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(context.l10n.notifTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: refresh,
-            tooltip: context.l10n.notifForceRefresh,
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
-            },
-            tooltip: context.l10n.settingsTitle,
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: [
@@ -412,7 +395,9 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                                       // Restore the exact dismissed quick-add entry directly
                                       await provider.addQuickAddItem(qa);
                                     } catch (e) {
-                                      debugPrint('[NotificationCenter] undo streak opt-out failed: $e');
+                                      debugPrint(
+                                        '[NotificationCenter] undo streak opt-out failed: $e',
+                                      );
                                     }
                                   },
                                 ),
@@ -420,7 +405,9 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                             );
                           }
                         } catch (e) {
-                          debugPrint('[NotificationCenter] streak opt-out failed: $e');
+                          debugPrint(
+                            '[NotificationCenter] streak opt-out failed: $e',
+                          );
                         }
                       },
                       child: ListTile(

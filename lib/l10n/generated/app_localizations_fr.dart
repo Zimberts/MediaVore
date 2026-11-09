@@ -188,14 +188,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsDarkTheme => 'Thème sombre';
 
   @override
-  String get settingsSectionMilestones => 'Jeu et étapes';
+  String get navProfile => 'Profil';
 
   @override
-  String get settingsAchievements => 'Succès';
+  String get profileTitle => 'Profil';
 
   @override
-  String get settingsAchievementsSubtitle =>
+  String get profileStats => 'Statistiques';
+
+  @override
+  String get profileStatsSubtitle =>
+      'Temps de visionnage, genres favoris et activité.';
+
+  @override
+  String get profileAchievements => 'Succès';
+
+  @override
+  String get profileAchievementsSubtitle =>
       'Consultez vos badges et votre progression.';
+
+  @override
+  String get profileSettings => 'Paramètres';
+
+  @override
+  String get profileSettingsSubtitle =>
+      'Apparence, clé TMDB, données et notifications.';
 
   @override
   String get settingsSectionListsDisplay => 'Affichage des listes';
@@ -519,6 +536,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listsSortOptions => 'Options de tri';
 
   @override
+  String get listsMoreActions => 'Plus d\'actions';
+
+  @override
   String get listsSortManual => 'Ordre manuel';
 
   @override
@@ -676,9 +696,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get seenSearchHint => 'Rechercher dans l\'historique...';
-
-  @override
-  String get seenStatistics => 'Statistiques';
 
   @override
   String get commonRefresh => 'Actualiser';
@@ -959,9 +976,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notifTitle => 'Centre de notifications';
-
-  @override
-  String get notifForceRefresh => 'Forcer l\'actualisation';
 
   @override
   String get notifTabReleases => 'Sorties';

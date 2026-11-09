@@ -410,23 +410,53 @@ abstract class AppLocalizations {
   /// **'Dark Theme'**
   String get settingsDarkTheme;
 
-  /// No description provided for @settingsSectionMilestones.
+  /// No description provided for @navProfile.
   ///
   /// In en, this message translates to:
-  /// **'Gaming & Milestones'**
-  String get settingsSectionMilestones;
+  /// **'Profile'**
+  String get navProfile;
 
-  /// No description provided for @settingsAchievements.
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
+  /// No description provided for @profileStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get profileStats;
+
+  /// No description provided for @profileStatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch time, top genres and activity.'**
+  String get profileStatsSubtitle;
+
+  /// No description provided for @profileAchievements.
   ///
   /// In en, this message translates to:
   /// **'Achievements'**
-  String get settingsAchievements;
+  String get profileAchievements;
 
-  /// No description provided for @settingsAchievementsSubtitle.
+  /// No description provided for @profileAchievementsSubtitle.
   ///
   /// In en, this message translates to:
   /// **'View your collection of badges and progress.'**
-  String get settingsAchievementsSubtitle;
+  String get profileAchievementsSubtitle;
+
+  /// No description provided for @profileSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get profileSettings;
+
+  /// No description provided for @profileSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance, TMDB key, data and notifications.'**
+  String get profileSettingsSubtitle;
 
   /// No description provided for @settingsSectionListsDisplay.
   ///
@@ -986,6 +1016,12 @@ abstract class AppLocalizations {
   /// **'Sort Options'**
   String get listsSortOptions;
 
+  /// No description provided for @listsMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get listsMoreActions;
+
   /// No description provided for @listsSortManual.
   ///
   /// In en, this message translates to:
@@ -1237,12 +1273,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search history...'**
   String get seenSearchHint;
-
-  /// No description provided for @seenStatistics.
-  ///
-  /// In en, this message translates to:
-  /// **'Statistics'**
-  String get seenStatistics;
 
   /// No description provided for @commonRefresh.
   ///
@@ -1729,12 +1759,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notification Center'**
   String get notifTitle;
-
-  /// No description provided for @notifForceRefresh.
-  ///
-  /// In en, this message translates to:
-  /// **'Force Refresh'**
-  String get notifForceRefresh;
 
   /// No description provided for @notifTabReleases.
   ///

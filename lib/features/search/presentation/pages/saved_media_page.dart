@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/widgets/scrollable_fill.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:mediavore/core/di/injection.dart';
@@ -13,7 +14,6 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -34,11 +34,13 @@ class SavedMediaPage extends StatefulWidget {
 
 enum SortMethod { manual, releaseDate, shuffle }
 
+/// Secondary My Lists actions, grouped in the app bar's overflow menu.
+enum _ListsMenuAction { share, sort }
+
 class SavedMediaPageState extends State<SavedMediaPage> {
   late final MediaRepository _mediaRepository;
   String _selectedList = 'watchlist';
   Future<List<MediaItem>>? _savedMediaFuture;
-  bool _isRefreshing = false;
   SortMethod _sortMethod = SortMethod.manual;
   bool _isReversed = false;
   List<MediaItem> _currentItems = [];
@@ -162,6 +164,15 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     });
   }
 
+  /// Pull-to-refresh: reloads the list and keeps the indicator visible until
+  /// the fetch ends. A failed fetch is shown by the [FutureBuilder].
+  Future<void> _pullToRefresh() async {
+    await loadSavedMedia(forceRefresh: true);
+    try {
+      await _savedMediaFuture;
+    } catch (_) {}
+  }
+
   void resetToDefault() {
     if (_selectedList != 'watchlist') {
       setState(() {
@@ -244,9 +255,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
           );
         }
       });
-      items = (await Future.wait(itemFutures))
-          .where((item) => item.id != 0)
-          .toList();
+      items = (await Future.wait(
+        itemFutures,
+      )).where((item) => item.id != 0).toList();
     }
 
     if (mounted) {
@@ -811,8 +822,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                   ),
                   Text(
                     context.l10n.listsSortOptions,
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _buildSortItem(
@@ -992,79 +1004,76 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 ]
               : [
                   IconButton(
-                    icon: const Icon(Icons.share),
-                    onPressed: () =>
-                        _showShareAndImportOptions(provider, settings),
-                    tooltip: context.l10n.listsSharingImporting,
-                  ),
-                  IconButton(
                     icon: const Icon(Icons.grid_on),
                     onPressed: _showDisplayModePicker,
                     tooltip: context.l10n.listsDisplayMode,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.sort),
-                    onPressed: _showSortOptions,
-                    tooltip: context.l10n.listsSortOptions,
-                  ),
-                  IconButton(
-                    icon: _isRefreshing
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh),
-                    tooltip: context.l10n.commonRefresh,
-                    onPressed: _isRefreshing
-                        ? null
-                        : () async {
-                            setState(() => _isRefreshing = true);
-                            await loadSavedMedia(forceRefresh: true);
-                            if (mounted) setState(() => _isRefreshing = false);
-                          },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.settings),
-                    tooltip: context.l10n.settingsTitle,
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(),
+                  PopupMenuButton<_ListsMenuAction>(
+                    key: const Key('lists_more_actions'),
+                    tooltip: context.l10n.listsMoreActions,
+                    onSelected: (action) => switch (action) {
+                      _ListsMenuAction.share => _showShareAndImportOptions(
+                        provider,
+                        settings,
                       ),
-                    ),
+                      _ListsMenuAction.sort => _showSortOptions(),
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: _ListsMenuAction.share,
+                        child: ListTile(
+                          leading: const Icon(Icons.share),
+                          title: Text(context.l10n.listsSharingImporting),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _ListsMenuAction.sort,
+                        child: ListTile(
+                          leading: const Icon(Icons.sort),
+                          title: Text(context.l10n.listsSortOptions),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
         ),
-        body: FutureBuilder<List<MediaItem>>(
-          future: _savedMediaFuture,
-          builder: (context, snapshot) {
-            // Prefer fresh data, but fall back to the last loaded items for the
-            // same list so the scrollable is not torn down (losing its scroll
-            // offset) while a refresh is in flight.
-            final List<MediaItem>? displayItems = snapshot.hasData
-                ? snapshot.data
-                : (_currentItemsList == _selectedList ? _currentItems : null);
+        body: RefreshIndicator(
+          onRefresh: _pullToRefresh,
+          child: FutureBuilder<List<MediaItem>>(
+            future: _savedMediaFuture,
+            builder: (context, snapshot) {
+              // Prefer fresh data, but fall back to the last loaded items for the
+              // same list so the scrollable is not torn down (losing its scroll
+              // offset) while a refresh is in flight.
+              final List<MediaItem>? displayItems = snapshot.hasData
+                  ? snapshot.data
+                  : (_currentItemsList == _selectedList ? _currentItems : null);
 
-            if (displayItems == null && !snapshot.hasError) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (displayItems == null || displayItems.isEmpty) {
-              return Center(child: Text(context.l10n.listsEmpty));
-            }
+              if (displayItems == null && !snapshot.hasError) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (displayItems == null || displayItems.isEmpty) {
+                return ScrollableFill(
+                  child: Center(child: Text(context.l10n.listsEmpty)),
+                );
+              }
 
-            final sortedItems = _getFilteredAndSortedItems(
-              displayItems,
-              settings,
-            );
+              final sortedItems = _getFilteredAndSortedItems(
+                displayItems,
+                settings,
+              );
 
-            if (settings.displayMode == DisplayMode.grid) {
-              return _buildGridView(sortedItems, provider, settings);
-            } else if (settings.displayMode == DisplayMode.swipe) {
-              return _buildSwipeView(sortedItems, provider);
-            } else {
-              return _buildListView(sortedItems, provider, settings);
-            }
-          },
+              if (settings.displayMode == DisplayMode.grid) {
+                return _buildGridView(sortedItems, provider, settings);
+              } else if (settings.displayMode == DisplayMode.swipe) {
+                return _buildSwipeView(sortedItems, provider);
+              } else {
+                return _buildListView(sortedItems, provider, settings);
+              }
+            },
+          ),
         ),
       ),
     );
