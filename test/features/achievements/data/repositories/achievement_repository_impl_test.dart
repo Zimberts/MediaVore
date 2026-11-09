@@ -36,7 +36,6 @@ void main() {
       [AchievementModelSchema, SeenItemModelSchema],
       directory: tempPath,
       name: 'test_achievements_db',
-      inspector: false,
     );
     mockDataSource = MockMediaListLocalDataSource();
     when(
