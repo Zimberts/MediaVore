@@ -45,6 +45,8 @@ void main() {
     when(() => cache.getSeason(7, number)).thenAnswer((_) async => data);
   }
 
+  setUpAll(() => registerFallbackValue(MediaType.tv));
+
   setUp(() {
     remote = MockMediaRemoteDataSource();
     cache = MockMediaCache();
@@ -52,6 +54,10 @@ void main() {
       MediaDetailsService(remoteDataSource: remote, cache: cache),
     );
     when(() => cache.cacheSeason(any(), any(), any())).thenAnswer((_) async {});
+    when(() => cache.getItem(any(), any())).thenAnswer((_) async => null);
+    when(
+      () => cache.getSeasonUpdateDate(any(), any()),
+    ).thenAnswer((_) async => null);
   });
 
   group('NextEpisodeScanner.scan', () {

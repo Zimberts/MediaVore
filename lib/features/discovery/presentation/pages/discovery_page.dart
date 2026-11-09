@@ -28,11 +28,18 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounce;
   final ScrollController _scrollController = ScrollController();
+  late final SettingsProvider _settings;
+  late String _credential;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // Reload once a TMDB credential is saved (first-launch screen or
+    // Settings), so a stale "missing key" error doesn't stay on screen.
+    _settings = context.read<SettingsProvider>();
+    _credential = _settings.tmdbApiKey;
+    _settings.addListener(_onSettingsChanged);
     widget.searchTrigger?.addListener(_handleSearchTrigger);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshDiscovery();
@@ -55,6 +62,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     _searchFocusNode.dispose();
     _scrollController.dispose();
     widget.searchTrigger?.removeListener(_handleSearchTrigger);
+    _settings.removeListener(_onSettingsChanged);
     super.dispose();
   }
 
@@ -63,6 +71,13 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
         _scrollController.position.maxScrollExtent - 200) {
       context.read<SearchProvider>().fetchNextPage();
     }
+  }
+
+  void _onSettingsChanged() {
+    final credential = _settings.tmdbApiKey;
+    if (credential == _credential) return;
+    _credential = credential;
+    if (credential.isNotEmpty && mounted) _refreshDiscovery();
   }
 
   void _refreshDiscovery([String? query]) {
@@ -382,14 +397,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 key: const Key('discovery_open_settings'),
                 icon: const Icon(Icons.settings),
                 label: Text(context.l10n.commonOpenSettings),
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(),
-                    ),
-                  );
-                  if (mounted) _refreshDiscovery();
-                },
+                // Saving a key reloads via _onSettingsChanged.
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                ),
               )
             else
               ElevatedButton.icon(
@@ -442,6 +453,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
         actions: [
           IconButton(
             icon: Icon(_showSearch ? Icons.close : Icons.search),
+            tooltip: _showSearch
+                ? context.l10n.commonClose
+                : context.l10n.discoverySearchToggle,
             onPressed: () {
               setState(() {
                 if (_showSearch) {
@@ -463,6 +477,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
+            tooltip: context.l10n.discoveryFiltersTitle,
             onPressed: _openFilterDialog,
           ),
         ],
@@ -559,18 +574,18 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                           width: double.infinity,
                                           placeholder: (context, url) =>
                                               Container(
-                                                color: Colors.grey[800],
+                                                color: colors.placeholder,
                                               ),
                                           errorWidget: (context, url, error) =>
                                               const Icon(Icons.error),
                                         )
                                       : Container(
-                                          color: Colors.grey[800],
+                                          color: colors.placeholder,
                                           height: double.infinity,
                                           width: double.infinity,
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.movie,
-                                            color: Colors.white54,
+                                            color: colors.comments,
                                           ),
                                         ),
                                 ),
@@ -585,7 +600,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                             : colors.badgeBg,
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: Colors.white,
+                                          color: colors.badgeText,
                                           width: 1.5,
                                         ),
                                       ),
@@ -631,7 +646,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                     ? Icons.tv
                                     : Icons.movie,
                                 size: 12,
-                                color: Colors.grey,
+                                color: colors.comments,
                               ),
                               const SizedBox(width: 4),
                               Flexible(
@@ -644,9 +659,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                               if (item.voteAverage != null &&
                                   item.voteAverage! > 0) ...[
                                 const Text(' • '),
-                                const Icon(
+                                Icon(
                                   Icons.star,
-                                  color: Colors.amber,
+                                  color: colors.ratingStar,
                                   size: 12,
                                 ),
                                 const SizedBox(width: 2),
@@ -708,16 +723,16 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                           'https://image.tmdb.org/t/p/w342${item.posterPath}',
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) =>
-                                          Container(color: Colors.grey[800]),
+                                          Container(color: colors.placeholder),
                                       errorWidget: (context, url, error) =>
                                           const Icon(Icons.error),
                                     )
                                   else
                                     Container(
-                                      color: Colors.grey[800],
-                                      child: const Icon(
+                                      color: colors.placeholder,
+                                      child: Icon(
                                         Icons.movie,
-                                        color: Colors.white54,
+                                        color: colors.comments,
                                       ),
                                     ),
                                   Positioned(
@@ -812,9 +827,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                       ),
                                       child: Row(
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.star,
-                                            color: Colors.amber,
+                                            color: colors.ratingStar,
                                             size: 10,
                                           ),
                                           const SizedBox(width: 2),
@@ -875,7 +890,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                         : colors.badgeBg,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: colors.badgeText,
                                       width: 1.5,
                                     ),
                                   ),

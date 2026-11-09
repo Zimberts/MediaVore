@@ -69,21 +69,70 @@ class AppLocalizationsFr extends AppLocalizations {
   String get importListNameHint => 'Saisissez un nom';
 
   @override
-  String get tmdbCredentialRequiredTitle => 'Identifiant TMDB requis';
+  String get tmdbOnboardingTitle => 'Connexion à TMDB';
 
   @override
-  String get tmdbCredentialRequiredMessage =>
-      'Pour utiliser cette application, il vous faut un identifiant TMDB (clé d\'API v3 ou jeton de lecture v4). Vous pouvez en obtenir un sur themoviedb.org.';
+  String get tmdbOnboardingWhy =>
+      'MediaVore récupère les données des films et séries (affiches, synopsis, dates de sortie) sur The Movie Database (TMDB). TMDB demande à chaque utilisateur une clé personnelle gratuite.';
+
+  @override
+  String get tmdbOnboardingStepGetKey =>
+      '1. Créez un compte TMDB gratuit, puis ouvrez sa page de paramètres de l\'API.';
+
+  @override
+  String get tmdbOnboardingOpenTmdb => 'Ouvrir la page API de TMDB';
+
+  @override
+  String get tmdbOnboardingStepPaste =>
+      '2. Copiez le « Jeton d\'accès en lecture à l\'API » (ou la « Clé d\'API ») et collez-le ci-dessous.';
+
+  @override
+  String tmdbCredentialLinkCopied(String url) {
+    return 'Impossible d\'ouvrir le navigateur. Lien copié : $url';
+  }
 
   @override
   String get tmdbCredentialHint => 'Clé d\'API TMDB v3 ou jeton de lecture v4';
+
+  @override
+  String get tmdbCredentialPaste => 'Coller';
+
+  @override
+  String get tmdbCredentialShow => 'Afficher';
+
+  @override
+  String get tmdbCredentialHide => 'Masquer';
+
+  @override
+  String get tmdbCredentialVerifyAndSave => 'Vérifier et enregistrer';
+
+  @override
+  String get tmdbCredentialVerifying => 'Vérification auprès de TMDB…';
+
+  @override
+  String get tmdbCredentialSaved => 'Clé TMDB vérifiée et enregistrée.';
+
+  @override
+  String get tmdbCredentialInvalid =>
+      'TMDB a refusé cette clé. Vérifiez que vous avez copié la clé d\'API ou le jeton de lecture en entier.';
+
+  @override
+  String tmdbCredentialCheckFailed(String reason) {
+    return 'La clé n\'a pas pu être vérifiée : $reason';
+  }
+
+  @override
+  String get tmdbCredentialSaveAnyway => 'Enregistrer sans vérifier';
+
+  @override
+  String get tmdbCredentialRemove => 'Supprimer la clé';
 
   @override
   String get tmdbCredentialLater =>
       'Vous pourrez définir votre clé d\'API plus tard dans les paramètres (accessibles depuis les onglets Mes listes, Vus ou Alertes).';
 
   @override
-  String get tmdbCredentialCancelForNow => 'Plus tard';
+  String get tmdbCredentialSkip => 'Plus tard';
 
   @override
   String get achievementUnlocked => 'Succès débloqué !';
@@ -687,6 +736,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsSelectPeriod => 'Choisir la période';
 
   @override
+  String get statsPreviousPeriod => 'Période précédente';
+
+  @override
+  String get statsNextPeriod => 'Période suivante';
+
+  @override
   String get statsTotalWatchTime => 'Temps de visionnage total';
 
   @override
@@ -880,6 +935,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get discoverySearchHint => 'Rechercher...';
+
+  @override
+  String get discoverySearchToggle => 'Rechercher dans Découvrir';
 
   @override
   String get discoveryTitle => 'Découvrir';

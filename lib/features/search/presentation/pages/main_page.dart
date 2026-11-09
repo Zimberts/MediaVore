@@ -12,6 +12,7 @@ import 'package:mediavore/features/media_details/presentation/pages/seen_history
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
@@ -59,7 +60,7 @@ class _MainPageState extends State<MainPage> {
       // Check if TMDB API key is missing
       final settings = context.read<SettingsProvider>();
       if (settings.tmdbApiKey.isEmpty) {
-        _showApiKeyDialog(context, settings);
+        _showCredentialOnboarding();
       }
     });
   }
@@ -259,54 +260,21 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  void _showApiKeyDialog(BuildContext context, SettingsProvider settings) {
-    final controller = TextEditingController(text: settings.tmdbApiKey);
-    showDialog(
-      context: context,
-      builder: (context) {
-        final l10n = context.l10n;
-        return AlertDialog(
-          title: Text(l10n.tmdbCredentialRequiredTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.tmdbCredentialRequiredMessage),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  hintText: l10n.tmdbCredentialHint,
-                  border: const OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.tmdbCredentialLater),
-                      duration: const Duration(seconds: 5),
-                    ),
-                  );
-                }
-              },
-              child: Text(l10n.tmdbCredentialCancelForNow),
-            ),
-            FilledButton(
-              onPressed: () {
-                settings.setTmdbApiKey(controller.text.trim());
-                Navigator.pop(context);
-              },
-              child: Text(l10n.commonSave),
-            ),
-          ],
-        );
-      },
+  /// First-launch TMDB credential screen. Discover reloads by itself once a
+  /// key is saved (it listens to [SettingsProvider.tmdbApiKey]).
+  Future<void> _showCredentialOnboarding() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const TmdbCredentialPage(onboarding: true),
+      ),
+    );
+    if (saved == true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(context.l10n.tmdbCredentialLater),
+        duration: const Duration(seconds: 5),
+      ),
     );
   }
 }
@@ -362,6 +330,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final onToast = contrastingForeground(colors.logicFlow);
     final statusBarHeight = MediaQuery.of(context).padding.top;
     final appBarHeight = kToolbarHeight;
 
@@ -403,13 +372,9 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
           color: Colors.transparent,
           child: GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AchievementsPage(
-                    initialAchievementId: widget.achievement.id,
-                  ),
-                ),
+              AchievementsPage.showAchievement(
+                Navigator.of(context),
+                widget.achievement.id,
               );
               _handleDismiss();
             },
@@ -433,7 +398,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.emoji_events, color: Colors.white, size: 28),
+                  Icon(Icons.emoji_events, color: onToast, size: 28),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -448,26 +413,24 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                               : context.l10n.achievementUnlocked,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: onToast,
                             fontSize: 14,
                           ),
                         ),
                         Text(
                           widget.achievement.titleFor(context.l10n.localeName),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: onToast, fontSize: 16),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close,
-                      color: Colors.white70,
+                      color: onToast.withValues(alpha: 0.7),
                       size: 20,
                     ),
+                    tooltip: context.l10n.commonClose,
                     onPressed: _handleDismiss,
                   ),
                 ],

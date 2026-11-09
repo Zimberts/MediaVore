@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/app_version.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
+import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -21,10 +23,35 @@ class SettingsPage extends StatelessWidget {
       fontSize: 13,
     );
 
+    final credentialMissing = settings.tmdbApiKey.isEmpty;
+    final apiSection = <Widget>[
+      _SectionHeader(title: l10n.settingsSectionApi),
+      ListTile(
+        key: const Key('settings_tmdb_credential'),
+        leading: const Icon(Icons.key),
+        title: Text(l10n.settingsTmdbCredential),
+        subtitle: Text(
+          credentialMissing
+              ? l10n.settingsNotSet
+              : '••••••••${settings.tmdbApiKey.length > 4 ? settings.tmdbApiKey.substring(settings.tmdbApiKey.length - 4) : ''}',
+        ),
+        trailing: const Icon(Icons.edit),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TmdbCredentialPage()),
+          );
+        },
+      ),
+      const Divider(),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
+          // Without a credential nothing loads: put it first.
+          if (credentialMissing) ...apiSection,
           _SectionHeader(title: l10n.settingsSectionAppearance),
           ListTile(
             leading: const Icon(Icons.language),
@@ -159,12 +186,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: Text(l10n.settingsAchievementsSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AchievementsPage(),
-                ),
-              );
+              Navigator.push(context, AchievementsPage.route());
             },
           ),
           const Divider(),
@@ -192,26 +214,12 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           const Divider(),
-          _SectionHeader(title: l10n.settingsSectionApi),
-          ListTile(
-            leading: const Icon(Icons.key),
-            title: Text(l10n.settingsTmdbCredential),
-            subtitle: Text(
-              settings.tmdbApiKey.isEmpty
-                  ? l10n.settingsNotSet
-                  : '••••••••${settings.tmdbApiKey.length > 4 ? settings.tmdbApiKey.substring(settings.tmdbApiKey.length - 4) : ''}',
-            ),
-            trailing: const Icon(Icons.edit),
-            onTap: () {
-              _showApiKeyDialog(context, settings);
-            },
-          ),
-          const Divider(),
+          if (!credentialMissing) ...apiSection,
           _SectionHeader(title: l10n.settingsSectionAbout),
           AboutListTile(
             icon: const Icon(Icons.info_outline),
             applicationName: l10n.appTitle,
-            applicationVersion: '1.1.0',
+            applicationVersion: appVersion,
             aboutBoxChildren: [Text(l10n.settingsAboutDescription)],
           ),
         ],
@@ -228,40 +236,6 @@ class SettingsPage extends StatelessWidget {
       case ThemeMode.dark:
         return l10n.settingsThemeModeDark;
     }
-  }
-
-  void _showApiKeyDialog(BuildContext context, SettingsProvider settings) {
-    final controller = TextEditingController(text: settings.tmdbApiKey);
-    showDialog(
-      context: context,
-      builder: (context) {
-        final l10n = context.l10n;
-        return AlertDialog(
-          title: Text(l10n.settingsTmdbCredential),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: l10n.tmdbCredentialHint,
-              border: const OutlineInputBorder(),
-            ),
-            obscureText: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                settings.setTmdbApiKey(controller.text.trim());
-                Navigator.pop(context);
-              },
-              child: Text(l10n.commonSave),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   IconData _getThemeModeIcon(ThemeMode mode) {

@@ -82,7 +82,8 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `list_items` | `target` | distinct titles over every list, watchlist included (current state) |
 | `distinct_languages` | `target` | distinct original languages (TMDB `original_language`, `xx` excluded) among the titles seen |
 
-The last five types read TMDB data from the local cache only (season sizes, last aired
+The collection types (`season_complete`, `series_complete`, `up_to_date`,
+`saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
 episode, collection parts): a title absent from the cache does not count until its details
 are cached (opening it, or the background cache warm-up). They can regress (a new episode
 airs, a cache entry is purged, the watchlist grows), so once persisted their unlock is kept
@@ -143,7 +144,7 @@ Achievements based on the user's own ratings are not defined: the app has no rat
 | `genre_romance` | 10, 15, 50, 100 |
 | `genre_horror`, `genre_doc`, `genre_animation`, `genre_thriller`, `genre_drama`, `genre_crime`, `genre_fantasy`, `genre_adventure`, `genre_western`, `genre_war`, `genre_music`, `genre_family`, `genre_mystery`, `genre_history` | 10, 50, 100 |
 | `night_owl` | 10, 50, 100, 250 |
-| `weekend` | 15, 30, 50, 100 (any 72-hour window; a 250 tier was dropped as unrealistic) |
+| `weekend` | 15, 30, 50 (any 72-hour window; 100 and 250 tiers were dropped as unrealistic) |
 | `marathon` | 5, 10, 20, 50 |
 | `streak` | 7, 30, 365 days |
 | `runtime` | 10, 20, 50, 100, 200, 500, 1000, 2000, 5000 h, 1 year |

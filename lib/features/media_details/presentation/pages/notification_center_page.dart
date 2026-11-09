@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/utils/notification_center_filter.dart';
@@ -186,8 +187,10 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                             : releaseSubtitleForItem(item, context.l10n)) +
                         (runtimeText.isNotEmpty ? ' · $runtimeText' : '');
                     final subtitleColor = item.releaseDate != null
-                        ? (isReleased ? Colors.green : Colors.orange)
-                        : Colors.grey;
+                        ? (isReleased
+                              ? context.appColors.success
+                              : context.appColors.warning)
+                        : context.appColors.comments;
 
                     return ListTile(
                       leading: item.posterPath != null
@@ -205,9 +208,9 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                         children: [
                           if (isReleased)
                             IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.visibility_outlined,
-                                color: Colors.green,
+                                color: context.appColors.success,
                               ),
                               tooltip: context.l10n.commonMarkAsSeen,
                               onPressed: () async {
@@ -258,6 +261,7 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                             ),
                           IconButton(
                             icon: const Icon(Icons.notifications_off_outlined),
+                            tooltip: context.l10n.notifyDisable,
                             onPressed: () {
                               final mediaItem = MediaItem(
                                 id: item.tmdbId,
@@ -369,10 +373,13 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                       key: ValueKey(dismissKey),
                       direction: DismissDirection.endToStart,
                       background: Container(
-                        color: Colors.redAccent,
+                        color: context.appColors.error,
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: const Icon(Icons.block, color: Colors.white),
+                        child: Icon(
+                          Icons.block,
+                          color: contrastingForeground(context.appColors.error),
+                        ),
                       ),
                       confirmDismiss: (direction) async {
                         return true; // allow swipe; perform opt-out in onDismissed to show Undo
@@ -425,10 +432,11 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                         title: Text(title),
                         subtitle: Text(subtitle),
                         trailing: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.check_circle_outline,
-                            color: Colors.green,
+                            color: context.appColors.success,
                           ),
+                          tooltip: context.l10n.commonMarkAsSeen,
                           onPressed: () async {
                             await provider.markAsSeen(
                               SeenItem(

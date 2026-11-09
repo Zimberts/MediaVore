@@ -18,6 +18,8 @@ the Feature Lead. Do not expand scope or touch unrelated code.
    `dart run build_runner build`.
 4. Run `dart analyze` on your touched files (and `flutter test` for any quick relevant
    existing test) before finishing.
+5. If you commit, follow `.ai/rules/commits.md`: Conventional Commits message
+   (`<type>(<scope>): <desc>`) on a readable branch (`<type>/<issue>-<slug>`).
 
 ## Constraints
 

@@ -3,6 +3,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:mediavore/core/cache/cache_warmup_policy.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
@@ -24,6 +25,14 @@ void callbackDispatcher() {
       // Initialize full DI safely so we can use locator<MediaRepository>()
       // It includes opening Isar gracefully.
       await init(locator);
+
+      // Every task below needs TMDB: without a credential each request would
+      // fail, so don't start them.
+      if (!locator<TmdbCredentialStore>().hasCredential) {
+        debugPrint('No TMDB credential; skipping background task $task.');
+        return true;
+      }
+
       final repo = locator<MediaRepository>();
 
       if (task == fetchTask ||
@@ -77,28 +86,11 @@ void callbackDispatcher() {
               );
               if (cacheDate == null) continue;
 
+              // Weekly shows publish at any time, so refresh once a day
+              // instead of guessing the air weekday.
               final age = DateTime.now().difference(cacheDate).inDays;
-              bool shouldUpdate = false;
 
-              if (age > 7) {
-                if (mediaItem.lastEpisodeAirDate != null &&
-                    mediaItem.lastEpisodeAirDate!.isNotEmpty) {
-                  try {
-                    final lastAir = DateTime.parse(
-                      mediaItem.lastEpisodeAirDate!,
-                    );
-                    if (lastAir.weekday == DateTime.now().weekday) {
-                      shouldUpdate = true;
-                    }
-                  } catch (_) {
-                    // Intentionally ignored: malformed air date, no update.
-                  }
-                }
-              } else if (age >= 1) {
-                shouldUpdate = true;
-              }
-
-              if (shouldUpdate) {
+              if (age >= 1) {
                 debugPrint("Daily sync refreshing returning series: $tmdbId");
                 await repo.refreshReturningSeries(tmdbId);
               }

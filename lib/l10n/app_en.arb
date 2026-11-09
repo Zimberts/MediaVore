@@ -24,11 +24,39 @@
   },
   "importListNameLabel": "List Name",
   "importListNameHint": "Enter name",
-  "tmdbCredentialRequiredTitle": "TMDB Credential Required",
-  "tmdbCredentialRequiredMessage": "To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.",
+  "tmdbOnboardingTitle": "Connect to TMDB",
+  "tmdbOnboardingWhy": "MediaVore gets movie and series data (posters, synopses, release dates) from The Movie Database (TMDB). TMDB asks each user for a free personal key.",
+  "tmdbOnboardingStepGetKey": "1. Create a free TMDB account, then open its API settings page.",
+  "tmdbOnboardingOpenTmdb": "Open the TMDB API page",
+  "tmdbOnboardingStepPaste": "2. Copy the \"API Read Access Token\" (or the \"API Key\") and paste it below.",
+  "tmdbCredentialLinkCopied": "Couldn't open the browser. Link copied: {url}",
+  "@tmdbCredentialLinkCopied": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "tmdbCredentialHint": "Enter TMDB v3 API key or v4 read token",
+  "tmdbCredentialPaste": "Paste",
+  "tmdbCredentialShow": "Show",
+  "tmdbCredentialHide": "Hide",
+  "tmdbCredentialVerifyAndSave": "Verify and save",
+  "tmdbCredentialVerifying": "Checking with TMDB…",
+  "tmdbCredentialSaved": "TMDB key verified and saved.",
+  "tmdbCredentialInvalid": "TMDB rejected this key. Check that you copied the whole API key or read access token.",
+  "tmdbCredentialCheckFailed": "The key could not be verified: {reason}",
+  "@tmdbCredentialCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "tmdbCredentialSaveAnyway": "Save without verifying",
+  "tmdbCredentialRemove": "Remove key",
   "tmdbCredentialLater": "You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).",
-  "tmdbCredentialCancelForNow": "Cancel for now",
+  "tmdbCredentialSkip": "Skip for now",
   "achievementUnlocked": "Achievement Unlocked!",
   "searchErrorMissingApiKey": "Add your TMDB API key in Settings to search and discover media.",
   "searchErrorInvalidApiKey": "Your TMDB API key was rejected. Check it in Settings.",
@@ -318,6 +346,8 @@
   "statsDistribution": "Distribution",
   "statsSelectYear": "Select Year",
   "statsSelectPeriod": "Select Period",
+  "statsPreviousPeriod": "Previous period",
+  "statsNextPeriod": "Next period",
   "statsTotalWatchTime": "Total Watch Time",
   "statsDuration": "{days}d {hours}h {minutes}m",
   "@statsDuration": {
@@ -462,6 +492,7 @@
   "discoveryApply": "Apply",
   "commonRetry": "Retry",
   "discoverySearchHint": "Search within Discovery...",
+  "discoverySearchToggle": "Search Discovery",
   "discoveryTitle": "Discover",
   "discoveryNoResults": "No results found",
   "discoveryClearFilters": "Clear Filters",

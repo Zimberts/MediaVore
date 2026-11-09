@@ -69,21 +69,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importListNameHint => 'Enter name';
 
   @override
-  String get tmdbCredentialRequiredTitle => 'TMDB Credential Required';
+  String get tmdbOnboardingTitle => 'Connect to TMDB';
 
   @override
-  String get tmdbCredentialRequiredMessage =>
-      'To use this app, you need a TMDB credential (v3 API key or v4 read token). You can get one at themoviedb.org.';
+  String get tmdbOnboardingWhy =>
+      'MediaVore gets movie and series data (posters, synopses, release dates) from The Movie Database (TMDB). TMDB asks each user for a free personal key.';
+
+  @override
+  String get tmdbOnboardingStepGetKey =>
+      '1. Create a free TMDB account, then open its API settings page.';
+
+  @override
+  String get tmdbOnboardingOpenTmdb => 'Open the TMDB API page';
+
+  @override
+  String get tmdbOnboardingStepPaste =>
+      '2. Copy the \"API Read Access Token\" (or the \"API Key\") and paste it below.';
+
+  @override
+  String tmdbCredentialLinkCopied(String url) {
+    return 'Couldn\'t open the browser. Link copied: $url';
+  }
 
   @override
   String get tmdbCredentialHint => 'Enter TMDB v3 API key or v4 read token';
+
+  @override
+  String get tmdbCredentialPaste => 'Paste';
+
+  @override
+  String get tmdbCredentialShow => 'Show';
+
+  @override
+  String get tmdbCredentialHide => 'Hide';
+
+  @override
+  String get tmdbCredentialVerifyAndSave => 'Verify and save';
+
+  @override
+  String get tmdbCredentialVerifying => 'Checking with TMDB…';
+
+  @override
+  String get tmdbCredentialSaved => 'TMDB key verified and saved.';
+
+  @override
+  String get tmdbCredentialInvalid =>
+      'TMDB rejected this key. Check that you copied the whole API key or read access token.';
+
+  @override
+  String tmdbCredentialCheckFailed(String reason) {
+    return 'The key could not be verified: $reason';
+  }
+
+  @override
+  String get tmdbCredentialSaveAnyway => 'Save without verifying';
+
+  @override
+  String get tmdbCredentialRemove => 'Remove key';
 
   @override
   String get tmdbCredentialLater =>
       'You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).';
 
   @override
-  String get tmdbCredentialCancelForNow => 'Cancel for now';
+  String get tmdbCredentialSkip => 'Skip for now';
 
   @override
   String get achievementUnlocked => 'Achievement Unlocked!';
@@ -673,6 +722,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsSelectPeriod => 'Select Period';
 
   @override
+  String get statsPreviousPeriod => 'Previous period';
+
+  @override
+  String get statsNextPeriod => 'Next period';
+
+  @override
   String get statsTotalWatchTime => 'Total Watch Time';
 
   @override
@@ -865,6 +920,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverySearchHint => 'Search within Discovery...';
+
+  @override
+  String get discoverySearchToggle => 'Search Discovery';
 
   @override
   String get discoveryTitle => 'Discover';
