@@ -74,54 +74,12 @@ class MediaDetailsService {
     }
   }
 
-  /// Runs [call] and returns [fallback] on any error (sync or async), logging
-  /// it. Used for optional detail endpoints so they never fail the whole page
-  /// nor leak unhandled asynchronous errors.
-  Future<T> _optional<T>(
-    String label,
-    Future<T> Function() call,
-    T fallback,
-  ) async {
-    try {
-      return await call();
-    } catch (e) {
-      debugPrint('[Repo] getMediaDetails optional $label failed: $e');
-      return fallback;
-    }
-  }
-
   Future<MediaDetails> _fetchMediaDetails(int id, MediaType type) async {
-    // Optional requests are started before awaiting the main item and each
-    // has its error handler attached immediately: if the main item fails,
-    // their failures are still handled. Only the main item is fatal.
-    final creditsFuture = _optional<Map<String, dynamic>>(
-      'credits',
-      () => remoteDataSource.getMediaCredits(id, type: type),
-      {'cast': [], 'crew': []},
-    );
-    final similarFuture = _optional<List<MediaItem>>(
-      'similar',
-      () => remoteDataSource.getSimilarMedia(id, type),
-      [],
-    );
-    final recommendationsFuture = _optional<List<MediaItem>>(
-      'recommendations',
-      () => remoteDataSource.getRecommendedMedia(id, type),
-      [],
-    );
-    final watchProvidersFuture = _optional<Map<String, dynamic>>(
-      'watchProviders',
-      () => remoteDataSource.getWatchProviders(id, type),
-      {},
-    );
-    final videosFuture = _optional<List<Map<String, dynamic>>>(
-      'videos',
-      () => remoteDataSource.getVideos(id, type),
-      [],
-    );
-
-    final item = await remoteDataSource.getMediaItem(id, type: type);
-    final credits = await creditsFuture;
+    // One request for the item and its optional parts (append_to_response);
+    // only the item is fatal, unreadable parts fall back to empty values.
+    final bundle = await remoteDataSource.getMediaDetailsBundle(id, type: type);
+    final item = bundle.item;
+    final credits = bundle.credits;
 
     final List castResults = credits['cast'] ?? [];
     final List crewResults = credits['crew'] ?? [];
@@ -137,11 +95,6 @@ class MediaDetailsService {
               member.job == 'Director' || member.job == 'Executive Producer',
           orElse: () => CrewMember(name: 'N/A', job: 'Director'),
         );
-
-    final List<MediaItem> similar = await similarFuture;
-    final List<MediaItem> recommendations = await recommendationsFuture;
-    final Map<String, dynamic> watchProviders = await watchProvidersFuture;
-    final List<Map<String, dynamic>> videos = await videosFuture;
 
     // If this item belongs to a collection, fetch collection parts (saga)
     List<MediaItem>? collectionParts;
@@ -159,11 +112,11 @@ class MediaDetailsService {
       item: item,
       cast: cast,
       director: director,
-      similar: similar,
-      recommendations: recommendations,
+      similar: bundle.similar,
+      recommendations: bundle.recommendations,
       collection: collectionParts,
-      watchProviders: watchProviders,
-      videos: videos,
+      watchProviders: bundle.watchProviders,
+      videos: bundle.videos,
     );
 
     await cache.cacheDetails(details);
@@ -191,6 +144,25 @@ class MediaDetailsService {
       return details;
     } catch (e) {
       return await cache.getSeason(tvId, seasonNumber) ?? (throw e);
+    }
+  }
+
+  /// Caches the given seasons of [tvId], fetching the missing or stale ones
+  /// in as few requests as possible (`append_to_response`, see
+  /// [MediaRemoteDataSource.getSeasonsDetails]). Used by the cache warm-up;
+  /// throws on a network failure.
+  Future<void> prefetchSeasons(int tvId, Iterable<int> seasonNumbers) async {
+    final missing = <int>[];
+    for (final n in seasonNumbers) {
+      final cached = await cache.getSeason(tvId, n);
+      if (cached == null || await _isOngoingSeasonStale(tvId, n)) {
+        missing.add(n);
+      }
+    }
+    if (missing.isEmpty) return;
+    final fetched = await remoteDataSource.getSeasonsDetails(tvId, missing);
+    for (final entry in fetched.entries) {
+      await cache.cacheSeason(tvId, entry.key, entry.value);
     }
   }
 

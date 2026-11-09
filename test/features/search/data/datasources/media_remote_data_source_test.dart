@@ -583,4 +583,141 @@ void main() {
       );
     });
   });
+
+  group('append_to_response (#212)', () {
+    void stubGet(Map<String, dynamic> Function(Map<String, dynamic>) answer) {
+      when(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((invocation) async {
+        final params =
+            invocation.namedArguments[#queryParameters] as Map<String, dynamic>;
+        return Response(
+          requestOptions: RequestOptions(path: ''),
+          data: answer(params),
+          statusCode: 200,
+        );
+      });
+    }
+
+    test('should fetch an item and its parts in one request', () async {
+      stubGet(
+        (_) => {
+          'id': 5,
+          'title': 'Movie',
+          'overview': 'o',
+          'credits': {
+            'cast': [
+              {'id': 1, 'name': 'A'},
+            ],
+            'crew': [],
+          },
+          'similar': {
+            'results': [
+              {'id': 6, 'title': 'S'},
+            ],
+          },
+          'recommendations': {'results': []},
+          'watch/providers': {
+            'results': {'FR': {}},
+          },
+          'videos': {
+            'results': [
+              {'key': 'k'},
+            ],
+          },
+        },
+      );
+
+      final bundle = await dataSource.getMediaDetailsBundle(5);
+
+      final params =
+          verify(
+                () => mockDio.get(
+                  'https://api.themoviedb.org/3/movie/5',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                  options: any(named: 'options'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(
+        params['append_to_response'],
+        'credits,similar,recommendations,watch/providers,videos',
+      );
+      expect(bundle.item.id, 5);
+      expect(bundle.item.mediaType, MediaType.movie);
+      expect((bundle.credits['cast'] as List).length, 1);
+      expect(bundle.similar.single.id, 6);
+      expect(bundle.similar.single.mediaType, MediaType.movie);
+      expect(bundle.recommendations, isEmpty);
+      expect(bundle.watchProviders.keys, ['FR']);
+      expect(bundle.videos.single['key'], 'k');
+    });
+
+    test(
+      'should fall back to empty parts when they are missing or malformed',
+      () async {
+        stubGet(
+          (_) => {
+            'id': 5,
+            'name': 'Show',
+            'overview': 'o',
+            'similar': 'not a map',
+            'videos': {'results': 42},
+          },
+        );
+
+        final bundle = await dataSource.getMediaDetailsBundle(
+          5,
+          type: MediaType.tv,
+        );
+
+        expect(bundle.item.mediaType, MediaType.tv);
+        expect(bundle.credits, {'cast': [], 'crew': []});
+        expect(bundle.similar, isEmpty);
+        expect(bundle.recommendations, isEmpty);
+        expect(bundle.watchProviders, isEmpty);
+        expect(bundle.videos, isEmpty);
+      },
+    );
+
+    test('should batch seasons by 20 per request', () async {
+      stubGet((params) {
+        final seasons = (params['append_to_response'] as String).split(',');
+        return {
+          'id': 9,
+          for (final s in seasons)
+            if (s != 'season/3')
+              s: {'season_number': int.parse(s.substring(7))},
+        };
+      });
+
+      final seasons = await dataSource.getSeasonsDetails(
+        9,
+        List.generate(25, (i) => i),
+      );
+
+      final calls = verify(
+        () => mockDio.get(
+          'https://api.themoviedb.org/3/tv/9',
+          queryParameters: captureAny(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).captured.cast<Map<String, dynamic>>();
+      expect(calls.length, 2);
+      expect((calls[0]['append_to_response'] as String).split(',').length, 20);
+      expect(
+        calls[1]['append_to_response'],
+        'season/20,season/21,season/22,'
+        'season/23,season/24',
+      );
+      // A season TMDB does not return is absent, not an error.
+      expect(seasons.keys, isNot(contains(3)));
+      expect(seasons.length, 24);
+      expect(seasons[24], {'season_number': 24});
+    });
+  });
 }

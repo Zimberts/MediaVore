@@ -208,6 +208,125 @@ class MediaRemoteDataSource {
     });
   }
 
+  /// Sub-resources fetched with the item by [getMediaDetailsBundle], through
+  /// TMDB's `append_to_response` (one request instead of six).
+  static const List<String> detailsAppendedResources = [
+    'credits',
+    'similar',
+    'recommendations',
+    'watch/providers',
+    'videos',
+  ];
+
+  /// TMDB accepts at most 20 `append_to_response` entries per request.
+  static const int maxAppendedResponses = 20;
+
+  /// Fetches a media item with its credits, similar titles,
+  /// recommendations, watch providers and videos in one request
+  /// (`append_to_response`).
+  ///
+  /// Only the item is required: a missing or malformed appended part falls
+  /// back to an empty value, as the separate optional requests did.
+  Future<MediaDetailsBundle> getMediaDetailsBundle(
+    int id, {
+    MediaType type = MediaType.movie,
+  }) {
+    final path = type == MediaType.tv ? 'tv' : 'movie';
+    return _guard('fetching details', () async {
+      final url = 'https://api.themoviedb.org/3/$path/$id';
+      final response = await _tmdbGet(
+        url,
+        queryParameters: {
+          'append_to_response': detailsAppendedResources.join(','),
+        },
+      );
+      final data = Map<String, dynamic>.from(response.data);
+      final appended = {
+        for (final key in detailsAppendedResources) key: data.remove(key),
+      };
+      data['media_type'] = path;
+      await _fillMissingOverview(url, data);
+
+      T part<T>(String key, T Function(dynamic raw) parse, T fallback) {
+        final raw = appended[key];
+        if (raw == null) return fallback;
+        try {
+          return parse(raw);
+        } catch (e) {
+          debugPrint('[Remote] Appended $key unreadable for $url: $e');
+          return fallback;
+        }
+      }
+
+      return MediaDetailsBundle(
+        item: MediaItem.fromJson(data),
+        credits: part(
+          'credits',
+          (raw) => Map<String, dynamic>.from(raw as Map),
+          {'cast': [], 'crew': []},
+        ),
+        similar: part(
+          'similar',
+          (raw) => _parseResults(raw['results'] as List, path),
+          [],
+        ),
+        recommendations: part(
+          'recommendations',
+          (raw) => _parseResults(raw['results'] as List, path),
+          [],
+        ),
+        watchProviders: part(
+          'watch/providers',
+          (raw) => Map<String, dynamic>.from(raw['results'] as Map),
+          {},
+        ),
+        videos: part(
+          'videos',
+          (raw) => (raw['results'] as List)
+              .map((v) => Map<String, dynamic>.from(v as Map))
+              .toList(),
+          [],
+        ),
+      );
+    });
+  }
+
+  /// Fetches several seasons of a show with `append_to_response`, at most
+  /// [maxAppendedResponses] seasons per request. Seasons TMDB does not return
+  /// are absent from the result.
+  Future<Map<int, Map<String, dynamic>>> getSeasonsDetails(
+    int tvId,
+    List<int> seasonNumbers,
+  ) {
+    return _guard('fetching season details', () async {
+      final seasons = <int, Map<String, dynamic>>{};
+      for (var i = 0; i < seasonNumbers.length; i += maxAppendedResponses) {
+        final batch = seasonNumbers.skip(i).take(maxAppendedResponses);
+        final response = await _tmdbGet(
+          'https://api.themoviedb.org/3/tv/$tvId',
+          queryParameters: {
+            'append_to_response': batch.map((n) => 'season/$n').join(','),
+          },
+        );
+        final data = response.data as Map;
+        for (final n in batch) {
+          final season = data['season/$n'];
+          if (season is Map) seasons[n] = Map<String, dynamic>.from(season);
+        }
+      }
+      return seasons;
+    });
+  }
+
+  /// Parses a TMDB result list, defaulting `media_type` to [path].
+  static List<MediaItem> _parseResults(List results, String path) {
+    return results.map((m) {
+      final data = Map<String, dynamic>.from(m as Map);
+      if (data['media_type'] == null) data['media_type'] = path;
+      return MediaItem.fromJson(data);
+    }).toList();
+  }
+
   /// TMDB returns an empty overview when it has no translation; fall back to
   /// the English one so the details page isn't blank.
   Future<void> _fillMissingOverview(
@@ -356,12 +475,7 @@ class MediaRemoteDataSource {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/similar',
       );
-      final List results = response.data['results'];
-      return results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).toList();
+      return _parseResults(response.data['results'] as List, path);
     });
   }
 
@@ -386,12 +500,7 @@ class MediaRemoteDataSource {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/recommendations',
       );
-      final List results = response.data['results'];
-      return results.map((m) {
-        final data = Map<String, dynamic>.from(m);
-        if (data['media_type'] == null) data['media_type'] = path;
-        return MediaItem.fromJson(data);
-      }).toList();
+      return _parseResults(response.data['results'] as List, path);
     });
   }
 
@@ -415,4 +524,28 @@ class MediaRemoteDataSource {
       return results.cast<Map<String, dynamic>>();
     });
   }
+}
+
+/// A media item and the sub-resources fetched with it by
+/// [MediaRemoteDataSource.getMediaDetailsBundle].
+class MediaDetailsBundle {
+  final MediaItem item;
+
+  /// Raw `/credits` payload (`cast`, `crew`).
+  final Map<String, dynamic> credits;
+  final List<MediaItem> similar;
+  final List<MediaItem> recommendations;
+
+  /// `/watch/providers` results, keyed by country.
+  final Map<String, dynamic> watchProviders;
+  final List<Map<String, dynamic>> videos;
+
+  const MediaDetailsBundle({
+    required this.item,
+    required this.credits,
+    required this.similar,
+    required this.recommendations,
+    required this.watchProviders,
+    required this.videos,
+  });
 }

@@ -163,3 +163,14 @@ class FakeLocaleService extends Fake implements LocaleService {
   @override
   String tmdbLanguage;
 }
+
+/// A [MediaDetailsBundle] holding [item] and empty optional parts, as
+/// returned by `MediaRemoteDataSource.getMediaDetailsBundle`.
+MediaDetailsBundle bundleOf(MediaItem item) => MediaDetailsBundle(
+  item: item,
+  credits: const {'cast': [], 'crew': []},
+  similar: const [],
+  recommendations: const [],
+  watchProviders: const {},
+  videos: const [],
+);
