@@ -10,6 +10,7 @@ import 'package:mediavore/features/media_details/data/models/seen_item_model.dar
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mocks.dart';
 
@@ -266,164 +267,96 @@ void main() {
     const tId = 1;
 
     test(
-      'should fetch and cache media details including similar, recommended, providers, and videos',
+      'should fetch the item and its parts in one request and cache them',
       () async {
         when(
-          () =>
-              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
-        ).thenAnswer((_) async => tMediaItem);
-        when(
-          () => mockRemoteDataSource.getMediaCredits(
+          () => mockRemoteDataSource.getMediaDetailsBundle(
             tId,
             type: any(named: 'type'),
           ),
         ).thenAnswer(
-          (_) async => {
-            'cast': [
-              {
-                'id': 1,
-                'name': 'Leonardo DiCaprio',
-                'character': 'Cobb',
-                'profile_path': '/leo.jpg',
-              },
-            ],
-            'crew': [
-              {'name': 'Christopher Nolan', 'job': 'Director'},
-            ],
-          },
+          (_) async => MediaDetailsBundle(
+            item: tMediaItem,
+            credits: const {
+              'cast': [
+                {
+                  'id': 1,
+                  'name': 'Leonardo DiCaprio',
+                  'character': 'Cobb',
+                  'profile_path': '/leo.jpg',
+                },
+              ],
+              'crew': [
+                {'name': 'Christopher Nolan', 'job': 'Director'},
+              ],
+            },
+            similar: const [],
+            recommendations: const [],
+            watchProviders: const {'FR': <String, dynamic>{}},
+            videos: const [],
+          ),
         );
-        when(
-          () => mockRemoteDataSource.getSimilarMedia(tId, any()),
-        ).thenAnswer((_) async => []);
-        when(
-          () => mockRemoteDataSource.getRecommendedMedia(tId, any()),
-        ).thenAnswer((_) async => []);
-        when(
-          () => mockRemoteDataSource.getWatchProviders(tId, any()),
-        ).thenAnswer((_) async => {});
-        when(
-          () => mockRemoteDataSource.getVideos(tId, any()),
-        ).thenAnswer((_) async => []);
 
         final result = await repository.getMediaDetails(tId);
 
         expect(result.item, equals(tMediaItem));
-        expect(result.similar, isNotNull);
-        expect(result.recommendations, isNotNull);
-        expect(result.watchProviders, isNotNull);
-        expect(result.videos, isNotNull);
-
+        expect(result.cast.single.name, 'Leonardo DiCaprio');
+        expect(result.director?.name, 'Christopher Nolan');
+        expect(result.watchProviders, contains('FR'));
         verify(
-          () => mockRemoteDataSource.getSimilarMedia(tId, any()),
+          () => mockRemoteDataSource.getMediaDetailsBundle(
+            tId,
+            type: any(named: 'type'),
+          ),
         ).called(1);
-        verify(
-          () => mockRemoteDataSource.getRecommendedMedia(tId, any()),
-        ).called(1);
-        verify(
-          () => mockRemoteDataSource.getWatchProviders(tId, any()),
-        ).called(1);
-        verify(() => mockRemoteDataSource.getVideos(tId, any())).called(1);
-        verify(() => mockCache.cacheDetails(any())).called(1);
-      },
-    );
-
-    void stubOptionalEndpoints({Object? error, Duration? delay}) {
-      Future<T> answer<T>(T value) async {
-        if (delay != null) await Future<void>.delayed(delay);
-        if (error != null) throw error;
-        return value;
-      }
-
-      when(
-        () =>
-            mockRemoteDataSource.getMediaCredits(tId, type: any(named: 'type')),
-      ).thenAnswer(
-        (_) => answer<Map<String, dynamic>>({'cast': [], 'crew': []}),
-      );
-      when(
-        () => mockRemoteDataSource.getSimilarMedia(tId, any()),
-      ).thenAnswer((_) => answer<List<MediaItem>>([]));
-      when(
-        () => mockRemoteDataSource.getRecommendedMedia(tId, any()),
-      ).thenAnswer((_) => answer<List<MediaItem>>([]));
-      when(
-        () => mockRemoteDataSource.getWatchProviders(tId, any()),
-      ).thenAnswer((_) => answer<Map<String, dynamic>>({}));
-      when(
-        () => mockRemoteDataSource.getVideos(tId, any()),
-      ).thenAnswer((_) => answer<List<Map<String, dynamic>>>([]));
-    }
-
-    test(
-      'should return details with empty optional fields when optional endpoints fail',
-      () async {
-        when(
-          () =>
-              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
-        ).thenAnswer((_) async => tMediaItem);
-        stubOptionalEndpoints(error: Exception('optional failure'));
-        // A synchronous throw must be handled too.
-        when(
-          () => mockRemoteDataSource.getWatchProviders(tId, any()),
-        ).thenThrow(TypeError());
-
-        final result = await repository.getMediaDetails(tId);
-
-        expect(result.item, equals(tMediaItem));
-        expect(result.cast, isEmpty);
-        expect(result.similar, isEmpty);
-        expect(result.recommendations, isEmpty);
-        expect(result.watchProviders, isEmpty);
-        expect(result.videos, isEmpty);
-        verify(() => mockCache.cacheDetails(any())).called(1);
-      },
-    );
-
-    test(
-      'should rethrow main item error without leaking optional request errors',
-      () async {
-        when(
-          () =>
-              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
-        ).thenAnswer((_) async => throw Exception('item failure'));
-        // Optional requests fail after the main item has already failed.
-        stubOptionalEndpoints(
-          error: Exception('late optional failure'),
-          delay: const Duration(milliseconds: 10),
+        verifyNever(
+          () => mockRemoteDataSource.getMediaItem(
+            any(),
+            type: any(named: 'type'),
+          ),
         );
-
-        await expectLater(repository.getMediaDetails(tId), throwsException);
-        // Let the late failures complete: an unhandled one would fail the test.
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-
-        verifyNever(() => mockCache.cacheDetails(any()));
+        verify(() => mockCache.cacheDetails(any())).called(1);
       },
     );
+
+    test('should rethrow the item error without caching anything', () async {
+      when(
+        () => mockRemoteDataSource.getMediaDetailsBundle(
+          tId,
+          type: any(named: 'type'),
+        ),
+      ).thenAnswer((_) async => throw Exception('item failure'));
+
+      await expectLater(repository.getMediaDetails(tId), throwsException);
+      verifyNever(() => mockCache.cacheDetails(any()));
+    });
 
     test(
       'should share one in-flight request between concurrent callers',
       () async {
-        final itemCompleter = Completer<MediaItem>();
+        final bundle = Completer<MediaDetailsBundle>();
         when(
-          () =>
-              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
-        ).thenAnswer((_) => itemCompleter.future);
-        stubOptionalEndpoints();
+          () => mockRemoteDataSource.getMediaDetailsBundle(
+            tId,
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) => bundle.future);
 
         final first = repository.getMediaDetails(tId);
         final second = repository.getMediaDetails(tId);
         // Let both callers pass initialization and the cache check.
         await Future<void>.delayed(Duration.zero);
-        itemCompleter.complete(tMediaItem);
+        bundle.complete(bundleOf(tMediaItem));
 
         final results = await Future.wait([first, second]);
 
         expect(identical(results[0], results[1]), isTrue);
         verify(
-          () =>
-              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+          () => mockRemoteDataSource.getMediaDetailsBundle(
+            tId,
+            type: any(named: 'type'),
+          ),
         ).called(1);
-        verify(() => mockRemoteDataSource.getVideos(tId, any())).called(1);
       },
     );
 
@@ -431,17 +364,20 @@ void main() {
       'should issue a new request once the previous one has completed',
       () async {
         when(
-          () =>
-              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
-        ).thenAnswer((_) async => tMediaItem);
-        stubOptionalEndpoints();
+          () => mockRemoteDataSource.getMediaDetailsBundle(
+            tId,
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => bundleOf(tMediaItem));
 
         await repository.getMediaDetails(tId);
         await repository.getMediaDetails(tId);
 
         verify(
-          () =>
-              mockRemoteDataSource.getMediaItem(tId, type: any(named: 'type')),
+          () => mockRemoteDataSource.getMediaDetailsBundle(
+            tId,
+            type: any(named: 'type'),
+          ),
         ).called(2);
       },
     );
@@ -707,9 +643,7 @@ void main() {
           releaseDate: '2020-01-01',
           mediaType: MediaType.tv,
           status: 'Returning Series',
-          seasons: const [
-            TVSeason(id: 2, seasonNumber: 2, episodeCount: 4),
-          ],
+          seasons: const [TVSeason(id: 2, seasonNumber: 2, episodeCount: 4)],
           lastSeasonNumber: 2,
           lastEpisodeNumber: 3,
           lastEpisodeAirDate: '2024-05-15',
@@ -757,146 +691,161 @@ void main() {
       },
     );
 
-    test('should prefer an aired unseen episode over the next announcement', () async {
-      stubNotified();
-      when(
-        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
-      ).thenAnswer(
-        (_) async => tvItem(
-          status: 'Returning Series',
-          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
-        ),
-      );
-      when(() => mockCache.getItem(1, MediaType.tv)).thenAnswer((_) async => null);
-      when(
-        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
-      when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
-        (_) async => season([
-          ep(6, airDate: '2024-06-08'),
-          ep(7, airDate: '2999-01-01'),
-        ]),
-      );
+    test(
+      'should prefer an aired unseen episode over the next announcement',
+      () async {
+        stubNotified();
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer(
+          (_) async => tvItem(
+            status: 'Returning Series',
+            seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
+          ),
+        );
+        when(
+          () => mockCache.getItem(1, MediaType.tv),
+        ).thenAnswer((_) async => null);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+        when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
+          (_) async => season([
+            ep(6, airDate: '2024-06-08'),
+            ep(7, airDate: '2999-01-01'),
+          ]),
+        );
 
-      await repository.refreshNotificationForSeries(
-        1,
-        MediaType.tv,
-        force: true,
-      );
-
-      final captured = verify(
-        () => mockLocalDataSource.setNotificationEpisode(
+        await repository.refreshNotificationForSeries(
           1,
-          'tv',
-          seasonNumber: captureAny(named: 'seasonNumber'),
-          episodeNumber: captureAny(named: 'episodeNumber'),
-          releaseDate: captureAny(named: 'releaseDate'),
-          runtime: captureAny(named: 'runtime'),
-        ),
-      ).captured;
-      expect(captured[1], 6);
-      expect(captured[2], DateTime(2024, 6, 8));
-    });
+          MediaType.tv,
+          force: true,
+        );
 
-    test('should keep the announced episode when everything aired is seen', () async {
-      stubNotified();
-      when(
-        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
-      ).thenAnswer(
-        (_) async => MediaItem(
-          id: 1,
-          title: 'Show',
-          overview: '',
-          releaseDate: '2020-01-01',
-          mediaType: MediaType.tv,
-          status: 'Returning Series',
-          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
-          nextSeasonNumber: 4,
-          nextEpisodeNumber: 6,
-          nextEpisodeAirDate: '2999-01-01',
-        ),
-      );
-      when(() => mockCache.getItem(1, MediaType.tv)).thenAnswer((_) async => null);
-      when(
-        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
-      when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
-        (_) async => season([ep(5, airDate: '2024-05-01')]),
-      );
+        final captured = verify(
+          () => mockLocalDataSource.setNotificationEpisode(
+            1,
+            'tv',
+            seasonNumber: captureAny(named: 'seasonNumber'),
+            episodeNumber: captureAny(named: 'episodeNumber'),
+            releaseDate: captureAny(named: 'releaseDate'),
+            runtime: captureAny(named: 'runtime'),
+          ),
+        ).captured;
+        expect(captured[1], 6);
+        expect(captured[2], DateTime(2024, 6, 8));
+      },
+    );
 
-      await repository.refreshNotificationForSeries(
-        1,
-        MediaType.tv,
-        force: true,
-      );
+    test(
+      'should keep the announced episode when everything aired is seen',
+      () async {
+        stubNotified();
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer(
+          (_) async => MediaItem(
+            id: 1,
+            title: 'Show',
+            overview: '',
+            releaseDate: '2020-01-01',
+            mediaType: MediaType.tv,
+            status: 'Returning Series',
+            seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
+            nextSeasonNumber: 4,
+            nextEpisodeNumber: 6,
+            nextEpisodeAirDate: '2999-01-01',
+          ),
+        );
+        when(
+          () => mockCache.getItem(1, MediaType.tv),
+        ).thenAnswer((_) async => null);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+        when(
+          () => mockRemoteDataSource.getSeasonDetails(1, 4),
+        ).thenAnswer((_) async => season([ep(5, airDate: '2024-05-01')]));
 
-      final captured = verify(
-        () => mockLocalDataSource.setNotificationEpisode(
+        await repository.refreshNotificationForSeries(
           1,
-          'tv',
-          seasonNumber: captureAny(named: 'seasonNumber'),
-          episodeNumber: captureAny(named: 'episodeNumber'),
-          releaseDate: captureAny(named: 'releaseDate'),
-          runtime: captureAny(named: 'runtime'),
-        ),
-      ).captured;
-      expect(captured[1], 6);
-      expect(captured[2], DateTime(2999, 1, 1));
-    });
+          MediaType.tv,
+          force: true,
+        );
 
-    test('should rescan from the network when the cached season hides aired episodes', () async {
-      stubNotified();
-      when(
-        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
-      ).thenAnswer(
-        (_) async => MediaItem(
-          id: 1,
-          title: 'Show',
-          overview: '',
-          releaseDate: '2020-01-01',
-          mediaType: MediaType.tv,
-          status: 'Returning Series',
-          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
-          lastSeasonNumber: 4,
-          lastEpisodeNumber: 6,
-          lastEpisodeAirDate: '2024-05-01',
-          nextSeasonNumber: 4,
-          nextEpisodeNumber: 7,
-          nextEpisodeAirDate: '2999-01-01',
-        ),
-      );
-      when(() => mockCache.getItem(1, MediaType.tv)).thenAnswer((_) async => null);
-      when(
-        () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 4, 1))]);
-      final staleSeason = season([ep(5, airDate: '2024-04-01')]);
-      // The cache still holds the payload from before episode 6 aired.
-      when(
-        () => mockCache.getSeason(1, 4),
-      ).thenAnswer((_) async => staleSeason);
-      when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
-        (_) async => season([
-          ep(5, airDate: '2024-04-01'),
-          ep(6, airDate: '2024-05-01'),
-          ep(7, airDate: '2999-01-01'),
-        ]),
-      );
+        final captured = verify(
+          () => mockLocalDataSource.setNotificationEpisode(
+            1,
+            'tv',
+            seasonNumber: captureAny(named: 'seasonNumber'),
+            episodeNumber: captureAny(named: 'episodeNumber'),
+            releaseDate: captureAny(named: 'releaseDate'),
+            runtime: captureAny(named: 'runtime'),
+          ),
+        ).captured;
+        expect(captured[1], 6);
+        expect(captured[2], DateTime(2999, 1, 1));
+      },
+    );
 
-      await repository.refreshNotificationForSeries(1, MediaType.tv);
+    test(
+      'should rescan from the network when the cached season hides aired episodes',
+      () async {
+        stubNotified();
+        when(
+          () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+        ).thenAnswer(
+          (_) async => MediaItem(
+            id: 1,
+            title: 'Show',
+            overview: '',
+            releaseDate: '2020-01-01',
+            mediaType: MediaType.tv,
+            status: 'Returning Series',
+            seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
+            lastSeasonNumber: 4,
+            lastEpisodeNumber: 6,
+            lastEpisodeAirDate: '2024-05-01',
+            nextSeasonNumber: 4,
+            nextEpisodeNumber: 7,
+            nextEpisodeAirDate: '2999-01-01',
+          ),
+        );
+        when(
+          () => mockCache.getItem(1, MediaType.tv),
+        ).thenAnswer((_) async => null);
+        when(
+          () => mockLocalDataSource.getSeenStatus(1, 'tv'),
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 4, 1))]);
+        final staleSeason = season([ep(5, airDate: '2024-04-01')]);
+        // The cache still holds the payload from before episode 6 aired.
+        when(
+          () => mockCache.getSeason(1, 4),
+        ).thenAnswer((_) async => staleSeason);
+        when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
+          (_) async => season([
+            ep(5, airDate: '2024-04-01'),
+            ep(6, airDate: '2024-05-01'),
+            ep(7, airDate: '2999-01-01'),
+          ]),
+        );
 
-      final captured = verify(
-        () => mockLocalDataSource.setNotificationEpisode(
-          1,
-          'tv',
-          seasonNumber: captureAny(named: 'seasonNumber'),
-          episodeNumber: captureAny(named: 'episodeNumber'),
-          releaseDate: captureAny(named: 'releaseDate'),
-          runtime: captureAny(named: 'runtime'),
-        ),
-      ).captured;
-      expect(captured[1], 6);
-      expect(captured[2], DateTime(2024, 5, 1));
-    });
+        await repository.refreshNotificationForSeries(1, MediaType.tv);
+
+        final captured = verify(
+          () => mockLocalDataSource.setNotificationEpisode(
+            1,
+            'tv',
+            seasonNumber: captureAny(named: 'seasonNumber'),
+            episodeNumber: captureAny(named: 'episodeNumber'),
+            releaseDate: captureAny(named: 'releaseDate'),
+            runtime: captureAny(named: 'runtime'),
+          ),
+        ).captured;
+        expect(captured[1], 6);
+        expect(captured[2], DateTime(2024, 5, 1));
+      },
+    );
 
     test(
       'should keep a pending undated episode as date TBA when nothing aired is unseen',
@@ -918,15 +867,15 @@ void main() {
             lastEpisodeAirDate: '2024-05-01',
           ),
         );
-        when(() => mockCache.getItem(1, MediaType.tv)).thenAnswer((_) async => null);
+        when(
+          () => mockCache.getItem(1, MediaType.tv),
+        ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
         ).thenAnswer((_) async => [seen(4, 6, DateTime(2024, 5, 1))]);
         when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
-          (_) async => season([
-            ep(6, airDate: '2024-05-01'),
-            ep(7, airDate: null),
-          ]),
+          (_) async =>
+              season([ep(6, airDate: '2024-05-01'), ep(7, airDate: null)]),
         );
 
         await repository.refreshNotificationForSeries(
@@ -981,9 +930,7 @@ void main() {
           nextEpisodeNumber: 7,
           nextEpisodeAirDate: '2999-01-01',
         );
-        when(
-          () => mockLocalDataSource.getNotifiedItems(),
-        ).thenAnswer(
+        when(() => mockLocalDataSource.getNotifiedItems()).thenAnswer(
           (_) async => [
             NotifiedItemModel(
               tmdbId: 1,
@@ -1047,9 +994,7 @@ void main() {
             lastRefreshedAt: DateTime.now().subtract(const Duration(days: 2)),
           ),
         );
-        when(
-          () => mockLocalDataSource.getNotifiedItems(),
-        ).thenAnswer(
+        when(() => mockLocalDataSource.getNotifiedItems()).thenAnswer(
           (_) async => [
             NotifiedItemModel(
               tmdbId: 1,

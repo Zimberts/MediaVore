@@ -84,11 +84,12 @@ class CacheWarmupService {
               item.id,
               type: type,
             );
-            if (type == MediaType.tv && mediaDetails.item.seasons != null) {
-              for (final season in mediaDetails.item.seasons!) {
-                if (cancelled()) return false;
-                await details.getSeasonDetails(item.id, season.seasonNumber);
-              }
+            final seasons = mediaDetails.item.seasons;
+            if (type == MediaType.tv && seasons != null && !cancelled()) {
+              await details.prefetchSeasons(
+                item.id,
+                seasons.map((s) => s.seasonNumber),
+              );
             }
           } catch (e) {
             debugPrint('[Repo] _initCache list item refresh failed: $e');

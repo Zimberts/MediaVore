@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/search/data/services/media_details_service.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -47,47 +48,38 @@ void main() {
     when(
       () => cache.getSeasonUpdateDate(any(), any()),
     ).thenAnswer((_) async => null);
-    when(
-      () => remote.getMediaCredits(any(), type: any(named: 'type')),
-    ).thenAnswer((_) async => {'cast': [], 'crew': []});
-    when(
-      () => remote.getSimilarMedia(any(), any()),
-    ).thenAnswer((_) async => []);
-    when(
-      () => remote.getRecommendedMedia(any(), any()),
-    ).thenAnswer((_) async => []);
-    when(
-      () => remote.getWatchProviders(any(), any()),
-    ).thenAnswer((_) async => {});
-    when(() => remote.getVideos(any(), any())).thenAnswer((_) async => []);
   });
 
   group('getMediaDetails', () {
     test('should share one fetch between concurrent callers', () async {
-      final item = Completer<MediaItem>();
+      final item = Completer<MediaDetailsBundle>();
       when(
-        () => remote.getMediaItem(1, type: MediaType.movie),
+        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
       ).thenAnswer((_) => item.future);
 
       final first = service.getMediaDetails(1);
       final second = service.getMediaDetails(1);
-      item.complete(movie);
+      item.complete(bundleOf(movie));
 
       expect((await first).item, movie);
       expect((await second).item, movie);
-      verify(() => remote.getMediaItem(1, type: MediaType.movie)).called(1);
+      verify(
+        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+      ).called(1);
       verify(() => cache.cacheDetails(any())).called(1);
     });
 
     test('should fetch again once the previous request settled', () async {
       when(
-        () => remote.getMediaItem(1, type: MediaType.movie),
-      ).thenAnswer((_) async => movie);
+        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+      ).thenAnswer((_) async => bundleOf(movie));
 
       await service.getMediaDetails(1);
       await service.getMediaDetails(1);
 
-      verify(() => remote.getMediaItem(1, type: MediaType.movie)).called(2);
+      verify(
+        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+      ).called(2);
     });
   });
 
@@ -200,6 +192,35 @@ void main() {
     });
   });
 
+  group('prefetchSeasons', () {
+    test('should fetch only the missing seasons, in one batch call', () async {
+      when(() => cache.getSeason(2, 1)).thenAnswer((_) async => {'id': 1});
+      when(() => cache.getSeason(2, 2)).thenAnswer((_) async => null);
+      when(() => cache.getSeason(2, 3)).thenAnswer((_) async => null);
+      when(() => remote.getSeasonsDetails(2, [2, 3])).thenAnswer(
+        (_) async => {
+          2: {'season_number': 2},
+          3: {'season_number': 3},
+        },
+      );
+
+      await service.prefetchSeasons(2, [1, 2, 3]);
+
+      verify(() => remote.getSeasonsDetails(2, [2, 3])).called(1);
+      verify(() => cache.cacheSeason(2, 2, {'season_number': 2})).called(1);
+      verify(() => cache.cacheSeason(2, 3, {'season_number': 3})).called(1);
+      verifyNever(() => remote.getSeasonDetails(any(), any()));
+    });
+
+    test('should make no request when every season is cached', () async {
+      when(() => cache.getSeason(2, any())).thenAnswer((_) async => {'id': 1});
+
+      await service.prefetchSeasons(2, [1, 2]);
+
+      verifyNever(() => remote.getSeasonsDetails(any(), any()));
+    });
+  });
+
   group('seasonDetailsForRefresh', () {
     test('should read through the cache when not forced', () async {
       when(
@@ -245,13 +266,15 @@ void main() {
 
       expect(result.runtime, 90);
       expect(result.genres, ['Horror']);
-      verifyNever(() => remote.getMediaItem(any(), type: any(named: 'type')));
+      verifyNever(
+        () => remote.getMediaDetailsBundle(any(), type: any(named: 'type')),
+      );
     });
 
     test('should take runtime and genres from the movie details', () async {
       when(
-        () => remote.getMediaItem(1, type: MediaType.movie),
-      ).thenAnswer((_) async => movie);
+        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+      ).thenAnswer((_) async => bundleOf(movie));
 
       final result = await service.resolveRuntimeAndGenres(
         tmdbId: 1,
@@ -264,8 +287,8 @@ void main() {
 
     test('should take the episode runtime for a TV episode', () async {
       when(
-        () => remote.getMediaItem(2, type: MediaType.tv),
-      ).thenAnswer((_) async => show);
+        () => remote.getMediaDetailsBundle(2, type: MediaType.tv),
+      ).thenAnswer((_) async => bundleOf(show));
       when(() => cache.getSeason(2, 1)).thenAnswer(
         (_) async => {
           'episodes': <dynamic>[
@@ -288,7 +311,7 @@ void main() {
 
     test('should keep the given values when the lookup fails', () async {
       when(
-        () => remote.getMediaItem(1, type: MediaType.movie),
+        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
       ).thenThrow(Exception('offline'));
 
       final result = await service.resolveRuntimeAndGenres(
@@ -317,7 +340,9 @@ void main() {
 
       expect(result.runtime, 22);
       expect(result.genres, ['Comedy']);
-      verifyNever(() => remote.getMediaItem(any(), type: any(named: 'type')));
+      verifyNever(
+        () => remote.getMediaDetailsBundle(any(), type: any(named: 'type')),
+      );
       verifyNever(() => cache.getSeason(any(), any()));
     });
   });
