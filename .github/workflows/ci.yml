@@ -47,6 +47,18 @@ jobs:
       - name: Generate code
         run: dart run build_runner build --delete-conflicting-outputs
 
+      # Isar tests call Isar.initializeIsarCore(download: true). Without the
+      # library in place, parallel test processes each download it: one
+      # truncates libisar.so while another already has it mapped, and that
+      # process dies with SIGBUS (exit code -7). Provide it once, from the
+      # pub cache (same version as isar_community).
+      - name: Provide the Isar native library for tests
+        run: |
+          lib=$(find "${PUB_CACHE:-$HOME/.pub-cache}" -path '*/isar_community_flutter_libs-*/linux/libisar.so' | sort | tail -n1)
+          test -n "$lib"
+          echo "Using $lib"
+          cp "$lib" libisar.so
+
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 

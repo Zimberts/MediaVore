@@ -76,6 +76,8 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `monthly_streak` | `target` | consecutive calendar months with at least one view |
 | `anniversary` | `target` (years) | full years since the first view in the history (imported views included) |
 | `calendar_date` | `dates` (`MM-DD` list), `target` | distinct years with a view on one of the dates |
+| `movie_runtime` | `minMinutes`, `maxMinutes` (at least one, each inclusive), `target` | distinct movies whose stored runtime is within the bounds |
+| `series_seasons` | `target` | regular seasons (specials excluded) of the same series with at least one episode seen |
 
 The collection types (`season_complete`, `series_complete`, `up_to_date`,
 `saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
@@ -105,6 +107,15 @@ day-based types but never fall in the `early_bird` window. Several episodes of t
 series in one day ("binge") is the existing `marathon` type. `anniversary` is dated by the
 anniversary of the first view, so an imported history counts from its first entry (no
 install date is stored).
+
+The duration types (`movie_runtime`, `series_seasons`) use the history only and are not
+sticky. `movie_runtime` reads the runtime stored on each view (TMDB runtime when the movie
+was marked seen); views without a runtime never count, and a movie counts once, dated by
+its first matching view. The short-movie family starts at 40 minutes so that short films
+(40 minutes or less in the Academy / BFI definition) do not count. `series_seasons` counts
+seasons with at least one episode seen, not fully seen seasons (that is
+`season_complete`); it is dated by the first view of the season reaching the target.
+Episode counts per series are the existing `loyalist` type.
 
 ## Families (reference)
 
@@ -142,6 +153,9 @@ install date is stored).
 | `monthly` | 3, 6, 12, 24 consecutive months |
 | `anniversary` | 1, 2, 5 years |
 | `christmas` (24–25 Dec), `halloween` (31 Oct), `new_years_eve` (31 Dec) | 1, 3, 5 years |
+| `epic_movie` | 1, 5, 20 movies of 180 min or more |
+| `short_movie` | 1, 10, 50 movies of 40 to 80 min |
+| `long_runner` | 5, 10, 20 seasons of the same series |
 
 Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
 kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),

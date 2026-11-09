@@ -48,6 +48,8 @@ applyTo:
 - Rhythm types (`behavioral`/`early_bird`, `double_feature`, `every_weekday`,
   `monthly_streak`, `anniversary`, `calendar_date` with `params.dates` as `MM-DD`) use the
   history only; they are not sticky.
+- Duration types (`movie_runtime` with `params.minMinutes` / `maxMinutes`,
+  `series_seasons`) use the history only; they are not sticky.
 - Adding an achievement = editing the JSON. Evaluation is generic by `type`/`params`; never
   add id-specific code in `AchievementRepositoryImpl`.
 
