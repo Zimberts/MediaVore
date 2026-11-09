@@ -286,7 +286,7 @@ class DataCacheSettingsPage extends StatelessWidget {
     String fileName,
   ) async {
     try {
-      final result = await FilePicker.platform.saveFile(
+      final result = await FilePicker.saveFile(
         dialogTitle: context.l10n.dataSaveExportDialog,
         fileName: fileName,
         initialDirectory: Platform.isAndroid ? _defaultPath : null,
@@ -311,25 +311,26 @@ class DataCacheSettingsPage extends StatelessWidget {
     BuildContext context,
     SearchProvider provider,
   ) async {
-    final result = await FilePicker.platform.pickFiles(
+    final picked = await FilePicker.pickFile(
       type: FileType.any,
       initialDirectory: Platform.isAndroid ? _defaultPath : null,
     );
 
     if (!context.mounted) return;
 
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      if (!path.toLowerCase().endsWith('.mdv') &&
-          !path.toLowerCase().endsWith('.zip')) {
+    if (picked != null) {
+      // file_picker >= 12 may return a content:// URI (no local path) on
+      // Android: check the name and read through the PlatformFile.
+      final name = picked.name.toLowerCase();
+      if (!name.endsWith('.mdv') && !name.endsWith('.zip')) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(context.l10n.dataInvalidFile)));
         return;
       }
 
-      final file = File(path);
-      final bytes = await file.readAsBytes();
+      final bytes = await picked.readAsBytes();
+      if (!context.mounted) return;
 
       try {
         // Use serializer to normalize and validate
