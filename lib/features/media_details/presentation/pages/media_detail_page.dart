@@ -325,7 +325,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   ) async {
     try {
       final bytes = utf8.encode(jsonString);
-      final result = await FilePicker.platform.saveFile(
+      final result = await FilePicker.saveFile(
         dialogTitle: context.l10n.detailSaveHistoryDialog,
         fileName: fileName,
         initialDirectory: '/storage/emulated/0/Download/MediaVore',

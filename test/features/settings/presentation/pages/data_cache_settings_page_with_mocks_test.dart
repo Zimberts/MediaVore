@@ -15,6 +15,7 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 
+import '../../../../helpers/fake_file_picker.dart';
 import '../../../../helpers/mocks.dart';
 
 class MockAchievementRepo extends Mock implements AchievementRepository {}
@@ -28,58 +29,6 @@ class MockSearchProvider extends Mock
 class MockAchievementProvider extends Mock
     with ChangeNotifier
     implements AchievementProvider {}
-
-class FakeFilePicker extends FilePicker {
-  Future<FilePickerResult?> Function({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType? type,
-    List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
-    bool? allowCompression,
-    int? compressionQuality,
-    bool? allowMultiple,
-    bool? withData,
-    bool? withReadStream,
-    bool? lockParentWindow,
-    bool? readSequential,
-  })?
-  onPick;
-
-  @override
-  Future<FilePickerResult?> pickFiles({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType type = FileType.any,
-    List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
-    bool allowCompression = true,
-    int compressionQuality = 30,
-    bool allowMultiple = false,
-    bool withData = false,
-    bool withReadStream = false,
-    bool lockParentWindow = false,
-    bool readSequential = false,
-  }) async {
-    if (onPick != null) {
-      return onPick!(
-        dialogTitle: dialogTitle,
-        initialDirectory: initialDirectory,
-        type: type,
-        allowedExtensions: allowedExtensions,
-        onFileLoading: onFileLoading,
-        allowCompression: allowCompression,
-        compressionQuality: compressionQuality,
-        allowMultiple: allowMultiple,
-        withData: withData,
-        withReadStream: withReadStream,
-        lockParentWindow: lockParentWindow,
-        readSequential: readSequential,
-      );
-    }
-    return null;
-  }
-}
 
 void main() {
   testWidgets('pump page with mocks', (tester) async {
@@ -150,26 +99,12 @@ void main() {
       () => mockAchievementProvider.clearAchievements(),
     ).thenAnswer((_) async {});
 
-    final settingsProvider = SettingsProvider(MockSharedPreferences(), FakeTmdbCredentialStore());
+    final settingsProvider = SettingsProvider(
+      MockSharedPreferences(),
+      FakeTmdbCredentialStore(),
+    );
 
-    final mockFilePicker = FakeFilePicker();    mockFilePicker.onPick =
-        ({
-          String? dialogTitle,
-          String? initialDirectory,
-          FileType? type,
-          List<String>? allowedExtensions,
-          Function(FilePickerStatus)? onFileLoading,
-          bool? allowCompression,
-          int? compressionQuality,
-          bool? allowMultiple,
-          bool? withData,
-          bool? withReadStream,
-          bool? lockParentWindow,
-          bool? readSequential,
-        }) async {
-          return null;
-        };
-    FilePicker.platform = mockFilePicker;
+    FilePickerPlatform.instance = FakeFilePickerPlatform();
 
     await tester.pumpWidget(
       MaterialApp(

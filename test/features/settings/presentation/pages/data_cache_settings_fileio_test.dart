@@ -5,36 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/utils/export_import_serializer.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 
-class _FakePicker extends FilePicker {
-  String? filePath;
-
-  @override
-  Future<FilePickerResult?> pickFiles({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType type = FileType.any,
-    List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
-    bool allowCompression = true,
-    int compressionQuality = 30,
-    bool allowMultiple = false,
-    bool withData = false,
-    bool withReadStream = false,
-    bool lockParentWindow = false,
-    bool readSequential = false,
-  }) async {
-    if (filePath == null) return null;
-    final p = filePath!;
-    final f = File(p);
-    final size = await f.length();
-    final pf = PlatformFile(
-      name: p.split(Platform.pathSeparator).last,
-      path: p,
-      size: size,
-    );
-    return FilePickerResult([pf]);
-  }
-}
+import '../../../../helpers/fake_file_picker.dart';
 
 void main() {
   test('FilePicker + ZIP file -> ExportEnvelope parsing', () async {
@@ -66,17 +37,19 @@ void main() {
     final zipBytes = envelopeObj.toZipBytes();
     await file.writeAsBytes(zipBytes);
 
-    final fake = _FakePicker()..filePath = file.path;
-    FilePicker.platform = fake;
+    final fake = FakeFilePickerPlatform()
+      ..files = [LocalPlatformFile(file.path)];
+    FilePickerPlatform.instance = fake;
 
-    final result = await FilePicker.platform.pickFiles(
+    final picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['zip'],
     );
-    expect(result, isNotNull);
-    expect(result!.files.single.path, equals(file.path));
+    expect(picked, isNotNull);
+    expect(picked!.path, equals(file.path));
+    expect(picked.name, equals('export.zip'));
 
-    final bytes = await File(result.files.single.path!).readAsBytes();
+    final bytes = await picked.readAsBytes();
     final parsed = ExportEnvelope.fromZipBytes(bytes);
 
     expect(parsed.version, equals(1));
