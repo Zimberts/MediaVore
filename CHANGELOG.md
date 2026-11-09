@@ -3,6 +3,36 @@
 Written by release-please from the Conventional Commits on `main` (see `DOCS/releasing.md`).
 New entries are inserted above the latest one.
 
+## [1.3.0](https://github.com/Zimberts/MediaVore/compare/v1.2.0...v1.3.0) (2026-11-09)
+
+
+### Features
+
+* **a11y:** add tooltips to icon-only buttons ([#208](https://github.com/Zimberts/MediaVore/issues/208)) ([#255](https://github.com/Zimberts/MediaVore/issues/255)) ([1b964a1](https://github.com/Zimberts/MediaVore/commit/1b964a1fc95c2b8c0dd9fbcf8f618c0388db0875))
+* **achievements:** add the App usage category ([#229](https://github.com/Zimberts/MediaVore/issues/229)) ([#282](https://github.com/Zimberts/MediaVore/issues/282)) ([ab83018](https://github.com/Zimberts/MediaVore/commit/ab83018b5220702d8725730a7c0aaa25f947a302))
+* **achievements:** add the Collection category ([#225](https://github.com/Zimberts/MediaVore/issues/225)) ([#260](https://github.com/Zimberts/MediaVore/issues/260)) ([33bdcac](https://github.com/Zimberts/MediaVore/commit/33bdcacbd0c783bf0b0c6d0a6c9f235984675362))
+* **achievements:** add the Duration category ([#228](https://github.com/Zimberts/MediaVore/issues/228)) ([#263](https://github.com/Zimberts/MediaVore/issues/263)) ([aeb0abb](https://github.com/Zimberts/MediaVore/commit/aeb0abb83f7af9e39d93cfda5c3568ca44854f2a))
+* **achievements:** add the Rhythm category ([#227](https://github.com/Zimberts/MediaVore/issues/227)) ([#262](https://github.com/Zimberts/MediaVore/issues/262)) ([0eb35ec](https://github.com/Zimberts/MediaVore/commit/0eb35ecfbb6b3a38bbe28362ba69269d3c99823c))
+* **achievements:** family names, regular watch-time scale, weekend tiers ([#224](https://github.com/Zimberts/MediaVore/issues/224)) ([#258](https://github.com/Zimberts/MediaVore/issues/258)) ([c2f89df](https://github.com/Zimberts/MediaVore/commit/c2f89dfd106c3d0a82ccecf580a5df2ea749386a))
+* **front:** declutter My Lists app bar and add a Profile tab ([#204](https://github.com/Zimberts/MediaVore/issues/204), [#205](https://github.com/Zimberts/MediaVore/issues/205)) ([#280](https://github.com/Zimberts/MediaVore/issues/280)) ([3562757](https://github.com/Zimberts/MediaVore/commit/3562757e0a26a1fb1018943839e93613d2c2f942))
+* **front:** reusable empty state with help text and search action ([#201](https://github.com/Zimberts/MediaVore/issues/201)) ([#278](https://github.com/Zimberts/MediaVore/issues/278)) ([ea254f1](https://github.com/Zimberts/MediaVore/commit/ea254f14c70922d1b7f5c8698b2da70302e51ea8))
+* **tmdb-onboarding:** guide and verify the TMDB key on first launch ([#259](https://github.com/Zimberts/MediaVore/issues/259)) ([c9eca22](https://github.com/Zimberts/MediaVore/commit/c9eca22b01076244f898ffc4a6dffd53aed69db7))
+
+
+### Bug fixes
+
+* **achievements:** reuse the open AchievementsPage on banner tap ([#257](https://github.com/Zimberts/MediaVore/issues/257)) ([83aee80](https://github.com/Zimberts/MediaVore/commit/83aee80019f4557414adf6386e2461a4f3f8af4a))
+* **back:** auto-refresh returning series so new episodes are detected ([#173](https://github.com/Zimberts/MediaVore/issues/173)) ([063acca](https://github.com/Zimberts/MediaVore/commit/063accac4199c6880cd20d0f828f43e85cda60de))
+* **deps:** migrate to file_picker 13 API (supersedes [#267](https://github.com/Zimberts/MediaVore/issues/267)) ([#268](https://github.com/Zimberts/MediaVore/issues/268)) ([3814581](https://github.com/Zimberts/MediaVore/commit/3814581d726a9cfc8aef2aaa7def29064f3ded85))
+* **front:** refresh episode counters after Watch Next ([#209](https://github.com/Zimberts/MediaVore/issues/209)) ([#256](https://github.com/Zimberts/MediaVore/issues/256)) ([3a4a9af](https://github.com/Zimberts/MediaVore/commit/3a4a9af1999e800739667b12a8889189d67b0cd0))
+* **navigation:** align bottom-nav labels with screen titles ([#202](https://github.com/Zimberts/MediaVore/issues/202)) ([#279](https://github.com/Zimberts/MediaVore/issues/279)) ([72032a9](https://github.com/Zimberts/MediaVore/commit/72032a91e01fecd896019e4e364f133845065ce3))
+* **release:** skip the iOS job when no signing secret is set ([#277](https://github.com/Zimberts/MediaVore/issues/277)) ([51e92f8](https://github.com/Zimberts/MediaVore/commit/51e92f89f6a8b08aae25b37c257c909f9bd20b45))
+
+
+### Performance
+
+* **cache:** fetch details and seasons with append_to_response ([#212](https://github.com/Zimberts/MediaVore/issues/212)) ([#281](https://github.com/Zimberts/MediaVore/issues/281)) ([39ab091](https://github.com/Zimberts/MediaVore/commit/39ab091ac0fbc3cabbbd07df19d40238e75fb412))
+
 ## [1.2.0](https://github.com/Zimberts/MediaVore/compare/v1.1.0...v1.2.0) (2026-11-07)
 
 
