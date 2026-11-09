@@ -52,7 +52,7 @@ class ShowInfo {
   );
 }
 
-/// Title metadata used by the diversity achievements.
+/// Title metadata used by the diversity and app usage achievements.
 class TitleInfo {
   /// `yyyy-mm-dd` (first air date for a series), empty when unknown.
   final String releaseDate;
@@ -62,11 +62,15 @@ class TitleInfo {
   final double? voteAverage;
   final int? voteCount;
 
+  /// ISO 639-1 code; null when unknown (cached before it was stored).
+  final String? originalLanguage;
+
   const TitleInfo({
     this.releaseDate = '',
     this.originCountries,
     this.voteAverage,
     this.voteCount,
+    this.originalLanguage,
   });
 
   factory TitleInfo.fromItem(MediaItem item) => TitleInfo(
@@ -74,6 +78,7 @@ class TitleInfo {
     originCountries: item.originCountries,
     voteAverage: item.voteAverage,
     voteCount: item.voteCount,
+    originalLanguage: item.originalLanguage,
   );
 
   /// Release year, or null when the date is unknown or malformed.
@@ -84,7 +89,8 @@ class TitleInfo {
       year != null &&
       originCountries != null &&
       voteAverage != null &&
-      voteCount != null;
+      voteCount != null &&
+      originalLanguage != null;
 }
 
 /// TMDB data the history alone cannot provide (season sizes, sagas, title

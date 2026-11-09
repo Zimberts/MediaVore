@@ -5,4 +5,7 @@ abstract class AchievementRepository {
   Future<void> unlockAchievement(String achievementId, DateTime unlockedAt);
   Stream<List<Achievement>> watchAchievements();
   Future<void> clearAchievements();
+
+  /// Logs a user data export (backup) done at [at].
+  Future<void> recordExport(DateTime at);
 }

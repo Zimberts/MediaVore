@@ -3383,5 +3383,173 @@
                 "description": "Regarder des épisodes de 20 saisons d'une même série"
             }
         }
+    },
+    {
+        "id": "archivist_1",
+        "title": "Archivist",
+        "description": "Save or share a backup of your data",
+        "iconPath": "assets/achievements/archivist_1.png",
+        "type": "backup_export",
+        "group": "archivist",
+        "groupTitle": "Backups",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Sauvegardes",
+                "title": "Archiviste",
+                "description": "Enregistrer ou partager une sauvegarde de ses données"
+            }
+        }
+    },
+    {
+        "id": "archivist_5",
+        "title": "Safe Keeper",
+        "description": "Back up your data on 5 different days",
+        "iconPath": "assets/achievements/archivist_5.png",
+        "type": "backup_export",
+        "group": "archivist",
+        "tier": 2,
+        "params": {
+            "target": 5
+        },
+        "translations": {
+            "fr": {
+                "title": "Gardien des archives",
+                "description": "Sauvegarder ses données 5 jours différents"
+            }
+        }
+    },
+    {
+        "id": "archivist_12",
+        "title": "Belt and Braces",
+        "description": "Back up your data on 12 different days",
+        "iconPath": "assets/achievements/archivist_12.png",
+        "type": "backup_export",
+        "group": "archivist",
+        "tier": 3,
+        "params": {
+            "target": 12
+        },
+        "translations": {
+            "fr": {
+                "title": "Ceinture et bretelles",
+                "description": "Sauvegarder ses données 12 jours différents"
+            }
+        }
+    },
+    {
+        "id": "curator_10",
+        "title": "Curator",
+        "description": "Have 10 titles in your lists (watchlist included)",
+        "iconPath": "assets/achievements/curator_10.png",
+        "type": "list_items",
+        "group": "curator",
+        "groupTitle": "Lists",
+        "tier": 1,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Listes",
+                "title": "Conservateur",
+                "description": "Avoir 10 titres dans ses listes (watchlist comprise)"
+            }
+        }
+    },
+    {
+        "id": "curator_50",
+        "title": "Collector",
+        "description": "Have 50 titles in your lists (watchlist included)",
+        "iconPath": "assets/achievements/curator_50.png",
+        "type": "list_items",
+        "group": "curator",
+        "tier": 2,
+        "params": {
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Collectionneur",
+                "description": "Avoir 50 titres dans ses listes (watchlist comprise)"
+            }
+        }
+    },
+    {
+        "id": "curator_200",
+        "title": "Museum Director",
+        "description": "Have 200 titles in your lists (watchlist included)",
+        "iconPath": "assets/achievements/curator_200.png",
+        "type": "list_items",
+        "group": "curator",
+        "tier": 3,
+        "params": {
+            "target": 200
+        },
+        "translations": {
+            "fr": {
+                "title": "Directeur de musée",
+                "description": "Avoir 200 titres dans ses listes (watchlist comprise)"
+            }
+        }
+    },
+    {
+        "id": "polyglot_3",
+        "title": "Polyglot",
+        "description": "Watch titles in 3 different original languages",
+        "iconPath": "assets/achievements/polyglot_3.png",
+        "type": "distinct_languages",
+        "group": "polyglot",
+        "groupTitle": "Original languages",
+        "tier": 1,
+        "params": {
+            "target": 3
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Langues originales",
+                "title": "Polyglotte",
+                "description": "Regarder des titres en 3 langues originales différentes"
+            }
+        }
+    },
+    {
+        "id": "polyglot_7",
+        "title": "Interpreter",
+        "description": "Watch titles in 7 different original languages",
+        "iconPath": "assets/achievements/polyglot_7.png",
+        "type": "distinct_languages",
+        "group": "polyglot",
+        "tier": 2,
+        "params": {
+            "target": 7
+        },
+        "translations": {
+            "fr": {
+                "title": "Interprète",
+                "description": "Regarder des titres en 7 langues originales différentes"
+            }
+        }
+    },
+    {
+        "id": "polyglot_15",
+        "title": "Tower of Babel",
+        "description": "Watch titles in 15 different original languages",
+        "iconPath": "assets/achievements/polyglot_15.png",
+        "type": "distinct_languages",
+        "group": "polyglot",
+        "tier": 3,
+        "params": {
+            "target": 15
+        },
+        "translations": {
+            "fr": {
+                "title": "Tour de Babel",
+                "description": "Regarder des titres en 15 langues originales différentes"
+            }
+        }
     }
 ]

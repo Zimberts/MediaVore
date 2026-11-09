@@ -78,6 +78,9 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `calendar_date` | `dates` (`MM-DD` list), `target` | distinct years with a view on one of the dates |
 | `movie_runtime` | `minMinutes`, `maxMinutes` (at least one, each inclusive), `target` | distinct movies whose stored runtime is within the bounds |
 | `series_seasons` | `target` | regular seasons (specials excluded) of the same series with at least one episode seen |
+| `backup_export` | `target` | calendar days with a data export saved or shared |
+| `list_items` | `target` | distinct titles over every list, watchlist included (current state) |
+| `distinct_languages` | `target` | distinct original languages (TMDB `original_language`, `xx` excluded) among the titles seen |
 
 The collection types (`season_complete`, `series_complete`, `up_to_date`,
 `saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
@@ -116,6 +119,17 @@ its first matching view. The short-movie family starts at 40 minutes so that sho
 seasons with at least one episode seen, not fully seen seasons (that is
 `season_complete`); it is dated by the first view of the season reaching the target.
 Episode counts per series are the existing `loyalist` type.
+
+The app usage types: `backup_export` reads a log of exports kept in the preferences (an
+export leaves no trace in the database). An export is logged once the archive is saved to
+the device or shared (share sheet not dismissed; a platform that cannot tell counts it);
+several exports on the same day count once, so the family rewards regular backups. The
+log is neither exported nor reset by clearing the achievements, so the type is recomputed
+and not sticky. `list_items` counts the titles currently in the lists (a title in two lists
+counts once); it can regress, so it is sticky and dated when first observed.
+`distinct_languages` reads the cached title like the diversity types (`original_language`
+is cached since #229) and is sticky too; `xx` (no linguistic content) is not a language.
+Achievements based on the user's own ratings are not defined: the app has no rating.
 
 ## Families (reference)
 
@@ -156,6 +170,9 @@ Episode counts per series are the existing `loyalist` type.
 | `epic_movie` | 1, 5, 20 movies of 180 min or more |
 | `short_movie` | 1, 10, 50 movies of 40 to 80 min |
 | `long_runner` | 5, 10, 20 seasons of the same series |
+| `archivist` | 1, 5, 12 days with a backup |
+| `curator` | 10, 50, 200 titles in the lists |
+| `polyglot` | 3, 7, 15 original languages |
 
 Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
 kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),
