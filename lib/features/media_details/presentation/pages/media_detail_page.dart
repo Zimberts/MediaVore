@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/utils/network_images.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -413,8 +414,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  if (itemToDisplay.posterPath != null &&
-                      !Platform.environment.containsKey('FLUTTER_TEST'))
+                  if (itemToDisplay.posterPath != null && loadNetworkImages)
                     Image.network(
                       'https://image.tmdb.org/t/p/w500${itemToDisplay.posterPath}',
                       width: double.infinity,
@@ -811,9 +811,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                 child: Column(
                                   children: [
                                     member.profilePath != null &&
-                                            !Platform.environment.containsKey(
-                                              'FLUTTER_TEST',
-                                            )
+                                            loadNetworkImages
                                         ? CircleAvatar(
                                             radius: 40,
                                             backgroundImage: NetworkImage(

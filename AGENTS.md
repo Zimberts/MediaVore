@@ -45,6 +45,7 @@ flutter pub get                                           # install deps
 dart run build_runner build                               # REQUIRED after fresh clone
 flutter analyze                                           # lint
 flutter test                                              # tests
+tool/screenshots.sh                                       # screenshots + HTML gallery (DOCS/screenshots.md)
 ```
 
 `build_runner` regenerates gitignored Isar `*.g.dart` and injectable
