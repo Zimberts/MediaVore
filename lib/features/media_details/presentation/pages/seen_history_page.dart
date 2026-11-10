@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/utils/network_images.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/widgets/scrollable_fill.dart';
@@ -407,9 +407,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                       provider.deleteSeenEntry(seenItem.id!);
                     },
                     child: ListTile(
-                      leading:
-                          seenItem.posterPath != null &&
-                              !Platform.environment.containsKey('FLUTTER_TEST')
+                      leading: seenItem.posterPath != null && loadNetworkImages
                           ? CachedNetworkImage(
                               imageUrl:
                                   'https://image.tmdb.org/t/p/w92${seenItem.posterPath}',

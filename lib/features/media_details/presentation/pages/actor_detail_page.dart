@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/utils/network_images.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
@@ -116,8 +116,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _actorDetails?.profilePath != null &&
-                          !Platform.environment.containsKey('FLUTTER_TEST')
+                  _actorDetails?.profilePath != null && loadNetworkImages
                       ? CachedNetworkImage(
                           imageUrl:
                               'https://image.tmdb.org/t/p/w500${_actorDetails!.profilePath}',
@@ -244,9 +243,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child:
-                        item.posterPath != null &&
-                            !Platform.environment.containsKey('FLUTTER_TEST')
+                    child: item.posterPath != null && loadNetworkImages
                         ? CachedNetworkImage(
                             imageUrl:
                                 'https://image.tmdb.org/t/p/w185${item.posterPath}',
