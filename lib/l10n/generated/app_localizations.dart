@@ -2443,6 +2443,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import complete'**
   String get progressImportComplete;
+
+  /// No description provided for @mediaKindFilm.
+  ///
+  /// In en, this message translates to:
+  /// **'Movie'**
+  String get mediaKindFilm;
+
+  /// No description provided for @mediaKindSerie.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get mediaKindSerie;
+
+  /// No description provided for @mediaKindLivre.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get mediaKindLivre;
+
+  /// No description provided for @commonSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get commonSeeAll;
+
+  /// No description provided for @offlineBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offlineBannerTitle;
+
+  /// No description provided for @posterInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get posterInProgress;
+
+  /// No description provided for @posterLiked.
+  ///
+  /// In en, this message translates to:
+  /// **'Liked'**
+  String get posterLiked;
+
+  /// No description provided for @posterRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated {rating}'**
+  String posterRating(String rating);
 }
 
 class _AppLocalizationsDelegate

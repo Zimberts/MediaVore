@@ -90,6 +90,24 @@ void main() {
         });
       });
 
+      test('should keep text at AA on media tints (poster without image)', () {
+        final tints = {
+          'filmBg': palette.filmBg,
+          'serieBg': palette.serieBg,
+          'livreBg': palette.livreBg,
+        };
+        tints.forEach((tintName, tint) {
+          expectContrast(palette.text, tint, _aaText, 'text/$tintName');
+          expectContrast(palette.text2, tint, _aaText, 'text2/$tintName');
+        });
+      });
+
+      test('should keep the selected chip and the message readable', () {
+        // Selected filter chip: onPrimary on primary (checked above).
+        // Feedback message: bg on text.
+        expectContrast(palette.bg, palette.text, _aaText, 'bg/text');
+      });
+
       test('should keep danger at AA as text on every surface', () {
         surfaces.forEach((surfaceName, surface) {
           expectContrast(

@@ -833,5 +833,20 @@
     }
   },
   "progressSavingEntries": "Saving entries...",
-  "progressImportComplete": "Import complete"
+  "progressImportComplete": "Import complete",
+  "mediaKindFilm": "Movie",
+  "mediaKindSerie": "Series",
+  "mediaKindLivre": "Book",
+  "commonSeeAll": "See all",
+  "offlineBannerTitle": "Offline",
+  "posterInProgress": "In progress",
+  "posterLiked": "Liked",
+  "posterRating": "Rated {rating}",
+  "@posterRating": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  }
 }

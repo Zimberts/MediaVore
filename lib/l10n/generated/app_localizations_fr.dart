@@ -1400,4 +1400,30 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get progressImportComplete => 'Import terminé';
+
+  @override
+  String get mediaKindFilm => 'Film';
+
+  @override
+  String get mediaKindSerie => 'Série';
+
+  @override
+  String get mediaKindLivre => 'Livre';
+
+  @override
+  String get commonSeeAll => 'Tout voir';
+
+  @override
+  String get offlineBannerTitle => 'Hors ligne';
+
+  @override
+  String get posterInProgress => 'En cours';
+
+  @override
+  String get posterLiked => 'Aimé';
+
+  @override
+  String posterRating(String rating) {
+    return 'Note $rating';
+  }
 }
