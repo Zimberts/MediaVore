@@ -58,7 +58,7 @@ void main() {
         expect(palette.duoBg, const Color(0xFFEDE4FD));
         expect(palette.danger, const Color(0xFFB42318));
         expect(palette.onDanger, const Color(0xFFFFFFFF));
-        expect(palette.success, const Color(0xFF1E7A3A));
+        expect(palette.success, const Color(0xFF1A6B33));
       });
     }
 

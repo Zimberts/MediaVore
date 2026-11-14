@@ -48,7 +48,8 @@ class AppPalette {
        duoBg = const Color(0xFFEDE4FD),
        danger = const Color(0xFFB42318),
        onDanger = const Color(0xFFFFFFFF),
-       success = const Color(0xFF1E7A3A),
+       // Darker than the prototype (#1E7A3A) to reach 4.5:1 on every surface2.
+       success = const Color(0xFF1A6B33),
        warning = const Color(0xFF7A4F00);
 
   const AppPalette._dark({

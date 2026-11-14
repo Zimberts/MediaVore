@@ -101,23 +101,15 @@ void main() {
         });
       });
 
-      test('should keep success at AA as text on bg and surface, and at 3:1 '
-          'on surface2', () {
-        expectContrast(palette.success, palette.bg, _aaText, 'success/bg');
-        expectContrast(
-          palette.success,
-          palette.surface,
-          _aaText,
-          'success/surface',
-        );
-        // The prototype value reaches 4.07:1 on Sable's surface2: enough for
-        // icons and large text, not for small text.
-        expectContrast(
-          palette.success,
-          palette.surface2,
-          _aaNonText,
-          'success/surface2',
-        );
+      test('should keep success at AA as text on every surface', () {
+        surfaces.forEach((surfaceName, surface) {
+          expectContrast(
+            palette.success,
+            surface,
+            _aaText,
+            'success/$surfaceName',
+          );
+        });
       });
 
       test('should keep warning at AA as text on every surface', () {
