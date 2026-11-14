@@ -4,6 +4,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
 
 class WatchlistIconButton extends StatelessWidget {
   final MediaItem item;
@@ -11,12 +12,17 @@ class WatchlistIconButton extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final BoxConstraints? constraints;
 
+  /// Drawn over a poster: white icon on a dark disc instead of the theme
+  /// colors.
+  final bool onImage;
+
   const WatchlistIconButton({
     super.key,
     required this.item,
     this.iconSize,
     this.padding,
     this.constraints,
+    this.onImage = false,
   });
 
   @override
@@ -29,10 +35,22 @@ class WatchlistIconButton extends StatelessWidget {
       iconSize: iconSize,
       padding: padding ?? const EdgeInsets.all(8.0),
       constraints: constraints,
-      icon: Icon(
-        isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
-        color: isInWatchlist ? colors.onWatchlist : null,
-      ),
+      icon: onImage
+          ? Container(
+              padding: const EdgeInsets.all(5),
+              decoration: const BoxDecoration(
+                color: MediaPosterCard.badgeBackground,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
+                color: MediaPosterCard.onImage,
+              ),
+            )
+          : Icon(
+              isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
+              color: isInWatchlist ? colors.onWatchlist : null,
+            ),
       onPressed: () => provider.toggleInList(item, 'watchlist'),
       tooltip: isInWatchlist
           ? context.l10n.watchlistRemove

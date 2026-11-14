@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -159,6 +160,65 @@ void main() {
 
     expect(find.text('Movie 1'), findsOneWidget);
     expect(find.text('TV 1'), findsOneWidget);
+  });
+
+  testWidgets('DiscoveryPage grid draws its items with MediaPosterCard', (
+    WidgetTester tester,
+  ) async {
+    const longTitle =
+        'A Title So Long That It Could Never Fit On A Poster, Even On Three '
+        'Lines, And That Keeps Going Well Past Any Reasonable Length';
+    when(
+      () => mockMediaRepository.discoverMedia(
+        page: any(named: 'page'),
+        type: any(named: 'type'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        originalLanguage: any(named: 'originalLanguage'),
+        sortBy: any(named: 'sortBy'),
+      ),
+    ).thenAnswer(
+      (_) async => const [
+        MediaItem(
+          id: 1,
+          title: longTitle,
+          overview: 'O1',
+          releaseDate: '2021-01-01',
+          mediaType: MediaType.movie,
+          runtime: 155,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    final cards = find.byType(MediaPosterCard);
+    expect(cards, findsWidgets);
+    expect(tester.takeException(), isNull);
+
+    // Without image the title is drawn, on 3 lines at most; the caption
+    // stays on one line.
+    final title = tester.widget<Text>(
+      find.byKey(MediaPosterCard.titleKey).first,
+    );
+    expect(title.data, longTitle);
+    expect(title.maxLines, 3);
+    final caption = tester.widget<Text>(
+      find.byKey(MediaPosterCard.captionKey).first,
+    );
+    expect(caption.data, '2021 · 2h 35m');
+    expect(caption.maxLines, 1);
+
+    // The watchlist toggle keeps a 48 dp target on the poster.
+    final toggle = tester.getSize(
+      find.descendant(of: cards.first, matching: find.byType(IconButton)).first,
+    );
+    expect(toggle.width, greaterThanOrEqualTo(48));
+    expect(toggle.height, greaterThanOrEqualTo(48));
   });
 
   testWidgets('DiscoveryPage adjusts grid size via bottom sheet', (

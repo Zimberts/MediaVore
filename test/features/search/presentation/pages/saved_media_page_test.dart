@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -136,6 +137,40 @@ void main() {
     expect(find.text('Inception'), findsOneWidget);
     // Use matching by icon data since Icons.favorite is used in the widget
     expect(find.byIcon(Icons.favorite), findsOneWidget);
+  });
+
+  testWidgets('grid draws saved items with MediaPosterCard', (
+    WidgetTester tester,
+  ) async {
+    const longTitle =
+        'A Title So Long That It Could Never Fit On A Poster, Even On Three '
+        'Lines, And That Keeps Going Well Past Any Reasonable Length';
+    const item = MediaItem(
+      id: 1,
+      title: longTitle,
+      overview: 'Overview',
+      releaseDate: '2010-07-16',
+      mediaType: MediaType.tv,
+      numberOfSeasons: 2,
+    );
+    when(
+      () => mockMediaRepository.getListEntries('watchlist'),
+    ).thenAnswer((_) async => ['1:tv']);
+    when(
+      () => mockMediaRepository.getMediaDetails(1, type: MediaType.tv),
+    ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MediaPosterCard), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    final title = tester.widget<Text>(find.byKey(MediaPosterCard.titleKey));
+    expect(title.data, longTitle);
+    expect(title.maxLines, 3);
+    final caption = tester.widget<Text>(find.byKey(MediaPosterCard.captionKey));
+    expect(caption.data, '2010 · 2 seasons');
+    expect(caption.maxLines, 1);
   });
 
   testWidgets('displays very long list name without overflow exceptions', (

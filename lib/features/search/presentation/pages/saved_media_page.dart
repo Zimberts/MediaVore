@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/widgets/scrollable_fill.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -1241,23 +1242,38 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     );
   }
 
+  static const double _gridPadding = 8;
+
   Widget _buildGridView(
     List<MediaItem> items,
     SearchProvider provider,
     SettingsProvider settings,
   ) {
+    return LayoutBuilder(
+      builder: (context, constraints) => _buildGridViewWith(
+        items,
+        provider,
+        MediaPosterCard.gridDelegate(
+          context: context,
+          width: constraints.maxWidth - 2 * _gridPadding,
+          crossAxisCount: settings.gridSize.round(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridViewWith(
+    List<MediaItem> items,
+    SearchProvider provider,
+    SliverGridDelegate gridDelegate,
+  ) {
     // Keep a single scrollable type for the manual sort so toggling edit mode
     // does not dispose the viewport and reset the scroll offset.
     if (_sortMethod != SortMethod.manual) {
       return GridView.builder(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(_gridPadding),
         clipBehavior: Clip.none,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: settings.gridSize.round(),
-          childAspectRatio: 0.66,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-        ),
+        gridDelegate: gridDelegate,
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
@@ -1293,7 +1309,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     }
 
     return ReorderableGridView.builder(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(_gridPadding),
       clipBehavior: Clip.none,
       // Drag only outside edit mode; a long-press that does not move is used to
       // enter edit mode (see onReorder below).
@@ -1303,12 +1319,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       // otherwise nudge the list by up to 5px the moment it starts.
       scrollSpeedController: (elapsed, overSize, itemSize) =>
           _gridDragDistance < 12 ? 0 : 5,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: settings.gridSize.round(),
-        childAspectRatio: 0.66,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-      ),
+      gridDelegate: gridDelegate,
       itemCount: items.length,
       onDragStart: (index) => _gridDragDistance = 0,
       onDragUpdate: (index, position, delta) =>
