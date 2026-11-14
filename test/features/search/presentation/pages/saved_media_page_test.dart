@@ -100,7 +100,7 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: AppPalette.papier.toThemeData(),
         home: SavedMediaPage(key: key),
       ),
     );

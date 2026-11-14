@@ -194,6 +194,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsDarkTheme => 'Thème sombre';
 
   @override
+  String get paletteNamePapier => 'Papier';
+
+  @override
+  String get paletteNameSable => 'Sable';
+
+  @override
+  String get paletteNameBrume => 'Brume';
+
+  @override
+  String get paletteNameEncre => 'Encre';
+
+  @override
+  String get paletteNameNuit => 'Nuit';
+
+  @override
+  String get paletteNameOled => 'Noir OLED';
+
+  @override
   String get navProfile => 'Profil';
 
   @override

@@ -194,6 +194,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDarkTheme => 'Dark Theme';
 
   @override
+  String get paletteNamePapier => 'Paper';
+
+  @override
+  String get paletteNameSable => 'Sand';
+
+  @override
+  String get paletteNameBrume => 'Mist';
+
+  @override
+  String get paletteNameEncre => 'Ink';
+
+  @override
+  String get paletteNameNuit => 'Night';
+
+  @override
+  String get paletteNameOled => 'OLED black';
+
+  @override
   String get navProfile => 'Profile';
 
   @override

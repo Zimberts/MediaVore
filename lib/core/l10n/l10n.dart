@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/l10n/generated/app_localizations.dart';
 
 export 'package:mediavore/l10n/generated/app_localizations.dart';
@@ -15,6 +16,24 @@ extension AppLocalizationsX on BuildContext {
 /// Strings in [fallbackAppLanguage], for code without a [BuildContext].
 AppLocalizations get fallbackLocalizations =>
     lookupAppLocalizations(fallbackAppLanguage.locale);
+
+/// Localized display name of a palette.
+String paletteName(AppLocalizations l10n, AppPaletteId id) {
+  switch (id) {
+    case AppPaletteId.papier:
+      return l10n.paletteNamePapier;
+    case AppPaletteId.sable:
+      return l10n.paletteNameSable;
+    case AppPaletteId.brume:
+      return l10n.paletteNameBrume;
+    case AppPaletteId.encre:
+      return l10n.paletteNameEncre;
+    case AppPaletteId.nuit:
+      return l10n.paletteNameNuit;
+    case AppPaletteId.oled:
+      return l10n.paletteNameOled;
+  }
+}
 
 /// Localized TMDB `status` (TMDB always returns it in English).
 String localizedMediaStatus(AppLocalizations l10n, String status) {

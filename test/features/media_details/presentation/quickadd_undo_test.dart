@@ -93,7 +93,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: AppPalette.papier.toThemeData(),
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<SearchProvider>.value(value: provider),

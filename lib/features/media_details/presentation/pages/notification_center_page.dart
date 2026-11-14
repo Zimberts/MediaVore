@@ -189,7 +189,7 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                         ? (isReleased
                               ? context.appColors.success
                               : context.appColors.warning)
-                        : context.appColors.comments;
+                        : context.appColors.text2;
 
                     return ListTile(
                       leading: item.posterPath != null
@@ -377,7 +377,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Icon(
                           Icons.block,
-                          color: contrastingForeground(context.appColors.error),
+                          color: context.appColors.onDanger,
                         ),
                       ),
                       confirmDismiss: (direction) async {

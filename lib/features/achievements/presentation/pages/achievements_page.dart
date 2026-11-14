@@ -155,7 +155,7 @@ class _AchievementsSummary extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         border: Border(
           bottom: BorderSide(
-            color: colors.logicFlow.withValues(alpha: 0.1),
+            color: colors.primary.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -182,7 +182,7 @@ class _AchievementsSummary extends StatelessWidget {
                       ),
                       style: Theme.of(
                         context,
-                      ).textTheme.bodySmall?.copyWith(color: colors.comments),
+                      ).textTheme.bodySmall?.copyWith(color: colors.text2),
                     ),
                     Text(
                       context.l10n.achievementsChallengesCompleted(
@@ -191,7 +191,7 @@ class _AchievementsSummary extends StatelessWidget {
                       ),
                       style: Theme.of(
                         context,
-                      ).textTheme.bodySmall?.copyWith(color: colors.comments),
+                      ).textTheme.bodySmall?.copyWith(color: colors.text2),
                     ),
                   ],
                 ),
@@ -199,7 +199,7 @@ class _AchievementsSummary extends StatelessWidget {
               Text(
                 '${(percentage * 100).toInt()}%',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: colors.logicFlow,
+                  color: colors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -211,8 +211,8 @@ class _AchievementsSummary extends StatelessWidget {
             child: LinearProgressIndicator(
               value: percentage,
               minHeight: 10,
-              backgroundColor: colors.logicFlow.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(colors.logicFlow),
+              backgroundColor: colors.primary.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
             ),
           ),
         ],
@@ -241,7 +241,7 @@ class _FamilyCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: isHighlighted
-            ? Border.all(color: colors.logicFlow, width: 2)
+            ? Border.all(color: colors.primary, width: 2)
             : null,
       ),
       child: Card(
@@ -272,7 +272,7 @@ class _FamilyCard extends StatelessWidget {
                       ),
                       Text(
                         current.descriptionFor(languageCode),
-                        style: TextStyle(color: colors.comments),
+                        style: TextStyle(color: colors.text2),
                       ),
                       if (family.isTiered) ...[
                         const SizedBox(height: 6),
@@ -419,7 +419,7 @@ class _AchievementBadge extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: colors.logicFlow.withValues(alpha: 0.1),
+          color: colors.primary.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -429,7 +429,7 @@ class _AchievementBadge extends StatelessWidget {
               ? Icons.stars
               : Icons.stars_outlined,
           size: size / 2,
-          color: isUnlocked ? colors.logicFlow : colors.comments,
+          color: isUnlocked ? colors.primary : colors.text2,
         ),
       ),
     );
@@ -452,7 +452,7 @@ class _TierDots extends StatelessWidget {
             child: Icon(
               tier.isUnlocked ? Icons.circle : Icons.circle_outlined,
               size: 10,
-              color: tier.isUnlocked ? colors.logicFlow : colors.comments,
+              color: tier.isUnlocked ? colors.primary : colors.text2,
             ),
           ),
         const SizedBox(width: 4),
@@ -463,7 +463,7 @@ class _TierDots extends StatelessWidget {
           ),
           style: Theme.of(
             context,
-          ).textTheme.bodySmall?.copyWith(color: colors.comments),
+          ).textTheme.bodySmall?.copyWith(color: colors.text2),
         ),
       ],
     );
@@ -480,8 +480,8 @@ class _ProgressBar extends StatelessWidget {
     final colors = context.appColors;
     return LinearProgressIndicator(
       value: achievement.progress,
-      backgroundColor: colors.logicFlow.withValues(alpha: 0.1),
-      valueColor: AlwaysStoppedAnimation<Color>(colors.logicFlow),
+      backgroundColor: colors.primary.withValues(alpha: 0.1),
+      valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
     );
   }
 }

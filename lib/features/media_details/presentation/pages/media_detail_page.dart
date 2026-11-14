@@ -108,7 +108,7 @@ class _SearchIconText extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: context.appColors.comments),
+        Icon(icon, size: 16, color: context.appColors.text2),
         const SizedBox(width: 4),
         Text(text, style: Theme.of(context).textTheme.bodySmall),
       ],
@@ -425,7 +425,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           child: Icon(
                             Icons.broken_image,
                             size: 64,
-                            color: colors.comments,
+                            color: colors.text2,
                           ),
                         ),
                       ),
@@ -437,7 +437,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         child: Icon(
                           Icons.movie,
                           size: 100,
-                          color: colors.comments,
+                          color: colors.text2,
                         ),
                       ),
                     ),
@@ -556,7 +556,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                             Text(
                               context.l10n.detailOfflineMessage,
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: colors.comments),
+                              style: TextStyle(color: colors.text2),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
@@ -825,7 +825,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                                             backgroundColor: colors.placeholder,
                                             child: Icon(
                                               Icons.person,
-                                              color: colors.comments,
+                                              color: colors.text2,
                                             ),
                                           ),
                                     const SizedBox(height: 4),

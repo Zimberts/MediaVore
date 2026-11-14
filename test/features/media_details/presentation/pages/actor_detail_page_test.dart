@@ -15,7 +15,7 @@ void main() {
 
   setUp(() {
     mockMediaRepository = MockMediaRepository();
-        if (locator.isRegistered<MediaRepository>()) {
+    if (locator.isRegistered<MediaRepository>()) {
       locator.unregister<MediaRepository>();
     }
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
@@ -48,7 +48,7 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
-      theme: DefaultLightPalette().toThemeData(),
+      theme: AppPalette.papier.toThemeData(),
       home: const ActorDetailPage(actorId: tActorId, actorName: tActorName),
     );
   }

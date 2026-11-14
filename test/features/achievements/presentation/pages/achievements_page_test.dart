@@ -36,7 +36,7 @@ void main() {
         value: provider,
         child: MaterialApp(
           navigatorKey: navigatorKey,
-          theme: DefaultLightPalette().toThemeData(),
+          theme: AppPalette.papier.toThemeData(),
           home: const Scaffold(body: Text('home')),
         ),
       ),

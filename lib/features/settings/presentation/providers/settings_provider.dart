@@ -8,6 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum DisplayMode { list, grid, swipe }
 
 class SettingsProvider with ChangeNotifier {
+  /// Preference keys of the selected palettes (stable identifiers).
+  static const String lightPaletteKey = 'lightPalette';
+  static const String darkPaletteKey = 'darkPalette';
+
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
   final LocaleService? _localeService;
@@ -25,8 +29,8 @@ class SettingsProvider with ChangeNotifier {
   bool _hideNonReleased = false;
   bool _notificationCenterDebug = false;
 
-  int _lightAppThemeIndex = 0;
-  int _darkAppThemeIndex = 0;
+  AppPalette _lightPalette = AppPalette.defaultLight;
+  AppPalette _darkPalette = AppPalette.defaultDark;
   ThemeMode _themeMode = ThemeMode.system;
   String _tmdbApiKey = '';
 
@@ -35,8 +39,6 @@ class SettingsProvider with ChangeNotifier {
   bool get hideNonReleased => _hideNonReleased;
   bool get notificationCenterDebug => _notificationCenterDebug;
 
-  int get lightAppThemeIndex => _lightAppThemeIndex;
-  int get darkAppThemeIndex => _darkAppThemeIndex;
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
 
@@ -46,8 +48,8 @@ class SettingsProvider with ChangeNotifier {
   /// Locale forced on the app, or `null` to let Flutter follow the device.
   Locale? get locale => appLanguageOverride?.locale;
 
-  AppPalette get lightPalette => lightThemes[_lightAppThemeIndex].palette;
-  AppPalette get darkPalette => darkThemes[_darkAppThemeIndex].palette;
+  AppPalette get lightPalette => _lightPalette;
+  AppPalette get darkPalette => _darkPalette;
 
   void _loadSettings() {
     // Only override the in-memory default if a persisted value exists.
@@ -66,15 +68,18 @@ class SettingsProvider with ChangeNotifier {
     _notificationCenterDebug =
         _prefs.getBool('notificationCenterDebug') ?? false;
 
-    _lightAppThemeIndex = _prefs.getInt('lightAppTheme') ?? 0;
-    if (_lightAppThemeIndex < 0 || _lightAppThemeIndex >= lightThemes.length) {
-      _lightAppThemeIndex = 0;
-    }
-
-    _darkAppThemeIndex = _prefs.getInt('darkAppTheme') ?? 0;
-    if (_darkAppThemeIndex < 0 || _darkAppThemeIndex >= darkThemes.length) {
-      _darkAppThemeIndex = 0;
-    }
+    // Palettes are stored by stable identifier. Up to v1.3.0 they were
+    // stored as an index (`lightAppTheme` / `darkAppTheme`) into lists of
+    // palettes that no longer exist: those keys are neither read nor
+    // deleted, so such an install starts on the default palettes.
+    _lightPalette = AppPalette.fromStorageId(
+      _prefs.getString(lightPaletteKey),
+      Brightness.light,
+    );
+    _darkPalette = AppPalette.fromStorageId(
+      _prefs.getString(darkPaletteKey),
+      Brightness.dark,
+    );
 
     int themeModeIndex = _prefs.getInt('themeMode') ?? 0;
     if (themeModeIndex < 0 || themeModeIndex >= ThemeMode.values.length) {
@@ -117,15 +122,19 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setLightAppTheme(int themeIndex) async {
-    _lightAppThemeIndex = themeIndex;
-    await _prefs.setInt('lightAppTheme', themeIndex);
+  /// Selects the palette used in light mode. Ignores a dark palette.
+  Future<void> setLightPalette(AppPaletteId id) async {
+    if (id.brightness != Brightness.light) return;
+    _lightPalette = AppPalette.of(id);
+    await _prefs.setString(lightPaletteKey, id.name);
     notifyListeners();
   }
 
-  Future<void> setDarkAppTheme(int themeIndex) async {
-    _darkAppThemeIndex = themeIndex;
-    await _prefs.setInt('darkAppTheme', themeIndex);
+  /// Selects the palette used in dark mode. Ignores a light palette.
+  Future<void> setDarkPalette(AppPaletteId id) async {
+    if (id.brightness != Brightness.dark) return;
+    _darkPalette = AppPalette.of(id);
+    await _prefs.setString(darkPaletteKey, id.name);
     notifyListeners();
   }
 

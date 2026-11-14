@@ -422,6 +422,42 @@ abstract class AppLocalizations {
   /// **'Dark Theme'**
   String get settingsDarkTheme;
 
+  /// No description provided for @paletteNamePapier.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper'**
+  String get paletteNamePapier;
+
+  /// No description provided for @paletteNameSable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sand'**
+  String get paletteNameSable;
+
+  /// No description provided for @paletteNameBrume.
+  ///
+  /// In en, this message translates to:
+  /// **'Mist'**
+  String get paletteNameBrume;
+
+  /// No description provided for @paletteNameEncre.
+  ///
+  /// In en, this message translates to:
+  /// **'Ink'**
+  String get paletteNameEncre;
+
+  /// No description provided for @paletteNameNuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Night'**
+  String get paletteNameNuit;
+
+  /// No description provided for @paletteNameOled.
+  ///
+  /// In en, this message translates to:
+  /// **'OLED black'**
+  String get paletteNameOled;
+
   /// No description provided for @navProfile.
   ///
   /// In en, this message translates to:

@@ -11,7 +11,6 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 enum SeenSort { dateDesc, dateAsc, nameAsc, nameDesc }
@@ -262,10 +261,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
     final filteredItems = _getFilteredAndSortedItems(allSeenItems, provider);
     final groupedItems = _groupItems(filteredItems);
 
-    final settings = context.watch<SettingsProvider>();
-    final palette = Theme.of(context).brightness == Brightness.dark
-        ? settings.darkPalette
-        : settings.lightPalette;
+    final palette = context.appColors;
 
     return Scaffold(
       appBar: AppBar(
@@ -389,7 +385,7 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                       padding: const EdgeInsets.only(right: 20),
                       child: Icon(
                         Icons.delete,
-                        color: contrastingForeground(context.appColors.error),
+                        color: context.appColors.onDanger,
                       ),
                     ),
                     confirmDismiss: (direction) {

@@ -99,7 +99,7 @@ void main() {
         ),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: AppPalette.papier.toThemeData(),
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

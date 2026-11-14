@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 
@@ -12,10 +12,7 @@ class MediaListManager extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
-    final settings = context.watch<SettingsProvider>();
-    final palette = Theme.of(context).brightness == Brightness.dark
-        ? settings.darkPalette
-        : settings.lightPalette;
+    final palette = context.appColors;
 
     final otherLists = provider.listNames
         .where((name) => name != 'watchlist')

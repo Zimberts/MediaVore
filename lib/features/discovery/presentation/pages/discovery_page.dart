@@ -585,7 +585,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                           width: double.infinity,
                                           child: Icon(
                                             Icons.movie,
-                                            color: colors.comments,
+                                            color: colors.text2,
                                           ),
                                         ),
                                 ),
@@ -596,7 +596,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: isFinished
-                                            ? colors.badgeBgSeen
+                                            ? colors.seenBadge
                                             : colors.badgeBg,
                                         shape: BoxShape.circle,
                                         border: Border.all(
@@ -646,7 +646,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                     ? Icons.tv
                                     : Icons.movie,
                                 size: 12,
-                                color: colors.comments,
+                                color: colors.text2,
                               ),
                               const SizedBox(width: 4),
                               Flexible(
@@ -732,7 +732,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                       color: colors.placeholder,
                                       child: Icon(
                                         Icons.movie,
-                                        color: colors.comments,
+                                        color: colors.text2,
                                       ),
                                     ),
                                   Positioned(
@@ -886,7 +886,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: isFinished
-                                        ? colors.badgeBgSeen
+                                        ? colors.seenBadge
                                         : colors.badgeBg,
                                     shape: BoxShape.circle,
                                     border: Border.all(
