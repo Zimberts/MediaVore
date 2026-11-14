@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:isar_community/isar.dart';
@@ -290,7 +291,9 @@ class _MediaVoreAppState extends State<MediaVoreApp>
               Intl.defaultLocale = Localizations.localeOf(
                 context,
               ).toLanguageTag();
-              return child!;
+              // Above the navigator: feedback messages stay visible over
+              // pushed pages, sheets and dialogs.
+              return AppMessageHost(child: child!);
             },
           ),
           theme: settings.lightPalette.toThemeData(),

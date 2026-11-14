@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
@@ -76,14 +77,15 @@ void main() {
       return Future.value();
     });
 
-    when(
-      () => repo.addQuickAddItem(any()),
-    ).thenAnswer((inv) async {
+    when(() => repo.addQuickAddItem(any())).thenAnswer((inv) async {
       // Simulate repopulation by restoring the quick-add item
       when(() => repo.getQuickAddItems()).thenAnswer((_) async => [qa]);
     });
 
-    settingsProvider = SettingsProvider(MockSharedPreferences(), FakeTmdbCredentialStore());
+    settingsProvider = SettingsProvider(
+      MockSharedPreferences(),
+      FakeTmdbCredentialStore(),
+    );
     provider = SearchProvider(repo);
     await provider.loadQuickAddItems();
   });
@@ -94,6 +96,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
+        // Feedback messages are shown by the app-level host.
+        builder: (context, child) => AppMessageHost(child: child!),
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<SearchProvider>.value(value: provider),
@@ -120,7 +124,7 @@ void main() {
     await tester.drag(find.text('Test Show'), const Offset(-400, 0));
     await tester.pumpAndSettle();
 
-    // SnackBar with Undo should appear
+    // Message with Undo should appear
     expect(find.text('Streak opted out of Quick Add'), findsOneWidget);
     expect(find.text('Undo'), findsOneWidget);
 
@@ -131,8 +135,6 @@ void main() {
     verify(
       () => repo.clearOptOutSeries(100, seasonNumber: 1, episodeNumber: 2),
     ).called(1);
-    verify(
-      () => repo.addQuickAddItem(any()),
-    ).called(1);
+    verify(() => repo.addQuickAddItem(any())).called(1);
   });
 }
