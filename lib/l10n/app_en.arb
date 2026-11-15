@@ -1226,5 +1226,211 @@
     }
   },
   "mediaTypeMovie": "Movie",
-  "mediaTypeTv": "Series"
+  "mediaTypeTv": "Series",
+  "detailEpisodeRuntime": "~{minutes} min",
+  "@detailEpisodeRuntime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "detailSeenTimes": "Seen {count} times",
+  "@detailSeenTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailSeriesFinished": "Finished",
+  "detailMoreActions": "More actions",
+  "detailShare": "Share",
+  "detailShareHint": "Link to the title page",
+  "detailAddToList": "Add to “{name}”",
+  "@detailAddToList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailInListRemove": "In “{name}”, tap to remove",
+  "@detailInListRemove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailChooseList": "Choose a list",
+  "detailChooseListOthers": "{count, plural, =0{Choose another list} =1{Choose another list (in 1 other)} other{Choose another list (in {count} others)}}",
+  "@detailChooseListOthers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailAddedToList": "Added to “{name}”",
+  "@detailAddedToList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailRemovedFromList": "Removed from “{name}”",
+  "@detailRemovedFromList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailReadMore": "Read more",
+  "detailReadLess": "Show less",
+  "detailInfos": "Info",
+  "detailInfoDirection": "Directed by",
+  "detailInfoCreation": "Created by",
+  "detailOriginalTitle": "Original title",
+  "detailCountry": "Country",
+  "detailLanguage": "Language",
+  "detailCountryName": "{code, select, US{United States} GB{United Kingdom} FR{France} DE{Germany} IT{Italy} ES{Spain} CA{Canada} JP{Japan} KR{South Korea} CN{China} HK{Hong Kong} TW{Taiwan} IN{India} AU{Australia} NZ{New Zealand} BE{Belgium} CH{Switzerland} NL{Netherlands} SE{Sweden} NO{Norway} DK{Denmark} FI{Finland} IS{Iceland} IE{Ireland} PT{Portugal} BR{Brazil} MX{Mexico} AR{Argentina} CL{Chile} CO{Colombia} RU{Russia} PL{Poland} CZ{Czechia} AT{Austria} HU{Hungary} GR{Greece} TR{Turkey} IL{Israel} IR{Iran} EG{Egypt} ZA{South Africa} TH{Thailand} ID{Indonesia} PH{Philippines} UA{Ukraine} RO{Romania} LU{Luxembourg} other{{code}}}",
+  "@detailCountryName": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "detailLanguageName": "{code, select, en{English} fr{French} de{German} it{Italian} es{Spanish} pt{Portuguese} ja{Japanese} ko{Korean} zh{Chinese} cn{Cantonese} hi{Hindi} ru{Russian} sv{Swedish} no{Norwegian} da{Danish} fi{Finnish} nl{Dutch} pl{Polish} tr{Turkish} ar{Arabic} he{Hebrew} fa{Persian} th{Thai} id{Indonesian} el{Greek} cs{Czech} hu{Hungarian} ro{Romanian} uk{Ukrainian} is{Icelandic} ta{Tamil} te{Telugu} tl{Tagalog} xx{No language} other{{code}}}",
+  "@detailLanguageName": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "detailInYourLists": "In your lists: {lists}",
+  "@detailInYourLists": {
+    "placeholders": {
+      "lists": {
+        "type": "String"
+      }
+    }
+  },
+  "detailRating": "{rating} out of 10 on TMDB",
+  "@detailRating": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "inProgressTitle": "In progress · {count}",
+  "@inProgressTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inProgressPausedChip": "Paused · {count}",
+  "@inProgressPausedChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inProgressSortRecent": "Recent",
+  "inProgressSortAlmostDone": "Almost done",
+  "inProgressSortAlphabetical": "A–Z",
+  "inProgressEmptyFiltered": "Nothing matches these filters.",
+  "inProgressMoreActions": "More actions for {title}",
+  "@inProgressMoreActions": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inProgressRemoveFromQuickAdd": "Remove from quick add",
+  "inProgressRemoveFromQuickAddSubtitle": "The series will no longer appear in In progress",
+  "inProgressOpenDetails": "Open details",
+  "inProgressRemovedMessage": "Series removed from quick add",
+  "inProgressRemovedSection": "Removed from quick add · {count}",
+  "@inProgressRemovedSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inProgressRestore": "Restore",
+  "inProgressRestoreLabel": "Restore {title}",
+  "@inProgressRestoreLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "inProgressRestoredMessage": "Series restored",
+  "debugMissingEpisodesTitle": "Debug — missing episodes",
+  "debugMissingEpisodesSubtitle": "Expected next episodes that are not shown above.",
+  "debugRecompute": "Recompute",
+  "debugNothingOmitted": "Nothing omitted.",
+  "debugGroupCount": "{title} · {count}",
+  "@debugGroupCount": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugTitleWithEpisode": "{title} · {episode}",
+  "@debugTitleWithEpisode": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "episode": {
+        "type": "String"
+      }
+    }
+  },
+  "debugTitleAfterEpisode": "{title} · after {episode}",
+  "@debugTitleAfterEpisode": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "episode": {
+        "type": "String"
+      }
+    }
+  },
+  "debugQuickAddOptedOut": "Removed from quick add",
+  "debugQuickAddOptedOutDetail": "Removed manually",
+  "debugQuickAddNotReleased": "Next episode not aired yet",
+  "debugQuickAddNotReleasedDetail": "Airs on {date}",
+  "@debugQuickAddNotReleasedDetail": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "debugQuickAddNotReleasedUnknown": "Air date unknown",
+  "debugQuickAddNotPopulated": "Not added to quick add",
+  "debugQuickAddNotPopulatedDetail": "Aired episode missing from quick add: try Recompute",
+  "debugQuickAddNoAirDate": "No air date",
+  "debugQuickAddNoAirDateDetail": "The episode has no known air date",
+  "debugQuickAddNoCacheData": "Season data not cached",
+  "debugQuickAddNoCacheDataDetail": "Tap Recompute to fetch the season"
 }

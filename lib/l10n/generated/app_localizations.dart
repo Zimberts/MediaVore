@@ -3055,6 +3055,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Series'**
   String get mediaTypeTv;
+
+  /// No description provided for @detailEpisodeRuntime.
+  ///
+  /// In en, this message translates to:
+  /// **'~{minutes} min'**
+  String detailEpisodeRuntime(int minutes);
+
+  /// No description provided for @detailSeenTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen {count} times'**
+  String detailSeenTimes(int count);
+
+  /// No description provided for @detailSeriesFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get detailSeriesFinished;
+
+  /// No description provided for @detailMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get detailMoreActions;
+
+  /// No description provided for @detailShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get detailShare;
+
+  /// No description provided for @detailShareHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Link to the title page'**
+  String get detailShareHint;
+
+  /// No description provided for @detailAddToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to “{name}”'**
+  String detailAddToList(String name);
+
+  /// No description provided for @detailInListRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'In “{name}”, tap to remove'**
+  String detailInListRemove(String name);
+
+  /// No description provided for @detailChooseList.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a list'**
+  String get detailChooseList;
+
+  /// No description provided for @detailChooseListOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Choose another list} =1{Choose another list (in 1 other)} other{Choose another list (in {count} others)}}'**
+  String detailChooseListOthers(int count);
+
+  /// No description provided for @detailAddedToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to “{name}”'**
+  String detailAddedToList(String name);
+
+  /// No description provided for @detailRemovedFromList.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from “{name}”'**
+  String detailRemovedFromList(String name);
+
+  /// No description provided for @detailReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get detailReadMore;
+
+  /// No description provided for @detailReadLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get detailReadLess;
+
+  /// No description provided for @detailInfos.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get detailInfos;
+
+  /// No description provided for @detailInfoDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Directed by'**
+  String get detailInfoDirection;
+
+  /// No description provided for @detailInfoCreation.
+  ///
+  /// In en, this message translates to:
+  /// **'Created by'**
+  String get detailInfoCreation;
+
+  /// No description provided for @detailOriginalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Original title'**
+  String get detailOriginalTitle;
+
+  /// No description provided for @detailCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get detailCountry;
+
+  /// No description provided for @detailLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get detailLanguage;
+
+  /// No description provided for @detailCountryName.
+  ///
+  /// In en, this message translates to:
+  /// **'{code, select, US{United States} GB{United Kingdom} FR{France} DE{Germany} IT{Italy} ES{Spain} CA{Canada} JP{Japan} KR{South Korea} CN{China} HK{Hong Kong} TW{Taiwan} IN{India} AU{Australia} NZ{New Zealand} BE{Belgium} CH{Switzerland} NL{Netherlands} SE{Sweden} NO{Norway} DK{Denmark} FI{Finland} IS{Iceland} IE{Ireland} PT{Portugal} BR{Brazil} MX{Mexico} AR{Argentina} CL{Chile} CO{Colombia} RU{Russia} PL{Poland} CZ{Czechia} AT{Austria} HU{Hungary} GR{Greece} TR{Turkey} IL{Israel} IR{Iran} EG{Egypt} ZA{South Africa} TH{Thailand} ID{Indonesia} PH{Philippines} UA{Ukraine} RO{Romania} LU{Luxembourg} other{{code}}}'**
+  String detailCountryName(String code);
+
+  /// No description provided for @detailLanguageName.
+  ///
+  /// In en, this message translates to:
+  /// **'{code, select, en{English} fr{French} de{German} it{Italian} es{Spanish} pt{Portuguese} ja{Japanese} ko{Korean} zh{Chinese} cn{Cantonese} hi{Hindi} ru{Russian} sv{Swedish} no{Norwegian} da{Danish} fi{Finnish} nl{Dutch} pl{Polish} tr{Turkish} ar{Arabic} he{Hebrew} fa{Persian} th{Thai} id{Indonesian} el{Greek} cs{Czech} hu{Hungarian} ro{Romanian} uk{Ukrainian} is{Icelandic} ta{Tamil} te{Telugu} tl{Tagalog} xx{No language} other{{code}}}'**
+  String detailLanguageName(String code);
+
+  /// No description provided for @detailInYourLists.
+  ///
+  /// In en, this message translates to:
+  /// **'In your lists: {lists}'**
+  String detailInYourLists(String lists);
+
+  /// No description provided for @detailRating.
+  ///
+  /// In en, this message translates to:
+  /// **'{rating} out of 10 on TMDB'**
+  String detailRating(String rating);
+
+  /// No description provided for @inProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress · {count}'**
+  String inProgressTitle(int count);
+
+  /// No description provided for @inProgressPausedChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused · {count}'**
+  String inProgressPausedChip(int count);
+
+  /// No description provided for @inProgressSortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get inProgressSortRecent;
+
+  /// No description provided for @inProgressSortAlmostDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost done'**
+  String get inProgressSortAlmostDone;
+
+  /// No description provided for @inProgressSortAlphabetical.
+  ///
+  /// In en, this message translates to:
+  /// **'A–Z'**
+  String get inProgressSortAlphabetical;
+
+  /// No description provided for @inProgressEmptyFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches these filters.'**
+  String get inProgressEmptyFiltered;
+
+  /// No description provided for @inProgressMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions for {title}'**
+  String inProgressMoreActions(String title);
+
+  /// No description provided for @inProgressRemoveFromQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from quick add'**
+  String get inProgressRemoveFromQuickAdd;
+
+  /// No description provided for @inProgressRemoveFromQuickAddSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The series will no longer appear in In progress'**
+  String get inProgressRemoveFromQuickAddSubtitle;
+
+  /// No description provided for @inProgressOpenDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Open details'**
+  String get inProgressOpenDetails;
+
+  /// No description provided for @inProgressRemovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Series removed from quick add'**
+  String get inProgressRemovedMessage;
+
+  /// No description provided for @inProgressRemovedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from quick add · {count}'**
+  String inProgressRemovedSection(int count);
+
+  /// No description provided for @inProgressRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get inProgressRestore;
+
+  /// No description provided for @inProgressRestoreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore {title}'**
+  String inProgressRestoreLabel(String title);
+
+  /// No description provided for @inProgressRestoredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Series restored'**
+  String get inProgressRestoredMessage;
+
+  /// No description provided for @debugMissingEpisodesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug — missing episodes'**
+  String get debugMissingEpisodesTitle;
+
+  /// No description provided for @debugMissingEpisodesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected next episodes that are not shown above.'**
+  String get debugMissingEpisodesSubtitle;
+
+  /// No description provided for @debugRecompute.
+  ///
+  /// In en, this message translates to:
+  /// **'Recompute'**
+  String get debugRecompute;
+
+  /// No description provided for @debugNothingOmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing omitted.'**
+  String get debugNothingOmitted;
+
+  /// No description provided for @debugGroupCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} · {count}'**
+  String debugGroupCount(String title, int count);
+
+  /// No description provided for @debugTitleWithEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} · {episode}'**
+  String debugTitleWithEpisode(String title, String episode);
+
+  /// No description provided for @debugTitleAfterEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} · after {episode}'**
+  String debugTitleAfterEpisode(String title, String episode);
+
+  /// No description provided for @debugQuickAddOptedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from quick add'**
+  String get debugQuickAddOptedOut;
+
+  /// No description provided for @debugQuickAddOptedOutDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed manually'**
+  String get debugQuickAddOptedOutDetail;
+
+  /// No description provided for @debugQuickAddNotReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Next episode not aired yet'**
+  String get debugQuickAddNotReleased;
+
+  /// No description provided for @debugQuickAddNotReleasedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Airs on {date}'**
+  String debugQuickAddNotReleasedDetail(String date);
+
+  /// No description provided for @debugQuickAddNotReleasedUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Air date unknown'**
+  String get debugQuickAddNotReleasedUnknown;
+
+  /// No description provided for @debugQuickAddNotPopulated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not added to quick add'**
+  String get debugQuickAddNotPopulated;
+
+  /// No description provided for @debugQuickAddNotPopulatedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Aired episode missing from quick add: try Recompute'**
+  String get debugQuickAddNotPopulatedDetail;
+
+  /// No description provided for @debugQuickAddNoAirDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No air date'**
+  String get debugQuickAddNoAirDate;
+
+  /// No description provided for @debugQuickAddNoAirDateDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'The episode has no known air date'**
+  String get debugQuickAddNoAirDateDetail;
+
+  /// No description provided for @debugQuickAddNoCacheData.
+  ///
+  /// In en, this message translates to:
+  /// **'Season data not cached'**
+  String get debugQuickAddNoCacheData;
+
+  /// No description provided for @debugQuickAddNoCacheDataDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Recompute to fetch the season'**
+  String get debugQuickAddNoCacheDataDetail;
 }
 
 class _AppLocalizationsDelegate

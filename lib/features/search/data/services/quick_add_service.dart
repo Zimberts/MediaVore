@@ -141,6 +141,51 @@ class QuickAddService {
     );
   }
 
+  /// Opt-outs of Quick Add, most recent first. The title comes from the
+  /// cached series, else from a viewing of it: local data only.
+  Future<List<QuickAddOptOut>> getQuickAddOptOuts() async {
+    final optOuts = await localDataSource.getOptOuts();
+    if (optOuts.isEmpty) return const [];
+
+    final cached = await cache.getItems([
+      for (final optOut in optOuts) (optOut.tmdbId, MediaType.tv),
+    ]);
+
+    final result = <QuickAddOptOut>[];
+    for (var i = 0; i < optOuts.length; i++) {
+      final optOut = optOuts[i];
+      String? storedTitle;
+      String? storedPoster;
+      if (cached[i] == null) {
+        final viewings = await localDataSource.getSeenStatus(
+          optOut.tmdbId,
+          'tv',
+        );
+        if (viewings.isNotEmpty) {
+          storedTitle = viewings.first.title;
+          storedPoster = viewings.first.posterPath;
+        }
+      }
+      final title = preferCachedTitle(cached[i], storedTitle);
+      result.add(
+        QuickAddOptOut(
+          tmdbId: optOut.tmdbId,
+          seasonNumber: optOut.seasonNumber,
+          episodeNumber: optOut.episodeNumber,
+          optedOutAt: optOut.optedOutAt,
+          title: title == null || title.isEmpty ? null : title,
+          posterPath: cached[i]?.posterPath ?? storedPoster,
+        ),
+      );
+    }
+
+    result.sort((a, b) {
+      final byDate = b.optedOutAt.compareTo(a.optedOutAt);
+      return byDate != 0 ? byDate : a.tmdbId.compareTo(b.tmdbId);
+    });
+    return result;
+  }
+
   /// Fills the missing runtime of TV quick-add entries from season details.
   Future<void> refreshQuickAddItems() async {
     final items = await localDataSource.getQuickAddItems();

@@ -249,6 +249,11 @@ abstract class MediaRepository {
     int? episodeNumber,
   });
 
+  /// QuickAdd: episodes the user removed from Quick Add, most recent first,
+  /// with the title of their series as known locally. Never reaches the
+  /// network.
+  Future<List<QuickAddOptOut>> getQuickAddOptOuts();
+
   /// Populate quick-add collection from existing seen history.
   /// If [tmdbId] is provided, only compute quick-add for that show.
   /// If [tailSeason]/[tailEpisode] are provided, only compute for that specific tail.
@@ -328,6 +333,28 @@ class QuickAddItem {
     this.title,
     this.posterPath,
     this.runtime,
+  });
+}
+
+/// An episode the user removed from Quick Add: its series stays out of
+/// "In progress" until the opt-out is cleared.
+class QuickAddOptOut {
+  final int tmdbId;
+  final int? seasonNumber;
+  final int? episodeNumber;
+  final DateTime optedOutAt;
+
+  /// Title of the series, or `null` when it is not known locally.
+  final String? title;
+  final String? posterPath;
+
+  QuickAddOptOut({
+    required this.tmdbId,
+    this.seasonNumber,
+    this.episodeNumber,
+    required this.optedOutAt,
+    this.title,
+    this.posterPath,
   });
 }
 

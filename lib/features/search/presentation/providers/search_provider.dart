@@ -69,6 +69,7 @@ class SearchProvider with ChangeNotifier {
   List<QuickAddItem> _quickAddItems = [];
   List<InProgressItem> _inProgressItems = [];
   List<MediaItem> _tonightListItems = [];
+  List<QuickAddOptOut> _quickAddOptOuts = [];
   List<QuickAddOmission> _quickAddOmissions = [];
   bool _isQuickAddOmissionsLoading = false;
 
@@ -108,6 +109,8 @@ class SearchProvider with ChangeNotifier {
       if (getSeenCount(item) == 0) item,
   ];
 
+  /// Episodes removed from Quick Add, most recent first.
+  List<QuickAddOptOut> get quickAddOptOuts => _quickAddOptOuts;
   List<QuickAddOmission> get quickAddOmissions => _quickAddOmissions;
   bool get isQuickAddOmissionsLoading => _isQuickAddOmissionsLoading;
   AppTab get selectedTab => _selectedTab;
@@ -337,6 +340,12 @@ class SearchProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('[SearchProvider] getInProgressItems error: $e');
       _inProgressItems = [];
+    }
+    try {
+      _quickAddOptOuts = await repository.getQuickAddOptOuts();
+    } catch (e) {
+      debugPrint('[SearchProvider] getQuickAddOptOuts error: $e');
+      _quickAddOptOuts = [];
     }
     notifyListeners();
   }
@@ -1217,6 +1226,18 @@ class SearchProvider with ChangeNotifier {
       seasonNumber: seasonNumber,
       episodeNumber: episodeNumber,
     );
+    await loadQuickAddItems();
+  }
+
+  /// Puts a series removed from Quick Add back: clears [optOut], then
+  /// computes its next episode again from the seen history.
+  Future<void> restoreQuickAddOptOut(QuickAddOptOut optOut) async {
+    await repository.clearOptOutSeries(
+      optOut.tmdbId,
+      seasonNumber: optOut.seasonNumber,
+      episodeNumber: optOut.episodeNumber,
+    );
+    await repository.populateQuickAddFromSeenHistory(tmdbId: optOut.tmdbId);
     await loadQuickAddItems();
   }
 

@@ -661,6 +661,11 @@ class MediaListLocalDataSource {
     });
   }
 
+  /// Every opt-out of Quick Add, in no particular order.
+  Future<List<QuickAddOptOutModel>> getOptOuts() async {
+    return await _isar.quickAddOptOutModels.where().findAll();
+  }
+
   Future<bool> isOptedOut(
     int tmdbId, {
     int? seasonNumber,

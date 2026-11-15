@@ -18,6 +18,7 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/home/presentation/providers/home_session_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -279,6 +280,7 @@ class _MediaVoreAppState extends State<MediaVoreApp>
         ),
         // Session states live above the tabs so that they survive a change
         // of tab.
+        ChangeNotifierProvider(create: (context) => HomeSessionProvider()),
         ChangeNotifierProvider(create: (context) => SwipeSessionProvider()),
         ChangeNotifierProvider(create: (context) => TogetherSessionProvider()),
       ],
