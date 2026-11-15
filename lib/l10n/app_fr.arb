@@ -457,5 +457,12 @@
   "discoverOfflineMessage": "vérifiez votre connexion et réessayez. Vos listes et votre historique restent disponibles.",
   "discoverSwipeSoonTitle": "Le mode Swiper arrive bientôt",
   "discoverSwipeSoonMessage": "Faites défiler des suggestions une à une pour remplir vos listes.",
-  "discoverConnectTmdb": "Connexion à TMDB"
+  "discoverConnectTmdb": "Connexion à TMDB",
+  "libraryTypeAll": "Tout",
+  "libraryTypeChip": "{label} · {count}",
+  "libraryListRowLabel": "{name}, {count, plural, =0{aucun élément} =1{1 élément} other{{count} éléments}}, {films, plural, =0{aucun film} =1{1 film} other{{films} films}}, {series, plural, =0{aucune série} =1{1 série} other{{series} séries}}",
+  "libraryListImported": "Liste « {name} » ajoutée",
+  "libraryListNameTaken": "Une liste nommée « {name} » existe déjà",
+  "libraryListEmptyForType": "Aucun titre de ce type dans cette liste",
+  "libraryListScope": "{title} · {type}"
 }

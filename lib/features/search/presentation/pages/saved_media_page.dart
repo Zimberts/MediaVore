@@ -22,14 +22,25 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_dialogs.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:mediavore/features/search/presentation/widgets/saved_media_list_tile.dart';
 import 'package:mediavore/features/search/presentation/widgets/saved_media_grid_item.dart';
 import 'package:mediavore/features/search/presentation/widgets/saved_media_swipe_item.dart';
 
 class SavedMediaPage extends StatefulWidget {
-  const SavedMediaPage({super.key});
+  const SavedMediaPage({
+    super.key,
+    this.initialList = 'watchlist',
+    this.typeFilter,
+  });
+
+  /// List shown when the page opens.
+  final String initialList;
+
+  /// Restricts the content to one media type (the filter of the Library
+  /// tab); `null` shows every type.
+  final MediaType? typeFilter;
 
   @override
   State<SavedMediaPage> createState() => SavedMediaPageState();
@@ -42,7 +53,7 @@ enum _ListsMenuAction { share, sort }
 
 class SavedMediaPageState extends State<SavedMediaPage> {
   late final MediaRepository _mediaRepository;
-  String _selectedList = 'watchlist';
+  late String _selectedList = widget.initialList;
   Future<List<MediaItem>>? _savedMediaFuture;
   SortMethod _sortMethod = SortMethod.manual;
   bool _isReversed = false;
@@ -57,7 +68,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   Color? _lastThemeColor;
 
   // Sync state tracking for external list mutations
-  String _lastSelectedList = 'watchlist';
+  late String _lastSelectedList = widget.initialList;
   Set<String> _lastListSet = {};
   int? _lastLanguageRevision;
 
@@ -306,6 +317,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   ) {
     List<MediaItem> result = List.from(items);
 
+    final typeFilter = widget.typeFilter;
+    if (typeFilter != null) {
+      result = result.where((item) => item.mediaType == typeFilter).toList();
+    }
+
     if (settings.hideNonReleased) {
       final now = DateTime.now();
       result = result.where((item) {
@@ -436,7 +452,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               title: Text(context.l10n.listsScanQr),
               onTap: () {
                 Navigator.pop(context);
-                _showScanner();
+                importListFromQr(this.context).then(_openImportedList);
               },
             ),
             ListTile(
@@ -444,7 +460,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
               title: Text(context.l10n.listsImportViaLink),
               onTap: () {
                 Navigator.pop(context);
-                _showImportLinkDialog(provider);
+                importListFromLink(this.context).then(_openImportedList);
               },
             ),
             const Divider(),
@@ -638,165 +654,11 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     );
   }
 
-  void _showScanner() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.8,
-        child: Column(
-          children: [
-            AppBar(
-              title: Text(context.l10n.listsScanTitle),
-              leading: IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: context.l10n.commonClose,
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            Expanded(
-              child: MobileScanner(
-                onDetect: (capture) {
-                  final List<Barcode> barcodes = capture.barcodes;
-                  for (final barcode in barcodes) {
-                    final String? code = barcode.rawValue;
-                    if (code != null &&
-                        (code.startsWith('mediavore://share') ||
-                            code.startsWith('https://mediavore.app/share'))) {
-                      Navigator.pop(context);
-                      _handleScannedLink(code);
-                      break;
-                    }
-                  }
-                },
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Text(context.l10n.listsScanHint),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _handleScannedLink(String link) {
-    try {
-      final uri = Uri.parse(link);
-      final name = uri.queryParameters['name'];
-      final itemsStr = uri.queryParameters['items'];
-
-      if (name != null && itemsStr != null) {
-        final items = itemsStr.split(',');
-        _showImportConfirmationDialog(
-          context.read<SearchProvider>(),
-          name,
-          items,
-        );
-      }
-    } catch (e) {
-      debugPrint('[SavedMediaPage] scanned link handling failed: $e');
-    }
-  }
-
-  void _showImportLinkDialog(SearchProvider provider) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.listsImportViaLink),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: context.l10n.listsPasteLinkHint,
-            labelText: context.l10n.listsShareLinkLabel,
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () {
-              final url = controller.text.trim();
-              if (url.isEmpty) return;
-
-              try {
-                final uri = Uri.parse(url);
-                final name = uri.queryParameters['name'];
-                final itemsStr = uri.queryParameters['items'];
-
-                if (name != null && itemsStr != null) {
-                  final items = itemsStr.split(',');
-                  Navigator.pop(context);
-                  _showImportConfirmationDialog(provider, name, items);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.l10n.listsInvalidLink)),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.l10n.listsCouldNotParseLink)),
-                );
-              }
-            },
-            child: Text(context.l10n.commonImport),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showImportConfirmationDialog(
-    SearchProvider provider,
-    String suggestedName,
-    List<String> entries,
-  ) {
-    final controller = TextEditingController(text: suggestedName);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.listsConfirmImport),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.l10n.importListMessage(entries.length)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: context.l10n.importListNameLabel,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              await provider.importList(controller.text, entries);
-              if (mounted) {
-                navigator.pop();
-                setState(() {
-                  _selectedList = controller.text;
-                });
-                loadSavedMedia();
-              }
-            },
-            child: Text(context.l10n.commonConfirm),
-          ),
-        ],
-      ),
-    );
+  /// Shows the list that was just imported, if any.
+  void _openImportedList(String? name) {
+    if (name == null || !mounted) return;
+    setState(() => _selectedList = name);
+    loadSavedMedia();
   }
 
   void _showSortOptions() {
@@ -990,7 +852,17 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.l10n.navMyLists,
+                        switch (widget.typeFilter) {
+                          MediaType.movie => context.l10n.libraryListScope(
+                            context.l10n.navMyLists,
+                            context.l10n.commonMovies,
+                          ),
+                          MediaType.tv => context.l10n.libraryListScope(
+                            context.l10n.navMyLists,
+                            context.l10n.commonTvShows,
+                          ),
+                          _ => context.l10n.navMyLists,
+                        },
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(
                               color: Theme.of(
@@ -1085,9 +957,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     message: context.l10n.listsEmptyHint,
                     actionLabel: context.l10n.emptyStateSearchAction,
                     actionIcon: Icons.search,
-                    onAction: () => context
-                        .read<SearchProvider>()
-                        .setSelectedTab(AppTab.discover),
+                    onAction: () {
+                      context.read<SearchProvider>().setSelectedTab(
+                        AppTab.discover,
+                      );
+                      // Opened from the Library tab: go back to the shell.
+                      final navigator = Navigator.of(context);
+                      if (navigator.canPop()) navigator.pop();
+                    },
                   ),
                 );
               }
@@ -1096,6 +973,14 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 displayItems,
                 settings,
               );
+              if (sortedItems.isEmpty && widget.typeFilter != null) {
+                return ScrollableFill(
+                  child: EmptyState(
+                    icon: Icons.bookmark_border,
+                    title: context.l10n.libraryListEmptyForType,
+                  ),
+                );
+              }
 
               if (settings.displayMode == DisplayMode.grid) {
                 return _buildGridView(sortedItems, provider, settings);
@@ -1509,7 +1394,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                 title: Text(context.l10n.listsCreateNew),
                 onTap: () {
                   Navigator.pop(context);
-                  _showCreateListDialog(context, provider);
+                  _createList();
                 },
               ),
             ],
@@ -1574,46 +1459,19 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     );
   }
 
-  void _showCreateListDialog(BuildContext context, SearchProvider provider) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.listsNewList),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: context.l10n.listsNameHint),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final trimmedName = controller.text.trim();
-              if (trimmedName.isNotEmpty &&
-                  trimmedName.toLowerCase() != 'watchlist') {
-                await provider.createList(trimmedName);
-                setState(() {
-                  _selectedList = trimmedName;
-                  _currentItems.clear();
-                  _currentItemsList = null;
-                  _sortMethod = SortMethod.manual;
-                  _isReversed = false;
-                  _isEditMode = false;
-                  _selectedItems.clear();
-                });
-                loadSavedMedia();
-                if (context.mounted) Navigator.pop(context);
-              }
-            },
-            child: Text(context.l10n.commonCreate),
-          ),
-        ],
-      ),
-    );
+  Future<void> _createList() async {
+    final name = await showCreateListDialog(context);
+    if (name == null || !mounted) return;
+    setState(() {
+      _selectedList = name;
+      _currentItems.clear();
+      _currentItemsList = null;
+      _sortMethod = SortMethod.manual;
+      _isReversed = false;
+      _isEditMode = false;
+      _selectedItems.clear();
+    });
+    loadSavedMedia();
   }
 
   void _showDeleteListConfirm(

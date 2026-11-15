@@ -987,6 +987,50 @@ class SearchProvider with ChangeNotifier {
     return _listEntries[name]?.length ?? 0;
   }
 
+  /// Type of a list entry written as `id:type`; a movie when unspecified.
+  static MediaType listEntryType(String entry) =>
+      entry.endsWith(':tv') ? MediaType.tv : MediaType.movie;
+
+  /// Entries of [listName] of the given [type]; all of them when `null`.
+  List<String> getListEntriesOfType(String listName, MediaType? type) {
+    final entries = _listEntries[listName] ?? const <String>[];
+    if (type == null) return entries;
+    return entries.where((entry) => listEntryType(entry) == type).toList();
+  }
+
+  /// Number of entries of [type] across every list; all types when `null`.
+  int countListEntries(MediaType? type) {
+    var count = 0;
+    for (final name in _listNames) {
+      count += getListEntriesOfType(name, type).length;
+    }
+    return count;
+  }
+
+  /// First [limit] previews of [listName] of the given [type], in the order
+  /// of the list. Reads only as far into the list as needed.
+  Future<List<MediaItemPreview>> loadListPreviewsOfType(
+    String listName,
+    MediaType type, {
+    int limit = 3,
+  }) async {
+    final entries = _listEntries[listName] ?? const <String>[];
+    var found = 0;
+    var depth = 0;
+    for (var i = 0; i < entries.length && found < limit; i++) {
+      if (listEntryType(entries[i]) == type) {
+        found++;
+        depth = i + 1;
+      }
+    }
+    if (depth == 0) return const [];
+    final previews = await repository.getListPreviews(listName, limit: depth);
+    return previews
+        .where((preview) => preview.type == type.name)
+        .take(limit)
+        .toList();
+  }
+
   void setOffline(bool offline) {
     _isOffline = offline;
     notifyListeners();

@@ -19,7 +19,19 @@ enum SeenSort { dateDesc, dateAsc, nameAsc, nameDesc }
 enum SeenViewMode { history, library }
 
 class SeenHistoryPage extends StatefulWidget {
-  const SeenHistoryPage({super.key});
+  const SeenHistoryPage({
+    super.key,
+    this.typeFilter,
+    this.externalTypeFilter = false,
+  });
+
+  /// Media type imposed by the host (the Library tab); `null` shows all.
+  /// Only read when [externalTypeFilter] is set.
+  final MediaType? typeFilter;
+
+  /// The host owns the type filter: the page follows [typeFilter] and hides
+  /// its own type selector.
+  final bool externalTypeFilter;
 
   @override
   State<SeenHistoryPage> createState() => SeenHistoryPageState();
@@ -31,7 +43,10 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
   String _searchQuery = '';
   SeenSort _currentSort = SeenSort.dateDesc;
   SeenViewMode _viewMode = SeenViewMode.history;
-  MediaType? _filterType;
+  MediaType? _ownFilterType;
+
+  MediaType? get _filterType =>
+      widget.externalTypeFilter ? widget.typeFilter : _ownFilterType;
 
   @override
   void initState() {
@@ -221,30 +236,31 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                 ],
               ),
             ),
-            ListTile(
-              title: Text(context.l10n.seenMediaType),
-              trailing: DropdownButton<MediaType?>(
-                value: _filterType,
-                onChanged: (val) {
-                  setState(() => _filterType = val);
-                  setModalState(() {});
-                },
-                items: [
-                  DropdownMenuItem(
-                    value: null,
-                    child: Text(context.l10n.commonAll),
-                  ),
-                  DropdownMenuItem(
-                    value: MediaType.movie,
-                    child: Text(context.l10n.commonMovies),
-                  ),
-                  DropdownMenuItem(
-                    value: MediaType.tv,
-                    child: Text(context.l10n.commonTvShows),
-                  ),
-                ],
+            if (!widget.externalTypeFilter)
+              ListTile(
+                title: Text(context.l10n.seenMediaType),
+                trailing: DropdownButton<MediaType?>(
+                  value: _filterType,
+                  onChanged: (val) {
+                    setState(() => _ownFilterType = val);
+                    setModalState(() {});
+                  },
+                  items: [
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text(context.l10n.commonAll),
+                    ),
+                    DropdownMenuItem(
+                      value: MediaType.movie,
+                      child: Text(context.l10n.commonMovies),
+                    ),
+                    DropdownMenuItem(
+                      value: MediaType.tv,
+                      child: Text(context.l10n.commonTvShows),
+                    ),
+                  ],
+                ),
               ),
-            ),
             const SizedBox(height: 16),
           ],
         ),
