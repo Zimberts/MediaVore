@@ -209,6 +209,31 @@ void main() {
     });
   });
 
+  group('getTrendingMedia', () {
+    test('should return and cache the trends of the week', () async {
+      when(
+        () => mockRemoteDataSource.getTrendingMedia(page: 2),
+      ).thenAnswer((_) async => [tMediaItem]);
+
+      final result = await repository.getTrendingMedia(page: 2);
+
+      expect(result, equals([tMediaItem]));
+      verify(() => mockRemoteDataSource.getTrendingMedia(page: 2)).called(1);
+      verify(() => mockCache.cacheItems(any())).called(1);
+    });
+
+    test('should propagate a network failure', () async {
+      when(
+        () => mockRemoteDataSource.getTrendingMedia(page: 1),
+      ).thenThrow(const NetworkException('offline'));
+
+      expect(
+        () => repository.getTrendingMedia(),
+        throwsA(isA<NetworkException>()),
+      );
+    });
+  });
+
   group('searchMedia / discoverMedia error propagation', () {
     test('should rethrow ConfigurationException from searchMedia', () async {
       when(

@@ -1027,5 +1027,38 @@
         "type": "int"
       }
     }
-  }
+  },
+  "discoverModeExplore": "Explore",
+  "discoverModeSwipe": "Swipe",
+  "discoverSearchHint": "Films, series",
+  "discoverSearchHintWithBooks": "Films, series, books",
+  "discoverSearchLabel": "Search",
+  "discoverSearchClear": "Clear the search",
+  "discoverTypeAll": "All",
+  "discoverTypeFilms": "Films",
+  "discoverTypeSeries": "Series",
+  "discoverTypeBooks": "Books",
+  "discoverTrendingWeek": "Trending this week",
+  "discoverResults": "Results",
+  "discoverResultsCount": "Results · {count}",
+  "@discoverResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverNoResults": "No results with these filters.",
+  "discoverNoResultsFor": "No results for \"{query}\".",
+  "@discoverNoResultsFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverOfflineMessage": "check your connection and try again. Your lists and your history remain available.",
+  "discoverSwipeSoonTitle": "Swipe mode is coming soon",
+  "discoverSwipeSoonMessage": "Go through suggestions one by one to fill your lists.",
+  "discoverConnectTmdb": "Connect to TMDB"
 }

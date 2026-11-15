@@ -92,8 +92,11 @@ void main() {
     ).thenAnswer((_) async => []);
 
     searchProvider = SearchProvider(mockMediaRepository);
-    settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
-      });
+    settingsProvider = SettingsProvider(
+      mockSharedPreferences,
+      FakeTmdbCredentialStore(),
+    );
+  });
 
   Widget createWidgetUnderTest() {
     return MultiProvider(
@@ -132,28 +135,8 @@ void main() {
       ];
 
       when(
-        () => mockMediaRepository.discoverMedia(
-          type: MediaType.movie,
-          page: any(named: 'page'),
-          genreIds: any(named: 'genreIds'),
-          releaseYear: any(named: 'releaseYear'),
-          minRating: any(named: 'minRating'),
-          originalLanguage: any(named: 'originalLanguage'),
-          sortBy: any(named: 'sortBy'),
-        ),
-      ).thenAnswer((_) async => movieItems);
-
-      when(
-        () => mockMediaRepository.discoverMedia(
-          type: MediaType.tv,
-          page: any(named: 'page'),
-          genreIds: any(named: 'genreIds'),
-          releaseYear: any(named: 'releaseYear'),
-          minRating: any(named: 'minRating'),
-          originalLanguage: any(named: 'originalLanguage'),
-          sortBy: any(named: 'sortBy'),
-        ),
-      ).thenAnswer((_) async => tvItems);
+        () => mockMediaRepository.getTrendingMedia(page: any(named: 'page')),
+      ).thenAnswer((_) async => [...movieItems, ...tvItems]);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -165,7 +148,7 @@ void main() {
       expect(find.text('Discover'), findsOneWidget);
     });
 
-    testWidgets('toggles search bar and triggers auto-search', (
+    testWidgets('searches from the permanent field after the debounce', (
       WidgetTester tester,
     ) async {
       final movieItems = [
@@ -213,11 +196,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      // Tap search icon in Discovery AppBar
-      await tester.tap(find.byIcon(Icons.search));
-      await tester.pump();
-
-      // Verify TextField is present
+      // The field is always there: nothing to open.
       expect(find.byType(TextField), findsOneWidget);
 
       // Enter text
@@ -243,7 +222,7 @@ void main() {
       clearInteractions(mockMediaRepository);
 
       // Open filters
-      await tester.tap(find.byIcon(Icons.filter_list));
+      await tester.tap(find.byKey(const Key('discovery_filters')));
       await tester.pumpAndSettle();
 
       expect(find.text('Discovery Filters'), findsOneWidget);

@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/fixture_reader.dart';
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -70,6 +73,57 @@ void main() {
       expect(captured['with_genres'], '28,12');
       expect(captured['primary_release_year'], 2022);
       expect(captured['vote_average.gte'], 8.0);
+    });
+  });
+
+  group('getTrendingMedia', () {
+    void stubTrending() {
+      when(
+        () => mockDio.get(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: jsonDecode(fixture('trending_all_week.json')),
+          statusCode: 200,
+        ),
+      );
+    }
+
+    test('should call the weekly trending endpoint with the page', () async {
+      stubTrending();
+
+      await dataSource.getTrendingMedia(page: 2);
+
+      verify(
+        () => mockDio.get(
+          'https://api.themoviedb.org/3/trending/all/week',
+          queryParameters: any(
+            named: 'queryParameters',
+            that: containsPair('page', 2),
+          ),
+          options: any(named: 'options'),
+        ),
+      ).called(1);
+    });
+
+    test('should mix films and series and leave people out', () async {
+      stubTrending();
+
+      final result = await dataSource.getTrendingMedia();
+
+      expect(result.map((item) => (item.id, item.mediaType)), [
+        (1396, MediaType.tv),
+        (157336, MediaType.movie),
+      ]);
+      expect(result.first.title, 'Breaking Bad');
+      expect(result.first.posterPath, '/bb.jpg');
+      expect(result.first.voteAverage, 8.9);
+      expect(result.last.title, 'Interstellar');
+      expect(result.last.releaseDate, '2014-11-05');
     });
   });
 
@@ -294,6 +348,7 @@ void main() {
       'getRecommendedMedia': (d) => d.getRecommendedMedia(1, MediaType.movie),
       'getWatchProviders': (d) => d.getWatchProviders(1, MediaType.movie),
       'getVideos': (d) => d.getVideos(1, MediaType.movie),
+      'getTrendingMedia': (d) => d.getTrendingMedia(),
     };
 
     for (final entry in endpoints.entries) {

@@ -434,6 +434,27 @@ class MediaRemoteDataSource {
     });
   }
 
+  /// Films and series trending this week, mixed (`/trending/all/week`).
+  ///
+  /// People, which TMDB mixes in, are left out. Not enriched here, like
+  /// [discover].
+  Future<List<MediaItem>> getTrendingMedia({int page = 1}) {
+    return _guard('fetching trending media', () async {
+      final response = await _tmdbGet(
+        'https://api.themoviedb.org/3/trending/all/week',
+        queryParameters: {'page': page},
+      );
+      final List results = response.data['results'] ?? [];
+      return results
+          .map((m) => MediaItem.fromJson(Map<String, dynamic>.from(m as Map)))
+          .where(
+            (m) =>
+                m.mediaType == MediaType.movie || m.mediaType == MediaType.tv,
+          )
+          .toList();
+    });
+  }
+
   /// Fetches the movies an actor has been in.
   Future<List<MediaItem>> getActorMediaCredits(int actorId) {
     return _guard('fetching actor movie credits', () async {

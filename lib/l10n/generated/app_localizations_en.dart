@@ -1581,4 +1581,67 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get discoverModeExplore => 'Explore';
+
+  @override
+  String get discoverModeSwipe => 'Swipe';
+
+  @override
+  String get discoverSearchHint => 'Films, series';
+
+  @override
+  String get discoverSearchHintWithBooks => 'Films, series, books';
+
+  @override
+  String get discoverSearchLabel => 'Search';
+
+  @override
+  String get discoverSearchClear => 'Clear the search';
+
+  @override
+  String get discoverTypeAll => 'All';
+
+  @override
+  String get discoverTypeFilms => 'Films';
+
+  @override
+  String get discoverTypeSeries => 'Series';
+
+  @override
+  String get discoverTypeBooks => 'Books';
+
+  @override
+  String get discoverTrendingWeek => 'Trending this week';
+
+  @override
+  String get discoverResults => 'Results';
+
+  @override
+  String discoverResultsCount(int count) {
+    return 'Results · $count';
+  }
+
+  @override
+  String get discoverNoResults => 'No results with these filters.';
+
+  @override
+  String discoverNoResultsFor(String query) {
+    return 'No results for \"$query\".';
+  }
+
+  @override
+  String get discoverOfflineMessage =>
+      'check your connection and try again. Your lists and your history remain available.';
+
+  @override
+  String get discoverSwipeSoonTitle => 'Swipe mode is coming soon';
+
+  @override
+  String get discoverSwipeSoonMessage =>
+      'Go through suggestions one by one to fill your lists.';
+
+  @override
+  String get discoverConnectTmdb => 'Connect to TMDB';
 }

@@ -2737,6 +2737,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No title followed} =1{1 title followed} other{{count} titles followed}}'**
   String homeUpcomingSubtitle(int count);
+
+  /// No description provided for @discoverModeExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get discoverModeExplore;
+
+  /// No description provided for @discoverModeSwipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe'**
+  String get discoverModeSwipe;
+
+  /// No description provided for @discoverSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Films, series'**
+  String get discoverSearchHint;
+
+  /// No description provided for @discoverSearchHintWithBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Films, series, books'**
+  String get discoverSearchHintWithBooks;
+
+  /// No description provided for @discoverSearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get discoverSearchLabel;
+
+  /// No description provided for @discoverSearchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the search'**
+  String get discoverSearchClear;
+
+  /// No description provided for @discoverTypeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get discoverTypeAll;
+
+  /// No description provided for @discoverTypeFilms.
+  ///
+  /// In en, this message translates to:
+  /// **'Films'**
+  String get discoverTypeFilms;
+
+  /// No description provided for @discoverTypeSeries.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get discoverTypeSeries;
+
+  /// No description provided for @discoverTypeBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Books'**
+  String get discoverTypeBooks;
+
+  /// No description provided for @discoverTrendingWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Trending this week'**
+  String get discoverTrendingWeek;
+
+  /// No description provided for @discoverResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Results'**
+  String get discoverResults;
+
+  /// No description provided for @discoverResultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Results · {count}'**
+  String discoverResultsCount(int count);
+
+  /// No description provided for @discoverNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results with these filters.'**
+  String get discoverNoResults;
+
+  /// No description provided for @discoverNoResultsFor.
+  ///
+  /// In en, this message translates to:
+  /// **'No results for \"{query}\".'**
+  String discoverNoResultsFor(String query);
+
+  /// No description provided for @discoverOfflineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'check your connection and try again. Your lists and your history remain available.'**
+  String get discoverOfflineMessage;
+
+  /// No description provided for @discoverSwipeSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe mode is coming soon'**
+  String get discoverSwipeSoonTitle;
+
+  /// No description provided for @discoverSwipeSoonMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Go through suggestions one by one to fill your lists.'**
+  String get discoverSwipeSoonMessage;
+
+  /// No description provided for @discoverConnectTmdb.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to TMDB'**
+  String get discoverConnectTmdb;
 }
 
 class _AppLocalizationsDelegate

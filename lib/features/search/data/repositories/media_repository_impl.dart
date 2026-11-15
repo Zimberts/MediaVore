@@ -191,6 +191,15 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<List<MediaItem>> getTrendingMedia({int page = 1}) async {
+    await _ensureInitialized();
+    final results = await remoteDataSource.getTrendingMedia(page: page);
+    final enriched = await _details.enrichItems(results);
+    await _details.cacheItemsBestEffort(enriched, 'getTrendingMedia');
+    return enriched;
+  }
+
+  @override
   Future<void> validateTmdbCredential(String credential) =>
       remoteDataSource.validateCredential(credential);
 

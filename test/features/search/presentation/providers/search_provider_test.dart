@@ -71,7 +71,30 @@ void main() {
 
   group('SearchProvider - Discovery & Search Filters', () {
     test(
-      'searchMedia with empty query should call discoverMedia for both Movie and TV when filterType is null',
+      'searchMedia with empty query and no filter should load the trends of the week',
+      () async {
+        when(
+          () => mockRepository.getTrendingMedia(page: any(named: 'page')),
+        ).thenAnswer(
+          (_) async => [
+            const MediaItem(id: 1, title: 'A', overview: '', releaseDate: ''),
+          ],
+        );
+
+        await provider.searchMedia('');
+
+        verify(() => mockRepository.getTrendingMedia(page: 1)).called(1);
+        expect(provider.isTrending, isTrue);
+        expect(provider.items, hasLength(1));
+
+        await provider.fetchNextPage();
+        verify(() => mockRepository.getTrendingMedia(page: 2)).called(1);
+        expect(provider.items, hasLength(2));
+      },
+    );
+
+    test(
+      'searchMedia with empty query and a rating filter should call discoverMedia for both Movie and TV',
       () async {
         when(
           () => mockRepository.discoverMedia(
@@ -84,15 +107,28 @@ void main() {
           ),
         ).thenAnswer((_) async => []);
 
+        provider.setFilters(minRating: 7);
         await provider.searchMedia('');
 
         verify(
-          () => mockRepository.discoverMedia(page: 1, type: MediaType.movie),
+          () => mockRepository.discoverMedia(
+            page: 1,
+            minRating: 7,
+            type: MediaType.movie,
+          ),
         ).called(1);
         verify(
-          () => mockRepository.discoverMedia(page: 1, type: MediaType.tv),
+          () => mockRepository.discoverMedia(
+            page: 1,
+            minRating: 7,
+            type: MediaType.tv,
+          ),
         ).called(1);
         expect(provider.isDiscoverMode, isTrue);
+        expect(provider.isTrending, isFalse);
+        verifyNever(
+          () => mockRepository.getTrendingMedia(page: any(named: 'page')),
+        );
       },
     );
 
@@ -212,7 +248,7 @@ void main() {
 
     test('should set offline to true when network call fails', () async {
       when(
-        () => mockRepository.discoverMedia(page: any(named: 'page')),
+        () => mockRepository.getTrendingMedia(page: any(named: 'page')),
       ).thenThrow(const NetworkException('Connection failed'));
 
       await provider.searchMedia('');
@@ -225,10 +261,7 @@ void main() {
   group('SearchProvider - Search errors', () {
     void stubDiscoverThrows(Object error) {
       when(
-        () => mockRepository.discoverMedia(
-          page: any(named: 'page'),
-          type: any(named: 'type'),
-        ),
+        () => mockRepository.getTrendingMedia(page: any(named: 'page')),
       ).thenThrow(error);
     }
 
@@ -273,10 +306,7 @@ void main() {
       expect(provider.errorType, SearchErrorType.server);
 
       when(
-        () => mockRepository.discoverMedia(
-          page: any(named: 'page'),
-          type: any(named: 'type'),
-        ),
+        () => mockRepository.getTrendingMedia(page: any(named: 'page')),
       ).thenAnswer((_) async => []);
       await provider.searchMedia('');
 
