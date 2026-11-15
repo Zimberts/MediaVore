@@ -2151,4 +2151,106 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get debugQuickAddNoCacheDataDetail =>
       'Touchez Recalculer pour récupérer la saison';
+
+  @override
+  String upcomingTitle(int count) {
+    return 'À venir · $count';
+  }
+
+  @override
+  String get upcomingGroupReleased => 'Déjà sorties';
+
+  @override
+  String get upcomingGroupThisWeek => 'Cette semaine';
+
+  @override
+  String get upcomingGroupThisMonth => 'Ce mois-ci';
+
+  @override
+  String get upcomingGroupLater => 'Plus tard';
+
+  @override
+  String upcomingGroupCount(String label, int count) {
+    return '$label · $count';
+  }
+
+  @override
+  String upcomingUndatedRow(int count) {
+    return '$count sans date';
+  }
+
+  @override
+  String get upcomingUndatedRowSubtitle =>
+      'Renouvelées, prévues, épisodes à dater';
+
+  @override
+  String upcomingUndatedSection(int count) {
+    return 'Sans date · $count';
+  }
+
+  @override
+  String get upcomingNothingPlanned => 'Rien de prévu.';
+
+  @override
+  String upcomingDebugRow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sorties masquées',
+      one: '1 sortie masquée',
+      zero: '0 sortie masquée',
+    );
+    return 'Debug · $_temp0';
+  }
+
+  @override
+  String get upcomingDebugRowSubtitle => 'Voir les raisons';
+
+  @override
+  String upcomingMarkSeen(String title) {
+    return 'Marquer $title comme vu';
+  }
+
+  @override
+  String upcomingSeenMessage(String title) {
+    return 'Vu · $title';
+  }
+
+  @override
+  String get upcomingDisableAlert => 'Désactiver l\'alerte';
+
+  @override
+  String get upcomingDisableAlertSubtitle =>
+      'Le titre n\'apparaîtra plus dans À venir';
+
+  @override
+  String upcomingAlertDisabledMessage(String title) {
+    return 'Alerte désactivée · $title';
+  }
+
+  @override
+  String get debugHiddenReleasesTitle => 'Debug — sorties masquées';
+
+  @override
+  String get debugHiddenReleasesSubtitle =>
+      'Ces éléments existent dans la base mais sont omis ci-dessus.';
+
+  @override
+  String get debugReleaseAlreadySeen => 'Déjà vu';
+
+  @override
+  String get debugReleaseAlreadySeenDetail => 'Déjà dans l\'historique';
+
+  @override
+  String debugReleaseTooOld(int days) {
+    return 'Diffusé il y a plus de $days jours';
+  }
+
+  @override
+  String debugReleaseTooOldDetail(String date) {
+    return 'Date de diffusion enregistrée : $date';
+  }
+
+  @override
+  String get debugReleaseNoDate => 'Aucune date enregistrée';
 }

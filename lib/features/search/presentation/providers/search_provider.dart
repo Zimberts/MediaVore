@@ -979,6 +979,101 @@ class SearchProvider with ChangeNotifier {
     };
   }
 
+  /// Marks the release [item] as seen (the film, or the notified episode)
+  /// through [markAsSeen] and returns the action that undoes it: the viewing
+  /// just logged is deleted, the Quick Add queue is computed again and the
+  /// title returns to the watchlist if marking it had removed it.
+  Future<Future<void> Function()> markReleaseSeen(NotifiedItem item) async {
+    final seenDate = DateTime.now();
+    final wasInWatchlist = _watchlistIds.contains('${item.tmdbId}');
+    final isEpisode = item.type == MediaType.tv;
+
+    await markAsSeen(
+      SeenItem(
+        tmdbId: item.tmdbId,
+        type: item.type,
+        title: item.title,
+        posterPath: item.posterPath,
+        seenDate: seenDate,
+        seasonNumber: isEpisode ? item.seasonNumber : null,
+        episodeNumber: isEpisode ? item.episodeNumber : null,
+        runtime: item.runtime,
+      ),
+    );
+
+    // Refresh the title to find the next milestone to announce.
+    try {
+      await repository.getMediaDetails(item.tmdbId, type: item.type);
+    } catch (e) {
+      debugPrint('[SearchProvider] markReleaseSeen refresh failed: $e');
+    }
+    await loadNotifiedItems();
+
+    return () async {
+      final viewings = await repository.getSeenStatus(item.tmdbId, item.type);
+      for (final viewing in viewings) {
+        final id = viewing.id;
+        if (id != null && _sameInstant(viewing.seenDate, seenDate)) {
+          await repository.deleteSeenEntry(id);
+        }
+      }
+
+      if (isEpisode) {
+        // Drop the episode queued by this viewing, then let Quick Add find
+        // the next one again.
+        for (final queued in await repository.getQuickAddItems()) {
+          final id = queued.isarId;
+          if (id != null &&
+              queued.tmdbId == item.tmdbId &&
+              _sameInstant(queued.insertedAt, seenDate)) {
+            await repository.removeQuickAddItemById(id);
+          }
+        }
+        await repository.populateQuickAddFromSeenHistory(tmdbId: item.tmdbId);
+      }
+
+      if (wasInWatchlist && !_watchlistIds.contains('${item.tmdbId}')) {
+        try {
+          final details = await repository.getMediaDetails(
+            item.tmdbId,
+            type: item.type,
+          );
+          await toggleInList(details.item, 'watchlist');
+        } catch (e) {
+          debugPrint('[SearchProvider] undo watchlist restore failed: $e');
+        }
+      }
+
+      await loadAllSeenStatus();
+      await loadNotifiedItems();
+      await updateSeenDbSize();
+    };
+  }
+
+  MediaItem _releaseShell(NotifiedItem item) => MediaItem(
+    id: item.tmdbId,
+    title: item.title,
+    posterPath: item.posterPath,
+    overview: '',
+    releaseDate: item.releaseDate?.toIso8601String() ?? '',
+    mediaType: item.type,
+  );
+
+  /// Stops following the release [item]: it leaves "Upcoming". Returns the
+  /// action that follows it again, as it was (manual or automatic).
+  Future<Future<void> Function()> disableReleaseAlert(NotifiedItem item) async {
+    final shell = _releaseShell(item);
+    await repository.toggleNotification(shell);
+    await loadNotifiedItems();
+
+    return () async {
+      if (!await repository.isNotified(item.tmdbId, item.type)) {
+        await repository.toggleNotification(shell, autoNotify: item.autoNotify);
+      }
+      await loadNotifiedItems();
+    };
+  }
+
   Future<void> deleteSeenEntry(int id) async {
     await repository.deleteSeenEntry(id);
     await loadAllSeenStatus();

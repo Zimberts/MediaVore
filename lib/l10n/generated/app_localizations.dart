@@ -3397,6 +3397,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap Recompute to fetch the season'**
   String get debugQuickAddNoCacheDataDetail;
+
+  /// No description provided for @upcomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming · {count}'**
+  String upcomingTitle(int count);
+
+  /// No description provided for @upcomingGroupReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Already released'**
+  String get upcomingGroupReleased;
+
+  /// No description provided for @upcomingGroupThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get upcomingGroupThisWeek;
+
+  /// No description provided for @upcomingGroupThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get upcomingGroupThisMonth;
+
+  /// No description provided for @upcomingGroupLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get upcomingGroupLater;
+
+  /// No description provided for @upcomingGroupCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} · {count}'**
+  String upcomingGroupCount(String label, int count);
+
+  /// No description provided for @upcomingUndatedRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} without a date'**
+  String upcomingUndatedRow(int count);
+
+  /// No description provided for @upcomingUndatedRowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Renewed, planned, episodes to be dated'**
+  String get upcomingUndatedRowSubtitle;
+
+  /// No description provided for @upcomingUndatedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'No date · {count}'**
+  String upcomingUndatedSection(int count);
+
+  /// No description provided for @upcomingNothingPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing planned.'**
+  String get upcomingNothingPlanned;
+
+  /// No description provided for @upcomingDebugRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug · {count, plural, =1{1 hidden release} other{{count} hidden releases}}'**
+  String upcomingDebugRow(int count);
+
+  /// No description provided for @upcomingDebugRowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See the reasons'**
+  String get upcomingDebugRowSubtitle;
+
+  /// No description provided for @upcomingMarkSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {title} as seen'**
+  String upcomingMarkSeen(String title);
+
+  /// No description provided for @upcomingSeenMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen · {title}'**
+  String upcomingSeenMessage(String title);
+
+  /// No description provided for @upcomingDisableAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable the alert'**
+  String get upcomingDisableAlert;
+
+  /// No description provided for @upcomingDisableAlertSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The title will no longer appear in Upcoming'**
+  String get upcomingDisableAlertSubtitle;
+
+  /// No description provided for @upcomingAlertDisabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert disabled · {title}'**
+  String upcomingAlertDisabledMessage(String title);
+
+  /// No description provided for @debugHiddenReleasesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug — hidden releases'**
+  String get debugHiddenReleasesTitle;
+
+  /// No description provided for @debugHiddenReleasesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'These items exist in the database but are omitted above.'**
+  String get debugHiddenReleasesSubtitle;
+
+  /// No description provided for @debugReleaseAlreadySeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Already seen'**
+  String get debugReleaseAlreadySeen;
+
+  /// No description provided for @debugReleaseAlreadySeenDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in the history'**
+  String get debugReleaseAlreadySeenDetail;
+
+  /// No description provided for @debugReleaseTooOld.
+  ///
+  /// In en, this message translates to:
+  /// **'Aired more than {days} days ago'**
+  String debugReleaseTooOld(int days);
+
+  /// No description provided for @debugReleaseTooOldDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored air date: {date}'**
+  String debugReleaseTooOldDetail(String date);
+
+  /// No description provided for @debugReleaseNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No date stored'**
+  String get debugReleaseNoDate;
 }
 
 class _AppLocalizationsDelegate

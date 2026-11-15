@@ -1432,5 +1432,102 @@
   "debugQuickAddNoAirDate": "No air date",
   "debugQuickAddNoAirDateDetail": "The episode has no known air date",
   "debugQuickAddNoCacheData": "Season data not cached",
-  "debugQuickAddNoCacheDataDetail": "Tap Recompute to fetch the season"
+  "debugQuickAddNoCacheDataDetail": "Tap Recompute to fetch the season",
+  "upcomingTitle": "Upcoming · {count}",
+  "@upcomingTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingGroupReleased": "Already released",
+  "upcomingGroupThisWeek": "This week",
+  "upcomingGroupThisMonth": "This month",
+  "upcomingGroupLater": "Later",
+  "upcomingGroupCount": "{label} · {count}",
+  "@upcomingGroupCount": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingUndatedRow": "{count} without a date",
+  "@upcomingUndatedRow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingUndatedRowSubtitle": "Renewed, planned, episodes to be dated",
+  "upcomingUndatedSection": "No date · {count}",
+  "@upcomingUndatedSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingNothingPlanned": "Nothing planned.",
+  "upcomingDebugRow": "Debug · {count, plural, =1{1 hidden release} other{{count} hidden releases}}",
+  "@upcomingDebugRow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingDebugRowSubtitle": "See the reasons",
+  "upcomingMarkSeen": "Mark {title} as seen",
+  "@upcomingMarkSeen": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingSeenMessage": "Seen · {title}",
+  "@upcomingSeenMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingDisableAlert": "Disable the alert",
+  "upcomingDisableAlertSubtitle": "The title will no longer appear in Upcoming",
+  "upcomingAlertDisabledMessage": "Alert disabled · {title}",
+  "@upcomingAlertDisabledMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "debugHiddenReleasesTitle": "Debug — hidden releases",
+  "debugHiddenReleasesSubtitle": "These items exist in the database but are omitted above.",
+  "debugReleaseAlreadySeen": "Already seen",
+  "debugReleaseAlreadySeenDetail": "Already in the history",
+  "debugReleaseTooOld": "Aired more than {days} days ago",
+  "@debugReleaseTooOld": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "debugReleaseTooOldDetail": "Stored air date: {date}",
+  "@debugReleaseTooOldDetail": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "debugReleaseNoDate": "No date stored"
 }

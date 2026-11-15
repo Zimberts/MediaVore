@@ -8,6 +8,8 @@ Shared formatting, genre maps, sort helpers, and export/import serialization.
 - `lib/core/utils/export_import_serializer.dart`
 - `lib/core/utils/formatters.dart`
 - `lib/core/utils/genres.dart`
+- `lib/core/utils/notification_center_filter.dart`
+- `lib/core/utils/release_groups.dart`
 - `lib/core/utils/release_sort.dart`
 - `lib/core/utils/saga_sort.dart`
 - `lib/core/utils/watch_tail.dart`
@@ -18,6 +20,10 @@ Shared formatting, genre maps, sort helpers, and export/import serialization.
   spec is `DOCS/export-format.md` and must stay in sync (`.ai/rules/export-format.md`).
 - `genres.dart` hardcodes TMDB genre id→name maps; `release_sort.dart` / `saga_sort.dart`
   are pure, stateless sort helpers.
+- `notification_center_filter.dart` (`filterReleases`: visible releases and the hidden ones
+  with their reason) and `release_groups.dart` (`groupReleases`: released / this week /
+  this month / later / undated, and by calendar month) feed "Upcoming" on Home and
+  `UpcomingPage`. Both are pure and take the clock as a parameter.
 - `watch_tail.dart` derives the viewing `WatchTail` (the furthest-along seen episode by
   position, `seriesStartTail()` when there is no episode history) and selects the episode to
   anchor to: `findFirstAiredUnseenAfterTail` (aired and unseen) with `findNextEpisodeAfterTail`

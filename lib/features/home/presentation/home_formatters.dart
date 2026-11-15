@@ -59,3 +59,23 @@ String formatMediumDate(AppLocalizations l10n, DateTime date) {
     return DateFormat.yMMMd('en_US').format(date);
   }
 }
+
+/// Short month of a date badge, "Nov" / "nov.".
+String formatShortMonth(AppLocalizations l10n, DateTime date) {
+  try {
+    return DateFormat.MMM(l10n.localeName).format(date);
+  } on Exception {
+    return DateFormat.MMM('en_US').format(date);
+  }
+}
+
+/// Month title, "November 2026" / "Novembre 2026".
+String formatMonthYear(AppLocalizations l10n, DateTime month) {
+  String text;
+  try {
+    text = DateFormat.yMMMM(l10n.localeName).format(month);
+  } on Exception {
+    text = DateFormat.yMMMM('en_US').format(month);
+  }
+  return toBeginningOfSentenceCase(text);
+}
