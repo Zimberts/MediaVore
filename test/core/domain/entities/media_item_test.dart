@@ -183,4 +183,51 @@ void main() {
       expect(item.isComplete, isFalse);
     });
   });
+
+  group('originalTitle', () {
+    test('should read original_title for a movie', () {
+      final item = MediaItem.fromJson({
+        'id': 1,
+        'title': 'Spirited Away',
+        'original_title': '千と千尋の神隠し',
+        'media_type': 'movie',
+      });
+
+      expect(item.originalTitle, '千と千尋の神隠し');
+    });
+
+    test('should read original_name for a series', () {
+      final item = MediaItem.fromJson({
+        'id': 2,
+        'name': 'Money Heist',
+        'original_name': 'La casa de papel',
+        'media_type': 'tv',
+      });
+
+      expect(item.originalTitle, 'La casa de papel');
+    });
+
+    test('should survive a toJson / fromJson round trip', () {
+      const item = MediaItem(
+        id: 3,
+        title: 'Dark',
+        originalTitle: 'Dunkel',
+        overview: '',
+        releaseDate: '2017-12-01',
+        mediaType: MediaType.tv,
+      );
+
+      final restored = MediaItem.fromJson(item.toJson());
+
+      expect(restored.originalTitle, 'Dunkel');
+      expect(restored, item);
+    });
+
+    test('should stay null when TMDB does not report it', () {
+      final item = MediaItem.fromJson({'id': 4, 'title': 'Untitled'});
+
+      expect(item.originalTitle, isNull);
+      expect(MediaItem.fromJson(item.toJson()).originalTitle, isNull);
+    });
+  });
 }

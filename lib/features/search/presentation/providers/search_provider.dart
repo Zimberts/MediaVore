@@ -98,9 +98,13 @@ class SearchProvider with ChangeNotifier {
   /// Series in progress, most recent activity first (Home screen).
   List<InProgressItem> get inProgressItems => _inProgressItems;
 
-  /// List the "Tonight" picks of the Home screen come from: the first one.
-  String get tonightListName =>
+  /// First list: the one a title is added to in one tap from its detail
+  /// page.
+  String get firstListName =>
       _listNames.isEmpty ? 'watchlist' : _listNames.first;
+
+  /// List the "Tonight" picks of the Home screen come from: the first one.
+  String get tonightListName => firstListName;
 
   /// Titles of [tonightListName] that are neither seen nor started, in the
   /// order of the list.
