@@ -16,8 +16,17 @@ import 'package:mediavore/features/search/presentation/providers/search_provider
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Tabs of the [NotificationCenterPage].
+enum NotificationCenterTab { releases, quickAdd }
+
 class NotificationCenterPage extends StatefulWidget {
-  const NotificationCenterPage({super.key});
+  const NotificationCenterPage({
+    super.key,
+    this.initialTab = NotificationCenterTab.releases,
+  });
+
+  /// Tab the page opens on.
+  final NotificationCenterTab initialTab;
 
   @override
   State<NotificationCenterPage> createState() => NotificationCenterPageState();
@@ -34,7 +43,11 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: NotificationCenterTab.values.length,
+      initialIndex: widget.initialTab.index,
+      vsync: this,
+    );
   }
 
   @override

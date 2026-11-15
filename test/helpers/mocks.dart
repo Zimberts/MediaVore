@@ -28,6 +28,28 @@ class MockMediaRepository extends Mock implements MediaRepository {
   }
 
   @override
+  Future<List<InProgressItem>> getInProgressItems() {
+    try {
+      return super.noSuchMethod(Invocation.method(#getInProgressItems, []))
+          as Future<List<InProgressItem>>;
+    } catch (_) {
+      return Future.value(<InProgressItem>[]);
+    }
+  }
+
+  @override
+  Future<List<MediaItem>> getListMediaItems(String listName) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#getListMediaItems, [listName]),
+          )
+          as Future<List<MediaItem>>;
+    } catch (_) {
+      return Future.value(<MediaItem>[]);
+    }
+  }
+
+  @override
   Future<void> removeQuickAddItemById(int isarId) {
     try {
       return super.noSuchMethod(

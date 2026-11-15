@@ -66,6 +66,8 @@ class SearchProvider with ChangeNotifier {
   List<String> _likedIds = []; // "id:type"
   List<NotifiedItem> _notifiedItems = [];
   List<QuickAddItem> _quickAddItems = [];
+  List<InProgressItem> _inProgressItems = [];
+  List<MediaItem> _tonightListItems = [];
   List<QuickAddOmission> _quickAddOmissions = [];
   bool _isQuickAddOmissionsLoading = false;
 
@@ -89,6 +91,21 @@ class SearchProvider with ChangeNotifier {
   List<String> get likedIds => _likedIds;
   List<NotifiedItem> get notifiedItems => _notifiedItems;
   List<QuickAddItem> get quickAddItems => _quickAddItems;
+
+  /// Series in progress, most recent activity first (Home screen).
+  List<InProgressItem> get inProgressItems => _inProgressItems;
+
+  /// List the "Tonight" picks of the Home screen come from: the first one.
+  String get tonightListName =>
+      _listNames.isEmpty ? 'watchlist' : _listNames.first;
+
+  /// Titles of [tonightListName] that are neither seen nor started, in the
+  /// order of the list.
+  List<MediaItem> get tonightCandidates => [
+    for (final item in _tonightListItems)
+      if (getSeenCount(item) == 0) item,
+  ];
+
   List<QuickAddOmission> get quickAddOmissions => _quickAddOmissions;
   bool get isQuickAddOmissionsLoading => _isQuickAddOmissionsLoading;
   AppTab get selectedTab => _selectedTab;
@@ -120,6 +137,7 @@ class SearchProvider with ChangeNotifier {
     await loadLikedStatus();
     await loadNotifiedItems();
     await loadQuickAddItems();
+    await _loadTonightListItems();
 
     _notifiedItemsSubscription = repository.watchNotifiedItems().listen((_) {
       loadNotifiedItems();
@@ -229,7 +247,20 @@ class SearchProvider with ChangeNotifier {
       _listEntries[name] = await repository.getListEntries(name);
       _listPreviews[name] = await repository.getListPreviews(name);
     }
+    await _loadTonightListItems(notify: false);
     notifyListeners();
+  }
+
+  /// Reloads the titles behind [tonightCandidates]. Never throws: the Home
+  /// screen then simply has no pick to offer.
+  Future<void> _loadTonightListItems({bool notify = true}) async {
+    try {
+      _tonightListItems = await repository.getListMediaItems(tonightListName);
+    } catch (e) {
+      debugPrint('[SearchProvider] loadTonightListItems error: $e');
+      _tonightListItems = [];
+    }
+    if (notify) notifyListeners();
   }
 
   Future<void> loadListNames() async {
@@ -242,6 +273,7 @@ class SearchProvider with ChangeNotifier {
     _watchlistIds = entries.map((e) => e.split(':')[0]).toList();
     _listEntries['watchlist'] = entries;
     _listPreviews['watchlist'] = await repository.getListPreviews('watchlist');
+    await _loadTonightListItems(notify: false);
     notifyListeners();
   }
 
@@ -286,6 +318,12 @@ class SearchProvider with ChangeNotifier {
     final repoItems = await repository.getQuickAddItems();
     // Use repository-provided quick-add entries only (no compatibility fallback)
     _quickAddItems = repoItems;
+    try {
+      _inProgressItems = await repository.getInProgressItems();
+    } catch (e) {
+      debugPrint('[SearchProvider] getInProgressItems error: $e');
+      _inProgressItems = [];
+    }
     notifyListeners();
   }
 
@@ -365,6 +403,9 @@ class SearchProvider with ChangeNotifier {
       }
     }
     _listPreviews[listName] = await repository.getListPreviews(listName);
+    if (listName == tonightListName) {
+      await _loadTonightListItems(notify: false);
+    }
     await updateCacheSize();
     notifyListeners();
   }
@@ -380,6 +421,9 @@ class SearchProvider with ChangeNotifier {
         _watchlistIds.remove(item.id.toString());
       }
       _listPreviews[listName] = await repository.getListPreviews(listName);
+      if (listName == tonightListName) {
+        await _loadTonightListItems(notify: false);
+      }
       await updateCacheSize();
       notifyListeners();
     }
@@ -408,6 +452,7 @@ class SearchProvider with ChangeNotifier {
     await loadListNames();
     _listEntries.remove(name);
     _listPreviews.remove(name);
+    await _loadTonightListItems(notify: false);
     notifyListeners();
   }
 
@@ -418,6 +463,9 @@ class SearchProvider with ChangeNotifier {
     await repository.updateListOrder(listName, orderedEntries);
     _listEntries[listName] = orderedEntries;
     _listPreviews[listName] = await repository.getListPreviews(listName);
+    if (listName == tonightListName) {
+      await _loadTonightListItems(notify: false);
+    }
     notifyListeners();
   }
 
@@ -815,6 +863,78 @@ class SearchProvider with ChangeNotifier {
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
+  }
+
+  /// Whether two dates are the same once stored (the database keeps
+  /// microseconds at best).
+  static bool _sameInstant(DateTime a, DateTime b) =>
+      a.difference(b).abs() < const Duration(milliseconds: 1);
+
+  /// Marks the next episode of [item] as seen through [markAsSeen] and
+  /// returns the action that undoes it: the viewing just logged is deleted
+  /// (older viewings of the same episode are kept), the Quick Add queue goes
+  /// back to that episode and the series returns to the watchlist if marking
+  /// it had removed it.
+  Future<Future<void> Function()> markNextEpisodeSeen(
+    InProgressItem item,
+  ) async {
+    final next = item.next;
+    final seenDate = DateTime.now();
+    final wasInWatchlist = _watchlistIds.contains('${next.tmdbId}');
+
+    await markAsSeen(
+      SeenItem(
+        tmdbId: next.tmdbId,
+        type: next.type,
+        title: next.title ?? '',
+        posterPath: next.posterPath,
+        seenDate: seenDate,
+        seasonNumber: next.seasonNumber,
+        episodeNumber: next.episodeNumber,
+        runtime: next.runtime,
+      ),
+    );
+
+    return () async {
+      final viewings = await repository.getSeenStatus(next.tmdbId, next.type);
+      for (final viewing in viewings) {
+        final id = viewing.id;
+        if (id != null &&
+            viewing.seasonNumber == next.seasonNumber &&
+            viewing.episodeNumber == next.episodeNumber &&
+            _sameInstant(viewing.seenDate, seenDate)) {
+          await repository.deleteSeenEntry(id);
+        }
+      }
+
+      // Drop the episode queued by this viewing, then put the one that was
+      // marked back in the queue.
+      for (final queued in await repository.getQuickAddItems()) {
+        final id = queued.isarId;
+        if (id != null &&
+            queued.tmdbId == next.tmdbId &&
+            _sameInstant(queued.insertedAt, seenDate)) {
+          await repository.removeQuickAddItemById(id);
+        }
+      }
+      await repository.addQuickAddItem(next);
+
+      if (wasInWatchlist && !_watchlistIds.contains('${next.tmdbId}')) {
+        try {
+          final details = await repository.getMediaDetails(
+            next.tmdbId,
+            type: next.type,
+          );
+          await toggleInList(details.item, 'watchlist');
+        } catch (e) {
+          debugPrint('[SearchProvider] undo watchlist restore failed: $e');
+        }
+      }
+
+      await loadAllSeenStatus();
+      await loadNotifiedItems();
+      await updateSeenDbSize();
+    };
   }
 
   Future<void> deleteSeenEntry(int id) async {

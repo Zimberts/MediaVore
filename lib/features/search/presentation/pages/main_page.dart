@@ -9,7 +9,7 @@ import 'package:mediavore/features/achievements/domain/entities/achievement.dart
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
+import 'package:mediavore/features/home/presentation/pages/home_page.dart';
 import 'package:mediavore/features/library/presentation/pages/library_page.dart';
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
@@ -45,7 +45,7 @@ class _MainPageState extends State<MainPage> {
 
   /// Provisional content of each tab; every epic then replaces its own.
   Widget _pageFor(AppTab tab) => switch (tab) {
-    AppTab.home => const NotificationCenterPage(),
+    AppTab.home => HomePage(showTogetherLink: _tabs.contains(AppTab.together)),
     AppTab.discover => const SearchPage(),
     AppTab.library => const LibraryPage(),
     AppTab.together => const TogetherPage(),
@@ -333,10 +333,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
 
     if (isMainPageCurrent) {
       final provider = widget.mainPageContext.read<SearchProvider>();
-      if (provider.selectedTab == AppTab.home) {
-        // Notification Center TabBar
-        topOffset += 48;
-      } else if (provider.selectedTab == AppTab.library) {
+      if (provider.selectedTab == AppTab.library) {
         // Library segment, plus the search bar of the history
         topOffset += 56;
         if (provider.librarySection == LibrarySection.history) {

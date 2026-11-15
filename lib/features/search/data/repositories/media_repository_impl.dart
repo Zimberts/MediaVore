@@ -14,6 +14,7 @@ import 'package:mediavore/features/search/data/datasources/media_remote_data_sou
 import 'package:mediavore/features/search/data/services/cache_warmup_service.dart';
 import 'package:mediavore/features/search/data/services/cached_title.dart';
 import 'package:mediavore/features/search/data/services/import_export_service.dart';
+import 'package:mediavore/features/search/data/services/in_progress_service.dart';
 import 'package:mediavore/features/search/data/services/media_details_service.dart';
 import 'package:mediavore/features/search/data/services/next_episode_scanner.dart';
 import 'package:mediavore/features/search/data/services/notification_refresh_service.dart';
@@ -50,6 +51,7 @@ class MediaRepositoryImpl implements MediaRepository {
 
   late final MediaDetailsService _details;
   late final QuickAddService _quickAdd;
+  late final InProgressService _inProgress;
   late final NotificationRefreshService _notifications;
   late final SeenService _seen;
   late final CacheWarmupService _warmup;
@@ -77,6 +79,10 @@ class MediaRepositoryImpl implements MediaRepository {
       cache: cache,
       details: _details,
       scanner: scanner,
+    );
+    _inProgress = InProgressService(
+      localDataSource: localDataSource,
+      cache: cache,
     );
     _notifications = NotificationRefreshService(
       remoteDataSource: remoteDataSource,
@@ -359,6 +365,30 @@ class MediaRepositoryImpl implements MediaRepository {
     ];
   }
 
+  @override
+  Future<List<MediaItem>> getListMediaItems(String listName) async {
+    await _ensureInitialized();
+    final items = await localDataSource.getListItems(listName);
+    final types = [
+      for (final item in items)
+        item.type == 'tv' ? MediaType.tv : MediaType.movie,
+    ];
+    final cachedItems = await cache.getItems([
+      for (var i = 0; i < items.length; i++) (items[i].id, types[i]),
+    ]);
+    return [
+      for (var i = 0; i < items.length; i++)
+        cachedItems[i] ??
+            MediaItem(
+              id: items[i].id,
+              title: items[i].title,
+              overview: '',
+              releaseDate: '',
+              mediaType: types[i],
+            ),
+    ];
+  }
+
   // Seen history
 
   @override
@@ -583,6 +613,12 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<List<QuickAddItem>> getQuickAddItems() async {
     await _ensureInitialized();
     return _quickAdd.getQuickAddItems();
+  }
+
+  @override
+  Future<List<InProgressItem>> getInProgressItems() async {
+    await _ensureInitialized();
+    return _inProgress.getInProgressItems();
   }
 
   @override
