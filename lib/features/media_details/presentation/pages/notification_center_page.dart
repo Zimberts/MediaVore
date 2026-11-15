@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
@@ -16,10 +17,7 @@ import 'package:mediavore/features/settings/presentation/providers/settings_prov
 import 'package:provider/provider.dart';
 
 class NotificationCenterPage extends StatefulWidget {
-  const NotificationCenterPage({super.key, this.onSearch});
-
-  /// Opens the search; shown as the empty state's action when set.
-  final VoidCallback? onSearch;
+  const NotificationCenterPage({super.key});
 
   @override
   State<NotificationCenterPage> createState() => NotificationCenterPageState();
@@ -76,11 +74,7 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
           TabBarView(
             controller: _tabController,
             children: [
-              _ReleasesTab(
-                key: _releasesKey,
-                onRefresh: refresh,
-                onSearch: widget.onSearch,
-              ),
+              _ReleasesTab(key: _releasesKey, onRefresh: refresh),
               _QuickAddTab(key: _quickAddKey, onRefresh: refresh),
             ],
           ),
@@ -114,8 +108,7 @@ class NotificationCenterPageState extends State<NotificationCenterPage>
 
 class _ReleasesTab extends StatefulWidget {
   final Future<void> Function() onRefresh;
-  final VoidCallback? onSearch;
-  const _ReleasesTab({super.key, required this.onRefresh, this.onSearch});
+  const _ReleasesTab({super.key, required this.onRefresh});
 
   @override
   State<_ReleasesTab> createState() => _ReleasesTabState();
@@ -154,7 +147,9 @@ class _ReleasesTabState extends State<_ReleasesTab> {
                       message: context.l10n.notifNoReleasesHint,
                       actionLabel: context.l10n.emptyStateSearchAction,
                       actionIcon: Icons.search,
-                      onAction: widget.onSearch,
+                      onAction: () => context
+                          .read<SearchProvider>()
+                          .setSelectedTab(AppTab.discover),
                     ),
                   ],
                 )

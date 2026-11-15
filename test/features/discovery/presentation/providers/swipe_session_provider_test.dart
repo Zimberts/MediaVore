@@ -25,10 +25,10 @@ void main() {
     });
 
     test('should notify only when the filter changes', () {
-      session.setFilter(MediaKind.film);
-      session.setFilter(MediaKind.film);
+      session.setFilter(MediaKind.movie);
+      session.setFilter(MediaKind.movie);
 
-      expect(session.filter, MediaKind.film);
+      expect(session.filter, MediaKind.movie);
       expect(notifications, 1);
     });
 
@@ -59,13 +59,13 @@ void main() {
     });
 
     test('should keep the filter when the session is reset', () {
-      session.setFilter(MediaKind.serie);
+      session.setFilter(MediaKind.series);
       session.record(decision('1:tv', SwipeDecisionKind.added));
 
       session.reset();
 
       expect(session.decisions, isEmpty);
-      expect(session.filter, MediaKind.serie);
+      expect(session.filter, MediaKind.series);
     });
   });
 }

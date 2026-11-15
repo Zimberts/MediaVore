@@ -2,48 +2,59 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
+import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
+import 'package:mediavore/features/library/presentation/pages/library_page.dart';
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
-import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
+import 'package:mediavore/features/together/presentation/pages/together_page.dart';
+import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  const MainPage({super.key, this.tabs});
+
+  /// Tabs of the shell, in order; [AppTab.visibleTabs] by default.
+  final List<AppTab>? tabs;
 
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0; // Default to Discover (SearchPage)
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   StreamSubscription? _achievementSubscription;
-  final ValueNotifier<int> _discoverSearchTrigger = ValueNotifier<int>(0);
 
   // Achievement queue logic
   final Queue<Achievement> _achievementQueue = Queue<Achievement>();
   bool _isProcessingQueue = false;
   OverlayEntry? _currentNotification;
 
-  late final List<Widget> _pages = [
-    SearchPage(searchTrigger: _discoverSearchTrigger),
-    SavedMediaPage(onSearch: _openSearch),
-    SeenHistoryPage(onSearch: _openSearch),
-    NotificationCenterPage(onSearch: _openSearch),
-    const ProfilePage(),
-  ];
+  List<AppTab> get _tabs => widget.tabs ?? AppTab.visibleTabs;
+
+  /// Provisional content of each tab; every epic then replaces its own.
+  Widget _pageFor(AppTab tab) => switch (tab) {
+    AppTab.home => const NotificationCenterPage(),
+    AppTab.discover => const SearchPage(),
+    AppTab.library => const LibraryPage(),
+    AppTab.together => const TogetherPage(),
+    AppTab.me => const ProfilePage(),
+  };
+
+  late final Map<AppTab, Widget> _pages = {
+    for (final tab in AppTab.values) tab: _pageFor(tab),
+  };
 
   @override
   void initState() {
@@ -72,7 +83,6 @@ class _MainPageState extends State<MainPage> {
     _linkSubscription?.cancel();
     _achievementSubscription?.cancel();
     _currentNotification?.remove();
-    _discoverSearchTrigger.dispose();
     super.dispose();
   }
 
@@ -109,7 +119,6 @@ class _MainPageState extends State<MainPage> {
     _currentNotification = OverlayEntry(
       builder: (context) => _AchievementTopBanner(
         achievement: achievement,
-        selectedIndex: _selectedIndex,
         mainPageContext: mainPageContext,
         onDismiss: () {
           _currentNotification?.remove();
@@ -198,7 +207,7 @@ class _MainPageState extends State<MainPage> {
               await provider.importList(controller.text, entries);
               if (mounted) {
                 navigator.pop();
-                setState(() => _selectedIndex = 1);
+                provider.openLibrary(LibrarySection.lists);
               }
             },
             child: Text(context.l10n.commonImport),
@@ -208,65 +217,31 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    // Update provider selected tab if available
-    try {
-      final provider = context.read<SearchProvider>();
-      provider.setSelectedTab(index);
-    } catch (e) {
-      debugPrint('[MainPage] setSelectedTab failed: $e');
-    }
-  }
-
-  /// Switches to Discover and opens its search field.
-  void _openSearch() {
-    _onItemTapped(0);
-    _discoverSearchTrigger.value += 1;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final tabs = _tabs;
+    final requested = context.select<SearchProvider, AppTab>(
+      (provider) => provider.selectedTab,
+    );
+    // A tab that is not shown (see kShowTogetherTab) falls back to the first.
+    final selected = tabs.contains(requested) ? requested : tabs.first;
+    // A running vote is full screen: no tab can be tapped by accident.
+    final voting = context.select<TogetherSessionProvider, bool>(
+      (session) => session.isVoting,
+    );
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openSearch,
-        tooltip: l10n.navSearch,
-        child: const Icon(Icons.search),
+      body: IndexedStack(
+        index: tabs.indexOf(selected),
+        children: [for (final tab in tabs) _pages[tab]!],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.explore),
-            label: l10n.navDiscover,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.bookmark),
-            label: l10n.navMyLists,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.history),
-            label: l10n.navHistory,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.notifications),
-            label: l10n.navAlerts,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline),
-            activeIcon: const Icon(Icons.person),
-            label: l10n.navProfile,
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
+      bottomNavigationBar: voting
+          ? null
+          : AppTabBar(
+              tabs: tabs,
+              selected: selected,
+              onSelected: context.read<SearchProvider>().setSelectedTab,
+            ),
     );
   }
 
@@ -291,13 +266,11 @@ class _MainPageState extends State<MainPage> {
 
 class _AchievementTopBanner extends StatefulWidget {
   final Achievement achievement;
-  final int selectedIndex;
   final BuildContext mainPageContext;
   final VoidCallback onDismiss;
 
   const _AchievementTopBanner({
     required this.achievement,
-    required this.selectedIndex,
     required this.mainPageContext,
     required this.onDismiss,
   });
@@ -359,12 +332,16 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
     double topOffset = statusBarHeight + appBarHeight + 8;
 
     if (isMainPageCurrent) {
-      if (widget.selectedIndex == 2) {
-        // Seen History search bar
-        topOffset += 60;
-      } else if (widget.selectedIndex == 3) {
+      final provider = widget.mainPageContext.read<SearchProvider>();
+      if (provider.selectedTab == AppTab.home) {
         // Notification Center TabBar
         topOffset += 48;
+      } else if (provider.selectedTab == AppTab.library) {
+        // Library segment, plus the search bar of the history
+        topOffset += 56;
+        if (provider.librarySection == LibrarySection.history) {
+          topOffset += 60;
+        }
       }
     } else if (isMediaDetails) {
       // MediaDetailPage has a pinned SliverAppBar that expands.

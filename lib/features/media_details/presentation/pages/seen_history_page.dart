@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/widgets/scrollable_fill.dart';
@@ -18,10 +19,7 @@ enum SeenSort { dateDesc, dateAsc, nameAsc, nameDesc }
 enum SeenViewMode { history, library }
 
 class SeenHistoryPage extends StatefulWidget {
-  const SeenHistoryPage({super.key, this.onSearch});
-
-  /// Opens the search; shown as the empty state's action when set.
-  final VoidCallback? onSearch;
+  const SeenHistoryPage({super.key});
 
   @override
   State<SeenHistoryPage> createState() => SeenHistoryPageState();
@@ -302,7 +300,9 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
                   message: context.l10n.seenEmptyHint,
                   actionLabel: context.l10n.emptyStateSearchAction,
                   actionIcon: Icons.search,
-                  onAction: widget.onSearch,
+                  onAction: () => context.read<SearchProvider>().setSelectedTab(
+                    AppTab.discover,
+                  ),
                 ),
               )
             : filteredItems.isEmpty

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -43,7 +44,8 @@ class SearchProvider with ChangeNotifier {
   int _currentPage = 1;
   String _currentQuery = '';
   bool _hasMore = true;
-  int _selectedTab = 0; // Default to "Discover" (SearchPage)
+  AppTab _selectedTab = AppTab.initial;
+  LibrarySection _librarySection = LibrarySection.lists;
 
   // Progress feedback for refetching/importing
   double _importProgress = 0.0;
@@ -89,7 +91,8 @@ class SearchProvider with ChangeNotifier {
   List<QuickAddItem> get quickAddItems => _quickAddItems;
   List<QuickAddOmission> get quickAddOmissions => _quickAddOmissions;
   bool get isQuickAddOmissionsLoading => _isQuickAddOmissionsLoading;
-  int get selectedTab => _selectedTab;
+  AppTab get selectedTab => _selectedTab;
+  LibrarySection get librarySection => _librarySection;
 
   double get importProgress => _importProgress;
   String get importStatus => _importStatus;
@@ -164,11 +167,26 @@ class SearchProvider with ChangeNotifier {
     await loadQuickAddItems();
   }
 
-  void setSelectedTab(int index) {
-    if (_selectedTab != index) {
-      _selectedTab = index;
+  void setSelectedTab(AppTab tab) {
+    if (_selectedTab != tab) {
+      _selectedTab = tab;
       notifyListeners();
     }
+  }
+
+  void setLibrarySection(LibrarySection section) {
+    if (_librarySection != section) {
+      _librarySection = section;
+      notifyListeners();
+    }
+  }
+
+  /// Opens the Library tab on [section].
+  void openLibrary(LibrarySection section) {
+    if (_selectedTab == AppTab.library && _librarySection == section) return;
+    _selectedTab = AppTab.library;
+    _librarySection = section;
+    notifyListeners();
   }
 
   Future<void> updateCacheSize() async {

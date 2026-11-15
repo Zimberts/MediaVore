@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
@@ -28,10 +29,7 @@ import 'package:mediavore/features/search/presentation/widgets/saved_media_grid_
 import 'package:mediavore/features/search/presentation/widgets/saved_media_swipe_item.dart';
 
 class SavedMediaPage extends StatefulWidget {
-  const SavedMediaPage({super.key, this.onSearch});
-
-  /// Opens the search; shown as the empty state's action when set.
-  final VoidCallback? onSearch;
+  const SavedMediaPage({super.key});
 
   @override
   State<SavedMediaPage> createState() => SavedMediaPageState();
@@ -1087,7 +1085,9 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     message: context.l10n.listsEmptyHint,
                     actionLabel: context.l10n.emptyStateSearchAction,
                     actionIcon: Icons.search,
-                    onAction: widget.onSearch,
+                    onAction: () => context
+                        .read<SearchProvider>()
+                        .setSelectedTab(AppTab.discover),
                   ),
                 );
               }

@@ -14,7 +14,6 @@ void main() {
   late MockSharedPreferences mockSharedPreferences;
   late SearchProvider searchProvider;
   late SettingsProvider settingsProvider;
-  late ValueNotifier<int> searchTrigger;
 
   setUpAll(() {
     registerFallbackValue(Uri());
@@ -94,12 +93,7 @@ void main() {
 
     searchProvider = SearchProvider(mockMediaRepository);
     settingsProvider = SettingsProvider(mockSharedPreferences, FakeTmdbCredentialStore());
-    searchTrigger = ValueNotifier<int>(0);
       });
-
-  tearDown(() {
-    searchTrigger.dispose();
-  });
 
   Widget createWidgetUnderTest() {
     return MultiProvider(
@@ -109,7 +103,7 @@ void main() {
       ],
       child: MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
-        home: SearchPage(searchTrigger: searchTrigger),
+        home: const SearchPage(),
       ),
     );
   }

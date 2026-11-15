@@ -9,11 +9,9 @@
   "commonSave": "Save",
   "commonImport": "Import",
   "commonOpenSettings": "Open Settings",
-  "navSearch": "Search",
   "navDiscover": "Discover",
   "navMyLists": "My Lists",
   "navHistory": "History",
-  "navAlerts": "Alerts",
   "emptyStateSearchAction": "Search a movie or series",
   "importListTitle": "Import List",
   "importListMessage": "{count, plural, =1{You are about to import a list with 1 item.} other{You are about to import a list with {count} items.}}",
@@ -57,7 +55,7 @@
   },
   "tmdbCredentialSaveAnyway": "Save without verifying",
   "tmdbCredentialRemove": "Remove key",
-  "tmdbCredentialLater": "You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).",
+  "tmdbCredentialLater": "You can set your API key later in Me › TMDB API Credential.",
   "tmdbCredentialSkip": "Skip for now",
   "achievementUnlocked": "Achievement Unlocked!",
   "searchErrorMissingApiKey": "Add your TMDB API key in Settings to search and discover media.",
@@ -848,5 +846,12 @@
         "type": "String"
       }
     }
-  }
+  },
+  "navHome": "Home",
+  "navLibrary": "Library",
+  "navTogether": "Together",
+  "navMe": "Me",
+  "librarySectionLists": "Lists",
+  "togetherSoonTitle": "Choosing together is coming soon",
+  "togetherSoonMessage": "Compare your lists with friends and vote for what to watch."
 }

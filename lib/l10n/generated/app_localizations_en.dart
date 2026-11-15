@@ -37,9 +37,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonOpenSettings => 'Open Settings';
 
   @override
-  String get navSearch => 'Search';
-
-  @override
   String get navDiscover => 'Discover';
 
   @override
@@ -47,9 +44,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navHistory => 'History';
-
-  @override
-  String get navAlerts => 'Alerts';
 
   @override
   String get emptyStateSearchAction => 'Search a movie or series';
@@ -135,7 +129,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tmdbCredentialLater =>
-      'You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).';
+      'You can set your API key later in Me › TMDB API Credential.';
 
   @override
   String get tmdbCredentialSkip => 'Skip for now';
@@ -1406,4 +1400,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String posterRating(String rating) {
     return 'Rated $rating';
   }
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navLibrary => 'Library';
+
+  @override
+  String get navTogether => 'Together';
+
+  @override
+  String get navMe => 'Me';
+
+  @override
+  String get librarySectionLists => 'Lists';
+
+  @override
+  String get togetherSoonTitle => 'Choosing together is coming soon';
+
+  @override
+  String get togetherSoonMessage =>
+      'Compare your lists with friends and vote for what to watch.';
 }

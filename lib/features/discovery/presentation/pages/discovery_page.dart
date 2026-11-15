@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -15,9 +14,7 @@ import 'package:mediavore/features/search/presentation/widgets/media_item_poster
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 
 class DiscoveryPage extends StatefulWidget {
-  final ValueListenable<int>? searchTrigger;
-
-  const DiscoveryPage({super.key, this.searchTrigger});
+  const DiscoveryPage({super.key});
 
   @override
   State<DiscoveryPage> createState() => _DiscoveryPageState();
@@ -43,19 +40,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     _settings = context.read<SettingsProvider>();
     _credential = _settings.tmdbApiKey;
     _settings.addListener(_onSettingsChanged);
-    widget.searchTrigger?.addListener(_handleSearchTrigger);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshDiscovery();
     });
-  }
-
-  @override
-  void didUpdateWidget(covariant DiscoveryPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.searchTrigger != widget.searchTrigger) {
-      oldWidget.searchTrigger?.removeListener(_handleSearchTrigger);
-      widget.searchTrigger?.addListener(_handleSearchTrigger);
-    }
   }
 
   @override
@@ -64,7 +51,6 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     _controller.dispose();
     _searchFocusNode.dispose();
     _scrollController.dispose();
-    widget.searchTrigger?.removeListener(_handleSearchTrigger);
     _settings.removeListener(_onSettingsChanged);
     super.dispose();
   }
@@ -92,20 +78,6 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _refreshDiscovery(value);
-    });
-  }
-
-  void _handleSearchTrigger() {
-    if (!mounted) return;
-    if (!_showSearch) {
-      setState(() {
-        _showSearch = true;
-      });
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _searchFocusNode.requestFocus();
-      }
     });
   }
 
