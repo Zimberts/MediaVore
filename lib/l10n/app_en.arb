@@ -1700,5 +1700,55 @@
       }
     }
   },
-  "filtersChipHideSeen": "Unseen"
+  "filtersChipHideSeen": "Unseen",
+  "historyToday": "Today",
+  "historyYesterday": "Yesterday",
+  "historyDayHeaderSubtitle": "{count, plural, =1{1 item} other{{count} items}}",
+  "@historyDayHeaderSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyModeChronologicalHint": "Chronological view",
+  "historyModeLibraryHint": "One entry per title",
+  "historyActionOpenDetail": "Open details",
+  "historyActionDeleteViewing": "Delete this viewing",
+  "historyTimesSeen": "{count, plural, =1{Seen once} other{Seen {count} times}}",
+  "@historyTimesSeen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyTvLibrarySubtitle": "{episodesSeen, plural, =1{1 episode seen} other{{episodesSeen} episodes seen}} · {entries, plural, =1{1 entry} other{{entries} entries}}",
+  "@historyTvLibrarySubtitle": {
+    "placeholders": {
+      "episodesSeen": {
+        "type": "int"
+      },
+      "entries": {
+        "type": "int"
+      }
+    }
+  },
+  "historyEpisodeSubtitle": "S{season} E{episode}",
+  "@historyEpisodeSubtitle": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
+  "historySegmentHistory": "History",
+  "historySegmentLibrary": "Library",
+  "historySortRecent": "Date (newest)",
+  "historySortOldest": "Date (oldest)",
+  "historySortTitleAsc": "Title (A–Z)",
+  "historySortTitleDesc": "Title (Z–A)"
 }
