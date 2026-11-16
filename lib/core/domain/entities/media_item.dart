@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:mediavore/core/utils/genres.dart';
 
 enum MediaType { movie, tv, person, unknown }
 
@@ -52,6 +53,7 @@ class MediaItem extends Equatable {
   final int? numberOfEpisodes;
   final String? status;
   final List<String>? genres;
+  final List<int>? genreIds;
   final double? voteAverage;
 
   /// Number of TMDB votes behind [voteAverage].
@@ -87,6 +89,7 @@ class MediaItem extends Equatable {
     this.numberOfEpisodes,
     this.status,
     this.genres,
+    this.genreIds,
     this.voteAverage,
     this.voteCount,
     this.originCountries,
@@ -108,15 +111,28 @@ class MediaItem extends Equatable {
     final mediaType = _parseMediaType(mediaTypeStr);
 
     List<String>? genresList;
+    List<int>? genreIdsList;
+    if (json['genre_ids'] != null && json['genre_ids'] is List) {
+      genreIdsList = (json['genre_ids'] as List)
+          .whereType<num>()
+          .map((n) => n.toInt())
+          .toList();
+    }
     if (json['genres'] != null && json['genres'] is List) {
       genresList = [];
+      final parsedIds = <int>[];
       for (final g in (json['genres'] as List)) {
         if (g is String) {
           genresList.add(g);
         } else if (g is Map) {
           final name = g['name'];
           if (name is String) genresList.add(name);
+          final id = g['id'];
+          if (id is num) parsedIds.add(id.toInt());
         }
+      }
+      if (genreIdsList == null && parsedIds.isNotEmpty) {
+        genreIdsList = parsedIds;
       }
     }
 
@@ -163,6 +179,7 @@ class MediaItem extends Equatable {
       numberOfEpisodes: json['number_of_episodes'] as int?,
       status: json['status'] as String?,
       genres: genresList,
+      genreIds: genreIdsList,
       voteAverage: (json['vote_average'] as num?)?.toDouble(),
       voteCount: (json['vote_count'] as num?)?.toInt(),
       originCountries: _parseOriginCountries(json),
@@ -255,6 +272,7 @@ class MediaItem extends Equatable {
       'number_of_episodes': numberOfEpisodes,
       'status': status,
       'genres': genres,
+      'genre_ids': genreIds,
       'vote_average': voteAverage,
       'vote_count': voteCount,
       'origin_country': originCountries,
@@ -290,6 +308,7 @@ class MediaItem extends Equatable {
     int? numberOfEpisodes,
     String? status,
     List<String>? genres,
+    List<int>? genreIds,
     double? voteAverage,
     int? voteCount,
     List<String>? originCountries,
@@ -317,6 +336,7 @@ class MediaItem extends Equatable {
       numberOfEpisodes: numberOfEpisodes ?? this.numberOfEpisodes,
       status: status ?? this.status,
       genres: genres ?? this.genres,
+      genreIds: genreIds ?? this.genreIds,
       voteAverage: voteAverage ?? this.voteAverage,
       voteCount: voteCount ?? this.voteCount,
       originCountries: originCountries ?? this.originCountries,
@@ -357,6 +377,26 @@ class MediaItem extends Equatable {
     return false;
   }
 
+  /// Returns all genre IDs resolved either from [genreIds] or by matching
+  /// names in [genres] via [GenreUtils].
+  Set<int> get resolvedGenreIds {
+    if (genreIds != null && genreIds!.isNotEmpty) {
+      return genreIds!.toSet();
+    }
+    if (genres != null && genres!.isNotEmpty) {
+      return genres!.map(GenreUtils.getGenreIdByName).whereType<int>().toSet();
+    }
+    return const {};
+  }
+
+  /// Extracts the 4-digit release year from [releaseDate], or `null` if unavailable.
+  int? get releaseYearNumber {
+    if (releaseDate.length >= 4) {
+      return int.tryParse(releaseDate.substring(0, 4));
+    }
+    return null;
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -370,6 +410,7 @@ class MediaItem extends Equatable {
     numberOfEpisodes,
     status,
     genres,
+    genreIds,
     voteAverage,
     voteCount,
     originCountries,

@@ -3637,6 +3637,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fill by swiping'**
   String get listsFillBySwiping;
+
+  /// No description provided for @filtersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filtersTitle;
+
+  /// No description provided for @filtersSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get filtersSortBy;
+
+  /// No description provided for @filtersSortRelevance.
+  ///
+  /// In en, this message translates to:
+  /// **'Relevance'**
+  String get filtersSortRelevance;
+
+  /// No description provided for @filtersSortRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Top rated'**
+  String get filtersSortRating;
+
+  /// No description provided for @filtersSortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Most recent'**
+  String get filtersSortRecent;
+
+  /// No description provided for @filtersSortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest'**
+  String get filtersSortOldest;
+
+  /// No description provided for @filtersPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Release year'**
+  String get filtersPeriod;
+
+  /// No description provided for @filtersPeriodAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filtersPeriodAll;
+
+  /// No description provided for @filtersPeriodBefore1990.
+  ///
+  /// In en, this message translates to:
+  /// **'Before 1990'**
+  String get filtersPeriodBefore1990;
+
+  /// No description provided for @filtersPeriod1990s.
+  ///
+  /// In en, this message translates to:
+  /// **'1990–1999'**
+  String get filtersPeriod1990s;
+
+  /// No description provided for @filtersPeriod2000s.
+  ///
+  /// In en, this message translates to:
+  /// **'2000–2009'**
+  String get filtersPeriod2000s;
+
+  /// No description provided for @filtersPeriod2010s.
+  ///
+  /// In en, this message translates to:
+  /// **'2010–2019'**
+  String get filtersPeriod2010s;
+
+  /// No description provided for @filtersPeriod2020plus.
+  ///
+  /// In en, this message translates to:
+  /// **'2020 and later'**
+  String get filtersPeriod2020plus;
+
+  /// No description provided for @filtersRatingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum rating'**
+  String get filtersRatingTitle;
+
+  /// No description provided for @filtersRatingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Movies and TV shows'**
+  String get filtersRatingSubtitle;
+
+  /// No description provided for @filtersRatingAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filtersRatingAll;
+
+  /// No description provided for @filtersRating7Plus.
+  ///
+  /// In en, this message translates to:
+  /// **'7+'**
+  String get filtersRating7Plus;
+
+  /// No description provided for @filtersRating8Plus.
+  ///
+  /// In en, this message translates to:
+  /// **'8+'**
+  String get filtersRating8Plus;
+
+  /// No description provided for @filtersDurationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get filtersDurationTitle;
+
+  /// No description provided for @filtersDurationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Movies only'**
+  String get filtersDurationSubtitle;
+
+  /// No description provided for @filtersDurationNotApplicable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not applicable to TV shows'**
+  String get filtersDurationNotApplicable;
+
+  /// No description provided for @filtersDurationAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filtersDurationAll;
+
+  /// No description provided for @filtersDurationUnder105.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 1h 45m'**
+  String get filtersDurationUnder105;
+
+  /// No description provided for @filtersDuration105To150.
+  ///
+  /// In en, this message translates to:
+  /// **'1h 45m to 2h 30m'**
+  String get filtersDuration105To150;
+
+  /// No description provided for @filtersDurationOver150.
+  ///
+  /// In en, this message translates to:
+  /// **'Over 2h 30m'**
+  String get filtersDurationOver150;
+
+  /// No description provided for @filtersHideSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide what I\'ve already seen or read'**
+  String get filtersHideSeen;
+
+  /// No description provided for @filtersClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get filtersClearAll;
+
+  /// No description provided for @filtersShowResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Show results'**
+  String get filtersShowResults;
+
+  /// No description provided for @filtersShowNResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} results'**
+  String filtersShowNResults(int count);
+
+  /// No description provided for @filtersChipSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort: {sort}'**
+  String filtersChipSort(String sort);
+
+  /// No description provided for @filtersChipRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating {rating}+'**
+  String filtersChipRating(String rating);
+
+  /// No description provided for @filtersChipHideSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Unseen'**
+  String get filtersChipHideSeen;
 }
 
 class _AppLocalizationsDelegate

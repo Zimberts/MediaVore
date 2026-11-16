@@ -36,44 +36,47 @@ void main() {
       ],
     };
 
-    test('should include filter parameters in the query', () async {
-      when(
-        () => mockDio.get(
-          any(),
-          queryParameters: any(named: 'queryParameters'),
-          options: any(named: 'options'),
-        ),
-      ).thenAnswer(
-        (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
-          data: tResponse,
-          statusCode: 200,
-        ),
-      );
+    test(
+      'should not include ignored filter parameters in search query',
+      () async {
+        when(
+          () => mockDio.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+            options: any(named: 'options'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: ''),
+            data: tResponse,
+            statusCode: 200,
+          ),
+        );
 
-      await dataSource.searchMedia(
-        tQuery,
-        genreIds: [28, 12],
-        releaseYear: 2022,
-        minRating: 8.0,
-        type: MediaType.movie,
-      );
+        await dataSource.searchMedia(
+          tQuery,
+          genreIds: [28, 12],
+          releaseYear: 2022,
+          minRating: 8.0,
+          type: MediaType.movie,
+        );
 
-      final captured =
-          verify(
-                () => mockDio.get(
-                  'https://api.themoviedb.org/3/search/movie',
-                  queryParameters: captureAny(named: 'queryParameters'),
-                  options: any(named: 'options'),
-                ),
-              ).captured.first
-              as Map<String, dynamic>;
+        final captured =
+            verify(
+                  () => mockDio.get(
+                    'https://api.themoviedb.org/3/search/movie',
+                    queryParameters: captureAny(named: 'queryParameters'),
+                    options: any(named: 'options'),
+                  ),
+                ).captured.first
+                as Map<String, dynamic>;
 
-      expect(captured['query'], tQuery);
-      expect(captured['with_genres'], '28,12');
-      expect(captured['primary_release_year'], 2022);
-      expect(captured['vote_average.gte'], 8.0);
-    });
+        expect(captured['query'], tQuery);
+        expect(captured['primary_release_year'], 2022);
+        expect(captured.containsKey('with_genres'), isFalse);
+        expect(captured.containsKey('vote_average.gte'), isFalse);
+      },
+    );
   });
 
   group('getTrendingMedia', () {
