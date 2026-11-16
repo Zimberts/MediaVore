@@ -1,12 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/widgets/app_dialog.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+
+/// Opens the date and time picker dialog for a viewing.
+/// Returns the chosen [DateTime], or `null` if cancelled.
+Future<DateTime?> showSeenDateTimePickerDialog(
+  BuildContext context, {
+  required MediaItem item,
+  required DateTime initialDate,
+  bool isEditing = false,
+}) {
+  return showDialog<DateTime>(
+    context: context,
+    builder: (dialogContext) => _SeenDateTimePickerDialog(
+      item: item,
+      initialDate: initialDate,
+      isEditing: isEditing,
+    ),
+  );
+}
 
 class SeenManager extends StatefulWidget {
   final MediaItem item;
@@ -15,7 +36,7 @@ class SeenManager extends StatefulWidget {
   final bool compact;
 
   /// Full-width main action of the detail page: "Mark as seen", then
-  /// "Seen" opening the viewing history once the title has been seen.
+  /// "Rewatch" (or "Rewatch…" in advanced mode) once the title has been seen.
   final bool primary;
 
   const SeenManager({
@@ -35,6 +56,8 @@ class _SeenManagerState extends State<SeenManager> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SearchProvider>();
+    final settings = Provider.of<SettingsProvider?>(context);
+    final advanced = settings?.advancedTracking ?? false;
     final colors = context.appColors;
 
     bool isSeen;
@@ -60,25 +83,34 @@ class _SeenManagerState extends State<SeenManager> {
     final isTv = widget.item.mediaType == MediaType.tv;
 
     if (widget.primary) {
+      final String label;
+      if (!isSeen) {
+        label = advanced
+            ? context.l10n.commonMarkAsSeenWithDots
+            : context.l10n.commonMarkAsSeen;
+      } else {
+        label = advanced
+            ? context.l10n.seenRewatchActionWithDots
+            : context.l10n.seenRewatchAction;
+      }
+
       return Tooltip(
-        message: isSeen
-            ? context.l10n.seenOpenHistory
-            : context.l10n.commonMarkAsSeen,
+        message: label,
         child: FilledButton.icon(
           style: FilledButton.styleFrom(
             minimumSize: const Size(0, 48),
             padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
           onPressed: () {
-            if (isSeen) {
-              _showSeenHistory(context, provider);
+            if (!advanced) {
+              _markAsSeenImmediate(context, provider);
             } else {
               _markAsSeenWithFlow(context, provider);
             }
           },
           icon: isSeen ? const Icon(Icons.check, size: 18) : null,
           label: Text(
-            isSeen ? context.l10n.seenSeen : context.l10n.commonMarkAsSeen,
+            label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -89,21 +121,35 @@ class _SeenManagerState extends State<SeenManager> {
     // Use a single smart button for compact/episode views to avoid duplication
     if (widget.compact ||
         (widget.seasonNumber != null && widget.episodeNumber != null)) {
+      final String tooltip;
+      if (!isSeen) {
+        tooltip = advanced
+            ? context.l10n.commonMarkAsSeenWithDots
+            : context.l10n.commonMarkAsSeen;
+      } else {
+        tooltip = advanced
+            ? context.l10n.seenVisionnagesSectionTitle
+            : context.l10n.seenRewatchAction;
+      }
+
       return IconButton(
         icon: Icon(
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
           color: isSeen ? colors.success : colors.text2,
         ),
-        tooltip: isSeen
-            ? context.l10n.seenOpenHistory
-            : context.l10n.commonMarkAsSeen,
+        tooltip: tooltip,
         onPressed: () {
-          if (isSeen) {
-            _showSeenHistory(context, provider);
+          if (!advanced) {
+            _markAsSeenImmediate(context, provider);
           } else {
-            _markAsSeenWithFlow(context, provider);
+            if (isSeen) {
+              _showSeenHistory(context, provider);
+            } else {
+              _markAsSeenWithFlow(context, provider);
+            }
           }
         },
+        onLongPress: isSeen ? () => _confirmClear(context, provider) : null,
       );
     }
 
@@ -122,17 +168,50 @@ class _SeenManagerState extends State<SeenManager> {
           color: isSeen ? colors.success : colors.text2,
         ),
         tooltip: isSeen
-            ? context.l10n.seenOpenHistory
-            : context.l10n.commonMarkAsSeen,
+            ? (advanced
+                ? context.l10n.seenVisionnagesSectionTitle
+                : context.l10n.seenRewatchAction)
+            : (advanced
+                ? context.l10n.commonMarkAsSeenWithDots
+                : context.l10n.commonMarkAsSeen),
         onPressed: () {
-          if (isSeen) {
-            _showSeenHistory(context, provider);
+          if (!advanced) {
+            _markAsSeenImmediate(context, provider);
           } else {
-            _markAsSeenWithFlow(context, provider);
+            if (isSeen) {
+              _showSeenHistory(context, provider);
+            } else {
+              _markAsSeenWithFlow(context, provider);
+            }
           }
         },
       ),
       onLongPress: isSeen ? () => _confirmClear(context, provider) : null,
+    );
+  }
+
+  Future<void> _markAsSeenImmediate(
+    BuildContext context,
+    SearchProvider provider,
+  ) async {
+    final item = widget.item;
+    final l10n = context.l10n;
+    final undo = await provider.markItemSeen(
+      SeenItem(
+        tmdbId: item.id,
+        type: item.mediaType,
+        title: item.title,
+        posterPath: item.posterPath,
+        seasonNumber: widget.seasonNumber,
+        episodeNumber: widget.episodeNumber,
+        seenDate: DateTime.now(),
+      ),
+    );
+
+    showAppMessage(
+      l10n.seenAddedMessage(item.title),
+      actionLabel: l10n.commonUndo,
+      onAction: undo,
     );
   }
 
@@ -144,10 +223,10 @@ class _SeenManagerState extends State<SeenManager> {
     final seasonNumber = widget.seasonNumber;
     final episodeNumber = widget.episodeNumber;
 
-    final DateTime? finalDateTime = await showDialog<DateTime>(
-      context: context,
-      builder: (dialogContext) =>
-          _SeenDateTimePickerDialog(item: item, initialDate: DateTime.now()),
+    final DateTime? finalDateTime = await showSeenDateTimePickerDialog(
+      context,
+      item: item,
+      initialDate: DateTime.now(),
     );
 
     if (finalDateTime != null) {
@@ -162,167 +241,229 @@ class _SeenManagerState extends State<SeenManager> {
           seenDate: finalDateTime,
         ),
       );
+    }
+  }
 
-      // If this was a movie or the last episode / no next episode of a
-      // discontinued TV series, remove it from the watchlist if present.
-      try {
-        final inWatchlist = provider.isItemInList(item, 'watchlist');
+  Future<void> _confirmClear(
+    BuildContext context,
+    SearchProvider provider,
+  ) async {
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      title: context.l10n.seenClearHistory,
+      message: context.l10n.seenClearHistoryMessage(widget.item.title),
+      actions: [
+        AppDialogAction(
+          label: context.l10n.commonCancel,
+          value: false,
+        ),
+        AppDialogAction(
+          label: context.l10n.seenClearAll,
+          value: true,
+          danger: true,
+        ),
+      ],
+    );
 
-        if (item.mediaType == MediaType.movie) {
-          if (inWatchlist) await provider.toggleInList(item, 'watchlist');
-        } else if (item.mediaType == MediaType.tv &&
-            seasonNumber != null &&
-            episodeNumber != null) {
-          final isLastEpisode =
-              item.lastSeasonNumber != null &&
-              item.lastEpisodeNumber != null &&
-              item.lastSeasonNumber == seasonNumber &&
-              item.lastEpisodeNumber == episodeNumber;
-
-          // Treat multiple discontinued variants
-          final discontinued =
-              item.status != null &&
-              {'ended', 'canceled'}.contains(item.status!.toLowerCase());
-
-          // Also check for no next episode according to provider (covers
-          // cases where lastEpisodeNumber may not match or all episodes
-          // already seen).
-          bool noNext = false;
-          try {
-            final next = await provider.getNextEpisode(item.id);
-            if (next == null) noNext = true;
-          } catch (_) {
-            noNext = false;
-          }
-
-          if ((isLastEpisode || noNext) && discontinued && inWatchlist) {
-            await provider.toggleInList(item, 'watchlist');
+    if (confirmed == true) {
+      if (widget.seasonNumber != null && widget.episodeNumber != null) {
+        final history = provider.seenItems
+            .where(
+              (s) =>
+                  s.tmdbId == widget.item.id &&
+                  s.type == widget.item.mediaType &&
+                  s.seasonNumber == widget.seasonNumber &&
+                  s.episodeNumber == widget.episodeNumber,
+            )
+            .toList();
+        for (final entry in history) {
+          if (entry.id != null) {
+            await provider.deleteSeenEntry(entry.id!);
           }
         }
-      } catch (e) {
-        debugPrint('[SeenManager] watchlist cleanup after seen failed: $e');
+      } else {
+        await provider.removeFromSeen(widget.item.id, widget.item.mediaType);
       }
     }
   }
 
-  void _confirmClear(BuildContext context, SearchProvider provider) {
-    final colors = context.appColors;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.seenClearHistory),
-        content: Text(context.l10n.seenClearHistoryMessage(widget.item.title)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () {
-              provider.removeFromSeen(widget.item.id, widget.item.mediaType);
-              Navigator.pop(dialogContext);
-            },
-            child: Text(
-              context.l10n.seenClearAll,
-              style: TextStyle(color: colors.error),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showSeenHistory(BuildContext context, SearchProvider provider) {
-    final history = provider.seenItems
-        .where(
-          (s) =>
-              s.tmdbId == widget.item.id &&
-              s.type == widget.item.mediaType &&
-              s.seasonNumber == widget.seasonNumber &&
-              s.episodeNumber == widget.episodeNumber,
-        )
-        .toList();
-
-    final colors = context.appColors;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+      builder: (sheetContext) => _EpisodeSeenHistorySheet(
+        item: widget.item,
+        seasonNumber: widget.seasonNumber,
+        episodeNumber: widget.episodeNumber,
+        onClearRequested: () => _confirmClear(context, provider),
+      ),
+    );
+  }
+}
+
+class _EpisodeSeenHistorySheet extends StatelessWidget {
+  final MediaItem item;
+  final int? seasonNumber;
+  final int? episodeNumber;
+  final VoidCallback onClearRequested;
+
+  const _EpisodeSeenHistorySheet({
+    required this.item,
+    required this.seasonNumber,
+    required this.episodeNumber,
+    required this.onClearRequested,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<SearchProvider>();
+    final colors = context.appColors;
+    final l10n = context.l10n;
+
+    final history = provider.seenItems
+        .where(
+          (s) =>
+              s.tmdbId == item.id &&
+              s.type == item.mediaType &&
+              s.seasonNumber == seasonNumber &&
+              s.episodeNumber == episodeNumber,
+        )
+        .toList();
+
+    history.sort((a, b) => a.seenDate.compareTo(b.seenDate));
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                l10n.seenVisionnagesSectionTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: Icon(Icons.add_circle_outline, color: colors.success),
+              title: Text(
+                l10n.seenAddViewing,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onTap: () async {
+                final date = await showSeenDateTimePickerDialog(
+                  context,
+                  item: item,
+                  initialDate: DateTime.now(),
+                );
+                if (date != null) {
+                  await provider.markAsSeen(
+                    SeenItem(
+                      tmdbId: item.id,
+                      type: item.mediaType,
+                      title: item.title,
+                      posterPath: item.posterPath,
+                      seasonNumber: seasonNumber,
+                      episodeNumber: episodeNumber,
+                      seenDate: date,
+                    ),
+                  );
+                }
+              },
+            ),
+            const Divider(),
+            if (history.isEmpty)
               Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  context.l10n.seenViewingHistory,
-                  style: Theme.of(sheetContext).textTheme.titleLarge,
-                ),
-              ),
-              const Divider(),
-              ListTile(
-                leading: Icon(Icons.add_circle_outline, color: colors.success),
-                title: Text(
-                  context.l10n.seenAddViewing,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _markAsSeenWithFlow(context, provider);
-                },
-              ),
-              const Divider(),
-              if (history.isEmpty)
-                Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text(context.l10n.seenNoHistory),
-                )
-              else
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: history.length,
-                    itemBuilder: (context, index) {
-                      final seenEntry = history[index];
-                      return ListTile(
-                        leading: Icon(Icons.event, color: colors.text2),
-                        title: Text(
-                          DateFormat.yMMMd().add_Hm().format(
-                            seenEntry.seenDate,
+                padding: const EdgeInsets.all(32.0),
+                child: Text(l10n.seenNoHistory),
+              )
+            else
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: history.length,
+                  itemBuilder: (context, index) {
+                    final seenEntry = history[index];
+                    final ordinal = l10n.seenOrdinal((index + 1).toString());
+                    final dateStr = Formatters.formatSeenDateTime(
+                      seenEntry.seenDate,
+                      l10n.localeName,
+                    );
+
+                    return ListTile(
+                      leading: Icon(Icons.history, color: colors.primary),
+                      title: Text('$ordinal · $dateStr'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined),
+                            tooltip: l10n.seenEditViewing,
+                            onPressed: () async {
+                              final newDate = await showSeenDateTimePickerDialog(
+                                context,
+                                item: item,
+                                initialDate: seenEntry.seenDate,
+                                isEditing: true,
+                              );
+                              if (newDate != null) {
+                                await provider.updateSeenEntry(
+                                  seenEntry.copyWith(seenDate: newDate),
+                                );
+                              }
+                            },
                           ),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete_outline, color: colors.error),
-                          tooltip: context.l10n.commonDelete,
-                          onPressed: () {
-                            provider.deleteSeenEntry(seenEntry.id!);
-                            if (history.length <= 1) {
-                              Navigator.pop(sheetContext);
-                            }
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextButton(
-                  style: TextButton.styleFrom(foregroundColor: colors.error),
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    _confirmClear(context, provider);
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, color: colors.error),
+                            tooltip: l10n.commonDelete,
+                            onPressed: () async {
+                              final confirmed = await showAppDialog<bool>(
+                                context: context,
+                                title: l10n.seenRemoveLogTitle,
+                                message: l10n.seenRemoveLogMessage,
+                                actions: [
+                                  AppDialogAction(
+                                    label: l10n.commonCancel,
+                                    value: false,
+                                  ),
+                                  AppDialogAction(
+                                    label: l10n.commonDelete,
+                                    value: true,
+                                    danger: true,
+                                  ),
+                                ],
+                              );
+                              if (confirmed == true && seenEntry.id != null) {
+                                await provider.deleteSeenEntry(seenEntry.id!);
+                                if (history.length <= 1 && context.mounted) {
+                                  Navigator.pop(context);
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
                   },
-                  child: Text(context.l10n.seenRemoveAllHistory),
                 ),
               ),
-            ],
-          ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextButton(
+                style: TextButton.styleFrom(foregroundColor: colors.error),
+                onPressed: () {
+                  Navigator.pop(context);
+                  onClearRequested();
+                },
+                child: Text(l10n.seenRemoveAllHistory),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -332,10 +473,12 @@ class _SeenManagerState extends State<SeenManager> {
 class _SeenDateTimePickerDialog extends StatefulWidget {
   final MediaItem item;
   final DateTime initialDate;
+  final bool isEditing;
 
   const _SeenDateTimePickerDialog({
     required this.item,
     required this.initialDate,
+    this.isEditing = false,
   });
 
   @override
@@ -381,6 +524,18 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final isMovie = widget.item.mediaType == MediaType.movie;
+    final l10n = context.l10n;
+
+    final title = widget.isEditing
+        ? l10n.seenEditViewing
+        : l10n.commonMarkAsSeen;
+    final buttonLabel = widget.isEditing
+        ? l10n.commonSave
+        : l10n.seenLogViewing;
+
+    final now = DateTime.now();
+    final calendarInitialDate =
+        _selectedDate.isAfter(now) ? now : _selectedDate;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -404,7 +559,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.l10n.commonMarkAsSeen,
+                          title,
                           style: Theme.of(
                             context,
                           ).textTheme.titleSmall?.copyWith(color: colors.text2),
@@ -426,8 +581,8 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     onPressed: () =>
                         setState(() => _isTextEntry = !_isTextEntry),
                     tooltip: _isTextEntry
-                        ? context.l10n.seenUseCalendar
-                        : context.l10n.seenTypeDate,
+                        ? l10n.seenUseCalendar
+                        : l10n.seenTypeDate,
                     color: colors.primary,
                   ),
                 ],
@@ -441,9 +596,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: CalendarDatePicker(
-                    initialDate: _selectedDate,
+                    initialDate: calendarInitialDate,
                     firstDate: DateTime(1900),
-                    lastDate: DateTime.now().add(const Duration(minutes: 1)),
+                    lastDate: now,
                     onDateChanged: (date) {
                       setState(() {
                         _selectedDate = date;
@@ -459,7 +614,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   controller: _dateController,
                   autofocus: true,
                   decoration: InputDecoration(
-                    labelText: context.l10n.seenDateLabel,
+                    labelText: l10n.seenDateLabel,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -500,7 +655,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       Icon(Icons.access_time, color: colors.primary),
                       const SizedBox(width: 12),
                       Text(
-                        context.l10n.seenTimeLabel(
+                        l10n.seenTimeLabel(
                           DateFormat('HH:mm').format(
                             DateTime(
                               0,
@@ -526,7 +681,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text(context.l10n.seenCancelCaps),
+                    child: Text(l10n.seenCancelCaps),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -556,14 +711,24 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                           _selectedTime.hour,
                           _selectedTime.minute,
                         );
+
+                        if (result.isAfter(DateTime.now())) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.seenFutureDateError),
+                            ),
+                          );
+                          return;
+                        }
+
                         Navigator.pop(context, result);
                       } catch (_) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.l10n.seenInvalidDate)),
+                          SnackBar(content: Text(l10n.seenInvalidDate)),
                         );
                       }
                     },
-                    child: Text(context.l10n.seenLogViewing),
+                    child: Text(buttonLabel),
                   ),
                 ],
               ),

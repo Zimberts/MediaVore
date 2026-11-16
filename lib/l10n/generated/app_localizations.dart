@@ -4045,6 +4045,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Title (Z–A)'**
   String get historySortTitleDesc;
+
+  /// No description provided for @settingsSectionTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking'**
+  String get settingsSectionTracking;
+
+  /// No description provided for @settingsAdvancedTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced tracking'**
+  String get settingsAdvancedTracking;
+
+  /// No description provided for @settingsAdvancedTrackingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose viewing date and time, edit past viewing logs'**
+  String get settingsAdvancedTrackingSubtitle;
+
+  /// No description provided for @commonMarkAsSeenWithDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as seen…'**
+  String get commonMarkAsSeenWithDots;
+
+  /// No description provided for @seenSeenWithDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen…'**
+  String get seenSeenWithDots;
+
+  /// No description provided for @seenRewatchAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewatch'**
+  String get seenRewatchAction;
+
+  /// No description provided for @seenRewatchActionWithDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewatch…'**
+  String get seenRewatchActionWithDots;
+
+  /// No description provided for @seenSummaryOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen once · on {date}'**
+  String seenSummaryOnce(String date);
+
+  /// No description provided for @seenSummaryMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen {count} times · last on {date}'**
+  String seenSummaryMultiple(int count, String date);
+
+  /// No description provided for @seenAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as seen · {title}'**
+  String seenAddedMessage(String title);
+
+  /// No description provided for @seenFutureDateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing date cannot be in the future'**
+  String get seenFutureDateError;
+
+  /// No description provided for @seenOrdinal.
+  ///
+  /// In en, this message translates to:
+  /// **'{ordinal, select, 1{1st} 2{2nd} 3{3rd} other{{ordinal}th}} viewing'**
+  String seenOrdinal(String ordinal);
+
+  /// No description provided for @seenEditViewing.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit date'**
+  String get seenEditViewing;
+
+  /// No description provided for @seenVisionnagesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewings'**
+  String get seenVisionnagesSectionTitle;
 }
 
 class _AppLocalizationsDelegate

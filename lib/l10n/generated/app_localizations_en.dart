@@ -2582,4 +2582,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historySortTitleDesc => 'Title (Z–A)';
+
+  @override
+  String get settingsSectionTracking => 'Tracking';
+
+  @override
+  String get settingsAdvancedTracking => 'Advanced tracking';
+
+  @override
+  String get settingsAdvancedTrackingSubtitle =>
+      'Choose viewing date and time, edit past viewing logs';
+
+  @override
+  String get commonMarkAsSeenWithDots => 'Mark as seen…';
+
+  @override
+  String get seenSeenWithDots => 'Seen…';
+
+  @override
+  String get seenRewatchAction => 'Rewatch';
+
+  @override
+  String get seenRewatchActionWithDots => 'Rewatch…';
+
+  @override
+  String seenSummaryOnce(String date) {
+    return 'Seen once · on $date';
+  }
+
+  @override
+  String seenSummaryMultiple(int count, String date) {
+    return 'Seen $count times · last on $date';
+  }
+
+  @override
+  String seenAddedMessage(String title) {
+    return 'Marked as seen · $title';
+  }
+
+  @override
+  String get seenFutureDateError => 'Viewing date cannot be in the future';
+
+  @override
+  String seenOrdinal(String ordinal) {
+    String _temp0 = intl.Intl.selectLogic(ordinal, {
+      '1': '1st',
+      '2': '2nd',
+      '3': '3rd',
+      'other': '${ordinal}th',
+    });
+    return '$_temp0 viewing';
+  }
+
+  @override
+  String get seenEditViewing => 'Edit date';
+
+  @override
+  String get seenVisionnagesSectionTitle => 'Viewings';
 }

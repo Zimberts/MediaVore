@@ -701,5 +701,19 @@
   "historySortRecent": "Date (plus récent)",
   "historySortOldest": "Date (plus ancien)",
   "historySortTitleAsc": "Nom (A–Z)",
-  "historySortTitleDesc": "Nom (Z–A)"
+  "historySortTitleDesc": "Nom (Z–A)",
+  "settingsSectionTracking": "Suivi",
+  "settingsAdvancedTracking": "Mode avancé",
+  "settingsAdvancedTrackingSubtitle": "Saisie de la date et de l'heure des visionnages, modification d'entrées passées",
+  "commonMarkAsSeenWithDots": "Marquer comme vu…",
+  "seenSeenWithDots": "Vu…",
+  "seenRewatchAction": "Revu",
+  "seenRewatchActionWithDots": "Revu…",
+  "seenSummaryOnce": "Vu 1 fois · le {date}",
+  "seenSummaryMultiple": "Vu {count} fois · dernière fois le {date}",
+  "seenAddedMessage": "Marqué comme vu · {title}",
+  "seenFutureDateError": "La date de visionnage ne peut pas être dans le futur",
+  "seenOrdinal": "{ordinal, select, 1{1er} other{{ordinal}e}} visionnage",
+  "seenEditViewing": "Modifier la date",
+  "seenVisionnagesSectionTitle": "Visionnages"
 }

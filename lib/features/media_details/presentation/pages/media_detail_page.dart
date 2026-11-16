@@ -17,6 +17,7 @@ import 'package:mediavore/features/media_details/presentation/widgets/detail/med
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_cast.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_header.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_infos.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_movie_viewings.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_related.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_seasons.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_synopsis.dart';
@@ -460,6 +461,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                             primary: true,
                           ),
                   ),
+                  if (!isTv) MediaDetailMovieViewings(item: item),
                   if (isTv) WatchNextButton(item: item),
                   if (_isLoading)
                     const Center(

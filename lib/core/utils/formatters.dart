@@ -1,6 +1,23 @@
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 class Formatters {
+  static String formatSeenDate(DateTime date, [String? locale]) {
+    try {
+      return DateFormat.yMMMd(locale).format(date.toLocal());
+    } catch (_) {
+      return DateFormat.yMMMd().format(date.toLocal());
+    }
+  }
+
+  static String formatSeenDateTime(DateTime date, [String? locale]) {
+    try {
+      return DateFormat.yMMMd(locale).add_Hm().format(date.toLocal());
+    } catch (_) {
+      return DateFormat.yMMMd().add_Hm().format(date.toLocal());
+    }
+  }
+
   static String formatRuntime(int? minutes) {
     if (minutes == null || minutes == 0) return '';
     final hours = minutes ~/ 60;
