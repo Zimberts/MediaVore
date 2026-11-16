@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
@@ -234,6 +235,50 @@ void main() {
       final items = await dataSource.getListItems('watchlist');
       expect(items[0].id, 2);
       expect(items[1].id, 1);
+    });
+
+    test('should add all items to list atomically without duplicates in order', () async {
+      await dataSource.addToList(
+        id: 1,
+        type: 'movie',
+        listName: 'watchlist',
+        title: 'Film 1',
+      );
+
+      final toAdd = [
+        const MediaItem(
+          id: 1, // already in list, should not duplicate
+          title: 'Film 1',
+          overview: '',
+          releaseDate: '2010-01-01',
+          mediaType: MediaType.movie,
+        ),
+        const MediaItem(
+          id: 2,
+          title: 'Film 2',
+          overview: '',
+          releaseDate: '2012-01-01',
+          mediaType: MediaType.movie,
+        ),
+        const MediaItem(
+          id: 3,
+          title: 'Film 3',
+          overview: '',
+          releaseDate: '2015-01-01',
+          mediaType: MediaType.movie,
+        ),
+      ];
+
+      await dataSource.addAllToList(items: toAdd, listName: 'watchlist');
+
+      final items = await dataSource.getListItems('watchlist');
+      expect(items.length, 3);
+      expect(items[0].id, 1);
+      expect(items[0].position, 0);
+      expect(items[1].id, 2);
+      expect(items[1].position, 1);
+      expect(items[2].id, 3);
+      expect(items[2].position, 2);
     });
   });
 

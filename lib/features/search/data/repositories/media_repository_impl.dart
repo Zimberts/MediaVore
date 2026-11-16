@@ -296,6 +296,31 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> addAllToList(List<MediaItem> items, String listName) async {
+    if (items.isEmpty) return;
+    await _ensureInitialized();
+    for (final item in items) {
+      await cache.cacheItem(item);
+    }
+    await localDataSource.addAllToList(items: items, listName: listName);
+    for (final item in items) {
+      try {
+        final details = await _details.getMediaDetails(
+          item.id,
+          type: item.mediaType,
+        );
+        if (item.mediaType == MediaType.tv && details.item.seasons != null) {
+          for (final season in details.item.seasons!) {
+            await _details.getSeasonDetails(item.id, season.seasonNumber);
+          }
+        }
+      } catch (e) {
+        debugPrint('[Repo] addAllToList details prefetch failed: $e');
+      }
+    }
+  }
+
+  @override
   Future<void> removeFromList(int id, MediaType type, String listName) async {
     await _ensureInitialized();
     return localDataSource.removeFromList(id, type.name, listName);

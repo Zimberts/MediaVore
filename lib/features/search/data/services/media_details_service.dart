@@ -122,12 +122,16 @@ class MediaDetailsService {
     // If this item belongs to a collection, fetch collection parts (saga)
     List<MediaItem>? collectionParts;
     if (item.collectionId != null) {
-      try {
-        collectionParts = await remoteDataSource.getCollectionParts(
-          item.collectionId!,
-        );
-      } catch (_) {
-        collectionParts = null;
+      collectionParts = cache.getCachedCollection(item.collectionId!);
+      if (collectionParts == null) {
+        try {
+          collectionParts = await remoteDataSource.getCollectionParts(
+            item.collectionId!,
+          );
+          cache.cacheCollectionParts(item.collectionId!, collectionParts);
+        } catch (_) {
+          collectionParts = null;
+        }
       }
     }
 

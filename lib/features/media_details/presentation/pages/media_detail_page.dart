@@ -19,6 +19,7 @@ import 'package:mediavore/features/media_details/presentation/widgets/detail/med
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_infos.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_movie_viewings.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_related.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_saga.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_seasons.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_synopsis.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_trailers.dart';
@@ -497,6 +498,16 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           watchProviders: details!.watchProviders,
                         ),
                       MediaDetailSynopsis(text: item.overview),
+                      if (details?.collection != null &&
+                          details!.collection!.isNotEmpty) ...[
+                        gap,
+                        MediaDetailSaga(
+                          currentItem: item,
+                          collection: details.collection,
+                          seenStatus: _seenStatus,
+                          onOpen: _openRelated,
+                        ),
+                      ],
                       MediaDetailTrailers(
                         videos: details?.videos,
                         onOpen: widget.onShare ?? _shareWithSystem,

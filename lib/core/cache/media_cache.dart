@@ -20,6 +20,7 @@ class MediaCache {
   static const int detailsCapacity = 50;
   static const int seasonCapacity = 50;
   static const int actorCapacity = 500;
+  static const int collectionCapacity = 50;
 
   final Isar _isar;
   final LruMap<String, MediaItem> _itemCache = LruMap(itemCapacity);
@@ -28,6 +29,9 @@ class MediaCache {
     seasonCapacity,
   );
   final LruMap<int, String?> _actorProfileCache = LruMap(actorCapacity);
+  final LruMap<int, List<MediaItem>> _collectionPartsCache = LruMap(
+    collectionCapacity,
+  );
 
   MediaCache(this._isar);
 
@@ -42,6 +46,9 @@ class MediaCache {
     final key = _getKey(details.item.id, details.item.mediaType);
     _detailsCache.put(key, details);
     _itemCache.put(key, details.item);
+    if (details.item.collectionId != null && details.collection != null) {
+      _collectionPartsCache.put(details.item.collectionId!, details.collection!);
+    }
 
     final now = DateTime.now();
     final actors = <int, CachedActorProfile>{};
@@ -181,6 +188,9 @@ class MediaCache {
       () => MediaDetails.fromJson(jsonDecode(json)),
     );
     if (details == null) return null;
+    if (details.item.collectionId != null && details.collection != null) {
+      _collectionPartsCache.put(details.item.collectionId!, details.collection!);
+    }
     return _detailsCache.remember(key, details);
   }
 
@@ -265,6 +275,15 @@ class MediaCache {
           MediaItem.fromJson(Map<String, dynamic>.from(part as Map)),
       ];
     });
+  }
+
+  /// Parts of the TMDB collection cached in memory by [collectionId].
+  List<MediaItem>? getCachedCollection(int collectionId) =>
+      _collectionPartsCache.get(collectionId);
+
+  /// Caches parts of a TMDB collection in memory by [collectionId].
+  void cacheCollectionParts(int collectionId, List<MediaItem> parts) {
+    _collectionPartsCache.put(collectionId, parts);
   }
 
   Future<String?> getActorProfile(int actorId) async {
