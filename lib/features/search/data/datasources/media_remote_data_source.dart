@@ -259,7 +259,25 @@ class MediaRemoteDataSource {
         item: MediaItem.fromJson(data),
         credits: part(
           'credits',
-          (raw) => Map<String, dynamic>.from(raw as Map),
+          (raw) {
+            final map = Map<String, dynamic>.from(raw as Map);
+            if (data['created_by'] is List &&
+                (data['created_by'] as List).isNotEmpty) {
+              final existingCrew = List.from(map['crew'] as List? ?? const []);
+              for (final creator in (data['created_by'] as List)) {
+                if (creator is Map) {
+                  existingCrew.insert(0, {
+                    'id': creator['id'],
+                    'name': creator['name'],
+                    'job': 'Creator',
+                    'profile_path': creator['profile_path'],
+                  });
+                }
+              }
+              map['crew'] = existingCrew;
+            }
+            return map;
+          },
           {'cast': [], 'crew': []},
         ),
         similar: part(
@@ -347,6 +365,27 @@ class MediaRemoteDataSource {
     }
   }
 
+  Future<void> _fillMissingBiography(
+    String url,
+    Map<String, dynamic> data,
+  ) async {
+    final bio = data['biography'] as String?;
+    if (bio != null && bio.trim().isNotEmpty) return;
+    if (locale.tmdbLanguage == fallbackAppLanguage.tmdbTag) return;
+    try {
+      final fallback = await _tmdbGet(
+        url,
+        queryParameters: {'language': fallbackAppLanguage.tmdbTag},
+      );
+      final fallbackBio = fallback.data['biography'] as String?;
+      if (fallbackBio != null && fallbackBio.isNotEmpty) {
+        data['biography'] = fallbackBio;
+      }
+    } catch (e) {
+      debugPrint('[Remote] Biography fallback failed for $url: $e');
+    }
+  }
+
   /// Fetches the details for a TV season from the TMDB API.
   Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) {
     return _guard('fetching season details', () async {
@@ -374,10 +413,11 @@ class MediaRemoteDataSource {
   /// Fetches the details for an actor from the TMDB API.
   Future<ActorDetails> getActorDetails(int actorId) {
     return _guard('fetching actor details', () async {
-      final response = await _tmdbGet(
-        'https://api.themoviedb.org/3/person/$actorId',
-      );
-      return ActorDetails.fromJson(response.data);
+      final url = 'https://api.themoviedb.org/3/person/$actorId';
+      final response = await _tmdbGet(url);
+      final data = Map<String, dynamic>.from(response.data as Map);
+      await _fillMissingBiography(url, data);
+      return ActorDetails.fromJson(data);
     });
   }
 
@@ -452,15 +492,56 @@ class MediaRemoteDataSource {
     });
   }
 
-  /// Fetches the movies an actor has been in.
-  Future<List<MediaItem>> getActorMediaCredits(int actorId) {
-    return _guard('fetching actor movie credits', () async {
+  /// Fetches the movie and TV credits for a person, returning cast and crew
+  /// (filtered on Director and Creator) deduplicated by media id.
+  Future<({List<MediaItem> cast, List<MediaItem> crew})> getPersonCredits(
+    int personId,
+  ) {
+    return _guard('fetching person credits', () async {
       final response = await _tmdbGet(
-        'https://api.themoviedb.org/3/person/$actorId/combined_credits',
+        'https://api.themoviedb.org/3/person/$personId/combined_credits',
       );
-      final List results = response.data['cast'];
-      return results.map((m) => MediaItem.fromJson(m)).toList();
+      final data = response.data as Map;
+      final castRaw = (data['cast'] as List?) ?? const [];
+      final crewRaw = (data['crew'] as List?) ?? const [];
+
+      final cast = _parseAndDeduplicateCredits(castRaw);
+      final crew = _parseAndDeduplicateCredits(
+        crewRaw.where((c) {
+          if (c is! Map) return false;
+          final job = c['job'] as String?;
+          return job == 'Director' || job == 'Creator';
+        }).toList(),
+      );
+
+      return (cast: cast, crew: crew);
     });
+  }
+
+  static List<MediaItem> _parseAndDeduplicateCredits(List<dynamic> rawList) {
+    final seenIds = <int>{};
+    final items = <MediaItem>[];
+    for (final raw in rawList) {
+      if (raw is! Map) continue;
+      final map = Map<String, dynamic>.from(raw);
+      final id = map['id'] as int?;
+      if (id == null || seenIds.contains(id)) continue;
+      seenIds.add(id);
+      items.add(MediaItem.fromJson(map));
+    }
+    items.sort((a, b) {
+      if (a.releaseDate.isEmpty && b.releaseDate.isEmpty) return 0;
+      if (a.releaseDate.isEmpty) return 1;
+      if (b.releaseDate.isEmpty) return -1;
+      return b.releaseDate.compareTo(a.releaseDate);
+    });
+    return items;
+  }
+
+  /// Fetches the movies an actor has been in.
+  Future<List<MediaItem>> getActorMediaCredits(int actorId) async {
+    final credits = await getPersonCredits(actorId);
+    return credits.cast;
   }
 
   /// Backwards-compatible wrapper for discover with filter naming used elsewhere.

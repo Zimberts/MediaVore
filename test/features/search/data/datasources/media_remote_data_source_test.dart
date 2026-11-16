@@ -250,6 +250,132 @@ void main() {
 
       expect(result.first['key'], 'xyz');
     });
+
+    test('getPersonCredits should filter crew on Director and Creator, deduplicate and sort by date descending', () async {
+      final tCredits = {
+        'cast': [
+          {
+            'id': 101,
+            'title': 'Older Film',
+            'overview': 'Desc',
+            'release_date': '2010-01-01',
+            'media_type': 'movie',
+          },
+          {
+            'id': 102,
+            'title': 'Newer Film',
+            'overview': 'Desc',
+            'release_date': '2022-05-01',
+            'media_type': 'movie',
+          },
+          {
+            'id': 101,
+            'title': 'Older Film Duplicate Role',
+            'overview': 'Desc',
+            'release_date': '2010-01-01',
+            'media_type': 'movie',
+          },
+        ],
+        'crew': [
+          {
+            'id': 201,
+            'title': 'Directed Film 1',
+            'job': 'Director',
+            'release_date': '2015-06-01',
+            'media_type': 'movie',
+          },
+          {
+            'id': 202,
+            'name': 'Created Series',
+            'job': 'Creator',
+            'first_air_date': '2020-09-01',
+            'media_type': 'tv',
+          },
+          {
+            'id': 203,
+            'title': 'Producer Film (should be excluded)',
+            'job': 'Producer',
+            'release_date': '2021-01-01',
+            'media_type': 'movie',
+          },
+          {
+            'id': 201,
+            'title': 'Directed Film 1 duplicate',
+            'job': 'Director',
+            'release_date': '2015-06-01',
+            'media_type': 'movie',
+          },
+        ],
+      };
+
+      when(
+        () => mockDio.get(
+          'https://api.themoviedb.org/3/person/123/combined_credits',
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: tCredits,
+          statusCode: 200,
+        ),
+      );
+
+      final credits = await dataSource.getPersonCredits(123);
+
+      // Cast deduplicated: 2 unique items
+      expect(credits.cast.length, equals(2));
+      // Sorted descending by date: Newer Film first
+      expect(credits.cast[0].id, equals(102));
+      expect(credits.cast[1].id, equals(101));
+
+      // Crew filtered on Director and Creator: exactly 2 items (201 and 202)
+      expect(credits.crew.length, equals(2));
+      // Sorted descending by date: 2020 first, then 2015
+      expect(credits.crew[0].id, equals(202));
+      expect(credits.crew[0].title, equals('Created Series'));
+      expect(credits.crew[1].id, equals(201));
+      expect(credits.crew[1].title, equals('Directed Film 1'));
+    });
+
+    test('getActorDetails falls back to English biography if biography is empty', () async {
+      final tFrPerson = {
+        'id': 50,
+        'name': 'Jean Dupont',
+        'biography': '',
+      };
+      final tEnPerson = {
+        'id': 50,
+        'name': 'Jean Dupont',
+        'biography': 'English biography fallback.',
+      };
+
+      when(
+        () => mockDio.get(
+          'https://api.themoviedb.org/3/person/50',
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((invocation) async {
+        final queryParams = invocation.namedArguments[#queryParameters] as Map?;
+        if (queryParams != null && queryParams['language'] == 'en-US') {
+          return Response(
+            requestOptions: RequestOptions(path: ''),
+            data: tEnPerson,
+            statusCode: 200,
+          );
+        }
+        return Response(
+          requestOptions: RequestOptions(path: ''),
+          data: tFrPerson,
+          statusCode: 200,
+        );
+      });
+
+      final result = await dataSource.getActorDetails(50);
+      expect(result.biography, equals('English biography fallback.'));
+    });
   });
 
   group('TMDB authentication', () {

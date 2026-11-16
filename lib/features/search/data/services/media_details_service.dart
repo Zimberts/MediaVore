@@ -109,11 +109,14 @@ class MediaDetailsService {
         .toList();
 
     final CrewMember director = crewResults
-        .map((c) => CrewMember.fromJson(c))
+        .whereType<Map>()
+        .map((c) => CrewMember.fromJson(Map<String, dynamic>.from(c)))
         .firstWhere(
           (member) =>
-              member.job == 'Director' || member.job == 'Executive Producer',
-          orElse: () => CrewMember(name: 'N/A', job: 'Director'),
+              member.job == 'Director' ||
+              member.job == 'Creator' ||
+              member.job == 'Executive Producer',
+          orElse: () => const CrewMember(name: 'N/A', job: 'Director'),
         );
 
     // If this item belongs to a collection, fetch collection parts (saga)
@@ -262,23 +265,31 @@ class MediaDetailsService {
   }
 
   Future<ActorDetails> getActorDetails(int actorId) async {
-    final actorDetailsFuture = remoteDataSource.getActorDetails(actorId);
-    final actorMediasFuture = remoteDataSource.getActorMediaCredits(actorId);
+    try {
+      final actorDetailsFuture = remoteDataSource.getActorDetails(actorId);
+      final personCreditsFuture = remoteDataSource.getPersonCredits(actorId);
 
-    final actorDetails = await actorDetailsFuture;
-    final items = await actorMediasFuture;
+      final actorDetails = await actorDetailsFuture;
+      final credits = await personCreditsFuture;
 
-    await cache.cacheActorProfile(actorId, actorDetails.profilePath);
+      final fullDetails = ActorDetails(
+        id: actorDetails.id,
+        name: actorDetails.name,
+        biography: actorDetails.biography,
+        birthday: actorDetails.birthday,
+        placeOfBirth: actorDetails.placeOfBirth,
+        profilePath: actorDetails.profilePath,
+        items: credits.cast,
+        crewItems: credits.crew,
+      );
 
-    return ActorDetails(
-      id: actorDetails.id,
-      name: actorDetails.name,
-      biography: actorDetails.biography,
-      birthday: actorDetails.birthday,
-      placeOfBirth: actorDetails.placeOfBirth,
-      profilePath: actorDetails.profilePath,
-      items: items,
-    );
+      await cache.cacheActorDetails(fullDetails);
+      return fullDetails;
+    } catch (e) {
+      final cached = await cache.getActorDetails(actorId);
+      if (cached != null) return cached;
+      rethrow;
+    }
   }
 
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) async {

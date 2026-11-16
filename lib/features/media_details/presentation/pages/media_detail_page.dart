@@ -503,6 +503,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                       ),
                       MediaDetailInfos(
                         item: item,
+                        director: details?.director,
                         directorName: details?.director?.name,
                       ),
                     ],

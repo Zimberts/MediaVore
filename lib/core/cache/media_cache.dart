@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
+import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 
@@ -141,6 +142,27 @@ class MediaCache {
     });
   }
 
+  Future<void> cacheActorDetails(ActorDetails details) async {
+    _actorProfileCache.put(details.id, details.profilePath);
+    await _isar.writeTxn(() async {
+      await _isar.cachedActorProfiles.putByActorId(
+        CachedActorProfile(
+          actorId: details.id,
+          profilePath: details.profilePath,
+          name: details.name,
+          biography: details.biography,
+          birthday: details.birthday,
+          placeOfBirth: details.placeOfBirth,
+          itemsJson: jsonEncode(details.items.map((i) => i.toJson()).toList()),
+          crewItemsJson: jsonEncode(
+            details.crewItems.map((i) => i.toJson()).toList(),
+          ),
+          updatedAt: DateTime.now(),
+        ),
+      );
+    });
+  }
+
   // ---------------------------------------------------------------------------
   // Reads
   // ---------------------------------------------------------------------------
@@ -253,6 +275,37 @@ class MediaCache {
     if (row == null) return null;
     _actorProfileCache.put(actorId, row.profilePath);
     return row.profilePath;
+  }
+
+  Future<ActorDetails?> getActorDetails(int actorId) async {
+    final cached = await _isar.cachedActorProfiles.getByActorId(actorId);
+    if (cached == null || cached.name == null) return null;
+
+    List<MediaItem> parseItems(String? jsonStr) {
+      if (jsonStr == null || jsonStr.isEmpty) return const [];
+      try {
+        final list = jsonDecode(jsonStr);
+        if (list is! List) return const [];
+        return list
+            .whereType<Map>()
+            .map((item) => MediaItem.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      } catch (e) {
+        debugPrint('[Cache] Error parsing cached filmography for $actorId: $e');
+        return const [];
+      }
+    }
+
+    return ActorDetails(
+      id: cached.actorId,
+      name: cached.name!,
+      biography: cached.biography,
+      birthday: cached.birthday,
+      placeOfBirth: cached.placeOfBirth,
+      profilePath: cached.profilePath,
+      items: parseItems(cached.itemsJson),
+      crewItems: parseItems(cached.crewItemsJson),
+    );
   }
 
   Future<DateTime?> getSeasonUpdateDate(int tvId, int seasonNumber) async {

@@ -735,5 +735,9 @@
   "settingsWatchProvidersCountry": "Pays des plateformes",
   "settingsWatchProvidersCountrySubtitle": "Région pour les offres de streaming",
   "settingsWatchProvidersCountrySystem": "Système ({country})",
-  "settingsAboutJustWatch": "Données de streaming fournies par JustWatch."
+  "settingsAboutJustWatch": "Données de streaming fournies par JustWatch.",
+  "personDirecting": "Réalisation / Création",
+  "personActing": "Interprète",
+  "personSeenCount": "{seen} sur {total} vus",
+  "personOfflineNoData": "Aucune information en cache pour cette personne."
 }
