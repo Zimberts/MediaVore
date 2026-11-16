@@ -690,4 +690,194 @@ void main() {
       verifyNever(() => mockRepository.removeFromList(any(), any(), any()));
     });
   });
+
+  group('Previous unseen episodes prompt & batch marking', () {
+    void setupShowWithAnteriorEpisodes() {
+      when(() => mockRepository.getMediaDetails(10, type: MediaType.tv)).thenAnswer(
+        (_) async => MediaDetails(
+          item: const MediaItem(
+            id: 10,
+            title: 'Show',
+            overview: '',
+            releaseDate: '',
+            mediaType: MediaType.tv,
+            seasons: [
+              TVSeason(id: 1, seasonNumber: 1, episodeCount: 2),
+              TVSeason(id: 2, seasonNumber: 2, episodeCount: 5),
+            ],
+          ),
+          cast: [],
+        ),
+      );
+      when(() => mockRepository.getSeasonDetails(10, 1)).thenAnswer(
+        (_) async => {
+          'episodes': [
+            {'episode_number': 1, 'air_date': '2020-01-01'},
+            {'episode_number': 2, 'air_date': '2020-01-08'},
+          ],
+        },
+      );
+      when(() => mockRepository.getSeasonDetails(10, 2)).thenAnswer(
+        (_) async => {
+          'episodes': [
+            {'episode_number': 1, 'air_date': '2021-01-01'},
+            {'episode_number': 2, 'air_date': '2021-01-08'},
+            {'episode_number': 3, 'air_date': '2021-01-15'},
+            {'episode_number': 4, 'air_date': '2021-01-22'},
+            {'episode_number': 5, 'air_date': '2021-01-29'},
+          ],
+        },
+      );
+      // S1 complete in seen items
+      final seenItems = [
+        SeenItem(id: 1, tmdbId: 10, type: MediaType.tv, title: 'Show', seasonNumber: 1, episodeNumber: 1, seenDate: DateTime(2022)),
+        SeenItem(id: 2, tmdbId: 10, type: MediaType.tv, title: 'Show', seasonNumber: 1, episodeNumber: 2, seenDate: DateTime(2022)),
+      ];
+      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenItems);
+      when(() => mockRepository.markManyAsSeen(any())).thenAnswer((_) async => Future.value());
+    }
+
+    testWidgets('behavior ask: shows prompt proposing 4 previous episodes', (tester) async {
+      setupShowWithAnteriorEpisodes();
+      await searchProvider.loadAllSeenStatus();
+
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          tmdbId: 10,
+          type: MediaType.tv,
+          title: 'Show',
+          seasonNumber: 2,
+          episodeNumber: 5,
+          compact: true,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('4 previous episodes are unseen'), findsOneWidget);
+      expect(find.text('Remember my choice'), findsOneWidget);
+      expect(find.text('No, only this episode'), findsOneWidget);
+      expect(find.text('Yes, mark all as seen'), findsOneWidget);
+
+      // Tap Yes, mark all as seen
+      await tester.tap(find.text('Yes, mark all as seen'));
+      await tester.pumpAndSettle();
+
+      // Verify batch mark with 5 episodes
+      verify(() => mockRepository.markManyAsSeen(any(that: hasLength(5)))).called(1);
+    });
+
+    testWidgets('behavior ask: choosing only this episode marks single episode', (tester) async {
+      setupShowWithAnteriorEpisodes();
+      await searchProvider.loadAllSeenStatus();
+
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          tmdbId: 10,
+          type: MediaType.tv,
+          title: 'Show',
+          seasonNumber: 2,
+          episodeNumber: 5,
+          compact: true,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+
+      // Tap No, only this episode
+      await tester.tap(find.text('No, only this episode'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockRepository.markManyAsSeen(any()));
+      verify(() => mockRepository.markAsSeen(any())).called(1);
+    });
+
+    testWidgets('behavior all: marks all episodes immediately without prompt', (tester) async {
+      setupShowWithAnteriorEpisodes();
+      await searchProvider.loadAllSeenStatus();
+      await settingsProvider.setPreviousEpisodes(PreviousEpisodesBehavior.all);
+
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          tmdbId: 10,
+          type: MediaType.tv,
+          title: 'Show',
+          seasonNumber: 2,
+          episodeNumber: 5,
+          compact: true,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      verify(() => mockRepository.markManyAsSeen(any(that: hasLength(5)))).called(1);
+    });
+
+    testWidgets('behavior one: marks only this episode without prompt', (tester) async {
+      setupShowWithAnteriorEpisodes();
+      await searchProvider.loadAllSeenStatus();
+      await settingsProvider.setPreviousEpisodes(PreviousEpisodesBehavior.one);
+
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          tmdbId: 10,
+          type: MediaType.tv,
+          title: 'Show',
+          seasonNumber: 2,
+          episodeNumber: 5,
+          compact: true,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      verifyNever(() => mockRepository.markManyAsSeen(any()));
+      verify(() => mockRepository.markAsSeen(any())).called(1);
+    });
+
+    testWidgets('advanced mode: date dialog integrates previous episodes checkbox', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      setupShowWithAnteriorEpisodes();
+      await searchProvider.loadAllSeenStatus();
+      await settingsProvider.setAdvancedTracking(true);
+
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          tmdbId: 10,
+          type: MediaType.tv,
+          title: 'Show',
+          seasonNumber: 2,
+          episodeNumber: 5,
+          compact: true,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.textContaining('4 previous episodes are unseen'), findsOneWidget);
+      expect(find.byType(CheckboxListTile), findsOneWidget);
+
+      await tester.tap(find.text('LOG VIEWING'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockRepository.markManyAsSeen(any(that: hasLength(5)))).called(1);
+    });
+  });
 }

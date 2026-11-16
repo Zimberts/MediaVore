@@ -10,6 +10,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/core/utils/unseen_episodes.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/search/presentation/providers/search_error.dart';
@@ -1126,6 +1127,72 @@ class SearchProvider with ChangeNotifier {
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
+  }
+
+  Future<void> markManyAsSeen(List<SeenItem> items) async {
+    if (items.isEmpty) return;
+    await repository.markManyAsSeen(items);
+    await loadAllSeenStatus();
+    await loadNotifiedItems();
+    await updateSeenDbSize();
+    await loadQuickAddItems();
+  }
+
+  /// Finds anterior unseen episodes for a series before [targetSeason] / [targetEpisode].
+  Future<List<CandidateEpisode>> getPreviousUnseenEpisodes({
+    required int tvId,
+    required int targetSeason,
+    required int targetEpisode,
+  }) async {
+    try {
+      final details =
+          await repository.getMediaDetails(tvId, type: MediaType.tv);
+      final seasons = details.item.seasons ?? [];
+
+      final allCandidates = <CandidateEpisode>[];
+      for (final s in seasons) {
+        if (s.seasonNumber <= 0 || s.seasonNumber > targetSeason) continue;
+        try {
+          final sDetails =
+              await repository.getSeasonDetails(tvId, s.seasonNumber);
+          final episodes = sDetails['episodes'] as List? ?? [];
+          for (final ep in episodes) {
+            if (ep is Map<String, dynamic>) {
+              allCandidates.add(
+                CandidateEpisode(
+                  seasonNumber: s.seasonNumber,
+                  episodeNumber: ep['episode_number'] as int? ?? 0,
+                  name: ep['name'] as String?,
+                  runtime: ep['runtime'] as int?,
+                  airDate: ep['air_date'] as String?,
+                ),
+              );
+            }
+          }
+        } catch (_) {}
+      }
+
+      final seenKeys = _seenItems
+          .where(
+            (s) =>
+                s.tmdbId == tvId &&
+                s.type == MediaType.tv &&
+                s.seasonNumber != null &&
+                s.episodeNumber != null,
+          )
+          .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
+          .toSet();
+
+      return findPreviousUnseenEpisodes(
+        targetSeason: targetSeason,
+        targetEpisode: targetEpisode,
+        allEpisodes: allCandidates,
+        seenEpisodeKeys: seenKeys,
+      );
+    } catch (e) {
+      debugPrint('[SearchProvider] getPreviousUnseenEpisodes failed: $e');
+      return [];
+    }
   }
 
   /// Whether two dates are the same once stored (the database keeps

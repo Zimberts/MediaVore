@@ -167,6 +167,12 @@ class MediaListLocalDataSource {
     });
   }
 
+  Future<void> markManyAsSeen(List<SeenItemModel> items) async {
+    await _isar.writeTxn(() async {
+      await _isar.seenItemModels.putAll(items);
+    });
+  }
+
   Future<void> removeFromSeen(
     int tmdbId,
     String type, {
