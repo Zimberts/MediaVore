@@ -6,10 +6,10 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/filter_chip_row.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
+import 'package:mediavore/features/library/presentation/pages/list_page.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_dialogs.dart';
 import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
-import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -35,7 +35,7 @@ class _LibraryPageState extends State<LibraryPage> {
   void _openList(String name) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => SavedMediaPage(initialList: name, typeFilter: _type),
+        builder: (_) => ListPage(initialList: name, typeFilter: _type),
       ),
     );
   }

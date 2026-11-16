@@ -90,19 +90,31 @@ void main() {
     });
 
     test('setDisplayMode should update state and save to prefs', () async {
-      await provider.setDisplayMode(DisplayMode.swipe);
+      await provider.setDisplayMode(DisplayMode.list);
 
-      expect(provider.displayMode, DisplayMode.swipe);
+      expect(provider.displayMode, DisplayMode.list);
       verify(
-        () => mockPrefs.setInt('displayMode', DisplayMode.swipe.index),
+        () => mockPrefs.setInt('displayMode', DisplayMode.list.index),
+      ).called(1);
+
+      // v1.4.0 swipe mode falls back to grid
+      await provider.setDisplayMode(DisplayMode.swipe);
+      expect(provider.displayMode, DisplayMode.grid);
+      verify(
+        () => mockPrefs.setInt('displayMode', DisplayMode.grid.index),
       ).called(1);
     });
 
     test('setGridSize should update state and save to prefs', () async {
-      await provider.setGridSize(5.0);
+      await provider.setGridSize(3.0);
 
-      expect(provider.gridSize, 5.0);
-      verify(() => mockPrefs.setDouble('gridSize', 5.0)).called(1);
+      expect(provider.gridSize, 3.0);
+      verify(() => mockPrefs.setDouble('gridSize', 3.0)).called(1);
+
+      // Clamps outside [2.0, 4.0]
+      await provider.setGridSize(5.0);
+      expect(provider.gridSize, 4.0);
+      verify(() => mockPrefs.setDouble('gridSize', 4.0)).called(1);
     });
 
     test('setThemeMode should update state and save to prefs', () async {

@@ -94,15 +94,18 @@ void main() {
     locator.reset();
   });
 
-  Widget createWidgetUnderTest([GlobalKey<SavedMediaPageState>? key]) {
+  Widget createWidgetUnderTest([
+    GlobalKey<SavedMediaPageState>? key,
+    String initialList = 'watchlist',
+  ]) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
-        home: SavedMediaPage(key: key),
+        theme: AppPalette.paper.toThemeData(),
+        home: SavedMediaPage(key: key, initialList: initialList),
       ),
     );
   }
@@ -185,17 +188,7 @@ void main() {
       () => mockMediaRepository.getListEntries(any()),
     ).thenAnswer((_) async => []);
 
-    await tester.pumpWidget(createWidgetUnderTest());
-    // Force provider to load names
-    await searchProvider.loadListNames();
-    await tester.pumpAndSettle();
-
-    // Open list picker
-    await tester.tap(find.text('Watchlist').first);
-    await tester.pumpAndSettle();
-
-    // Select the long name list
-    await tester.tap(find.text(longName).first);
+    await tester.pumpWidget(createWidgetUnderTest(null, longName));
     await tester.pumpAndSettle();
 
     // Should render the long list name without exception
@@ -378,22 +371,16 @@ void main() {
       () => mockMediaRepository.getListEntries('mylist'),
     ).thenAnswer((_) async => List.generate(30, (i) => '${i + 101}:movie'));
 
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle();
-
-    // Make the extra list available in the picker (provider initialised in
-    // setUp before this test's stubs were registered).
-    await searchProvider.loadListNames();
+    final key = GlobalKey<SavedMediaPageState>();
+    await tester.pumpWidget(createWidgetUnderTest(key, 'watchlist'));
     await tester.pumpAndSettle();
 
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));
     await tester.pumpAndSettle();
     expect(listPosition(tester).pixels, greaterThan(0));
 
-    // Open the list picker and switch to another list.
-    await tester.tap(find.text('Watchlist').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('mylist').first);
+    // Switch to another list.
+    await tester.pumpWidget(createWidgetUnderTest(key, 'mylist'));
     await tester.pumpAndSettle();
 
     expect(listPosition(tester).pixels, 0);
@@ -481,18 +468,20 @@ void main() {
       expect(find.byIcon(Icons.settings), findsNothing);
     });
 
-    testWidgets('should group share and sort in the overflow menu', (
+    testWidgets('should show sort, display mode, and more actions menu', (
       tester,
     ) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.share), findsNothing);
+      expect(find.byIcon(Icons.swap_vert), findsOneWidget);
+      expect(find.byIcon(Icons.grid_view), findsOneWidget);
+
       await tester.tap(find.byKey(const Key('lists_more_actions')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Sharing & Importing'), findsOneWidget);
-      expect(find.text('Sort Options'), findsOneWidget);
+      expect(find.text('Share list'), findsOneWidget);
+      expect(find.text('Select'), findsOneWidget);
     });
 
     testWidgets('should reload the list on pull-to-refresh when empty', (

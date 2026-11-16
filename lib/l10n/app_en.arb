@@ -1529,5 +1529,45 @@
       }
     }
   },
-  "debugReleaseNoDate": "No date stored"
+  "debugReleaseNoDate": "No date stored",
+  "listsSortOrderManual": "Manual order",
+  "listsSortOrderReleaseDate": "Release date",
+  "listsSortOrderShuffle": "Shuffle",
+  "listsSortOrderReversed": "{order} (reversed)",
+  "@listsSortOrderReversed": {
+    "placeholders": {
+      "order": {
+        "type": "String"
+      }
+    }
+  },
+  "listsHeaderSubtitle": "{count, plural, =0{0 items} =1{1 item} other{{count} items}} · {order}",
+  "@listsHeaderSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "order": {
+        "type": "String"
+      }
+    }
+  },
+  "listsDisplayGrid2": "Grid (2 columns)",
+  "listsDisplayGrid3": "Grid (3 columns)",
+  "listsDisplayGrid4": "Grid (4 columns)",
+  "listsDisplayDetailedList": "Detailed list",
+  "listsActionShare": "Share list",
+  "listsActionSelect": "Select",
+  "listsSelectAll": "All",
+  "listsDeselectAll": "None",
+  "listsRemove": "Remove",
+  "listsRemovedNotification": "{count, plural, =1{1 item removed} other{{count} items removed}}",
+  "@listsRemovedNotification": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsFillBySwiping": "Fill by swiping"
 }
