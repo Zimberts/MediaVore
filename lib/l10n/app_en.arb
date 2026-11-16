@@ -1875,5 +1875,32 @@
         "type": "String"
       }
     }
+  },
+  "detailSeasonEpisodes": "{count, plural, =1{1 episode} other{{count} episodes}}",
+  "@detailSeasonEpisodes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailSeasonSeenShort": "{seen}/{total} seen",
+  "@detailSeasonSeenShort": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "detailEpisodeNumber": "Episode {number}",
+  "@detailEpisodeNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
   }
 }

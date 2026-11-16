@@ -132,15 +132,25 @@ class _SeenManagerState extends State<SeenManager> {
             : context.l10n.seenRewatchAction;
       }
 
+      final isEpisode =
+          widget.seasonNumber != null && widget.episodeNumber != null;
+
       return IconButton(
         icon: Icon(
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
-          color: isSeen ? colors.success : colors.text2,
+          color: isSeen
+              ? (isEpisode ? colors.series : colors.success)
+              : colors.text2,
+          size: 26,
         ),
         tooltip: tooltip,
         onPressed: () {
           if (!advanced) {
-            _markAsSeenImmediate(context, provider);
+            if (isEpisode && isSeen) {
+              _showSeenHistory(context, provider);
+            } else {
+              _markAsSeenImmediate(context, provider);
+            }
           } else {
             if (isSeen) {
               _showSeenHistory(context, provider);
@@ -389,10 +399,17 @@ class _EpisodeSeenHistorySheet extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final seenEntry = history[index];
                     final ordinal = l10n.seenOrdinal((index + 1).toString());
-                    final dateStr = Formatters.formatSeenDateTime(
-                      seenEntry.seenDate,
-                      l10n.localeName,
-                    );
+                    final settings = Provider.of<SettingsProvider?>(context);
+                    final advanced = settings?.advancedTracking ?? false;
+                    final dateStr = advanced
+                        ? Formatters.formatSeenDateTime(
+                            seenEntry.seenDate,
+                            l10n.localeName,
+                          )
+                        : Formatters.formatSeenDate(
+                            seenEntry.seenDate,
+                            l10n.localeName,
+                          );
 
                     return ListTile(
                       leading: Icon(Icons.history, color: colors.primary),

@@ -290,7 +290,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check the season list tile subtitle
-      expect(find.text('1 / 7 episodes seen'), findsOneWidget);
+      expect(find.text('7 episodes · 1/7 seen'), findsOneWidget);
     });
     group('seen counters stay in sync with the seen history (#209)', () {
       const tvId = 3;
@@ -375,7 +375,7 @@ void main() {
           findsOneWidget,
         );
         final progress = tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator),
+          find.byType(LinearProgressIndicator).first,
         );
         expect(progress.value, seenCount / 3);
         await tester.scrollUntilVisible(
@@ -383,7 +383,7 @@ void main() {
           200,
           scrollable: find.byType(Scrollable).first,
         );
-        expect(find.text('$seenCount / 3 episodes seen'), findsOneWidget);
+        expect(find.text('3 episodes · $seenCount/3 seen'), findsOneWidget);
       }
 
       testWidgets('Watch Next updates the global and season counters', (

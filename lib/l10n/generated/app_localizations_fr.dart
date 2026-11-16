@@ -2820,4 +2820,25 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String detailSeasonEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count épisodes',
+      one: '1 épisode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String detailSeasonSeenShort(int seen, int total) {
+    return '$seen/$total vus';
+  }
+
+  @override
+  String detailEpisodeNumber(int number) {
+    return 'Épisode $number';
+  }
 }
