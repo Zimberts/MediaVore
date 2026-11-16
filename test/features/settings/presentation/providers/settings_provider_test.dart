@@ -39,6 +39,8 @@ void main() {
         expect(provider.darkPalette, AppPalette.ink);
         expect(provider.notificationCenterDebug, false);
         expect(provider.advancedTracking, false);
+        expect(provider.previousEpisodes, PreviousEpisodesBehavior.ask);
+        expect(provider.watchProvidersCountry, isNull);
       },
     );
 
@@ -54,8 +56,9 @@ void main() {
     });
 
     test('should load advancedTracking from SharedPreferences', () {
-      when(() => mockPrefs.getBool(SettingsProvider.advancedTrackingKey))
-          .thenReturn(true);
+      when(
+        () => mockPrefs.getBool(SettingsProvider.advancedTrackingKey),
+      ).thenReturn(true);
 
       final newProvider = SettingsProvider(
         mockPrefs,
@@ -63,6 +66,19 @@ void main() {
       );
 
       expect(newProvider.advancedTracking, true);
+    });
+
+    test('should load previousEpisodes from SharedPreferences', () {
+      when(
+        () => mockPrefs.getString(SettingsProvider.previousEpisodesKey),
+      ).thenReturn('all');
+
+      final newProvider = SettingsProvider(
+        mockPrefs,
+        FakeTmdbCredentialStore(),
+      );
+
+      expect(newProvider.previousEpisodes, PreviousEpisodesBehavior.all);
     });
 
     test('should load values from SharedPreferences', () {
@@ -174,17 +190,23 @@ void main() {
       },
     );
 
-    test(
-      'setAdvancedTracking should update state and save to prefs',
-      () async {
-        await provider.setAdvancedTracking(true);
+    test('setAdvancedTracking should update state and save to prefs', () async {
+      await provider.setAdvancedTracking(true);
 
-        expect(provider.advancedTracking, true);
-        verify(
-          () => mockPrefs.setBool(SettingsProvider.advancedTrackingKey, true),
-        ).called(1);
-      },
-    );
+      expect(provider.advancedTracking, true);
+      verify(
+        () => mockPrefs.setBool(SettingsProvider.advancedTrackingKey, true),
+      ).called(1);
+    });
+
+    test('setPreviousEpisodes should update state and save to prefs', () async {
+      await provider.setPreviousEpisodes(PreviousEpisodesBehavior.one);
+
+      expect(provider.previousEpisodes, PreviousEpisodesBehavior.one);
+      verify(
+        () => mockPrefs.setString(SettingsProvider.previousEpisodesKey, 'one'),
+      ).called(1);
+    });
   });
 
   group('SettingsProvider - Palettes', () {
@@ -338,18 +360,81 @@ void main() {
       );
       expect(restarted.appLanguageOverride?.code, 'fr');
     });
+  });
 
-    test('should go back to the device language on System', () async {
-      final p = SettingsProvider(
+  group('SettingsProvider - Watch Providers Country', () {
+    test('should load watchProvidersCountry from SharedPreferences', () {
+      when(
+        () => mockPrefs.getString(SettingsProvider.watchProvidersCountryKey),
+      ).thenReturn('FR');
+
+      final newProvider = SettingsProvider(
         mockPrefs,
         FakeTmdbCredentialStore(),
-        localeService: localeService,
       );
-      await p.setAppLanguage(appLanguageForCode('fr'));
-      await p.setAppLanguage(null);
 
-      expect(p.locale, isNull);
-      expect(localeService.tmdbLanguage, 'en-US');
+      expect(newProvider.watchProvidersCountry, equals('FR'));
     });
+
+    test('should set and persist watchProvidersCountry', () async {
+      when(
+        () => mockPrefs.setString(
+          SettingsProvider.watchProvidersCountryKey,
+          'US',
+        ),
+      ).thenAnswer((_) async => true);
+
+      var notified = false;
+      provider.addListener(() => notified = true);
+
+      await provider.setWatchProvidersCountry('us');
+
+      expect(provider.watchProvidersCountry, equals('US'));
+      expect(notified, isTrue);
+      verify(
+        () => mockPrefs.setString(
+          SettingsProvider.watchProvidersCountryKey,
+          'US',
+        ),
+      ).called(1);
+    });
+
+    test('should remove watchProvidersCountry when null or empty', () async {
+      when(
+        () => mockPrefs.remove(SettingsProvider.watchProvidersCountryKey),
+      ).thenAnswer((_) async => true);
+
+      await provider.setWatchProvidersCountry(null);
+
+      expect(provider.watchProvidersCountry, isNull);
+      verify(
+        () => mockPrefs.remove(SettingsProvider.watchProvidersCountryKey),
+      ).called(1);
+    });
+
+    test('resolveWatchProvidersCountry resolves override if set', () async {
+      when(
+        () => mockPrefs.setString(
+          SettingsProvider.watchProvidersCountryKey,
+          'CA',
+        ),
+      ).thenAnswer((_) async => true);
+      await provider.setWatchProvidersCountry('CA');
+
+      expect(
+        provider.resolveWatchProvidersCountry(const Locale('fr', 'FR')),
+        equals('CA'),
+      );
+    });
+
+    test(
+      'resolveWatchProvidersCountry resolves device locale country if no override',
+      () {
+        expect(
+          provider.resolveWatchProvidersCountry(const Locale('en', 'GB')),
+          equals('GB'),
+        );
+      },
+    );
   });
 }

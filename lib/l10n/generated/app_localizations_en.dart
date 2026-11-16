@@ -2639,4 +2639,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenVisionnagesSectionTitle => 'Viewings';
+
+  @override
+  String get settingsPreviousEpisodes => 'Unseen previous episodes';
+
+  @override
+  String get settingsPreviousEpisodesSubtitle =>
+      'Behavior when marking an episode while earlier episodes are unseen';
+
+  @override
+  String get settingsPreviousEpisodesAsk => 'Ask';
+
+  @override
+  String get settingsPreviousEpisodesAll => 'All seen';
+
+  @override
+  String get settingsPreviousEpisodesOne => 'Leave unseen';
+
+  @override
+  String seenPreviousUnseenPrompt(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count previous episodes are unseen. Mark them as seen too?',
+      one: '1 previous episode is unseen. Mark it as seen too?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get seenPreviousMarkAll => 'Yes, mark all as seen';
+
+  @override
+  String get seenPreviousOnlyThis => 'No, only this episode';
+
+  @override
+  String get seenRememberChoice => 'Remember my choice';
+
+  @override
+  String seenBatchAddedMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '1 episode',
+    );
+    return 'Marked as seen · $_temp0';
+  }
+
+  @override
+  String get detailWhereToWatch => 'Where to watch';
+
+  @override
+  String get detailWatchFlatrate => 'Stream';
+
+  @override
+  String get detailWatchRent => 'Rent';
+
+  @override
+  String get detailWatchBuy => 'Buy';
+
+  @override
+  String get detailWatchFree => 'Free';
+
+  @override
+  String get detailWatchJustWatchAttribution => 'Data provided by JustWatch';
+
+  @override
+  String get settingsWatchProvidersCountry => 'Platforms country';
+
+  @override
+  String get settingsWatchProvidersCountrySubtitle =>
+      'Region used for streaming offers';
+
+  @override
+  String settingsWatchProvidersCountrySystem(String country) {
+    return 'System ($country)';
+  }
+
+  @override
+  String get settingsAboutJustWatch => 'Streaming data provided by JustWatch.';
 }

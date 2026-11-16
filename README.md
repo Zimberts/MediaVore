@@ -129,3 +129,8 @@ After completing these three steps, the project should build and run correctly.
     pip install pre-commit
     pre-commit install --hook-type commit-msg
     ```
+
+## Attributions & Data Sources
+
+- Media metadata and images provided by [The Movie Database (TMDB)](https://www.themoviedb.org/).
+- Streaming availability data provided by [JustWatch](https://www.justwatch.com/) via TMDB.
