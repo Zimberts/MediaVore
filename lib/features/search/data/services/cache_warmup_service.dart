@@ -100,15 +100,18 @@ class CacheWarmupService {
       // 2. Seen items logic
       final seenItems = await localDataSource.getAllSeenItems();
       final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      final checkedTitles = <(int, MediaType)>{};
 
       for (final seen in seenItems) {
         if (cancelled()) return false;
         final type = seen.type == 'movie' ? MediaType.movie : MediaType.tv;
+        keysToKeep.add('${seen.type}:${seen.tmdbId}');
+
         final isRecent = seen.seenDate.isAfter(thirtyDaysAgo);
         final isMissingPoster = seen.posterPath == null;
 
         if (isRecent || isMissingPoster) {
-          keysToKeep.add('${seen.type}:${seen.tmdbId}');
+          checkedTitles.add((seen.tmdbId, type));
           try {
             final mediaDetails = await details.getMediaDetails(
               seen.tmdbId,
@@ -126,6 +129,17 @@ class CacheWarmupService {
             }
           } catch (e) {
             debugPrint('[Repo] _initCache seen item refresh failed: $e');
+          }
+        } else if (checkedTitles.add((seen.tmdbId, type))) {
+          try {
+            final cached = await cache.getDetails(seen.tmdbId, type);
+            if (cached == null || !cached.item.isComplete) {
+              await details.getMediaDetails(seen.tmdbId, type: type);
+            }
+          } catch (e) {
+            debugPrint(
+              '[Repo] _initCache incomplete seen item refresh failed: $e',
+            );
           }
         }
       }

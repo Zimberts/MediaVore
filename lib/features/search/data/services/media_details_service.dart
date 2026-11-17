@@ -57,10 +57,30 @@ class MediaDetailsService {
   Future<MediaDetails> getMediaDetails(
     int id, {
     MediaType type = MediaType.movie,
+    bool forceRefresh = false,
   }) async {
     final cachedDetails = await cache.getDetails(id, type);
-    if (cachedDetails != null) return cachedDetails;
+    if (cachedDetails != null && !forceRefresh) {
+      if (cachedDetails.item.isComplete) {
+        return cachedDetails;
+      }
+      try {
+        return await _fetchMediaDetailsWithFlight(id, type);
+      } catch (e) {
+        debugPrint(
+          '[MediaDetailsService] Failed to refresh incomplete metadata for $id: $e',
+        );
+        return cachedDetails;
+      }
+    }
 
+    return _fetchMediaDetailsWithFlight(id, type);
+  }
+
+  Future<MediaDetails> _fetchMediaDetailsWithFlight(
+    int id,
+    MediaType type,
+  ) async {
     final key = '${type.name}_$id';
     final pending = _inFlightDetails[key];
     if (pending != null) return pending;
