@@ -6,8 +6,13 @@ import 'package:mediavore/features/achievements/domain/entities/achievement.dart
 class AchievementFamily extends Equatable {
   final String id;
   final List<Achievement> tiers;
+  final String category;
 
-  const AchievementFamily({required this.id, required this.tiers});
+  const AchievementFamily({
+    required this.id,
+    required this.tiers,
+    this.category = 'discovery',
+  });
 
   bool get isTiered => tiers.length > 1;
 
@@ -49,7 +54,7 @@ class AchievementFamily extends Equatable {
       tiers.any((a) => a.id == achievementId);
 
   @override
-  List<Object?> get props => [id, tiers];
+  List<Object?> get props => [id, tiers, category];
 }
 
 /// Groups achievements by [Achievement.group], keeping the order in which
@@ -62,6 +67,9 @@ List<AchievementFamily> groupAchievements(List<Achievement> achievements) {
   return byGroup.entries.map((e) {
     final tiers = List<Achievement>.from(e.value)
       ..sort((a, b) => (a.tier ?? 0).compareTo(b.tier ?? 0));
-    return AchievementFamily(id: e.key, tiers: tiers);
+    final category = tiers
+        .map((a) => a.category)
+        .firstWhere((c) => c != null, orElse: () => 'discovery')!;
+    return AchievementFamily(id: e.key, tiers: tiers, category: category);
   }).toList();
 }

@@ -2414,6 +2414,42 @@ abstract class AppLocalizations {
   /// **'Overall Progress'**
   String get achievementsOverall;
 
+  /// No description provided for @achievementsCategoryMovies.
+  ///
+  /// In en, this message translates to:
+  /// **'Movies'**
+  String get achievementsCategoryMovies;
+
+  /// No description provided for @achievementsCategoryTv.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get achievementsCategoryTv;
+
+  /// No description provided for @achievementsCategoryBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Books'**
+  String get achievementsCategoryBooks;
+
+  /// No description provided for @achievementsCategoryDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery'**
+  String get achievementsCategoryDiscovery;
+
+  /// No description provided for @achievementsCategoryTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Together'**
+  String get achievementsCategoryTogether;
+
+  /// No description provided for @achievementsCategoryRegularity.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity'**
+  String get achievementsCategoryRegularity;
+
   /// No description provided for @achievementsUnlockedCount.
   ///
   /// In en, this message translates to:

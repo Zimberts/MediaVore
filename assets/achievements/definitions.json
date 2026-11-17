@@ -18,7 +18,8 @@
                 "title": "Premier film",
                 "description": "Regarder votre premier film"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "movie_10",
@@ -134,7 +135,8 @@
                 "title": "Premier épisode",
                 "description": "Regarder votre premier épisode"
             }
-        }
+        },
+        "category": "tv"
     },
     {
         "id": "tv_10",
@@ -269,7 +271,8 @@
                 "title": "Bis !",
                 "description": "Regarder le même film deux fois"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "rewatch_movie_5",
@@ -328,7 +331,8 @@
                 "title": "Deuxième prise",
                 "description": "Regarder le même épisode deux fois"
             }
-        }
+        },
+        "category": "tv"
     },
     {
         "id": "rewatch_ep_5",
@@ -386,7 +390,8 @@
                 "title": "Super fan",
                 "description": "Regarder 100 épisodes de la même série"
             }
-        }
+        },
+        "category": "tv"
     },
     {
         "id": "loyalist_500",
@@ -425,7 +430,8 @@
                 "title": "Reine/Roi du cri",
                 "description": "Regarder 10 films d'horreur"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_horror_50",
@@ -484,7 +490,8 @@
                 "title": "Pitre de la classe",
                 "description": "Regarder 10 comédies"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_comedy",
@@ -562,7 +569,8 @@
                 "title": "Cascadeur",
                 "description": "Regarder 10 films d'action"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_action",
@@ -640,7 +648,8 @@
                 "title": "Contemplateur d'étoiles",
                 "description": "Regarder 10 films de science-fiction"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_scifi",
@@ -718,7 +727,8 @@
                 "title": "Érudit",
                 "description": "Regarder 10 documentaires"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_doc_50",
@@ -777,7 +787,8 @@
                 "title": "Papillons dans le ventre",
                 "description": "Regarder 10 films romantiques"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_romance",
@@ -855,7 +866,8 @@
                 "title": "Fan de dessins animés",
                 "description": "Regarder 10 films d'animation"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_animation_50",
@@ -914,7 +926,8 @@
                 "title": "Sur le fil",
                 "description": "Regarder 10 thrillers"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_thriller_50",
@@ -973,7 +986,8 @@
                 "title": "Mouchoirs de rigueur",
                 "description": "Regarder 10 drames"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_drama_50",
@@ -1032,7 +1046,8 @@
                 "title": "Détective",
                 "description": "Regarder 10 films policiers"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_crime_50",
@@ -1091,7 +1106,8 @@
                 "title": "Rêveur",
                 "description": "Regarder 10 films fantastiques"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_fantasy_50",
@@ -1150,7 +1166,8 @@
                 "title": "Explorateur",
                 "description": "Regarder 10 films d'aventure"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_adventure_50",
@@ -1209,7 +1226,8 @@
                 "title": "Vacher",
                 "description": "Regarder 10 westerns"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_western_50",
@@ -1268,7 +1286,8 @@
                 "title": "Recrue",
                 "description": "Regarder 10 films de guerre"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_war_50",
@@ -1327,7 +1346,8 @@
                 "title": "Groupie",
                 "description": "Regarder 10 films musicaux"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_music_50",
@@ -1386,7 +1406,8 @@
                 "title": "Soirée cinéma",
                 "description": "Regarder 10 films familiaux"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_family_50",
@@ -1445,7 +1466,8 @@
                 "title": "Fin limier",
                 "description": "Regarder 10 films à mystère"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_mystery_50",
@@ -1504,7 +1526,8 @@
                 "title": "Passionné d'histoire",
                 "description": "Regarder 10 films historiques"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "genre_history_50",
@@ -1563,7 +1586,8 @@
                 "title": "Oiseau de nuit",
                 "description": "Regarder 10 titres entre minuit et 4 h"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "night_owl_50",
@@ -1641,7 +1665,8 @@
                 "title": "Guerrier du week-end",
                 "description": "Regarder 15 titres en 72 heures"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "weekend_warrior_30",
@@ -1699,7 +1724,8 @@
                 "title": "Tour d'échauffement",
                 "description": "Regarder 5 épisodes de la même série en un jour"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "marathon",
@@ -1773,7 +1799,8 @@
                 "title": "Régulier",
                 "description": "Regarder quelque chose chaque jour pendant une semaine"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "streak_30",
@@ -1829,7 +1856,8 @@
                 "title": "Dix heures au compteur",
                 "description": "Regarder 10 heures au total"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "runtime_hour_20",
@@ -2011,7 +2039,8 @@
                 "title": "Final de saison",
                 "description": "Voir tous les épisodes d'une saison"
             }
-        }
+        },
+        "category": "tv"
     },
     {
         "id": "season_complete_10",
@@ -2067,7 +2096,8 @@
                 "title": "Le mot de la fin",
                 "description": "Voir tous les épisodes d'une série terminée"
             }
-        }
+        },
+        "category": "tv"
     },
     {
         "id": "series_complete_5",
@@ -2123,7 +2153,8 @@
                 "title": "À jour",
                 "description": "Être à jour sur une série en cours"
             }
-        }
+        },
+        "category": "tv"
     },
     {
         "id": "up_to_date_5",
@@ -2179,7 +2210,8 @@
                 "title": "Saga bouclée",
                 "description": "Voir tous les films sortis d'une saga"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "saga_complete_5",
@@ -2231,7 +2263,8 @@
                 "title": "Table rase",
                 "description": "N'avoir plus rien à voir dans sa watchlist (après au moins 10 titres vus)"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "countries_5",
@@ -2251,7 +2284,8 @@
                 "title": "Touriste",
                 "description": "Voir des films ou séries de 5 pays différents"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "countries_15",
@@ -2307,7 +2341,8 @@
                 "title": "Curieux",
                 "description": "Voir des films ou séries de 5 genres différents"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "genres_10",
@@ -2363,7 +2398,8 @@
                 "title": "Touriste du temps",
                 "description": "Voir des films ou séries sortis sur 3 décennies différentes"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "decades_5",
@@ -2420,7 +2456,8 @@
                 "title": "Old school",
                 "description": "Voir un film ou une série sorti avant 1970"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "classic_10",
@@ -2479,7 +2516,8 @@
                 "title": "Jour J",
                 "description": "Voir un film ou un épisode le jour de sa sortie (ou le lendemain)"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "day_one_10",
@@ -2540,7 +2578,8 @@
                 "title": "Dénicheur",
                 "description": "Voir un titre noté 7,5+ sur TMDB avec au plus 500 votes"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "hidden_gem_5",
@@ -2603,7 +2642,8 @@
                 "title": "Grand public",
                 "description": "Voir 5 titres avec au moins 10 000 votes sur TMDB"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "blockbuster_25",
@@ -2663,7 +2703,8 @@
                 "title": "Exigeant",
                 "description": "Voir 5 titres notés 8+ sur TMDB (au moins 1 000 votes)"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "critics_taste_25",
@@ -2724,7 +2765,8 @@
                 "title": "Lève-tôt",
                 "description": "Regarder 10 titres entre 5 h et 9 h"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "early_bird_50",
@@ -2783,7 +2825,8 @@
                 "title": "Séance double",
                 "description": "Regarder 2 films différents le même jour"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "double_feature_10",
@@ -2841,7 +2884,8 @@
                 "title": "Sept jours",
                 "description": "Regarder un titre chaque jour de la semaine"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "every_weekday_10",
@@ -2897,7 +2941,8 @@
                 "title": "Habitué",
                 "description": "Regarder un titre chaque mois pendant 3 mois consécutifs"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "monthly_6",
@@ -2971,7 +3016,8 @@
                 "title": "Premier anniversaire",
                 "description": "Suivre ses visionnages depuis 1 an"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "anniversary_2",
@@ -3031,7 +3077,8 @@
                 "title": "Film de Noël",
                 "description": "Regarder un titre le 24 ou le 25 décembre"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "christmas_3",
@@ -3098,7 +3145,8 @@
                 "title": "Des bonbons ou un sort",
                 "description": "Regarder un titre le 31 octobre"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "halloween_3",
@@ -3163,7 +3211,8 @@
                 "title": "Compte à rebours",
                 "description": "Regarder un titre le 31 décembre"
             }
-        }
+        },
+        "category": "regularity"
     },
     {
         "id": "new_years_eve_3",
@@ -3226,7 +3275,8 @@
                 "title": "Épopée",
                 "description": "Regarder un film de 3 heures ou plus"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "epic_movie_5",
@@ -3286,7 +3336,8 @@
                 "title": "Court mais bon",
                 "description": "Regarder un film de 40 à 80 minutes"
             }
-        }
+        },
+        "category": "movies"
     },
     {
         "id": "short_movie_10",
@@ -3346,7 +3397,8 @@
                 "title": "Au long cours",
                 "description": "Regarder des épisodes de 5 saisons d'une même série"
             }
-        }
+        },
+        "category": "tv"
     },
     {
         "id": "long_runner_10",
@@ -3402,7 +3454,8 @@
                 "title": "Archiviste",
                 "description": "Enregistrer ou partager une sauvegarde de ses données"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "archivist_5",
@@ -3458,7 +3511,8 @@
                 "title": "Conservateur",
                 "description": "Avoir 10 titres dans ses listes (watchlist comprise)"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "curator_50",
@@ -3514,7 +3568,8 @@
                 "title": "Polyglotte",
                 "description": "Regarder des titres en 3 langues originales différentes"
             }
-        }
+        },
+        "category": "discovery"
     },
     {
         "id": "polyglot_7",

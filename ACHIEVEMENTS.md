@@ -38,6 +38,10 @@ JSON example:
   the card (e.g. `"Horror movies"`), translated as `translations.<code>.groupTitle`.
   Tier titles stay visible in the levels sheet. When a new first tier is inserted, move
   `groupTitle` onto it.
+- `category` (first tier of a family only, required there): the category id
+  (`movies`, `tv`, `books`, `discovery`, `together`, `regularity`) defining which section the
+  family appears under on the achievements page. When a new first tier is inserted, move
+  `category` onto it.
 - Never raise an existing target: unlock state is recomputed from the history, so a
   higher target would re-lock users who earned it. Lowering is safe (checked by the
   definitions test). Ids are opaque: after a re-spacing a number in an id may no longer
