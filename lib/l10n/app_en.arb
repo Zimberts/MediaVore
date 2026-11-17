@@ -88,14 +88,14 @@
   "paletteNameSlate": "Slate",
   "paletteNameMidnight": "Midnight",
   "paletteNameEspresso": "Espresso",
-  "navProfile": "Profile",
-  "profileTitle": "Profile",
+  "navProfile": "Me",
+  "profileTitle": "Me",
   "profileStats": "Statistics",
   "profileStatsSubtitle": "Watch time, top genres and activity.",
   "profileAchievements": "Achievements",
   "profileAchievementsSubtitle": "View your collection of badges and progress.",
   "profileSettings": "Settings",
-  "profileSettingsSubtitle": "Appearance, TMDB key, data and notifications.",
+  "profileSettingsSubtitle": "Appearance, display and preferences.",
   "settingsSectionListsDisplay": "Lists Display",
   "settingsHideNonReleased": "Hide Non-Released Media",
   "settingsHideNonReleasedSubtitle": "Only show movies and episodes that have already aired.",
@@ -1072,5 +1072,36 @@
   "@libraryListNameTaken": {"placeholders": {"name": {"type": "String"}}},
   "libraryListEmptyForType": "Nothing of this type in this list",
   "libraryListScope": "{title} · {type}",
-  "@libraryListScope": {"placeholders": {"title": {"type": "String"}, "type": {"type": "String"}}}
+  "@libraryListScope": {"placeholders": {"title": {"type": "String"}, "type": {"type": "String"}}},
+  "profileActiveDays": "{count, plural, =0{No active days in the last 30 days} =1{1 active day in the last 30 days} other{{count} active days in the last 30 days}}",
+  "@profileActiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileMoviesWatched": "Movies watched",
+  "profileEpisodesAndScreen": "Episodes & screen",
+  "profileScreenTime": "{hours}h screen time",
+  "@profileScreenTime": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "profileAllStats": "All statistics",
+  "profileAchievementsSeeAll": "See all · {unlocked} of {total}",
+  "@profileAchievementsSeeAll": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "profileUnlocked": "Unlocked"
 }

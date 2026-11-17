@@ -67,14 +67,14 @@
   "paletteNameSlate": "Ardoise",
   "paletteNameMidnight": "Minuit",
   "paletteNameEspresso": "Expresso",
-  "navProfile": "Profil",
-  "profileTitle": "Profil",
+  "navProfile": "Moi",
+  "profileTitle": "Moi",
   "profileStats": "Statistiques",
   "profileStatsSubtitle": "Temps de visionnage, genres favoris et activité.",
   "profileAchievements": "Succès",
   "profileAchievementsSubtitle": "Consultez vos badges et votre progression.",
   "profileSettings": "Paramètres",
-  "profileSettingsSubtitle": "Apparence, clé TMDB, données et notifications.",
+  "profileSettingsSubtitle": "Apparence, affichage et préférences.",
   "settingsSectionListsDisplay": "Affichage des listes",
   "settingsHideNonReleased": "Masquer les contenus non sortis",
   "settingsHideNonReleasedSubtitle": "N'afficher que les films et épisodes déjà diffusés.",
@@ -464,5 +464,36 @@
   "libraryListImported": "Liste « {name} » ajoutée",
   "libraryListNameTaken": "Une liste nommée « {name} » existe déjà",
   "libraryListEmptyForType": "Aucun titre de ce type dans cette liste",
-  "libraryListScope": "{title} · {type}"
+  "libraryListScope": "{title} · {type}",
+  "profileActiveDays": "{count, plural, =0{Aucun jour actif sur les 30 derniers} =1{1 jour actif sur les 30 derniers} other{{count} jours actifs sur les 30 derniers}}",
+  "@profileActiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileMoviesWatched": "Films vus",
+  "profileEpisodesAndScreen": "Épisodes et écran",
+  "profileScreenTime": "{hours} h d'écran",
+  "@profileScreenTime": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "profileAllStats": "Toutes les statistiques",
+  "profileAchievementsSeeAll": "Tout voir · {unlocked} sur {total}",
+  "@profileAchievementsSeeAll": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "profileUnlocked": "Débloqué"
 }
