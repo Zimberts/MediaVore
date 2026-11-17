@@ -43,7 +43,7 @@ void main() {
   );
 
   group('paletteName', () {
-    test('should translate every palette in every language', () {
+    test('should translate every core palette in every language', () {
       const expected = {
         'en': ['Paper', 'Sand', 'Mist', 'Ink', 'Night', 'OLED black'],
         'fr': ['Papier', 'Sable', 'Brume', 'Encre', 'Nuit', 'Noir OLED'],
@@ -55,7 +55,7 @@ void main() {
       for (final language in supportedAppLanguages) {
         final l10n = lookupAppLocalizations(language.locale);
         expect(
-          AppPaletteId.values.map((id) => paletteName(l10n, id)),
+          AppPalette.coreValues.map((p) => paletteName(l10n, p.id)),
           expected[language.locale.languageCode],
         );
       }
@@ -75,7 +75,7 @@ void main() {
       expect(find.text('Encre'), findsOneWidget);
     });
 
-    testWidgets('should list the three light palettes and apply the picked '
+    testWidgets('should list the light palettes and apply the picked '
         'one', (tester) async {
       await setUpSettings({});
 
@@ -95,11 +95,11 @@ void main() {
       await tester.tap(find.text('Sand').last);
       await tester.pumpAndSettle();
 
-      expect(settings.lightPalette, AppPalette.sable);
+      expect(settings.lightPalette, AppPalette.sand);
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('lightPalette'), 'sable');
+      expect(prefs.getString('lightPalette'), 'sand');
       final context = tester.element(find.byType(SettingsPage));
-      expect(Theme.of(context).scaffoldBackgroundColor, AppPalette.sable.bg);
+      expect(Theme.of(context).scaffoldBackgroundColor, AppPalette.sand.bg);
     });
 
     testWidgets('should list the three dark palettes and apply the picked '

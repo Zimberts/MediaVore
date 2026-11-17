@@ -20,18 +20,36 @@ AppLocalizations get fallbackLocalizations =>
 /// Localized display name of a palette.
 String paletteName(AppLocalizations l10n, AppPaletteId id) {
   switch (id) {
-    case AppPaletteId.papier:
-      return l10n.paletteNamePapier;
-    case AppPaletteId.sable:
-      return l10n.paletteNameSable;
-    case AppPaletteId.brume:
-      return l10n.paletteNameBrume;
-    case AppPaletteId.encre:
-      return l10n.paletteNameEncre;
-    case AppPaletteId.nuit:
-      return l10n.paletteNameNuit;
+    case AppPaletteId.paper:
+      return l10n.paletteNamePaper;
+    case AppPaletteId.sand:
+      return l10n.paletteNameSand;
+    case AppPaletteId.mist:
+      return l10n.paletteNameMist;
+    case AppPaletteId.ink:
+      return l10n.paletteNameInk;
+    case AppPaletteId.night:
+      return l10n.paletteNameNight;
     case AppPaletteId.oled:
       return l10n.paletteNameOled;
+    case AppPaletteId.defaultLight:
+      return l10n.paletteNameDefaultLight;
+    case AppPaletteId.parchment:
+      return l10n.paletteNameParchment;
+    case AppPaletteId.mint:
+      return l10n.paletteNameMint;
+    case AppPaletteId.solarizedLight:
+      return l10n.paletteNameSolarizedLight;
+    case AppPaletteId.pinky:
+      return l10n.paletteNamePinky;
+    case AppPaletteId.defaultDark:
+      return l10n.paletteNameDefaultDark;
+    case AppPaletteId.slate:
+      return l10n.paletteNameSlate;
+    case AppPaletteId.midnight:
+      return l10n.paletteNameMidnight;
+    case AppPaletteId.espresso:
+      return l10n.paletteNameEspresso;
   }
 }
 

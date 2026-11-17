@@ -18,14 +18,14 @@ App theming: design tokens, palettes, fonts and the Material theme built from th
 - Consume tokens via `context.appColors` (`AppThemeExtension`), never ad-hoc `Color`s.
   Add a token to `AppPalette` + `AppThemeExtension` (fields, `copyWith`, `lerp`).
 - The primary color is the ink (`text`): no seed, `ColorScheme` is written role by role.
-- Media colors (`film`, `serie`, `livre`, `duo`) identify a media type only. States use
+- Media colors (`movie`, `series`, `book`, `duo`) identify a media type only. States use
   `danger` / `onDanger`, `success`, `warning`.
 - Outlines of state controls (unchecked box, switch off) use `stateOutline` (`text2`,
   3:1); `border` is decorative and does not reach 3:1.
 - Any new token pair that carries text or state must be added to
   `test/core/theme/app_contrast_test.dart` (WCAG AA: 4.5:1 text, 3:1 non-text).
-- Palettes are persisted by `AppPaletteId.name` (`lightPalette` / `darkPalette` prefs):
-  never rename a value. Display names are localized (`paletteName` in `core/l10n`).
+- Palettes are persisted by `AppPaletteId.name` (`lightPalette` / `darkPalette` prefs).
+  Display names are localized (`paletteName` in `core/l10n`).
 - Fonts are static files declared in `pubspec.yaml`; never add `google_fonts` or any
   runtime font download. Only use the bundled weights (Bricolage 500/700, Inter 400–700).
 

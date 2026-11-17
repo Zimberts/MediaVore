@@ -30,7 +30,7 @@ void main() {
       const black = Color(0xFF000000);
       expect(contrastRatio(white, black), closeTo(21, 0.001));
       expect(contrastRatio(white, white), closeTo(1, 0.001));
-      // The failure reported by the design review: white on dark "serie".
+      // The failure reported by the design review: white on dark "series".
       expect(
         contrastRatio(white, const Color(0xFF8AB0FF)),
         closeTo(2.16, 0.01),
@@ -62,10 +62,10 @@ void main() {
           'onPrimary/primary',
         );
         expectContrast(
-          palette.onSerie,
-          palette.serie,
+          palette.onSeries,
+          palette.series,
           _aaText,
-          'onSerie/serie',
+          'onSeries/series',
         );
         expectContrast(
           palette.onDanger,
@@ -77,9 +77,9 @@ void main() {
 
       test('should keep media colors at AA on their tint and on pages', () {
         final media = {
-          'film': (palette.film, palette.filmBg),
-          'serie': (palette.serie, palette.serieBg),
-          'livre': (palette.livre, palette.livreBg),
+          'movie': (palette.movie, palette.movieBg),
+          'series': (palette.series, palette.seriesBg),
+          'book': (palette.book, palette.bookBg),
           'duo': (palette.duo, palette.duoBg),
         };
         media.forEach((mediaName, colors) {

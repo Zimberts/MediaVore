@@ -35,8 +35,8 @@ void main() {
         expect(provider.displayMode, DisplayMode.grid);
         expect(provider.gridSize, 3.0);
         expect(provider.themeMode, ThemeMode.system);
-        expect(provider.lightPalette, AppPalette.papier);
-        expect(provider.darkPalette, AppPalette.encre);
+        expect(provider.lightPalette, AppPalette.paper);
+        expect(provider.darkPalette, AppPalette.ink);
         expect(provider.notificationCenterDebug, false);
       },
     );
@@ -115,10 +115,10 @@ void main() {
     });
 
     test('setLightPalette should update state and save its id', () async {
-      await provider.setLightPalette(AppPaletteId.brume);
+      await provider.setLightPalette(AppPaletteId.mist);
 
-      expect(provider.lightPalette, AppPalette.brume);
-      verify(() => mockPrefs.setString('lightPalette', 'brume')).called(1);
+      expect(provider.lightPalette, AppPalette.mist);
+      verify(() => mockPrefs.setString('lightPalette', 'mist')).called(1);
     });
 
     test('setDarkPalette should update state and save its id', () async {
@@ -129,11 +129,11 @@ void main() {
     });
 
     test('should ignore a palette of the other brightness', () async {
-      await provider.setLightPalette(AppPaletteId.nuit);
-      await provider.setDarkPalette(AppPaletteId.sable);
+      await provider.setLightPalette(AppPaletteId.night);
+      await provider.setDarkPalette(AppPaletteId.sand);
 
-      expect(provider.lightPalette, AppPalette.papier);
-      expect(provider.darkPalette, AppPalette.encre);
+      expect(provider.lightPalette, AppPalette.paper);
+      expect(provider.darkPalette, AppPalette.ink);
       verifyNever(() => mockPrefs.setString(any(), any()));
     });
 
@@ -155,34 +155,34 @@ void main() {
         SettingsProvider(mockPrefs, FakeTmdbCredentialStore());
 
     test('should load the palettes stored by identifier', () {
-      when(() => mockPrefs.getString('lightPalette')).thenReturn('sable');
-      when(() => mockPrefs.getString('darkPalette')).thenReturn('nuit');
+      when(() => mockPrefs.getString('lightPalette')).thenReturn('sand');
+      when(() => mockPrefs.getString('darkPalette')).thenReturn('night');
 
       final loaded = build();
 
-      expect(loaded.lightPalette, AppPalette.sable);
-      expect(loaded.darkPalette, AppPalette.nuit);
+      expect(loaded.lightPalette, AppPalette.sand);
+      expect(loaded.darkPalette, AppPalette.night);
     });
 
     test('should fall back to the defaults on an unknown identifier', () {
-      when(() => mockPrefs.getString('lightPalette')).thenReturn('pinky');
+      when(() => mockPrefs.getString('lightPalette')).thenReturn('unknown_theme');
       when(() => mockPrefs.getString('darkPalette')).thenReturn('');
 
       final loaded = build();
 
-      expect(loaded.lightPalette, AppPalette.papier);
-      expect(loaded.darkPalette, AppPalette.encre);
+      expect(loaded.lightPalette, AppPalette.paper);
+      expect(loaded.darkPalette, AppPalette.ink);
     });
 
     test('should fall back to the default when the stored palette has the '
         'other brightness', () {
       when(() => mockPrefs.getString('lightPalette')).thenReturn('oled');
-      when(() => mockPrefs.getString('darkPalette')).thenReturn('papier');
+      when(() => mockPrefs.getString('darkPalette')).thenReturn('paper');
 
       final loaded = build();
 
-      expect(loaded.lightPalette, AppPalette.papier);
-      expect(loaded.darkPalette, AppPalette.encre);
+      expect(loaded.lightPalette, AppPalette.paper);
+      expect(loaded.darkPalette, AppPalette.ink);
     });
   });
 
@@ -205,8 +205,8 @@ void main() {
             'darkAppTheme': dark,
           });
 
-          expect(migrated.lightPalette, AppPalette.papier);
-          expect(migrated.darkPalette, AppPalette.encre);
+          expect(migrated.lightPalette, AppPalette.paper);
+          expect(migrated.darkPalette, AppPalette.ink);
         }
       }
     });
@@ -218,8 +218,8 @@ void main() {
         'darkAppTheme': -1,
       });
 
-      expect(migrated.lightPalette, AppPalette.papier);
-      expect(migrated.darkPalette, AppPalette.encre);
+      expect(migrated.lightPalette, AppPalette.paper);
+      expect(migrated.darkPalette, AppPalette.ink);
     });
 
     test('should keep the other settings and leave the legacy keys '
@@ -242,13 +242,13 @@ void main() {
 
     test('should persist a palette picked after the migration', () async {
       final migrated = await buildWith({'lightAppTheme': 2});
-      await migrated.setLightPalette(AppPaletteId.sable);
+      await migrated.setLightPalette(AppPaletteId.sand);
 
       final prefs = await SharedPreferences.getInstance();
       final reloaded = SettingsProvider(prefs, FakeTmdbCredentialStore());
 
-      expect(prefs.getString('lightPalette'), 'sable');
-      expect(reloaded.lightPalette, AppPalette.sable);
+      expect(prefs.getString('lightPalette'), 'sand');
+      expect(reloaded.lightPalette, AppPalette.sand);
     });
   });
 

@@ -57,8 +57,8 @@ class DistributionTab extends StatelessWidget {
                 centerSpaceRadius: 40,
                 sections: typeData.entries.map((e) {
                   final color = e.key == MediaType.movie
-                      ? context.appColors.film
-                      : context.appColors.serie;
+                      ? context.appColors.movie
+                      : context.appColors.series;
                   final percentage = totalValue > 0
                       ? (e.value / totalValue * 100).toStringAsFixed(1)
                       : '0';

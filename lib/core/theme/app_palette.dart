@@ -7,12 +7,23 @@ import 'package:mediavore/core/theme/app_theme.dart';
 /// at will; an identifier that is no longer known falls back to the default
 /// of its brightness (see [AppPalette.fromStorageId]).
 enum AppPaletteId {
-  papier(Brightness.light),
-  sable(Brightness.light),
-  brume(Brightness.light),
-  encre(Brightness.dark),
-  nuit(Brightness.dark),
-  oled(Brightness.dark);
+  paper(Brightness.light),
+  sand(Brightness.light),
+  mist(Brightness.light),
+  ink(Brightness.dark),
+  night(Brightness.dark),
+  oled(Brightness.dark),
+
+  // Preserved legacy theme palettes:
+  defaultLight(Brightness.light),
+  parchment(Brightness.light),
+  mint(Brightness.light),
+  solarizedLight(Brightness.light),
+  pinky(Brightness.light),
+  defaultDark(Brightness.dark),
+  slate(Brightness.dark),
+  midnight(Brightness.dark),
+  espresso(Brightness.dark);
 
   const AppPaletteId(this.brightness);
 
@@ -37,13 +48,13 @@ class AppPalette {
        text2 = const Color(0xFF5C584F),
        primary = const Color(0xFF1B1A17),
        onPrimary = const Color(0xFFFFFFFF),
-       film = const Color(0xFFB23A0A),
-       filmBg = const Color(0xFFFBE7DC),
-       serie = const Color(0xFF1D4ED8),
-       serieBg = const Color(0xFFDFE7FB),
-       onSerie = const Color(0xFFFFFFFF),
-       livre = const Color(0xFF44700C),
-       livreBg = const Color(0xFFE5EFD6),
+       movie = const Color(0xFFB23A0A),
+       movieBg = const Color(0xFFFBE7DC),
+       series = const Color(0xFF1D4ED8),
+       seriesBg = const Color(0xFFDFE7FB),
+       onSeries = const Color(0xFFFFFFFF),
+       book = const Color(0xFF44700C),
+       bookBg = const Color(0xFFE5EFD6),
        duo = const Color(0xFF7C3AED),
        duoBg = const Color(0xFFEDE4FD),
        danger = const Color(0xFFB42318),
@@ -63,13 +74,13 @@ class AppPalette {
        text2 = const Color(0xFFABA59A),
        primary = const Color(0xFFF3F0EA),
        onPrimary = const Color(0xFF121110),
-       film = const Color(0xFFFB8A4C),
-       filmBg = const Color(0xFF3A2418),
-       serie = const Color(0xFF8AB0FF),
-       serieBg = const Color(0xFF1C2640),
-       onSerie = const Color(0xFF121110),
-       livre = const Color(0xFFA8CC6E),
-       livreBg = const Color(0xFF25301A),
+       movie = const Color(0xFFFB8A4C),
+       movieBg = const Color(0xFF3A2418),
+       series = const Color(0xFF8AB0FF),
+       seriesBg = const Color(0xFF1C2640),
+       onSeries = const Color(0xFF121110),
+       book = const Color(0xFFA8CC6E),
+       bookBg = const Color(0xFF25301A),
        duo = const Color(0xFFB99BFF),
        duoBg = const Color(0xFF2A2140),
        danger = const Color(0xFFFF9B8A),
@@ -77,40 +88,41 @@ class AppPalette {
        success = const Color(0xFF86D69C),
        warning = const Color(0xFFF2C063);
 
-  static const papier = AppPalette._light(
-    id: AppPaletteId.papier,
+  // Core V1 Design Palettes
+  static const paper = AppPalette._light(
+    id: AppPaletteId.paper,
     bg: Color(0xFFF6F4EF),
     surface: Color(0xFFFFFFFF),
     surface2: Color(0xFFECE8DF),
     border: Color(0xFFDED8CC),
   );
 
-  static const sable = AppPalette._light(
-    id: AppPaletteId.sable,
+  static const sand = AppPalette._light(
+    id: AppPaletteId.sand,
     bg: Color(0xFFF3EDE2),
     surface: Color(0xFFFFFCF6),
     surface2: Color(0xFFE8DFCF),
     border: Color(0xFFDCD0BC),
   );
 
-  static const brume = AppPalette._light(
-    id: AppPaletteId.brume,
+  static const mist = AppPalette._light(
+    id: AppPaletteId.mist,
     bg: Color(0xFFEEF1F4),
     surface: Color(0xFFFFFFFF),
     surface2: Color(0xFFE1E6EC),
     border: Color(0xFFD3DAE2),
   );
 
-  static const encre = AppPalette._dark(
-    id: AppPaletteId.encre,
+  static const ink = AppPalette._dark(
+    id: AppPaletteId.ink,
     bg: Color(0xFF121110),
     surface: Color(0xFF1C1B19),
     surface2: Color(0xFF292723),
     border: Color(0xFF36332E),
   );
 
-  static const nuit = AppPalette._dark(
-    id: AppPaletteId.nuit,
+  static const night = AppPalette._dark(
+    id: AppPaletteId.night,
     bg: Color(0xFF0E1320),
     surface: Color(0xFF161D2E),
     surface2: Color(0xFF212A3F),
@@ -125,18 +137,111 @@ class AppPalette {
     border: Color(0xFF262626),
   );
 
-  /// Every palette, light ones first, in the order of the design.
-  static const List<AppPalette> values = [
-    papier,
-    sable,
-    brume,
-    encre,
-    nuit,
+  // Preserved Previous Theme Styles (Light)
+  static const defaultLight = AppPalette._light(
+    id: AppPaletteId.defaultLight,
+    bg: Color(0xFFF8F9FA),
+    surface: Color(0xFFFFFFFF),
+    surface2: Color(0xFFECEFF1),
+    border: Color(0xFFCFD8DC),
+  );
+
+  static const parchment = AppPalette._light(
+    id: AppPaletteId.parchment,
+    bg: Color(0xFFFBF0D9),
+    surface: Color(0xFFFFFDF5),
+    surface2: Color(0xFFF0E4C8),
+    border: Color(0xFFE2D6C0),
+  );
+
+  static const mint = AppPalette._light(
+    id: AppPaletteId.mint,
+    bg: Color(0xFFF1F8F3),
+    surface: Color(0xFFFFFFFF),
+    surface2: Color(0xFFE0EFE4),
+    border: Color(0xFFC8E2CF),
+  );
+
+  static const solarizedLight = AppPalette._light(
+    id: AppPaletteId.solarizedLight,
+    bg: Color(0xFFFDF6E3),
+    surface: Color(0xFFFFFDF5),
+    surface2: Color(0xFFEEE8D5),
+    border: Color(0xFFD3CBB7),
+  );
+
+  static const pinky = AppPalette._light(
+    id: AppPaletteId.pinky,
+    bg: Color(0xFFFDF2F4),
+    surface: Color(0xFFFFFFFF),
+    surface2: Color(0xFFF8DAE0),
+    border: Color(0xFFEDB9C5),
+  );
+
+  // Preserved Previous Theme Styles (Dark)
+  static const defaultDark = AppPalette._dark(
+    id: AppPaletteId.defaultDark,
+    bg: Color(0xFF1C1B1F),
+    surface: Color(0xFF2B2930),
+    surface2: Color(0xFF36343C),
+    border: Color(0xFF49454F),
+  );
+
+  static const slate = AppPalette._dark(
+    id: AppPaletteId.slate,
+    bg: Color(0xFF0F172A),
+    surface: Color(0xFF1E293B),
+    surface2: Color(0xFF283446),
+    border: Color(0xFF384556),
+  );
+
+  static const midnight = AppPalette._dark(
+    id: AppPaletteId.midnight,
+    bg: Color(0xFF0B0F19),
+    surface: Color(0xFF111827),
+    surface2: Color(0xFF1F2937),
+    border: Color(0xFF374151),
+  );
+
+  static const espresso = AppPalette._dark(
+    id: AppPaletteId.espresso,
+    bg: Color(0xFF1C130E),
+    surface: Color(0xFF2B1D16),
+    surface2: Color(0xFF3D2B22),
+    border: Color(0xFF543E33),
+  );
+
+  /// The six core palettes of the design.
+  static const List<AppPalette> coreValues = [
+    paper,
+    sand,
+    mist,
+    ink,
+    night,
     oled,
   ];
 
-  static const AppPalette defaultLight = papier;
-  static const AppPalette defaultDark = encre;
+  /// Every available palette, including preserved legacy styles.
+  static const List<AppPalette> values = [
+    paper,
+    sand,
+    mist,
+    ink,
+    night,
+    oled,
+    defaultLight,
+    parchment,
+    mint,
+    solarizedLight,
+    pinky,
+    defaultDark,
+    slate,
+    midnight,
+    espresso,
+  ];
+
+  static const AppPalette defaultLightPalette = paper;
+  static const AppPalette defaultDarkPalette = ink;
 
   static List<AppPalette> get lightPalettes =>
       values.where((p) => p.brightness == Brightness.light).toList();
@@ -145,7 +250,7 @@ class AppPalette {
       values.where((p) => p.brightness == Brightness.dark).toList();
 
   static AppPalette defaultFor(Brightness brightness) =>
-      brightness == Brightness.dark ? defaultDark : defaultLight;
+      brightness == Brightness.dark ? defaultDarkPalette : defaultLightPalette;
 
   static AppPalette of(AppPaletteId id) => values.firstWhere((p) => p.id == id);
 
@@ -154,10 +259,32 @@ class AppPalette {
   /// Falls back to the default palette of [brightness] when the value is
   /// missing, unknown, or belongs to the other brightness.
   static AppPalette fromStorageId(String? storageId, Brightness brightness) {
+    if (storageId == null) return defaultFor(brightness);
     for (final palette in values) {
       if (palette.id.name == storageId && palette.brightness == brightness) {
         return palette;
       }
+    }
+    // Backward-compatibility aliases for French names or legacy theme names:
+    final AppPalette? alias = switch (storageId) {
+      'papier' => paper,
+      'sable' => sand,
+      'brume' => mist,
+      'encre' => ink,
+      'nuit' => night,
+      'Default Light' => defaultLight,
+      'Parchment' => parchment,
+      'Mint' => mint,
+      'Solarized' || 'Solarized Light' => solarizedLight,
+      'Pinky' => pinky,
+      'Default Dark' => defaultDark,
+      'Slate' => slate,
+      'Midnight' => midnight,
+      'Espresso' => espresso,
+      _ => null,
+    };
+    if (alias != null && alias.brightness == brightness) {
+      return alias;
     }
     return defaultFor(brightness);
   }
@@ -190,15 +317,15 @@ class AppPalette {
   final Color onPrimary;
 
   /// One color per media type, with its tinted background.
-  final Color film;
-  final Color filmBg;
-  final Color serie;
-  final Color serieBg;
+  final Color movie;
+  final Color movieBg;
+  final Color series;
+  final Color seriesBg;
 
-  /// Content laid on a [serie] fill.
-  final Color onSerie;
-  final Color livre;
-  final Color livreBg;
+  /// Content laid on a [series] fill.
+  final Color onSeries;
+  final Color book;
+  final Color bookBg;
 
   /// "Ensemble" (watching together).
   final Color duo;
@@ -227,13 +354,13 @@ class AppPalette {
     border: border,
     primary: primary,
     onPrimary: onPrimary,
-    film: film,
-    filmBg: filmBg,
-    serie: serie,
-    serieBg: serieBg,
-    onSerie: onSerie,
-    livre: livre,
-    livreBg: livreBg,
+    movie: movie,
+    movieBg: movieBg,
+    series: series,
+    seriesBg: seriesBg,
+    onSeries: onSeries,
+    book: book,
+    bookBg: bookBg,
     duo: duo,
     duoBg: duoBg,
     danger: danger,
@@ -254,13 +381,14 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   final Color primary;
   final Color onPrimary;
 
-  final Color film;
-  final Color filmBg;
-  final Color serie;
-  final Color serieBg;
-  final Color onSerie;
-  final Color livre;
-  final Color livreBg;
+  final Color movie;
+  final Color movieBg;
+  final Color series;
+  final Color seriesBg;
+  final Color onSeries;
+  final Color book;
+  final Color bookBg;
+
   final Color duo;
   final Color duoBg;
 
@@ -278,13 +406,13 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     required this.border,
     required this.primary,
     required this.onPrimary,
-    required this.film,
-    required this.filmBg,
-    required this.serie,
-    required this.serieBg,
-    required this.onSerie,
-    required this.livre,
-    required this.livreBg,
+    this.movie = const Color(0xFFB23A0A),
+    this.movieBg = const Color(0xFFFBE7DC),
+    this.series = const Color(0xFF1D4ED8),
+    this.seriesBg = const Color(0xFFDFE7FB),
+    this.onSeries = const Color(0xFFFFFFFF),
+    this.book = const Color(0xFF44700C),
+    this.bookBg = const Color(0xFFE5EFD6),
     required this.duo,
     required this.duoBg,
     required this.danger,
@@ -333,13 +461,13 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     Color? border,
     Color? primary,
     Color? onPrimary,
-    Color? film,
-    Color? filmBg,
-    Color? serie,
-    Color? serieBg,
-    Color? onSerie,
-    Color? livre,
-    Color? livreBg,
+    Color? movie,
+    Color? movieBg,
+    Color? series,
+    Color? seriesBg,
+    Color? onSeries,
+    Color? book,
+    Color? bookBg,
     Color? duo,
     Color? duoBg,
     Color? danger,
@@ -356,13 +484,13 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       border: border ?? this.border,
       primary: primary ?? this.primary,
       onPrimary: onPrimary ?? this.onPrimary,
-      film: film ?? this.film,
-      filmBg: filmBg ?? this.filmBg,
-      serie: serie ?? this.serie,
-      serieBg: serieBg ?? this.serieBg,
-      onSerie: onSerie ?? this.onSerie,
-      livre: livre ?? this.livre,
-      livreBg: livreBg ?? this.livreBg,
+      movie: movie ?? this.movie,
+      movieBg: movieBg ?? this.movieBg,
+      series: series ?? this.series,
+      seriesBg: seriesBg ?? this.seriesBg,
+      onSeries: onSeries ?? this.onSeries,
+      book: book ?? this.book,
+      bookBg: bookBg ?? this.bookBg,
       duo: duo ?? this.duo,
       duoBg: duoBg ?? this.duoBg,
       danger: danger ?? this.danger,
@@ -384,13 +512,13 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       border: Color.lerp(border, other.border, t)!,
       primary: Color.lerp(primary, other.primary, t)!,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
-      film: Color.lerp(film, other.film, t)!,
-      filmBg: Color.lerp(filmBg, other.filmBg, t)!,
-      serie: Color.lerp(serie, other.serie, t)!,
-      serieBg: Color.lerp(serieBg, other.serieBg, t)!,
-      onSerie: Color.lerp(onSerie, other.onSerie, t)!,
-      livre: Color.lerp(livre, other.livre, t)!,
-      livreBg: Color.lerp(livreBg, other.livreBg, t)!,
+      movie: Color.lerp(movie, other.movie, t)!,
+      movieBg: Color.lerp(movieBg, other.movieBg, t)!,
+      series: Color.lerp(series, other.series, t)!,
+      seriesBg: Color.lerp(seriesBg, other.seriesBg, t)!,
+      onSeries: Color.lerp(onSeries, other.onSeries, t)!,
+      book: Color.lerp(book, other.book, t)!,
+      bookBg: Color.lerp(bookBg, other.bookBg, t)!,
       duo: Color.lerp(duo, other.duo, t)!,
       duoBg: Color.lerp(duoBg, other.duoBg, t)!,
       danger: Color.lerp(danger, other.danger, t)!,

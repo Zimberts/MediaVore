@@ -56,6 +56,11 @@ flutter test                                              # tests
   commit message **and** every PR title. Types `feat`/`fix`/`docs`/`style`/`refactor`/`perf`/
   `test`/`build`/`ci`/`chore`/`revert`/`bump`; scope optional and free (feature name, e.g.
   `export`, `media_details`, `back`). Details in `.ai/rules/commits.md`.
+- **Language & Clean Code** — Strictly English for all code (class names, methods, variables,
+  comments, test descriptions) and commit messages/PR titles. Zero code duplication: never
+  introduce duplicate French aliases, dual-language boilerplate, or redundant definitions. All
+  user-facing UI text is localized via `.arb` files (`app_en.arb` template and `app_fr.arb`),
+  never hardcoded strings in code.
 - **Branches** — readable, referencing the issue: `<type>/<issue>-<slug>`, e.g.
   `feat/233-readable-export-filename`.
 - **Tests** — mirror source path + `_test.dart`; `group('...', () { test('should ...', ...) })`.

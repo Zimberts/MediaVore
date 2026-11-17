@@ -84,7 +84,7 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
       ],
       child: MaterialApp(
-        theme: AppPalette.papier.toThemeData(),
+        theme: AppPalette.paper.toThemeData(),
         home: SeenHistoryPage(onSearch: onSearch),
       ),
     );

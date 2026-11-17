@@ -6,7 +6,7 @@ import 'package:mediavore/features/media_details/presentation/widgets/top_scrim_
 void main() {
   Widget createWidgetUnderTest(Widget child) {
     return MaterialApp(
-      theme: AppPalette.papier.toThemeData(),
+      theme: AppPalette.paper.toThemeData(),
       home: Scaffold(body: child),
     );
   }
@@ -25,7 +25,7 @@ void main() {
   testWidgets(
     'fades the scaffold background colour from opaque to transparent top-to-bottom',
     (WidgetTester tester) async {
-      final theme = AppPalette.papier.toThemeData();
+      final theme = AppPalette.paper.toThemeData();
 
       await tester.pumpWidget(createWidgetUnderTest(const TopScrimGradient()));
 

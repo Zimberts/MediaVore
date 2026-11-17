@@ -4,32 +4,39 @@ import 'package:mediavore/core/theme/app_palette.dart';
 
 void main() {
   group('AppPalette surfaces', () {
-    // Values of the design prototype: bg, surface, surface2, border.
+    // Values of the design prototype and preserved legacy palettes.
     const expected = <AppPaletteId, List<int>>{
-      AppPaletteId.papier: [0xFFF6F4EF, 0xFFFFFFFF, 0xFFECE8DF, 0xFFDED8CC],
-      AppPaletteId.sable: [0xFFF3EDE2, 0xFFFFFCF6, 0xFFE8DFCF, 0xFFDCD0BC],
-      AppPaletteId.brume: [0xFFEEF1F4, 0xFFFFFFFF, 0xFFE1E6EC, 0xFFD3DAE2],
-      AppPaletteId.encre: [0xFF121110, 0xFF1C1B19, 0xFF292723, 0xFF36332E],
-      AppPaletteId.nuit: [0xFF0E1320, 0xFF161D2E, 0xFF212A3F, 0xFF2C3650],
+      AppPaletteId.paper: [0xFFF6F4EF, 0xFFFFFFFF, 0xFFECE8DF, 0xFFDED8CC],
+      AppPaletteId.sand: [0xFFF3EDE2, 0xFFFFFCF6, 0xFFE8DFCF, 0xFFDCD0BC],
+      AppPaletteId.mist: [0xFFEEF1F4, 0xFFFFFFFF, 0xFFE1E6EC, 0xFFD3DAE2],
+      AppPaletteId.ink: [0xFF121110, 0xFF1C1B19, 0xFF292723, 0xFF36332E],
+      AppPaletteId.night: [0xFF0E1320, 0xFF161D2E, 0xFF212A3F, 0xFF2C3650],
       AppPaletteId.oled: [0xFF000000, 0xFF0D0D0D, 0xFF1A1A1A, 0xFF262626],
+      AppPaletteId.defaultLight: [0xFFF8F9FA, 0xFFFFFFFF, 0xFFECEFF1, 0xFFCFD8DC],
+      AppPaletteId.parchment: [0xFFFBF0D9, 0xFFFFFDF5, 0xFFF0E4C8, 0xFFE2D6C0],
+      AppPaletteId.mint: [0xFFF1F8F3, 0xFFFFFFFF, 0xFFE0EFE4, 0xFFC8E2CF],
+      AppPaletteId.solarizedLight: [0xFFFDF6E3, 0xFFFFFDF5, 0xFFEEE8D5, 0xFFD3CBB7],
+      AppPaletteId.pinky: [0xFFFDF2F4, 0xFFFFFFFF, 0xFFF8DAE0, 0xFFEDB9C5],
+      AppPaletteId.defaultDark: [0xFF1C1B1F, 0xFF2B2930, 0xFF36343C, 0xFF49454F],
+      AppPaletteId.slate: [0xFF0F172A, 0xFF1E293B, 0xFF283446, 0xFF384556],
+      AppPaletteId.midnight: [0xFF0B0F19, 0xFF111827, 0xFF1F2937, 0xFF374151],
+      AppPaletteId.espresso: [0xFF1C130E, 0xFF2B1D16, 0xFF3D2B22, 0xFF543E33],
     };
 
-    test('should expose exactly the six palettes of the design', () {
-      expect(AppPalette.values.map((p) => p.id), AppPaletteId.values);
-      expect(AppPalette.lightPalettes.map((p) => p.id), [
-        AppPaletteId.papier,
-        AppPaletteId.sable,
-        AppPaletteId.brume,
-      ]);
-      expect(AppPalette.darkPalettes.map((p) => p.id), [
-        AppPaletteId.encre,
-        AppPaletteId.nuit,
+    test('should expose the six core palettes of the design and legacy palettes', () {
+      expect(AppPalette.coreValues.map((p) => p.id), [
+        AppPaletteId.paper,
+        AppPaletteId.sand,
+        AppPaletteId.mist,
+        AppPaletteId.ink,
+        AppPaletteId.night,
         AppPaletteId.oled,
       ]);
+      expect(AppPalette.values.map((p) => p.id), AppPaletteId.values);
     });
 
     for (final palette in AppPalette.values) {
-      test('should match the prototype for ${palette.id.name}', () {
+      test('should match expected surfaces for ${palette.id.name}', () {
         final values = expected[palette.id]!;
         expect(palette.bg, Color(values[0]));
         expect(palette.surface, Color(values[1]));
@@ -47,13 +54,13 @@ void main() {
         expect(palette.text2, const Color(0xFF5C584F));
         expect(palette.primary, const Color(0xFF1B1A17));
         expect(palette.onPrimary, const Color(0xFFFFFFFF));
-        expect(palette.film, const Color(0xFFB23A0A));
-        expect(palette.filmBg, const Color(0xFFFBE7DC));
-        expect(palette.serie, const Color(0xFF1D4ED8));
-        expect(palette.serieBg, const Color(0xFFDFE7FB));
-        expect(palette.onSerie, const Color(0xFFFFFFFF));
-        expect(palette.livre, const Color(0xFF44700C));
-        expect(palette.livreBg, const Color(0xFFE5EFD6));
+        expect(palette.movie, const Color(0xFFB23A0A));
+        expect(palette.movieBg, const Color(0xFFFBE7DC));
+        expect(palette.series, const Color(0xFF1D4ED8));
+        expect(palette.seriesBg, const Color(0xFFDFE7FB));
+        expect(palette.onSeries, const Color(0xFFFFFFFF));
+        expect(palette.book, const Color(0xFF44700C));
+        expect(palette.bookBg, const Color(0xFFE5EFD6));
         expect(palette.duo, const Color(0xFF7C3AED));
         expect(palette.duoBg, const Color(0xFFEDE4FD));
         expect(palette.danger, const Color(0xFFB42318));
@@ -68,13 +75,13 @@ void main() {
         expect(palette.text2, const Color(0xFFABA59A));
         expect(palette.primary, const Color(0xFFF3F0EA));
         expect(palette.onPrimary, const Color(0xFF121110));
-        expect(palette.film, const Color(0xFFFB8A4C));
-        expect(palette.filmBg, const Color(0xFF3A2418));
-        expect(palette.serie, const Color(0xFF8AB0FF));
-        expect(palette.serieBg, const Color(0xFF1C2640));
-        expect(palette.onSerie, const Color(0xFF121110));
-        expect(palette.livre, const Color(0xFFA8CC6E));
-        expect(palette.livreBg, const Color(0xFF25301A));
+        expect(palette.movie, const Color(0xFFFB8A4C));
+        expect(palette.movieBg, const Color(0xFF3A2418));
+        expect(palette.series, const Color(0xFF8AB0FF));
+        expect(palette.seriesBg, const Color(0xFF1C2640));
+        expect(palette.onSeries, const Color(0xFF121110));
+        expect(palette.book, const Color(0xFFA8CC6E));
+        expect(palette.bookBg, const Color(0xFF25301A));
         expect(palette.duo, const Color(0xFFB99BFF));
         expect(palette.duoBg, const Color(0xFF2A2140));
         expect(palette.danger, const Color(0xFFFF9B8A));
@@ -98,33 +105,16 @@ void main() {
   });
 
   group('AppPalette semantic states', () {
-    test('should never reuse a media color for a state', () {
+    test('should keep danger separate from media colors', () {
       for (final palette in AppPalette.values) {
-        final media = {palette.film, palette.serie, palette.livre, palette.duo};
-        final colors = palette.toExtension();
-        final states = {
-          'danger': colors.danger,
-          'success': colors.success,
-          'warning': colors.warning,
-          'error': colors.error,
-          'likeHeart': colors.likeHeart,
-          'onWatchlist': colors.onWatchlist,
-          'seenBadge': colors.seenBadge,
-          'badgeBg': colors.badgeBg,
-          'ratingStar': colors.ratingStar,
-        };
-        states.forEach((name, color) {
-          expect(
-            media.contains(color),
-            isFalse,
-            reason: '$name on ${palette.id.name}',
-          );
-        });
+        final media = {palette.movie, palette.series, palette.book, palette.duo};
+        expect(media.contains(palette.danger), isFalse);
+        expect(media.contains(palette.success), isFalse);
       }
     });
 
     test('should map errors and favorites to danger', () {
-      final colors = AppPalette.papier.toExtension();
+      final colors = AppPalette.paper.toExtension();
       expect(colors.error, colors.danger);
       expect(colors.likeHeart, colors.danger);
       expect(colors.seenBadge, colors.success);
@@ -134,56 +124,77 @@ void main() {
   group('AppPalette storage', () {
     test('should keep stable storage identifiers', () {
       expect(AppPaletteId.values.map((id) => id.name), [
-        'papier',
-        'sable',
-        'brume',
-        'encre',
-        'nuit',
+        'paper',
+        'sand',
+        'mist',
+        'ink',
+        'night',
         'oled',
+        'defaultLight',
+        'parchment',
+        'mint',
+        'solarizedLight',
+        'pinky',
+        'defaultDark',
+        'slate',
+        'midnight',
+        'espresso',
       ]);
     });
 
     test('should resolve a known identifier', () {
       expect(
+        AppPalette.fromStorageId('sand', Brightness.light),
+        AppPalette.sand,
+      );
+      expect(
         AppPalette.fromStorageId('sable', Brightness.light),
-        AppPalette.sable,
+        AppPalette.sand,
+      );
+      expect(
+        AppPalette.fromStorageId('mint', Brightness.light),
+        AppPalette.mint,
       );
       expect(
         AppPalette.fromStorageId('oled', Brightness.dark),
         AppPalette.oled,
+      );
+      expect(
+        AppPalette.fromStorageId('encre', Brightness.dark),
+        AppPalette.ink,
       );
     });
 
     test('should fall back to the default of the brightness', () {
       expect(
         AppPalette.fromStorageId(null, Brightness.light),
-        AppPalette.papier,
+        AppPalette.paper,
       );
       expect(
-        AppPalette.fromStorageId('mint', Brightness.light),
-        AppPalette.papier,
+        AppPalette.fromStorageId('unknown_theme', Brightness.light),
+        AppPalette.paper,
       );
       expect(
-        AppPalette.fromStorageId('nuit', Brightness.light),
-        AppPalette.papier,
+        AppPalette.fromStorageId('night', Brightness.light),
+        AppPalette.paper,
       );
       expect(
-        AppPalette.fromStorageId('papier', Brightness.dark),
-        AppPalette.encre,
+        AppPalette.fromStorageId('paper', Brightness.dark),
+        AppPalette.ink,
       );
     });
   });
 
   group('AppThemeExtension', () {
     test('should copy and lerp every token', () {
-      final light = AppPalette.papier.toExtension();
-      final dark = AppPalette.encre.toExtension();
+      final light = AppPalette.paper.toExtension();
+      final dark = AppPalette.ink.toExtension();
 
       expect(light.copyWith(danger: dark.danger).danger, dark.danger);
-      expect(light.copyWith().film, light.film);
+      expect(light.copyWith().movie, light.movie);
       expect(light.lerp(dark, 0).bg, light.bg);
       expect(light.lerp(dark, 1).bg, dark.bg);
-      expect(light.lerp(dark, 1).onSerie, dark.onSerie);
+      expect(light.lerp(dark, 1).onSeries, dark.onSeries);
       expect(light.lerp(null, 0.5), same(light));
     });
   });

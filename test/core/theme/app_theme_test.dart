@@ -94,7 +94,7 @@ void main() {
       test('should leave no hue in the scheme besides danger', () {
         for (final color in _schemeColors(scheme)) {
           if (color == palette.danger || color.a == 0) continue;
-          // "Nuit" tints its surfaces slightly; nothing may be vivid.
+          // "Night" tints its surfaces slightly; nothing may be vivid.
           final channels = [color.r, color.g, color.b];
           final chroma = channels.reduce(math.max) - channels.reduce(math.min);
           expect(chroma, lessThan(0.25), reason: '$color');
@@ -116,8 +116,8 @@ void main() {
 
       test('should expose the tokens through the theme extension', () {
         final colors = theme.extension<AppThemeExtension>()!;
-        expect(colors.film, palette.film);
-        expect(colors.onSerie, palette.onSerie);
+        expect(colors.movie, palette.movie);
+        expect(colors.onSeries, palette.onSeries);
         expect(colors.danger, palette.danger);
         expect(colors.success, palette.success);
         expect(colors.stateOutline, palette.text2);
@@ -222,7 +222,7 @@ void main() {
       );
     }
 
-    for (final palette in [AppPalette.papier, AppPalette.encre]) {
+    for (final palette in [AppPalette.paper, AppPalette.ink]) {
       testWidgets('should render ${palette.id.name} with ink and bundled '
           'fonts', (tester) async {
         await pump(tester, palette);

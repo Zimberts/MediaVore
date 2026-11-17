@@ -48,7 +48,7 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
-      theme: AppPalette.papier.toThemeData(),
+      theme: AppPalette.paper.toThemeData(),
       home: const ActorDetailPage(actorId: tActorId, actorName: tActorName),
     );
   }

@@ -136,7 +136,7 @@ void main() {
         ),
       ],
       child: MaterialApp(
-        theme: AppPalette.papier.toThemeData(),
+        theme: AppPalette.paper.toThemeData(),
         home: const MainPage(),
       ),
     );

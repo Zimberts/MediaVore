@@ -82,7 +82,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppPalette.papier.toThemeData(),
+            theme: AppPalette.paper.toThemeData(),
             home: const NotificationCenterPage(),
           ),
         ),
@@ -120,7 +120,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppPalette.papier.toThemeData(),
+            theme: AppPalette.paper.toThemeData(),
             home: const NotificationCenterPage(),
           ),
         ),
@@ -160,7 +160,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppPalette.papier.toThemeData(),
+            theme: AppPalette.paper.toThemeData(),
             home: const NotificationCenterPage(),
           ),
         ),

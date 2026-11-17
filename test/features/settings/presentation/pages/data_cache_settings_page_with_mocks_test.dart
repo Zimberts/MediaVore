@@ -108,7 +108,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppPalette.papier.toThemeData(),
+        theme: AppPalette.paper.toThemeData(),
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<SearchProvider>.value(value: provider),
@@ -137,7 +137,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppPalette.papier.toThemeData(),
+        theme: AppPalette.paper.toThemeData(),
         home: ChangeNotifierProvider<SearchProvider>.value(
           value: provider,
           child: Builder(
