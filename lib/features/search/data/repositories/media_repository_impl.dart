@@ -10,6 +10,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/search/data/services/cache_warmup_service.dart';
 import 'package:mediavore/features/search/data/services/cached_title.dart';
@@ -716,5 +717,41 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<void> clearQuickAddItems() async {
     await _ensureInitialized();
     return _quickAdd.clearQuickAddItems();
+  }
+
+  @override
+  Future<void> recordSwipeDecision(SwipeDecisionModel decision) async {
+    await _ensureInitialized();
+    return localDataSource.recordSwipeDecision(decision);
+  }
+
+  @override
+  Future<void> recordSwipeDecisions(List<SwipeDecisionModel> decisions) async {
+    await _ensureInitialized();
+    return localDataSource.recordSwipeDecisions(decisions);
+  }
+
+  @override
+  Future<List<SwipeDecisionModel>> getSwipeDecisions() async {
+    await _ensureInitialized();
+    return localDataSource.getSwipeDecisions();
+  }
+
+  @override
+  Future<Set<int>> getDecidedTmdbIds() async {
+    await _ensureInitialized();
+    return localDataSource.getDecidedTmdbIds();
+  }
+
+  @override
+  Future<SwipeDecisionModel?> undoLastSwipeDecision() async {
+    await _ensureInitialized();
+    return localDataSource.undoLastSwipeDecision();
+  }
+
+  @override
+  Future<void> clearAllSwipeDecisions() async {
+    await _ensureInitialized();
+    return localDataSource.clearAllSwipeDecisions();
   }
 }

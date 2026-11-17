@@ -6,10 +6,10 @@ import 'package:mediavore/features/search/presentation/providers/search_provider
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
+import 'package:mediavore/features/discovery/presentation/pages/swiper_page.dart';
 import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
-import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/widgets/filter_chip_row.dart';
 import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
@@ -442,7 +442,6 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     final mode = context.watch<DiscoveryProvider>().mode;
 
     if (mode == DiscoverMode.swipe) {
-      // Placeholder until the Swiper lands (#285).
       return ColoredBox(
         color: context.appColors.bg,
         child: SafeArea(
@@ -455,13 +454,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 _buildTitle(l10n),
                 const SizedBox(height: 8),
                 _buildModeSegment(l10n, mode),
-                Expanded(
-                  child: EmptyState(
-                    icon: Icons.style_outlined,
-                    title: l10n.discoverSwipeSoonTitle,
-                    message: l10n.discoverSwipeSoonMessage,
-                  ),
-                ),
+                const Expanded(child: SwiperPage()),
               ],
             ),
           ),

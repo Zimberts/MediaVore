@@ -4,6 +4,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/entities/search_filters.dart';
+import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 
 enum ImportMode { append, replace, merge }
 
@@ -279,6 +280,24 @@ abstract class MediaRepository {
 
   /// Add a specific quick-add entry directly (used for Undo of a dismiss).
   Future<void> addQuickAddItem(QuickAddItem item);
+
+  /// Records a user's swipe decision on a candidate movie.
+  Future<void> recordSwipeDecision(SwipeDecisionModel decision);
+
+  /// Records multiple swipe decisions atomically (e.g. for a whole saga).
+  Future<void> recordSwipeDecisions(List<SwipeDecisionModel> decisions);
+
+  /// Retrieves all recorded swipe decisions sorted latest first.
+  Future<List<SwipeDecisionModel>> getSwipeDecisions();
+
+  /// Retrieves the set of TMDB IDs that have already been decided in swipe mode.
+  Future<Set<int>> getDecidedTmdbIds();
+
+  /// Undoes the most recent swipe decision (or collection decisions).
+  Future<SwipeDecisionModel?> undoLastSwipeDecision();
+
+  /// Clears all swipe decisions from local storage.
+  Future<void> clearAllSwipeDecisions();
 }
 
 class NotifiedItem {

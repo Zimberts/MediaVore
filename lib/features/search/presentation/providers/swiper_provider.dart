@@ -1,0 +1,365 @@
+import 'dart:math';
+
+import 'package:flutter/foundation.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/utils/saga_sort.dart';
+import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+
+/// Represents a candidate presented on the Swiper screen.
+/// Can be a standalone movie or an entire saga/collection.
+class SwipeCardCandidate {
+  final MediaItem item;
+  final int? collectionId;
+  final String? collectionName;
+  final List<MediaItem> sagaItems;
+
+  const SwipeCardCandidate({
+    required this.item,
+    this.collectionId,
+    this.collectionName,
+    this.sagaItems = const [],
+  });
+
+  bool get isSaga => collectionId != null && sagaItems.isNotEmpty;
+}
+
+/// Result of an undo operation.
+class UndoResult {
+  final SwipeCardCandidate restoredCandidate;
+  final String decision;
+  final String? targetList;
+
+  const UndoResult({
+    required this.restoredCandidate,
+    required this.decision,
+    this.targetList,
+  });
+}
+
+class SwiperProvider extends ChangeNotifier {
+  final MediaRepository repository;
+
+  SwiperProvider(this.repository);
+
+  final List<SwipeCardCandidate> _candidates = [];
+  final List<SwipeCardCandidate> _historyStack = [];
+
+  bool _isLoading = false;
+  bool _isFetchingMore = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
+
+  int _sessionAddedCount = 0;
+  int _sessionDiscardedCount = 0;
+
+  final Set<int> _decidedTmdbIds = {};
+  final Set<int> _seenSagaCollectionIds = {};
+
+  // External filters passed during refresh/load
+  Set<int> _existingListIds = {};
+  Set<int> _seenIds = {};
+
+  List<SwipeCardCandidate> get candidates => List.unmodifiable(_candidates);
+  SwipeCardCandidate? get currentCandidate =>
+      _candidates.isNotEmpty ? _candidates.first : null;
+
+  bool get isLoading => _isLoading;
+  bool get hasMore => _hasMore;
+  bool get canUndo => _historyStack.isNotEmpty;
+
+  int get sessionAddedCount => _sessionAddedCount;
+  int get sessionDiscardedCount => _sessionDiscardedCount;
+
+  /// Initializes the swiper and preloads the first candidate cards.
+  Future<void> init({
+    Set<int> existingListIds = const {},
+    Set<int> seenIds = const {},
+  }) async {
+    _existingListIds = Set.from(existingListIds);
+    _seenIds = Set.from(seenIds);
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final decided = await repository.getDecidedTmdbIds();
+      _decidedTmdbIds.clear();
+      _decidedTmdbIds.addAll(decided);
+
+      final pastDecisions = await repository.getSwipeDecisions();
+      _seenSagaCollectionIds.clear();
+      for (final d in pastDecisions) {
+        if (d.collectionId != null) {
+          _seenSagaCollectionIds.add(d.collectionId!);
+        }
+      }
+
+      _candidates.clear();
+      _historyStack.clear();
+      _sessionAddedCount = 0;
+      _sessionDiscardedCount = 0;
+      _currentPage = 1;
+      _hasMore = true;
+
+      await _loadCandidatesUntilThreshold(targetCount: 4);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Updates the external filters (e.g. if the user marks something seen elsewhere).
+  void updateFilters({Set<int>? existingListIds, Set<int>? seenIds}) {
+    if (existingListIds != null) _existingListIds = Set.from(existingListIds);
+    if (seenIds != null) _seenIds = Set.from(seenIds);
+
+    // Prune any candidates that now match the updated filters
+    _candidates.removeWhere(
+      (c) =>
+          _decidedTmdbIds.contains(c.item.id) ||
+          _existingListIds.contains(c.item.id) ||
+          _seenIds.contains(c.item.id),
+    );
+    notifyListeners();
+  }
+
+  /// Swipes right (Accept / Add to list).
+  Future<void> swipeRight(String targetList) async {
+    if (_candidates.isEmpty) return;
+
+    final candidate = _candidates.removeAt(0);
+    _historyStack.add(candidate);
+    final now = DateTime.now();
+
+    if (candidate.isSaga) {
+      final decisions = <SwipeDecisionModel>[];
+      for (final movie in candidate.sagaItems) {
+        // Add all movies from the saga not already in list
+        if (!_existingListIds.contains(movie.id)) {
+          await repository.addToList(movie, targetList);
+          _existingListIds.add(movie.id);
+        }
+        decisions.add(
+          SwipeDecisionModel(
+            tmdbId: movie.id,
+            mediaType: 'movie',
+            title: movie.title,
+            posterPath: movie.posterPath,
+            decision: 'added',
+            decidedAt: now,
+            targetList: targetList,
+            collectionId: candidate.collectionId,
+            collectionName: candidate.collectionName,
+          ),
+        );
+        _decidedTmdbIds.add(movie.id);
+      }
+      if (candidate.collectionId != null) {
+        _seenSagaCollectionIds.add(candidate.collectionId!);
+      }
+      await repository.recordSwipeDecisions(decisions);
+    } else {
+      await repository.addToList(candidate.item, targetList);
+      _existingListIds.add(candidate.item.id);
+      _decidedTmdbIds.add(candidate.item.id);
+
+      final decision = SwipeDecisionModel(
+        tmdbId: candidate.item.id,
+        mediaType: 'movie',
+        title: candidate.item.title,
+        posterPath: candidate.item.posterPath,
+        decision: 'added',
+        decidedAt: now,
+        targetList: targetList,
+      );
+      await repository.recordSwipeDecision(decision);
+    }
+
+    _sessionAddedCount++;
+    notifyListeners();
+
+    _checkPrefetch();
+  }
+
+  /// Swipes left (Pass / Discard).
+  Future<void> swipeLeft() async {
+    if (_candidates.isEmpty) return;
+
+    final candidate = _candidates.removeAt(0);
+    _historyStack.add(candidate);
+    final now = DateTime.now();
+
+    if (candidate.isSaga) {
+      final decisions = <SwipeDecisionModel>[];
+      for (final movie in candidate.sagaItems) {
+        decisions.add(
+          SwipeDecisionModel(
+            tmdbId: movie.id,
+            mediaType: 'movie',
+            title: movie.title,
+            posterPath: movie.posterPath,
+            decision: 'discarded',
+            decidedAt: now,
+            collectionId: candidate.collectionId,
+            collectionName: candidate.collectionName,
+          ),
+        );
+        _decidedTmdbIds.add(movie.id);
+      }
+      if (candidate.collectionId != null) {
+        _seenSagaCollectionIds.add(candidate.collectionId!);
+      }
+      await repository.recordSwipeDecisions(decisions);
+    } else {
+      _decidedTmdbIds.add(candidate.item.id);
+      final decision = SwipeDecisionModel(
+        tmdbId: candidate.item.id,
+        mediaType: 'movie',
+        title: candidate.item.title,
+        posterPath: candidate.item.posterPath,
+        decision: 'discarded',
+        decidedAt: now,
+      );
+      await repository.recordSwipeDecision(decision);
+    }
+
+    _sessionDiscardedCount++;
+    notifyListeners();
+
+    _checkPrefetch();
+  }
+
+  /// Undoes the last swipe decision.
+  Future<UndoResult?> undoLastDecision() async {
+    if (_historyStack.isEmpty) return null;
+
+    final lastCandidate = _historyStack.removeLast();
+    final undone = await repository.undoLastSwipeDecision();
+
+    if (undone != null) {
+      if (undone.decision == 'added') {
+        _sessionAddedCount = max(0, _sessionAddedCount - 1);
+        if (undone.targetList != null) {
+          if (lastCandidate.isSaga) {
+            for (final movie in lastCandidate.sagaItems) {
+              await repository.removeFromList(
+                movie.id,
+                MediaType.movie,
+                undone.targetList!,
+              );
+              _existingListIds.remove(movie.id);
+              _decidedTmdbIds.remove(movie.id);
+            }
+          } else {
+            await repository.removeFromList(
+              undone.tmdbId,
+              MediaType.movie,
+              undone.targetList!,
+            );
+            _existingListIds.remove(undone.tmdbId);
+            _decidedTmdbIds.remove(undone.tmdbId);
+          }
+        }
+      } else {
+        _sessionDiscardedCount = max(0, _sessionDiscardedCount - 1);
+        if (lastCandidate.isSaga) {
+          for (final movie in lastCandidate.sagaItems) {
+            _decidedTmdbIds.remove(movie.id);
+          }
+        } else {
+          _decidedTmdbIds.remove(undone.tmdbId);
+        }
+      }
+
+      if (lastCandidate.collectionId != null) {
+        _seenSagaCollectionIds.remove(lastCandidate.collectionId!);
+      }
+
+      _candidates.insert(0, lastCandidate);
+      notifyListeners();
+
+      return UndoResult(
+        restoredCandidate: lastCandidate,
+        decision: undone.decision,
+        targetList: undone.targetList,
+      );
+    }
+
+    return null;
+  }
+
+  void _checkPrefetch() {
+    if (_candidates.length < 3 && !_isFetchingMore && _hasMore) {
+      _loadCandidatesUntilThreshold(targetCount: 4);
+    }
+  }
+
+  Future<void> _loadCandidatesUntilThreshold({int targetCount = 4}) async {
+    if (_isFetchingMore || !_hasMore) return;
+    _isFetchingMore = true;
+
+    try {
+      while (_candidates.length < targetCount &&
+          _hasMore &&
+          _currentPage <= 50) {
+        final pageItems = await repository.discoverMedia(
+          type: MediaType.movie,
+          page: _currentPage,
+        );
+        _currentPage++;
+
+        if (pageItems.isEmpty) {
+          _hasMore = false;
+          break;
+        }
+
+        for (final item in pageItems) {
+          if (_decidedTmdbIds.contains(item.id)) continue;
+          if (_existingListIds.contains(item.id)) continue;
+          if (_seenIds.contains(item.id)) continue;
+          if (_candidates.any((c) => c.item.id == item.id)) continue;
+
+          // Enrich with details to detect collections/sagas
+          try {
+            final details = await repository.getMediaDetails(
+              item.id,
+              type: MediaType.movie,
+            );
+            final collId = details.item.collectionId;
+            final collName = details.item.collectionName;
+
+            if (collId != null &&
+                details.collection != null &&
+                details.collection!.isNotEmpty) {
+              if (_seenSagaCollectionIds.contains(collId)) continue;
+
+              final sagaSorted = sortSagaByDate(details.collection!);
+              _seenSagaCollectionIds.add(collId);
+
+              _candidates.add(
+                SwipeCardCandidate(
+                  item: details.item,
+                  collectionId: collId,
+                  collectionName: collName ?? details.item.title,
+                  sagaItems: sagaSorted,
+                ),
+              );
+            } else {
+              _candidates.add(SwipeCardCandidate(item: details.item));
+            }
+          } catch (_) {
+            _candidates.add(SwipeCardCandidate(item: item));
+          }
+
+          if (_candidates.length >= targetCount) break;
+        }
+      }
+    } catch (_) {
+      // In case of network errors, preserve existing candidates
+    } finally {
+      _isFetchingMore = false;
+      notifyListeners();
+    }
+  }
+}

@@ -1902,5 +1902,58 @@
         "type": "int"
       }
     }
+  },
+  "swiperTitle": "Swiper",
+  "swiperAddTo": "Add to",
+  "swiperPass": "Pass",
+  "swiperDiscard": "Discard",
+  "swiperAdd": "Add",
+  "swiperUndo": "Undo",
+  "swiperAddedMessage": "{title} added to {list}",
+  "@swiperAddedMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "swiperDiscardedMessage": "Discarded",
+  "swiperSagaAddedMessage": "Saga {title} added ({count} movies)",
+  "@swiperSagaAddedMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "swiperSagaDiscardedMessage": "Saga discarded",
+  "swiperEmptyTitle": "No more movies",
+  "swiperEmptyMessage": "You've gone through all available movies for now.",
+  "swiperSessionStats": "{added} added · {discarded} discarded",
+  "@swiperSessionStats": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "discarded": {
+        "type": "int"
+      }
+    }
+  },
+  "swiperSettingTitle": "Swipe discovery",
+  "swiperSettingSubtitle": "Discover movies card by card and quickly add them to your lists",
+  "swiperSagaBadge": "Saga ({count} movies)",
+  "@swiperSagaBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

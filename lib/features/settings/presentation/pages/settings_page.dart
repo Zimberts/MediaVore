@@ -215,6 +215,13 @@ class SettingsPage extends StatelessWidget {
             value: settings.hideNonReleased,
             onChanged: (val) => settings.setHideNonReleased(val),
           ),
+          SwitchListTile(
+            key: const Key('settings_swipe_mode_switch'),
+            title: Text(l10n.swiperSettingTitle),
+            subtitle: Text(l10n.swiperSettingSubtitle),
+            value: settings.isSwipeModeEnabled,
+            onChanged: (val) => settings.setSwipeModeEnabled(val),
+          ),
           const Divider(),
           _SectionHeader(title: l10n.settingsSectionTracking),
           SwitchListTile(

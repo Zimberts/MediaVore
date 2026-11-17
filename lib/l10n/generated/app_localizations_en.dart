@@ -2807,4 +2807,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String detailEpisodeNumber(int number) {
     return 'Episode $number';
   }
+
+  @override
+  String get swiperTitle => 'Swiper';
+
+  @override
+  String get swiperAddTo => 'Add to';
+
+  @override
+  String get swiperPass => 'Pass';
+
+  @override
+  String get swiperDiscard => 'Discard';
+
+  @override
+  String get swiperAdd => 'Add';
+
+  @override
+  String get swiperUndo => 'Undo';
+
+  @override
+  String swiperAddedMessage(String title, String list) {
+    return '$title added to $list';
+  }
+
+  @override
+  String get swiperDiscardedMessage => 'Discarded';
+
+  @override
+  String swiperSagaAddedMessage(String title, int count) {
+    return 'Saga $title added ($count movies)';
+  }
+
+  @override
+  String get swiperSagaDiscardedMessage => 'Saga discarded';
+
+  @override
+  String get swiperEmptyTitle => 'No more movies';
+
+  @override
+  String get swiperEmptyMessage =>
+      'You\'ve gone through all available movies for now.';
+
+  @override
+  String swiperSessionStats(int added, int discarded) {
+    return '$added added · $discarded discarded';
+  }
+
+  @override
+  String get swiperSettingTitle => 'Swipe discovery';
+
+  @override
+  String get swiperSettingSubtitle =>
+      'Discover movies card by card and quickly add them to your lists';
+
+  @override
+  String swiperSagaBadge(int count) {
+    return 'Saga ($count movies)';
+  }
 }

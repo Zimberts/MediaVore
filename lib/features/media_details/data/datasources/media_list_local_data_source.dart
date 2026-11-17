@@ -8,6 +8,7 @@ import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_opt_out_model.dart';
+import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 @lazySingleton
@@ -893,6 +894,61 @@ class MediaListLocalDataSource {
       }
       if (quickAdd.isNotEmpty) await _importQuickAddInTxn(quickAdd, mode, null);
       if (lists.isNotEmpty) await _importListsInTxn(lists, mode, null);
+    });
+  }
+
+  Future<void> recordSwipeDecision(SwipeDecisionModel decision) async {
+    await _isar.writeTxn(() async {
+      await _isar.swipeDecisionModels.put(decision);
+    });
+  }
+
+  Future<void> recordSwipeDecisions(List<SwipeDecisionModel> decisions) async {
+    await _isar.writeTxn(() async {
+      await _isar.swipeDecisionModels.putAll(decisions);
+    });
+  }
+
+  Future<List<SwipeDecisionModel>> getSwipeDecisions() async {
+    return await _isar.swipeDecisionModels
+        .where()
+        .sortByDecidedAtDesc()
+        .findAll();
+  }
+
+  Future<Set<int>> getDecidedTmdbIds() async {
+    final decisions = await _isar.swipeDecisionModels.where().findAll();
+    return decisions.map((d) => d.tmdbId).toSet();
+  }
+
+  Future<SwipeDecisionModel?> undoLastSwipeDecision() async {
+    return await _isar.writeTxn(() async {
+      final latest = await _isar.swipeDecisionModels
+          .where()
+          .sortByDecidedAtDesc()
+          .findFirst();
+      if (latest != null && latest.isarId != null) {
+        if (latest.collectionId != null) {
+          final sagaDecisions = await _isar.swipeDecisionModels
+              .filter()
+              .collectionIdEqualTo(latest.collectionId)
+              .findAll();
+          for (final d in sagaDecisions) {
+            if (d.isarId != null) {
+              await _isar.swipeDecisionModels.delete(d.isarId!);
+            }
+          }
+        } else {
+          await _isar.swipeDecisionModels.delete(latest.isarId!);
+        }
+      }
+      return latest;
+    });
+  }
+
+  Future<void> clearAllSwipeDecisions() async {
+    await _isar.writeTxn(() async {
+      await _isar.swipeDecisionModels.clear();
     });
   }
 }

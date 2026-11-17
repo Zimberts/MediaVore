@@ -4339,6 +4339,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Episode {number}'**
   String detailEpisodeNumber(int number);
+
+  /// No description provided for @swiperTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swiper'**
+  String get swiperTitle;
+
+  /// No description provided for @swiperAddTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to'**
+  String get swiperAddTo;
+
+  /// No description provided for @swiperPass.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass'**
+  String get swiperPass;
+
+  /// No description provided for @swiperDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get swiperDiscard;
+
+  /// No description provided for @swiperAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get swiperAdd;
+
+  /// No description provided for @swiperUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get swiperUndo;
+
+  /// No description provided for @swiperAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} added to {list}'**
+  String swiperAddedMessage(String title, String list);
+
+  /// No description provided for @swiperDiscardedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Discarded'**
+  String get swiperDiscardedMessage;
+
+  /// No description provided for @swiperSagaAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga {title} added ({count} movies)'**
+  String swiperSagaAddedMessage(String title, int count);
+
+  /// No description provided for @swiperSagaDiscardedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga discarded'**
+  String get swiperSagaDiscardedMessage;
+
+  /// No description provided for @swiperEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No more movies'**
+  String get swiperEmptyTitle;
+
+  /// No description provided for @swiperEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve gone through all available movies for now.'**
+  String get swiperEmptyMessage;
+
+  /// No description provided for @swiperSessionStats.
+  ///
+  /// In en, this message translates to:
+  /// **'{added} added · {discarded} discarded'**
+  String swiperSessionStats(int added, int discarded);
+
+  /// No description provided for @swiperSettingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe discovery'**
+  String get swiperSettingTitle;
+
+  /// No description provided for @swiperSettingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover movies card by card and quickly add them to your lists'**
+  String get swiperSettingSubtitle;
+
+  /// No description provided for @swiperSagaBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga ({count} movies)'**
+  String swiperSagaBadge(int count);
 }
 
 class _AppLocalizationsDelegate

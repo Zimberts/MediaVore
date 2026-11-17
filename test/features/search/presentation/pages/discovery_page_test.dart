@@ -8,6 +8,7 @@ import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
+import 'package:mediavore/features/discovery/presentation/pages/swiper_page.dart';
 import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
@@ -549,7 +550,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(discoveryProvider.mode, DiscoverMode.swipe);
-      expect(find.text('Swipe mode is coming soon'), findsOneWidget);
+      expect(find.byType(SwiperPage), findsOneWidget);
       expect(find.byType(TextField), findsNothing);
 
       await tester.tap(find.text('Explore'));
