@@ -5,6 +5,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
@@ -14,6 +15,7 @@ import 'package:mediavore/features/library/presentation/pages/library_page.dart'
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/search/presentation/widgets/incoming_list_sheet.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/together/presentation/pages/together_page.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
@@ -164,57 +166,20 @@ class _MainPageState extends State<MainPage> {
   void _handleLink(Uri uri) {
     if (uri.path == '/share' ||
         (uri.scheme == 'mediavore' && uri.host == 'share')) {
-      final name = uri.queryParameters['name'];
-      final itemsStr = uri.queryParameters['items'];
-
-      if (name != null && itemsStr != null) {
-        final items = itemsStr.split(',');
-        _showImportDialog(name, items);
+      final payload = ListShareCodec.decodeUri(uri);
+      if (payload != null && payload.entries.isNotEmpty) {
+        showIncomingListOptionsSheet(
+          context: context,
+          payload: payload,
+          onImportComplete: () {
+            if (mounted) {
+              final provider = context.read<SearchProvider>();
+              provider.openLibrary(LibrarySection.lists);
+            }
+          },
+        );
       }
     }
-  }
-
-  void _showImportDialog(String suggestedName, List<String> entries) {
-    final controller = TextEditingController(text: suggestedName);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.importListTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.l10n.importListMessage(entries.length)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: context.l10n.importListNameLabel,
-                hintText: context.l10n.importListNameHint,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final provider = context.read<SearchProvider>();
-              final navigator = Navigator.of(context);
-              await provider.importList(controller.text, entries);
-              if (mounted) {
-                navigator.pop();
-                provider.openLibrary(LibrarySection.lists);
-              }
-            },
-            child: Text(context.l10n.commonImport),
-          ),
-        ],
-      ),
-    );
   }
 
   @override

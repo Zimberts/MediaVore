@@ -495,5 +495,25 @@
       }
     }
   },
-  "profileUnlocked": "Débloqué"
+  "profileUnlocked": "Débloqué",
+  "listsIncomingSharedTitle": "Liste partagée reçue",
+  "listsIncomingSharedMessage": "La liste partagée « {name} » contient {count, plural, =1{1 titre} other{{count} titres}}. Que souhaitez-vous faire ?",
+  "listsCompareWithMine": "Comparer avec une de mes listes",
+  "listsCompareWithMineSubtitle": "Trouver les films et séries en commun sans rien importer",
+  "listsImportOptionTitle": "Importer dans ma bibliothèque",
+  "listsImportOptionSubtitle": "Ajouter cette liste à vos listes personnelles",
+  "listsCompareTitle": "Intersection de listes",
+  "listsCompareSubtitle": "{otherList} ∩ {myList}",
+  "listsCompareMyListLabel": "Comparer avec :",
+  "listsCompareCommonCount": "{count, plural, =0{Aucun titre en commun} =1{1 titre en commun} other{{count} titres en commun}}",
+  "listsCompareHideSeen": "Masquer mes vus",
+  "listsCompareSeenBadge": "({count} vus)",
+  "listsCompareEmptyTitle": "Aucun titre en commun",
+  "listsCompareEmptyMessage": "Aucun film ou série ne figure à la fois dans « {otherList} » et « {myList} ».",
+  "listsCompareSaveAsList": "Créer une liste ({count})",
+  "listsCompareSaveAsListSuccess": "Liste créée avec succès !",
+  "listsCompareShareIntersection": "Partager la sélection commune",
+  "listsCompareDefaultIntersectionName": "En commun avec {name}",
+  "mediaTypeMovie": "Film",
+  "mediaTypeTv": "Série"
 }

@@ -9,6 +9,7 @@ import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
+import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_error.dart';
 import 'package:mediavore/features/search/presentation/providers/search_relevance.dart';
@@ -82,6 +83,7 @@ class SearchProvider with ChangeNotifier {
   SearchErrorType? get errorType => _errorType;
   bool get isOffline => _isOffline;
   List<String> get listNames => _listNames;
+  Map<String, List<String>> get listEntries => Map.unmodifiable(_listEntries);
   int get cacheSize => _cacheSize;
   int get seenDbSize => _seenDbSize;
   int get resetCount => _resetCount;
@@ -484,15 +486,30 @@ class SearchProvider with ChangeNotifier {
   String getShareLinkForList(String listName) {
     final entries = _listEntries[listName] ?? [];
     if (entries.isEmpty) return '';
-    final encodedItems = Uri.encodeComponent(entries.join(','));
-    return 'https://mediavore.app/share?name=${Uri.encodeComponent(listName)}&items=$encodedItems';
+    final sharedEntries = ListShareCodec.parseEntries(entries);
+    return ListShareCodec.createShareUrl(
+      listName: listName,
+      entries: sharedEntries,
+    );
   }
 
   String getCustomSchemeShareLinkForList(String listName) {
     final entries = _listEntries[listName] ?? [];
     if (entries.isEmpty) return '';
-    final encodedItems = Uri.encodeComponent(entries.join(','));
-    return 'mediavore://share?name=${Uri.encodeComponent(listName)}&items=$encodedItems';
+    final sharedEntries = ListShareCodec.parseEntries(entries);
+    return ListShareCodec.createShareUrl(
+      listName: listName,
+      entries: sharedEntries,
+      customScheme: true,
+    );
+  }
+
+  Future<void> importSharedEntries(
+    String name,
+    List<SharedMediaEntry> entries,
+  ) async {
+    final strList = entries.map((e) => '${e.id}:${e.type.name}').toList();
+    await importList(name, strList);
   }
 
   Future<void> importList(String name, List<String> entries) async {

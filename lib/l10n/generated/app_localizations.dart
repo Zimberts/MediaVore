@@ -2935,6 +2935,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlocked'**
   String get profileUnlocked;
+
+  /// No description provided for @listsIncomingSharedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared List Received'**
+  String get listsIncomingSharedTitle;
+
+  /// No description provided for @listsIncomingSharedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The shared list \"{name}\" contains {count, plural, =1{1 title} other{{count} titles}}. What would you like to do?'**
+  String listsIncomingSharedMessage(String name, int count);
+
+  /// No description provided for @listsCompareWithMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare with one of my lists'**
+  String get listsCompareWithMine;
+
+  /// No description provided for @listsCompareWithMineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find movies and series in common without importing'**
+  String get listsCompareWithMineSubtitle;
+
+  /// No description provided for @listsImportOptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import into library'**
+  String get listsImportOptionTitle;
+
+  /// No description provided for @listsImportOptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this list to your personal lists'**
+  String get listsImportOptionSubtitle;
+
+  /// No description provided for @listsCompareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'List Intersection'**
+  String get listsCompareTitle;
+
+  /// No description provided for @listsCompareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{otherList} ∩ {myList}'**
+  String listsCompareSubtitle(String otherList, String myList);
+
+  /// No description provided for @listsCompareMyListLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare with:'**
+  String get listsCompareMyListLabel;
+
+  /// No description provided for @listsCompareCommonCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No titles in common} =1{1 title in common} other{{count} titles in common}}'**
+  String listsCompareCommonCount(int count);
+
+  /// No description provided for @listsCompareHideSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide watched'**
+  String get listsCompareHideSeen;
+
+  /// No description provided for @listsCompareSeenBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'({count} watched)'**
+  String listsCompareSeenBadge(int count);
+
+  /// No description provided for @listsCompareEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No common titles'**
+  String get listsCompareEmptyTitle;
+
+  /// No description provided for @listsCompareEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No movies or TV shows appear in both \"{otherList}\" and \"{myList}\".'**
+  String listsCompareEmptyMessage(String otherList, String myList);
+
+  /// No description provided for @listsCompareSaveAsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as new list ({count})'**
+  String listsCompareSaveAsList(int count);
+
+  /// No description provided for @listsCompareSaveAsListSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'List created successfully!'**
+  String get listsCompareSaveAsListSuccess;
+
+  /// No description provided for @listsCompareShareIntersection.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Common Selection'**
+  String get listsCompareShareIntersection;
+
+  /// No description provided for @listsCompareDefaultIntersectionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Common with {name}'**
+  String listsCompareDefaultIntersectionName(String name);
+
+  /// No description provided for @mediaTypeMovie.
+  ///
+  /// In en, this message translates to:
+  /// **'Movie'**
+  String get mediaTypeMovie;
+
+  /// No description provided for @mediaTypeTv.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get mediaTypeTv;
 }
 
 class _AppLocalizationsDelegate
