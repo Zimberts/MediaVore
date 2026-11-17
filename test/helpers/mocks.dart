@@ -150,6 +150,18 @@ class MockMediaRepository extends Mock implements MediaRepository {
       return const Stream.empty();
     }
   }
+
+  @override
+  Future<List<MediaItem?>> getCachedMediaItems(List<(int, MediaType)> keys) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#getCachedMediaItems, [keys]),
+          )
+          as Future<List<MediaItem?>>;
+    } catch (_) {
+      return Future.value(<MediaItem?>[]);
+    }
+  }
 }
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}

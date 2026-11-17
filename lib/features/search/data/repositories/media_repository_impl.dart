@@ -260,6 +260,14 @@ class MediaRepositoryImpl implements MediaRepository {
     return cache.getCacheUpdateDate(tmdbId, type);
   }
 
+  @override
+  Future<List<MediaItem?>> getCachedMediaItems(
+    List<(int, MediaType)> keys,
+  ) async {
+    await _ensureInitialized();
+    return cache.getItems(keys);
+  }
+
   // Lists
 
   @override

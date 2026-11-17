@@ -233,6 +233,9 @@ abstract class MediaRepository {
   /// Gets the last cache update date for a specific media item.
   Future<DateTime?> getCacheUpdateDate(int tmdbId, MediaType type);
 
+  /// Returns cached media items for the given tmdb id and type pairs.
+  Future<List<MediaItem?>> getCachedMediaItems(List<(int, MediaType)> keys);
+
   /// Removes a quick-add entry by its isar id.
   Future<void> removeQuickAddItemById(int isarId);
 
