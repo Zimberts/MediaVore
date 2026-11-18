@@ -14,12 +14,17 @@ class SeenManager extends StatefulWidget {
   final int? episodeNumber;
   final bool compact;
 
+  /// Full-width main action of the detail page: "Mark as seen", then
+  /// "Seen" opening the viewing history once the title has been seen.
+  final bool primary;
+
   const SeenManager({
     super.key,
     required this.item,
     this.seasonNumber,
     this.episodeNumber,
     this.compact = false,
+    this.primary = false,
   });
 
   @override
@@ -53,6 +58,33 @@ class _SeenManagerState extends State<SeenManager> {
     }
 
     final isTv = widget.item.mediaType == MediaType.tv;
+
+    if (widget.primary) {
+      return Tooltip(
+        message: isSeen
+            ? context.l10n.seenOpenHistory
+            : context.l10n.commonMarkAsSeen,
+        child: FilledButton.icon(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+          ),
+          onPressed: () {
+            if (isSeen) {
+              _showSeenHistory(context, provider);
+            } else {
+              _markAsSeenWithFlow(context, provider);
+            }
+          },
+          icon: isSeen ? const Icon(Icons.check, size: 18) : null,
+          label: Text(
+            isSeen ? context.l10n.seenSeen : context.l10n.commonMarkAsSeen,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      );
+    }
 
     // Use a single smart button for compact/episode views to avoid duplication
     if (widget.compact ||

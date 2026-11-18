@@ -40,6 +40,10 @@ class TVSeason extends Equatable {
 class MediaItem extends Equatable {
   final int id;
   final String title;
+
+  /// Title in the original language (TMDB `original_title` for a movie,
+  /// `original_name` for a series). Null when TMDB did not report it.
+  final String? originalTitle;
   final String? posterPath;
   final String overview;
   final String releaseDate;
@@ -74,6 +78,7 @@ class MediaItem extends Equatable {
   const MediaItem({
     required this.id,
     required this.title,
+    this.originalTitle,
     this.posterPath,
     required this.overview,
     required this.releaseDate,
@@ -148,6 +153,8 @@ class MediaItem extends Equatable {
     return MediaItem(
       id: json['id'] ?? 0,
       title: json['title'] ?? json['name'] ?? '',
+      originalTitle:
+          (json['original_title'] ?? json['original_name']) as String?,
       posterPath: json['poster_path'] as String?,
       overview: json['overview'] ?? '',
       releaseDate: json['release_date'] ?? json['first_air_date'] ?? '',
@@ -239,6 +246,7 @@ class MediaItem extends Equatable {
     return {
       'id': id,
       'title': title,
+      'original_title': originalTitle,
       'poster_path': posterPath,
       'overview': overview,
       'release_date': releaseDate,
@@ -273,6 +281,7 @@ class MediaItem extends Equatable {
   MediaItem copyWith({
     int? id,
     String? title,
+    String? originalTitle,
     String? posterPath,
     String? overview,
     String? releaseDate,
@@ -299,6 +308,7 @@ class MediaItem extends Equatable {
     return MediaItem(
       id: id ?? this.id,
       title: title ?? this.title,
+      originalTitle: originalTitle ?? this.originalTitle,
       posterPath: posterPath ?? this.posterPath,
       overview: overview ?? this.overview,
       releaseDate: releaseDate ?? this.releaseDate,
@@ -351,6 +361,7 @@ class MediaItem extends Equatable {
   List<Object?> get props => [
     id,
     title,
+    originalTitle,
     posterPath,
     overview,
     releaseDate,
