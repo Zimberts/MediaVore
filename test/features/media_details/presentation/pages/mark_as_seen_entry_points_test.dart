@@ -113,7 +113,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppPalette.paper.toThemeData(),
+            theme: DefaultLightPalette().toThemeData(),
             home: const NotificationCenterPage(),
           ),
         ),
@@ -199,7 +199,7 @@ void main() {
         ChangeNotifierProvider<SearchProvider>.value(
           value: provider,
           child: MaterialApp(
-            theme: AppPalette.paper.toThemeData(),
+            theme: DefaultLightPalette().toThemeData(),
             home: Scaffold(
               body: WatchNextButton(
                 item: MediaItem(
@@ -333,7 +333,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppPalette.paper.toThemeData(),
+            theme: DefaultLightPalette().toThemeData(),
             home: const NotificationCenterPage(),
           ),
         ),

@@ -12,28 +12,46 @@ void main() {
       AppPaletteId.ink: [0xFF121110, 0xFF1C1B19, 0xFF292723, 0xFF36332E],
       AppPaletteId.night: [0xFF0E1320, 0xFF161D2E, 0xFF212A3F, 0xFF2C3650],
       AppPaletteId.oled: [0xFF000000, 0xFF0D0D0D, 0xFF1A1A1A, 0xFF262626],
-      AppPaletteId.defaultLight: [0xFFF8F9FA, 0xFFFFFFFF, 0xFFECEFF1, 0xFFCFD8DC],
+      AppPaletteId.classicLight: [
+        0xFFF8F9FA,
+        0xFFFFFFFF,
+        0xFFECEFF1,
+        0xFFCFD8DC,
+      ],
       AppPaletteId.parchment: [0xFFFBF0D9, 0xFFFFFDF5, 0xFFF0E4C8, 0xFFE2D6C0],
       AppPaletteId.mint: [0xFFF1F8F3, 0xFFFFFFFF, 0xFFE0EFE4, 0xFFC8E2CF],
-      AppPaletteId.solarizedLight: [0xFFFDF6E3, 0xFFFFFDF5, 0xFFEEE8D5, 0xFFD3CBB7],
+      AppPaletteId.solarizedLight: [
+        0xFFFDF6E3,
+        0xFFFFFDF5,
+        0xFFEEE8D5,
+        0xFFD3CBB7,
+      ],
       AppPaletteId.pinky: [0xFFFDF2F4, 0xFFFFFFFF, 0xFFF8DAE0, 0xFFEDB9C5],
-      AppPaletteId.defaultDark: [0xFF1C1B1F, 0xFF2B2930, 0xFF36343C, 0xFF49454F],
+      AppPaletteId.classicDark: [
+        0xFF1C1B1F,
+        0xFF2B2930,
+        0xFF36343C,
+        0xFF49454F,
+      ],
       AppPaletteId.slate: [0xFF0F172A, 0xFF1E293B, 0xFF283446, 0xFF384556],
       AppPaletteId.midnight: [0xFF0B0F19, 0xFF111827, 0xFF1F2937, 0xFF374151],
       AppPaletteId.espresso: [0xFF1C130E, 0xFF2B1D16, 0xFF3D2B22, 0xFF543E33],
     };
 
-    test('should expose the six core palettes of the design and legacy palettes', () {
-      expect(AppPalette.coreValues.map((p) => p.id), [
-        AppPaletteId.paper,
-        AppPaletteId.sand,
-        AppPaletteId.mist,
-        AppPaletteId.ink,
-        AppPaletteId.night,
-        AppPaletteId.oled,
-      ]);
-      expect(AppPalette.values.map((p) => p.id), AppPaletteId.values);
-    });
+    test(
+      'should expose the six core palettes of the design and legacy palettes',
+      () {
+        expect(AppPalette.coreValues.map((p) => p.id), [
+          AppPaletteId.paper,
+          AppPaletteId.sand,
+          AppPaletteId.mist,
+          AppPaletteId.ink,
+          AppPaletteId.night,
+          AppPaletteId.oled,
+        ]);
+        expect(AppPalette.values.map((p) => p.id), AppPaletteId.values);
+      },
+    );
 
     for (final palette in AppPalette.values) {
       test('should match expected surfaces for ${palette.id.name}', () {
@@ -107,7 +125,12 @@ void main() {
   group('AppPalette semantic states', () {
     test('should keep danger separate from media colors', () {
       for (final palette in AppPalette.values) {
-        final media = {palette.movie, palette.series, palette.book, palette.duo};
+        final media = {
+          palette.movie,
+          palette.series,
+          palette.book,
+          palette.duo,
+        };
         expect(media.contains(palette.danger), isFalse);
         expect(media.contains(palette.success), isFalse);
       }
@@ -130,12 +153,12 @@ void main() {
         'ink',
         'night',
         'oled',
-        'defaultLight',
+        'classicLight',
         'parchment',
         'mint',
         'solarizedLight',
         'pinky',
-        'defaultDark',
+        'classicDark',
         'slate',
         'midnight',
         'espresso',
@@ -148,20 +171,28 @@ void main() {
         AppPalette.sand,
       );
       expect(
-        AppPalette.fromStorageId('sable', Brightness.light),
-        AppPalette.sand,
+        AppPalette.fromStorageId('mist', Brightness.light),
+        AppPalette.mist,
       );
       expect(
         AppPalette.fromStorageId('mint', Brightness.light),
         AppPalette.mint,
       );
       expect(
+        AppPalette.fromStorageId('classicLight', Brightness.light),
+        AppPalette.classicLight,
+      );
+      expect(
         AppPalette.fromStorageId('oled', Brightness.dark),
         AppPalette.oled,
       );
       expect(
-        AppPalette.fromStorageId('encre', Brightness.dark),
-        AppPalette.ink,
+        AppPalette.fromStorageId('night', Brightness.dark),
+        AppPalette.night,
+      );
+      expect(
+        AppPalette.fromStorageId('classicDark', Brightness.dark),
+        AppPalette.classicDark,
       );
     });
 
@@ -175,12 +206,38 @@ void main() {
         AppPalette.paper,
       );
       expect(
+        AppPalette.fromStorageId('sable', Brightness.light),
+        AppPalette.paper,
+      );
+      expect(
+        AppPalette.fromStorageId('encre', Brightness.dark),
+        AppPalette.ink,
+      );
+      expect(
         AppPalette.fromStorageId('night', Brightness.light),
         AppPalette.paper,
       );
       expect(
         AppPalette.fromStorageId('paper', Brightness.dark),
         AppPalette.ink,
+      );
+    });
+  });
+
+  group('Default palettes', () {
+    test('DefaultLightPalette should resolve to default light (paper)', () {
+      expect(const DefaultLightPalette().palette, AppPalette.defaultLight);
+      expect(
+        const DefaultLightPalette().toThemeData().scaffoldBackgroundColor,
+        AppPalette.paper.bg,
+      );
+    });
+
+    test('DefaultDarkPalette should resolve to default dark (ink)', () {
+      expect(const DefaultDarkPalette().palette, AppPalette.defaultDark);
+      expect(
+        const DefaultDarkPalette().toThemeData().scaffoldBackgroundColor,
+        AppPalette.ink.bg,
       );
     });
   });

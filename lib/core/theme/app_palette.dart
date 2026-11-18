@@ -15,12 +15,12 @@ enum AppPaletteId {
   oled(Brightness.dark),
 
   // Preserved legacy theme palettes:
-  defaultLight(Brightness.light),
+  classicLight(Brightness.light),
   parchment(Brightness.light),
   mint(Brightness.light),
   solarizedLight(Brightness.light),
   pinky(Brightness.light),
-  defaultDark(Brightness.dark),
+  classicDark(Brightness.dark),
   slate(Brightness.dark),
   midnight(Brightness.dark),
   espresso(Brightness.dark);
@@ -138,8 +138,8 @@ class AppPalette {
   );
 
   // Preserved Previous Theme Styles (Light)
-  static const defaultLight = AppPalette._light(
-    id: AppPaletteId.defaultLight,
+  static const classicLight = AppPalette._light(
+    id: AppPaletteId.classicLight,
     bg: Color(0xFFF8F9FA),
     surface: Color(0xFFFFFFFF),
     surface2: Color(0xFFECEFF1),
@@ -179,8 +179,8 @@ class AppPalette {
   );
 
   // Preserved Previous Theme Styles (Dark)
-  static const defaultDark = AppPalette._dark(
-    id: AppPaletteId.defaultDark,
+  static const classicDark = AppPalette._dark(
+    id: AppPaletteId.classicDark,
     bg: Color(0xFF1C1B1F),
     surface: Color(0xFF2B2930),
     surface2: Color(0xFF36343C),
@@ -229,17 +229,19 @@ class AppPalette {
     ink,
     night,
     oled,
-    defaultLight,
+    classicLight,
     parchment,
     mint,
     solarizedLight,
     pinky,
-    defaultDark,
+    classicDark,
     slate,
     midnight,
     espresso,
   ];
 
+  static const AppPalette defaultLight = paper;
+  static const AppPalette defaultDark = ink;
   static const AppPalette defaultLightPalette = paper;
   static const AppPalette defaultDarkPalette = ink;
 
@@ -265,26 +267,12 @@ class AppPalette {
         return palette;
       }
     }
-    // Backward-compatibility aliases for French names or legacy theme names:
-    final AppPalette? alias = switch (storageId) {
-      'papier' => paper,
-      'sable' => sand,
-      'brume' => mist,
-      'encre' => ink,
-      'nuit' => night,
-      'Default Light' => defaultLight,
-      'Parchment' => parchment,
-      'Mint' => mint,
-      'Solarized' || 'Solarized Light' => solarizedLight,
-      'Pinky' => pinky,
-      'Default Dark' => defaultDark,
-      'Slate' => slate,
-      'Midnight' => midnight,
-      'Espresso' => espresso,
-      _ => null,
-    };
-    if (alias != null && alias.brightness == brightness) {
-      return alias;
+    // Backward-compatibility aliases for legacy storage IDs:
+    if (storageId == 'defaultLight' && brightness == Brightness.light) {
+      return classicLight;
+    }
+    if (storageId == 'defaultDark' && brightness == Brightness.dark) {
+      return classicDark;
     }
     return defaultFor(brightness);
   }
@@ -541,3 +529,21 @@ Color contrastingForeground(Color background) =>
     ThemeData.estimateBrightnessForColor(background) == Brightness.dark
     ? Colors.white
     : Colors.black;
+
+/// Default light palette wrapper for convenience and test compatibility.
+class DefaultLightPalette {
+  const DefaultLightPalette();
+
+  AppPalette get palette => AppPalette.defaultLight;
+
+  ThemeData toThemeData() => AppPalette.defaultLight.toThemeData();
+}
+
+/// Default dark palette wrapper for convenience and test compatibility.
+class DefaultDarkPalette {
+  const DefaultDarkPalette();
+
+  AppPalette get palette => AppPalette.defaultDark;
+
+  ThemeData toThemeData() => AppPalette.defaultDark.toThemeData();
+}

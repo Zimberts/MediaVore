@@ -74,7 +74,7 @@ void main() {
     return ChangeNotifierProvider<SearchProvider>.value(
       value: searchProvider,
       child: MaterialApp(
-        theme: AppPalette.paper.toThemeData(),
+        theme: DefaultLightPalette().toThemeData(),
         home: Scaffold(
           body: SeenManager(
             compact: compact,
@@ -338,7 +338,7 @@ void main() {
           ChangeNotifierProvider<SearchProvider>.value(
             value: searchProvider,
             child: MaterialApp(
-              theme: AppPalette.paper.toThemeData(),
+              theme: DefaultLightPalette().toThemeData(),
               home: Scaffold(
                 body: SeenManager(
                   compact: false,
@@ -384,7 +384,7 @@ void main() {
           ChangeNotifierProvider<SearchProvider>.value(
             value: searchProvider,
             child: MaterialApp(
-              theme: AppPalette.paper.toThemeData(),
+              theme: DefaultLightPalette().toThemeData(),
               home: Scaffold(
                 body: SeenManager(
                   compact: false,
@@ -426,7 +426,7 @@ void main() {
           ChangeNotifierProvider<SearchProvider>.value(
             value: searchProvider,
             child: MaterialApp(
-              theme: AppPalette.paper.toThemeData(),
+              theme: DefaultLightPalette().toThemeData(),
               home: Scaffold(
                 body: SeenManager(
                   compact: false,
@@ -470,7 +470,7 @@ void main() {
           ChangeNotifierProvider<SearchProvider>.value(
             value: searchProvider,
             child: MaterialApp(
-              theme: AppPalette.paper.toThemeData(),
+              theme: DefaultLightPalette().toThemeData(),
               home: Scaffold(
                 body: SeenManager(
                   compact: false,

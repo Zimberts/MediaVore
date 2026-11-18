@@ -32,8 +32,8 @@ String paletteName(AppLocalizations l10n, AppPaletteId id) {
       return l10n.paletteNameNight;
     case AppPaletteId.oled:
       return l10n.paletteNameOled;
-    case AppPaletteId.defaultLight:
-      return l10n.paletteNameDefaultLight;
+    case AppPaletteId.classicLight:
+      return l10n.paletteNameClassicLight;
     case AppPaletteId.parchment:
       return l10n.paletteNameParchment;
     case AppPaletteId.mint:
@@ -42,8 +42,8 @@ String paletteName(AppLocalizations l10n, AppPaletteId id) {
       return l10n.paletteNameSolarizedLight;
     case AppPaletteId.pinky:
       return l10n.paletteNamePinky;
-    case AppPaletteId.defaultDark:
-      return l10n.paletteNameDefaultDark;
+    case AppPaletteId.classicDark:
+      return l10n.paletteNameClassicDark;
     case AppPaletteId.slate:
       return l10n.paletteNameSlate;
     case AppPaletteId.midnight:

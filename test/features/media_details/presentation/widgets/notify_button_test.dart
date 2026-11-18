@@ -58,7 +58,7 @@ void main() {
     return ChangeNotifierProvider<SearchProvider>.value(
       value: searchProvider,
       child: MaterialApp(
-        theme: AppPalette.paper.toThemeData(),
+        theme: DefaultLightPalette().toThemeData(),
         home: Scaffold(body: NotifyButton(item: item)),
       ),
     );

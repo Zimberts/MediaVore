@@ -458,11 +458,11 @@ abstract class AppLocalizations {
   /// **'OLED black'**
   String get paletteNameOled;
 
-  /// No description provided for @paletteNameDefaultLight.
+  /// No description provided for @paletteNameClassicLight.
   ///
   /// In en, this message translates to:
-  /// **'Default Light'**
-  String get paletteNameDefaultLight;
+  /// **'Classic Light'**
+  String get paletteNameClassicLight;
 
   /// No description provided for @paletteNameParchment.
   ///
@@ -488,11 +488,11 @@ abstract class AppLocalizations {
   /// **'Pinky'**
   String get paletteNamePinky;
 
-  /// No description provided for @paletteNameDefaultDark.
+  /// No description provided for @paletteNameClassicDark.
   ///
   /// In en, this message translates to:
-  /// **'Default Dark'**
-  String get paletteNameDefaultDark;
+  /// **'Classic Dark'**
+  String get paletteNameClassicDark;
 
   /// No description provided for @paletteNameSlate.
   ///

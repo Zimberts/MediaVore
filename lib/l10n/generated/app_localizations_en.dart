@@ -212,7 +212,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paletteNameOled => 'OLED black';
 
   @override
-  String get paletteNameDefaultLight => 'Default Light';
+  String get paletteNameClassicLight => 'Classic Light';
 
   @override
   String get paletteNameParchment => 'Parchment';
@@ -227,7 +227,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paletteNamePinky => 'Pinky';
 
   @override
-  String get paletteNameDefaultDark => 'Default Dark';
+  String get paletteNameClassicDark => 'Classic Dark';
 
   @override
   String get paletteNameSlate => 'Slate';

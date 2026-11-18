@@ -60,6 +60,20 @@ void main() {
         );
       }
     });
+
+    test('should translate all available palettes in all languages', () {
+      for (final language in supportedAppLanguages) {
+        final l10n = lookupAppLocalizations(language.locale);
+        for (final palette in AppPalette.values) {
+          final name = paletteName(l10n, palette.id);
+          expect(
+            name,
+            isNotEmpty,
+            reason: '${palette.id.name} in ${language.locale}',
+          );
+        }
+      }
+    });
   });
 
   group('SettingsPage palettes', () {
