@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -77,7 +78,7 @@ void main() {
     locator.reset();
   });
 
-  Widget createWidgetUnderTest({VoidCallback? onSearch}) {
+  Widget createWidgetUnderTest() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
@@ -85,7 +86,7 @@ void main() {
       ],
       child: MaterialApp(
         theme: DefaultLightPalette().toThemeData(),
-        home: SeenHistoryPage(onSearch: onSearch),
+        home: const SeenHistoryPage(),
       ),
     );
   }
@@ -99,19 +100,19 @@ void main() {
     expect(find.text('No items seen yet.'), findsOneWidget);
   });
 
-  testWidgets('empty state offers a search action that calls onSearch', (
+  testWidgets('empty state offers a search action that opens Discover', (
     WidgetTester tester,
   ) async {
-    var searches = 0;
-    await tester.pumpWidget(createWidgetUnderTest(onSearch: () => searches++));
+    await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
+    searchProvider.setSelectedTab(AppTab.library);
 
     expect(
       find.text('Mark a movie or an episode as seen to start your history.'),
       findsOneWidget,
     );
     await tester.tap(find.text('Search a movie or series'));
-    expect(searches, 1);
+    expect(searchProvider.selectedTab, AppTab.discover);
   });
 
   testWidgets('displays grouped list of seen items and liked status', (

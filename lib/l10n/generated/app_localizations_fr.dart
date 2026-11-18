@@ -37,9 +37,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonOpenSettings => 'Ouvrir les paramètres';
 
   @override
-  String get navSearch => 'Recherche';
-
-  @override
   String get navDiscover => 'Découvrir';
 
   @override
@@ -47,9 +44,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get navHistory => 'Historique';
-
-  @override
-  String get navAlerts => 'Alertes';
 
   @override
   String get emptyStateSearchAction => 'Chercher un film ou une série';
@@ -135,7 +129,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tmdbCredentialLater =>
-      'Vous pourrez définir votre clé d\'API plus tard dans les paramètres (accessibles depuis les onglets Mes listes, Vus ou Alertes).';
+      'Vous pourrez définir votre clé d\'API plus tard dans Moi › Identifiant d\'API TMDB.';
 
   @override
   String get tmdbCredentialSkip => 'Plus tard';
@@ -1426,4 +1420,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String posterRating(String rating) {
     return 'Note $rating';
   }
+
+  @override
+  String get navHome => 'Accueil';
+
+  @override
+  String get navLibrary => 'Bibliothèque';
+
+  @override
+  String get navTogether => 'Ensemble';
+
+  @override
+  String get navMe => 'Moi';
+
+  @override
+  String get librarySectionLists => 'Listes';
+
+  @override
+  String get togetherSoonTitle => 'Choisir à plusieurs arrive bientôt';
+
+  @override
+  String get togetherSoonMessage =>
+      'Comparez vos listes entre amis et votez pour ce que vous allez regarder.';
 }

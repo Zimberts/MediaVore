@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -353,7 +354,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
       provider.clearFilters();
       provider.setFilters(genreIds: [genreId], type: widget.item.mediaType);
       provider.searchMedia('');
-      provider.setSelectedTab(0); // Switch to Discover tab
+      provider.setSelectedTab(AppTab.discover);
 
       if (widget.isSheet) {
         Navigator.of(context).pop();

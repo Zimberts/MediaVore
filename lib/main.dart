@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
+import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
@@ -275,6 +277,10 @@ class _MediaVoreAppState extends State<MediaVoreApp>
         ChangeNotifierProvider(
           create: (context) => locator<AchievementProvider>(),
         ),
+        // Session states live above the tabs so that they survive a change
+        // of tab.
+        ChangeNotifierProvider(create: (context) => SwipeSessionProvider()),
+        ChangeNotifierProvider(create: (context) => TogetherSessionProvider()),
       ],
       builder: (context, child) {
         final settings = context.watch<SettingsProvider>();

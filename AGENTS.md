@@ -22,7 +22,7 @@ The layers are **asymmetric** — do not assume every feature has all three:
 | --- | --- |
 | `achievements`, `search` | full `data` + `domain` + `presentation` |
 | `media_details` | `data` + `presentation` (no `domain`; entities in `lib/core`) |
-| `discovery`, `profile`, `settings` | `presentation` only |
+| `discovery`, `library`, `profile`, `settings`, `together` | `presentation` only |
 
 Key wiring:
 
@@ -30,7 +30,10 @@ Key wiring:
   Entry point `lib/core/di/injection.dart`; DB in `lib/core/database/app_database.dart`;
   initialized in `main.dart` via `await init(locator)`.
 - **State** — provider `ChangeNotifier`, wired in `MultiProvider` in `main.dart`
-  (`SearchProvider`, `SettingsProvider`, `AchievementProvider`).
+  (`SearchProvider`, `SettingsProvider`, `AchievementProvider`, and the session states
+  `SwipeSessionProvider` / `TogetherSessionProvider`, which must outlive a change of tab).
+- **Tabs** — `AppTab` (`lib/core/navigation/app_tab.dart`); never a tab index. The selected
+  tab lives in `SearchProvider.selectedTab`; the shell is `MainPage` + `AppTabBar`.
 - **Errors** — `AppException` hierarchy in `lib/core/error/exceptions.dart`.
 
 `search` owns `MediaRepository`. For deeper context see `DOCS/ai-guidelines.md`.

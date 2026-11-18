@@ -152,12 +152,6 @@ abstract class AppLocalizations {
   /// **'Open Settings'**
   String get commonOpenSettings;
 
-  /// No description provided for @navSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get navSearch;
-
   /// No description provided for @navDiscover.
   ///
   /// In en, this message translates to:
@@ -175,12 +169,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'History'**
   String get navHistory;
-
-  /// No description provided for @navAlerts.
-  ///
-  /// In en, this message translates to:
-  /// **'Alerts'**
-  String get navAlerts;
 
   /// No description provided for @emptyStateSearchAction.
   ///
@@ -317,7 +305,7 @@ abstract class AppLocalizations {
   /// No description provided for @tmdbCredentialLater.
   ///
   /// In en, this message translates to:
-  /// **'You can set your API key later in Settings (accessible from the My Lists, Seen, or Alerts tabs).'**
+  /// **'You can set your API key later in Me › TMDB API Credential.'**
   String get tmdbCredentialLater;
 
   /// No description provided for @tmdbCredentialSkip.
@@ -2491,6 +2479,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rated {rating}'**
   String posterRating(String rating);
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// No description provided for @navLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get navLibrary;
+
+  /// No description provided for @navTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Together'**
+  String get navTogether;
+
+  /// No description provided for @navMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get navMe;
+
+  /// No description provided for @librarySectionLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists'**
+  String get librarySectionLists;
+
+  /// No description provided for @togetherSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choosing together is coming soon'**
+  String get togetherSoonTitle;
+
+  /// No description provided for @togetherSoonMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare your lists with friends and vote for what to watch.'**
+  String get togetherSoonMessage;
 }
 
 class _AppLocalizationsDelegate
