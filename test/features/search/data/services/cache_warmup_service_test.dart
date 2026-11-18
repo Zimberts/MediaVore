@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/services/cache_warmup_service.dart';
 import 'package:mediavore/features/search/data/services/media_details_service.dart';
 import 'package:mediavore/features/search/data/services/next_episode_scanner.dart';
@@ -25,6 +26,12 @@ void main() {
   setUpAll(() {
     registerFallbackValue(Duration.zero);
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(
+      MediaDetails(
+        item: const MediaItem(id: 0, title: '', overview: '', releaseDate: ''),
+        cast: const [],
+      ),
+    );
   });
 
   setUp(() {
@@ -60,6 +67,7 @@ void main() {
     when(() => local.getAllSeenItems()).thenAnswer((_) async => []);
     when(() => local.getLikedItems()).thenAnswer((_) async => []);
     when(() => local.getNotifiedItems()).thenAnswer((_) async => []);
+    when(() => cache.cacheDetails(any())).thenAnswer((_) async {});
     when(
       () => cache.cleanup(
         keepKeys: any(named: 'keepKeys'),
@@ -164,5 +172,86 @@ void main() {
         ),
       ).called(1);
     });
+
+    test(
+      'should keep all seen items in cache even if older than 30 days with poster',
+      () async {
+        final oldSeen = SeenItemModel(
+          tmdbId: 42,
+          type: 'movie',
+          title: 'Old Seen Movie',
+          posterPath: '/poster.jpg',
+          seenDate: DateTime.now().subtract(const Duration(days: 90)),
+        );
+        when(() => local.getAllSeenItems()).thenAnswer((_) async => [oldSeen]);
+        const completeMovie = MediaItem(
+          id: 42,
+          title: 'Old Seen Movie',
+          overview: '',
+          releaseDate: '2020-01-01',
+          originCountries: ['US'],
+          voteCount: 100,
+          originalLanguage: 'en',
+        );
+        when(() => cache.getDetails(42, MediaType.movie)).thenAnswer(
+          (_) async => MediaDetails(item: completeMovie, cast: const []),
+        );
+        listNames.complete([]);
+
+        expect(await warmup.run(), isTrue);
+        verify(
+          () => cache.cleanup(
+            keepKeys: {'movie:42'},
+            olderThan: const Duration(days: 60),
+          ),
+        ).called(1);
+        verifyNever(
+          () => remote.getMediaDetailsBundle(42, type: MediaType.movie),
+        );
+      },
+    );
+
+    test(
+      'should refetch incomplete cached details for older seen titles',
+      () async {
+        final oldSeen = SeenItemModel(
+          tmdbId: 42,
+          type: 'movie',
+          title: 'Pre v1.3.0 Movie',
+          posterPath: '/poster.jpg',
+          seenDate: DateTime.now().subtract(const Duration(days: 90)),
+        );
+        when(() => local.getAllSeenItems()).thenAnswer((_) async => [oldSeen]);
+        const incompleteMovie = MediaItem(
+          id: 42,
+          title: 'Pre v1.3.0 Movie',
+          overview: '',
+          releaseDate: '2020-01-01',
+          // originCountries, voteCount, originalLanguage are null
+        );
+        const freshMovie = MediaItem(
+          id: 42,
+          title: 'Pre v1.3.0 Movie',
+          overview: '',
+          releaseDate: '2020-01-01',
+          originCountries: ['FR'],
+          voteCount: 50,
+          originalLanguage: 'fr',
+        );
+        when(() => cache.getDetails(42, MediaType.movie)).thenAnswer(
+          (_) async => MediaDetails(item: incompleteMovie, cast: const []),
+        );
+        when(
+          () => remote.getMediaDetailsBundle(42, type: MediaType.movie),
+        ).thenAnswer((_) async => bundleOf(freshMovie));
+        listNames.complete([]);
+
+        expect(await warmup.run(), isTrue);
+        verify(
+          () => remote.getMediaDetailsBundle(42, type: MediaType.movie),
+        ).called(1);
+        verify(() => cache.cacheDetails(any())).called(1);
+      },
+    );
   });
 }

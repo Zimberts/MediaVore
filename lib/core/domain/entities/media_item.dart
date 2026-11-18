@@ -195,17 +195,25 @@ class MediaItem extends Equatable {
   static List<String>? _parseOriginCountries(Map<String, dynamic> json) {
     final origin = json['origin_country'];
     if (origin is List) {
-      return [
+      final list = [
         for (final c in origin)
-          if (c is String) c,
+          if (c is String && c.isNotEmpty) c,
       ];
+      if (list.isNotEmpty) return list;
     }
     final production = json['production_countries'];
     if (production is List) {
-      return [
+      final list = [
         for (final c in production)
-          if (c is Map && c['iso_3166_1'] is String) c['iso_3166_1'] as String,
+          if (c is Map &&
+              c['iso_3166_1'] is String &&
+              (c['iso_3166_1'] as String).isNotEmpty)
+            c['iso_3166_1'] as String,
       ];
+      if (list.isNotEmpty) return list;
+    }
+    if (origin is List || production is List) {
+      return const [];
     }
     return null;
   }
@@ -315,6 +323,12 @@ class MediaItem extends Equatable {
       collectionName: collectionName ?? this.collectionName,
     );
   }
+
+  /// Whether metadata required for diversity achievements and stats
+  /// (origin countries, vote count, original language) is present.
+  /// Pre-v1.3.0 cache entries lack these fields.
+  bool get isComplete =>
+      originCountries != null && voteCount != null && originalLanguage != null;
 
   bool get canBeNotified {
     if (mediaType == MediaType.tv) {

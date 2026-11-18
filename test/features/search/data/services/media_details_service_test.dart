@@ -81,6 +81,97 @@ void main() {
         () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
       ).called(2);
     });
+
+    test(
+      'should return complete cached details without a network call',
+      () async {
+        const completeMovie = MediaItem(
+          id: 1,
+          title: 'Movie',
+          overview: '',
+          releaseDate: '2020-01-01',
+          runtime: 120,
+          genres: ['Drama'],
+          voteCount: 100,
+          originCountries: ['US'],
+          originalLanguage: 'en',
+        );
+        when(() => cache.getDetails(1, MediaType.movie)).thenAnswer(
+          (_) async => MediaDetails(item: completeMovie, cast: const []),
+        );
+
+        final result = await service.getMediaDetails(1);
+
+        expect(result.item, completeMovie);
+        verifyNever(
+          () => remote.getMediaDetailsBundle(any(), type: any(named: 'type')),
+        );
+      },
+    );
+
+    test(
+      'should refetch and cache when cached details metadata is incomplete',
+      () async {
+        const incompleteMovie = MediaItem(
+          id: 1,
+          title: 'Old Movie',
+          overview: '',
+          releaseDate: '2020-01-01',
+          genres: ['Drama'],
+          // voteCount, originCountries, originalLanguage are null
+        );
+        const freshMovie = MediaItem(
+          id: 1,
+          title: 'Old Movie',
+          overview: '',
+          releaseDate: '2020-01-01',
+          genres: ['Drama'],
+          voteCount: 250,
+          originCountries: ['FR'],
+          originalLanguage: 'fr',
+        );
+        when(() => cache.getDetails(1, MediaType.movie)).thenAnswer(
+          (_) async => MediaDetails(item: incompleteMovie, cast: const []),
+        );
+        when(
+          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        ).thenAnswer((_) async => bundleOf(freshMovie));
+
+        final result = await service.getMediaDetails(1);
+
+        expect(result.item, freshMovie);
+        verify(
+          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        ).called(1);
+        verify(() => cache.cacheDetails(any())).called(1);
+      },
+    );
+
+    test(
+      'should fallback to incomplete cached details when refetch throws',
+      () async {
+        const incompleteMovie = MediaItem(
+          id: 1,
+          title: 'Old Movie',
+          overview: '',
+          releaseDate: '2020-01-01',
+          genres: ['Drama'],
+        );
+        when(() => cache.getDetails(1, MediaType.movie)).thenAnswer(
+          (_) async => MediaDetails(item: incompleteMovie, cast: const []),
+        );
+        when(
+          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        ).thenThrow(Exception('Network failure'));
+
+        final result = await service.getMediaDetails(1);
+
+        expect(result.item, incompleteMovie);
+        verify(
+          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        ).called(1);
+      },
+    );
   });
 
   group('getSeasonDetails', () {

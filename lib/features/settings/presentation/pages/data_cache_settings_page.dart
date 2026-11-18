@@ -71,7 +71,12 @@ class DataCacheSettingsPage extends StatelessWidget {
                 title: Text(context.l10n.dataFillCache),
                 subtitle: Text(context.l10n.dataFillCacheSubtitle),
                 enabled: !isCacheLoading,
-                onTap: () => provider.fillCache(),
+                onTap: () async {
+                  await provider.fillCache();
+                  if (context.mounted) {
+                    await achievementProvider.refresh();
+                  }
+                },
               ),
               ListTile(
                 leading: Icon(Icons.delete_forever, color: colors.error),

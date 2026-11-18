@@ -135,6 +135,9 @@ class FakeTmdbAdapter implements HttpClientAdapter {
           'genres': [
             {'id': 18, 'name': 'Drama'},
           ],
+          'origin_country': ['US'],
+          'original_language': 'en',
+          'vote_count': 100,
           'episode_run_time': [45],
           'number_of_seasons': seasonsPerShow,
           'seasons': [
@@ -151,6 +154,9 @@ class FakeTmdbAdapter implements HttpClientAdapter {
           'genres': [
             {'id': 28, 'name': 'Action'},
           ],
+          'origin_country': ['US'],
+          'original_language': 'en',
+          'vote_count': 100,
           if (id % 4 == 0)
             'belongs_to_collection': {'id': id + 900000, 'name': 'Saga'},
         };
