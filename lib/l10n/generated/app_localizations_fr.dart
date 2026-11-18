@@ -1751,4 +1751,93 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileUnlocked => 'Débloqué';
+
+  @override
+  String get listsIncomingSharedTitle => 'Liste partagée reçue';
+
+  @override
+  String listsIncomingSharedMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titres',
+      one: '1 titre',
+    );
+    return 'La liste partagée « $name » contient $_temp0. Que souhaitez-vous faire ?';
+  }
+
+  @override
+  String get listsCompareWithMine => 'Comparer avec une de mes listes';
+
+  @override
+  String get listsCompareWithMineSubtitle =>
+      'Trouver les films et séries en commun sans rien importer';
+
+  @override
+  String get listsImportOptionTitle => 'Importer dans ma bibliothèque';
+
+  @override
+  String get listsImportOptionSubtitle =>
+      'Ajouter cette liste à vos listes personnelles';
+
+  @override
+  String get listsCompareTitle => 'Intersection de listes';
+
+  @override
+  String listsCompareSubtitle(String otherList, String myList) {
+    return '$otherList ∩ $myList';
+  }
+
+  @override
+  String get listsCompareMyListLabel => 'Comparer avec :';
+
+  @override
+  String listsCompareCommonCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titres en commun',
+      one: '1 titre en commun',
+      zero: 'Aucun titre en commun',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listsCompareHideSeen => 'Masquer mes vus';
+
+  @override
+  String listsCompareSeenBadge(int count) {
+    return '($count vus)';
+  }
+
+  @override
+  String get listsCompareEmptyTitle => 'Aucun titre en commun';
+
+  @override
+  String listsCompareEmptyMessage(String otherList, String myList) {
+    return 'Aucun film ou série ne figure à la fois dans « $otherList » et « $myList ».';
+  }
+
+  @override
+  String listsCompareSaveAsList(int count) {
+    return 'Créer une liste ($count)';
+  }
+
+  @override
+  String get listsCompareSaveAsListSuccess => 'Liste créée avec succès !';
+
+  @override
+  String get listsCompareShareIntersection => 'Partager la sélection commune';
+
+  @override
+  String listsCompareDefaultIntersectionName(String name) {
+    return 'En commun avec $name';
+  }
+
+  @override
+  String get mediaTypeMovie => 'Film';
+
+  @override
+  String get mediaTypeTv => 'Série';
 }

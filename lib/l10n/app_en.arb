@@ -1063,16 +1063,61 @@
   "discoverConnectTmdb": "Connect to TMDB",
   "libraryTypeAll": "All",
   "libraryTypeChip": "{label} · {count}",
-  "@libraryTypeChip": {"placeholders": {"label": {"type": "String"}, "count": {"type": "int"}}},
+  "@libraryTypeChip": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "libraryListRowLabel": "{name}, {count, plural, =0{no items} =1{1 item} other{{count} items}}, {films, plural, =0{no movies} =1{1 movie} other{{films} movies}}, {series, plural, =0{no series} =1{1 series} other{{series} series}}",
-  "@libraryListRowLabel": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}, "films": {"type": "int"}, "series": {"type": "int"}}},
+  "@libraryListRowLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "films": {
+        "type": "int"
+      },
+      "series": {
+        "type": "int"
+      }
+    }
+  },
   "libraryListImported": "List “{name}” added",
-  "@libraryListImported": {"placeholders": {"name": {"type": "String"}}},
+  "@libraryListImported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "libraryListNameTaken": "A list named “{name}” already exists",
-  "@libraryListNameTaken": {"placeholders": {"name": {"type": "String"}}},
+  "@libraryListNameTaken": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "libraryListEmptyForType": "Nothing of this type in this list",
   "libraryListScope": "{title} · {type}",
-  "@libraryListScope": {"placeholders": {"title": {"type": "String"}, "type": {"type": "String"}}},
+  "@libraryListScope": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "profileActiveDays": "{count, plural, =0{No active days in the last 30 days} =1{1 active day in the last 30 days} other{{count} active days in the last 30 days}}",
   "@profileActiveDays": {
     "placeholders": {
@@ -1103,5 +1148,83 @@
       }
     }
   },
-  "profileUnlocked": "Unlocked"
+  "profileUnlocked": "Unlocked",
+  "listsIncomingSharedTitle": "Shared List Received",
+  "listsIncomingSharedMessage": "The shared list \"{name}\" contains {count, plural, =1{1 title} other{{count} titles}}. What would you like to do?",
+  "@listsIncomingSharedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsCompareWithMine": "Compare with one of my lists",
+  "listsCompareWithMineSubtitle": "Find movies and series in common without importing",
+  "listsImportOptionTitle": "Import into library",
+  "listsImportOptionSubtitle": "Save this list to your personal lists",
+  "listsCompareTitle": "List Intersection",
+  "listsCompareSubtitle": "{otherList} ∩ {myList}",
+  "@listsCompareSubtitle": {
+    "placeholders": {
+      "otherList": {
+        "type": "String"
+      },
+      "myList": {
+        "type": "String"
+      }
+    }
+  },
+  "listsCompareMyListLabel": "Compare with:",
+  "listsCompareCommonCount": "{count, plural, =0{No titles in common} =1{1 title in common} other{{count} titles in common}}",
+  "@listsCompareCommonCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsCompareHideSeen": "Hide watched",
+  "listsCompareSeenBadge": "({count} watched)",
+  "@listsCompareSeenBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsCompareEmptyTitle": "No common titles",
+  "listsCompareEmptyMessage": "No movies or TV shows appear in both \"{otherList}\" and \"{myList}\".",
+  "@listsCompareEmptyMessage": {
+    "placeholders": {
+      "otherList": {
+        "type": "String"
+      },
+      "myList": {
+        "type": "String"
+      }
+    }
+  },
+  "listsCompareSaveAsList": "Save as new list ({count})",
+  "@listsCompareSaveAsList": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsCompareSaveAsListSuccess": "List created successfully!",
+  "listsCompareShareIntersection": "Share Common Selection",
+  "listsCompareDefaultIntersectionName": "Common with {name}",
+  "@listsCompareDefaultIntersectionName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaTypeMovie": "Movie",
+  "mediaTypeTv": "Series"
 }

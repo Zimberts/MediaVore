@@ -1729,4 +1729,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileUnlocked => 'Unlocked';
+
+  @override
+  String get listsIncomingSharedTitle => 'Shared List Received';
+
+  @override
+  String listsIncomingSharedMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles',
+      one: '1 title',
+    );
+    return 'The shared list \"$name\" contains $_temp0. What would you like to do?';
+  }
+
+  @override
+  String get listsCompareWithMine => 'Compare with one of my lists';
+
+  @override
+  String get listsCompareWithMineSubtitle =>
+      'Find movies and series in common without importing';
+
+  @override
+  String get listsImportOptionTitle => 'Import into library';
+
+  @override
+  String get listsImportOptionSubtitle =>
+      'Save this list to your personal lists';
+
+  @override
+  String get listsCompareTitle => 'List Intersection';
+
+  @override
+  String listsCompareSubtitle(String otherList, String myList) {
+    return '$otherList ∩ $myList';
+  }
+
+  @override
+  String get listsCompareMyListLabel => 'Compare with:';
+
+  @override
+  String listsCompareCommonCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles in common',
+      one: '1 title in common',
+      zero: 'No titles in common',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listsCompareHideSeen => 'Hide watched';
+
+  @override
+  String listsCompareSeenBadge(int count) {
+    return '($count watched)';
+  }
+
+  @override
+  String get listsCompareEmptyTitle => 'No common titles';
+
+  @override
+  String listsCompareEmptyMessage(String otherList, String myList) {
+    return 'No movies or TV shows appear in both \"$otherList\" and \"$myList\".';
+  }
+
+  @override
+  String listsCompareSaveAsList(int count) {
+    return 'Save as new list ($count)';
+  }
+
+  @override
+  String get listsCompareSaveAsListSuccess => 'List created successfully!';
+
+  @override
+  String get listsCompareShareIntersection => 'Share Common Selection';
+
+  @override
+  String listsCompareDefaultIntersectionName(String name) {
+    return 'Common with $name';
+  }
+
+  @override
+  String get mediaTypeMovie => 'Movie';
+
+  @override
+  String get mediaTypeTv => 'Series';
 }

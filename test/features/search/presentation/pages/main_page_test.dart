@@ -44,6 +44,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(FakeMediaItem());
   });
 
   setUp(() {
@@ -93,6 +94,9 @@ void main() {
       () => mockRepository.getSeenStatus(any(), any()),
     ).thenAnswer((_) async => []);
     when(() => mockRepository.createList(any())).thenAnswer((_) async {});
+    when(
+      () => mockRepository.addToList(any(), any()),
+    ).thenAnswer((_) async {});
 
     searchProvider = SearchProvider(mockRepository);
     swipeSession = SwipeSessionProvider();
@@ -525,7 +529,11 @@ void main() {
       await tester.tap(find.text('History').last);
       await goTo(tester, AppTab.me);
 
-      sink!.success('mediavore://share?name=Weekend&items=x');
+      sink!.success('mediavore://share?name=Weekend&items=1:movie');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('incoming_list_import_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('incoming_list_import_button')));
       await tester.pumpAndSettle();
 
       expect(find.text('Import List'), findsOneWidget);
@@ -554,6 +562,10 @@ void main() {
       addTearDown(() => messenger.setMockMethodCallHandler(messages, null));
 
       await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('incoming_list_import_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('incoming_list_import_button')));
       await tester.pumpAndSettle();
 
       expect(find.text('Import List'), findsOneWidget);

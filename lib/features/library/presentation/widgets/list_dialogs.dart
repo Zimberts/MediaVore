@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/widgets/app_dialog.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -31,14 +32,12 @@ bool isSharedListLink(String link) =>
 SharedList? parseSharedListLink(String link) {
   final uri = Uri.tryParse(link.trim());
   if (uri == null) return null;
-  try {
-    final name = uri.queryParameters['name'];
-    final items = uri.queryParameters['items'];
-    if (name == null || items == null) return null;
-    return SharedList(name: name, entries: items.split(','));
-  } on FormatException {
-    return null;
-  }
+  final payload = ListShareCodec.decodeUri(uri);
+  if (payload == null || payload.entries.isEmpty) return null;
+  return SharedList(
+    name: payload.name,
+    entries: payload.entries.map((e) => e.toString()).toList(),
+  );
 }
 
 /// Asks for a single line of text; completes with the trimmed text, or `null`
