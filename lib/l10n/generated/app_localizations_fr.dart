@@ -785,7 +785,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsToggleMetric => 'Changer d\'indicateur (entrées/durée)';
 
   @override
-  String get statsAllTime => 'Depuis toujours';
+  String get statsAllTime => 'Tout';
 
   @override
   String get statsYear => 'Année';
@@ -892,6 +892,98 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get statsMetricTime => 'durée';
+
+  @override
+  String get statsNoDataForPeriod =>
+      'Aucune donnée de visionnage pour cette période';
+
+  @override
+  String get statsDecades => 'Par décennie de sortie';
+
+  @override
+  String get statsDecadeBefore1990 => 'Avant 1990';
+
+  @override
+  String get statsDecadeAfter2020 => '2020 et après';
+
+  @override
+  String statsAverageRating(String rating) {
+    return '$rating ★';
+  }
+
+  @override
+  String get statsSeriesProgression => 'Séries';
+
+  @override
+  String statsSeriesProgressCount(int watched, int total, String percent) {
+    return '$watched / $total épisodes ($percent %)';
+  }
+
+  @override
+  String statsSeriesWatchedEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count épisodes',
+      one: '1 épisode',
+      zero: '0 épisode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsListsAndDiscovery => 'Listes et découverte';
+
+  @override
+  String statsWatchlistCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titres à voir',
+      one: '1 titre à voir',
+      zero: '0 titre à voir',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsCustomListsCount(int listsCount, int itemsCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      listsCount,
+      locale: localeName,
+      other: '$listsCount listes perso',
+      one: '1 liste perso',
+      zero: '0 liste perso',
+    );
+    return '$_temp0 ($itemsCount titres)';
+  }
+
+  @override
+  String get statsFooterDatedHistory => 'Calculé sur l\'historique daté.';
+
+  @override
+  String statsMoviesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count films',
+      one: '1 film',
+      zero: '0 film',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsEpisodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count épisodes',
+      one: '1 épisode',
+      zero: '0 épisode',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get genreAction => 'Action';

@@ -877,6 +877,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsMetricTime => 'time';
 
   @override
+  String get statsNoDataForPeriod => 'No viewing data for this period';
+
+  @override
+  String get statsDecades => 'By release decade';
+
+  @override
+  String get statsDecadeBefore1990 => 'Before 1990';
+
+  @override
+  String get statsDecadeAfter2020 => '2020 and later';
+
+  @override
+  String statsAverageRating(String rating) {
+    return '$rating ★';
+  }
+
+  @override
+  String get statsSeriesProgression => 'Series';
+
+  @override
+  String statsSeriesProgressCount(int watched, int total, String percent) {
+    return '$watched / $total episodes ($percent%)';
+  }
+
+  @override
+  String statsSeriesWatchedEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '1 episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsListsAndDiscovery => 'Lists and discovery';
+
+  @override
+  String statsWatchlistCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles in Watchlist',
+      one: '1 title in Watchlist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsCustomListsCount(int listsCount, int itemsCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      listsCount,
+      locale: localeName,
+      other: '$listsCount custom lists',
+      one: '1 custom list',
+    );
+    return '$_temp0 ($itemsCount titles)';
+  }
+
+  @override
+  String get statsFooterDatedHistory => 'Calculated on dated viewing history.';
+
+  @override
+  String statsMoviesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count movies',
+      one: '1 movie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsEpisodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '1 episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get genreAction => 'Action';
 
   @override

@@ -322,6 +322,22 @@ class SearchProvider with ChangeNotifier {
     await loadQuickAddItems();
   }
 
+  /// Returns a map of cached [MediaItem]s for all seen items, keyed by tmdbId.
+  Future<Map<int, MediaItem>> getCachedSeenMediaItems() async {
+    final distinctKeys = _seenItems
+        .map((s) => (s.tmdbId, s.type))
+        .toSet()
+        .toList();
+    final items = await repository.getCachedMediaItems(distinctKeys);
+    final map = <int, MediaItem>{};
+    for (final item in items) {
+      if (item != null) {
+        map[item.id] = item;
+      }
+    }
+    return map;
+  }
+
   Future<void> loadNotifiedItems() async {
     _notifiedItems = await repository.getNotifiedItems();
     notifyListeners();

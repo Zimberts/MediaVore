@@ -470,6 +470,78 @@
   },
   "statsMetricLogs": "logs",
   "statsMetricTime": "time",
+  "statsNoDataForPeriod": "No viewing data for this period",
+  "statsDecades": "By release decade",
+  "statsDecadeBefore1990": "Before 1990",
+  "statsDecadeAfter2020": "2020 and later",
+  "statsAverageRating": "{rating} ★",
+  "@statsAverageRating": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "statsSeriesProgression": "Series",
+  "statsSeriesProgressCount": "{watched} / {total} episodes ({percent}%)",
+  "@statsSeriesProgressCount": {
+    "placeholders": {
+      "watched": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "statsSeriesWatchedEpisodes": "{count, plural, =1{1 episode} other{{count} episodes}}",
+  "@statsSeriesWatchedEpisodes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsListsAndDiscovery": "Lists and discovery",
+  "statsWatchlistCount": "{count, plural, =1{1 title in Watchlist} other{{count} titles in Watchlist}}",
+  "@statsWatchlistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsCustomListsCount": "{listsCount, plural, =1{1 custom list} other{{listsCount} custom lists}} ({itemsCount} titles)",
+  "@statsCustomListsCount": {
+    "placeholders": {
+      "listsCount": {
+        "type": "int"
+      },
+      "itemsCount": {
+        "type": "int"
+      }
+    }
+  },
+  "statsFooterDatedHistory": "Calculated on dated viewing history.",
+  "statsMoviesCount": "{count, plural, =1{1 movie} other{{count} movies}}",
+  "@statsMoviesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsEpisodesCount": "{count, plural, =1{1 episode} other{{count} episodes}}",
+  "@statsEpisodesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "genreAction": "Action",
   "genreAdventure": "Adventure",
   "genreAnimation": "Animation",

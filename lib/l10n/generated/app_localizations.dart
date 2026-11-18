@@ -1592,6 +1592,90 @@ abstract class AppLocalizations {
   /// **'time'**
   String get statsMetricTime;
 
+  /// No description provided for @statsNoDataForPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No viewing data for this period'**
+  String get statsNoDataForPeriod;
+
+  /// No description provided for @statsDecades.
+  ///
+  /// In en, this message translates to:
+  /// **'By release decade'**
+  String get statsDecades;
+
+  /// No description provided for @statsDecadeBefore1990.
+  ///
+  /// In en, this message translates to:
+  /// **'Before 1990'**
+  String get statsDecadeBefore1990;
+
+  /// No description provided for @statsDecadeAfter2020.
+  ///
+  /// In en, this message translates to:
+  /// **'2020 and later'**
+  String get statsDecadeAfter2020;
+
+  /// No description provided for @statsAverageRating.
+  ///
+  /// In en, this message translates to:
+  /// **'{rating} ★'**
+  String statsAverageRating(String rating);
+
+  /// No description provided for @statsSeriesProgression.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get statsSeriesProgression;
+
+  /// No description provided for @statsSeriesProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{watched} / {total} episodes ({percent}%)'**
+  String statsSeriesProgressCount(int watched, int total, String percent);
+
+  /// No description provided for @statsSeriesWatchedEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 episode} other{{count} episodes}}'**
+  String statsSeriesWatchedEpisodes(int count);
+
+  /// No description provided for @statsListsAndDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists and discovery'**
+  String get statsListsAndDiscovery;
+
+  /// No description provided for @statsWatchlistCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 title in Watchlist} other{{count} titles in Watchlist}}'**
+  String statsWatchlistCount(int count);
+
+  /// No description provided for @statsCustomListsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{listsCount, plural, =1{1 custom list} other{{listsCount} custom lists}} ({itemsCount} titles)'**
+  String statsCustomListsCount(int listsCount, int itemsCount);
+
+  /// No description provided for @statsFooterDatedHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated on dated viewing history.'**
+  String get statsFooterDatedHistory;
+
+  /// No description provided for @statsMoviesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 movie} other{{count} movies}}'**
+  String statsMoviesCount(int count);
+
+  /// No description provided for @statsEpisodesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 episode} other{{count} episodes}}'**
+  String statsEpisodesCount(int count);
+
   /// No description provided for @genreAction.
   ///
   /// In en, this message translates to:
