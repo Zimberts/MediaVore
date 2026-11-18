@@ -124,6 +124,18 @@ class SearchProvider with ChangeNotifier {
   bool get isDiscoverMode => _isDiscoverMode;
   String get currentQuery => _currentQuery;
 
+  /// Whether a filter of Discover (type, genres, year, rating, language) is
+  /// set.
+  bool get hasActiveFilters =>
+      _filterType != null ||
+      (_genreIds?.isNotEmpty ?? false) ||
+      _releaseYear != null ||
+      _minRating != null ||
+      _originalLanguage != null;
+
+  /// Whether the list shows the trends of the week: no query and no filter.
+  bool get isTrending => _currentQuery.isEmpty && !hasActiveFilters;
+
   void _sortByRelevance(List<MediaItem> items) =>
       sortMediaByRelevance(items, _currentQuery);
 
@@ -563,7 +575,9 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      if (_isDiscoverMode && _currentQuery.isEmpty) {
+      if (isTrending) {
+        _searchResults = await repository.getTrendingMedia(page: _currentPage);
+      } else if (_isDiscoverMode && _currentQuery.isEmpty) {
         if (_filterType == null) {
           // Both types mode
           final movies = await repository.discoverMedia(
@@ -653,7 +667,9 @@ class SearchProvider with ChangeNotifier {
     try {
       _currentPage++;
       List<MediaItem> results;
-      if (_isDiscoverMode && _currentQuery.isEmpty) {
+      if (isTrending) {
+        results = await repository.getTrendingMedia(page: _currentPage);
+      } else if (_isDiscoverMode && _currentQuery.isEmpty) {
         if (_filterType == null) {
           final movies = await repository.discoverMedia(
             page: _currentPage,

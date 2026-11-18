@@ -1602,4 +1602,67 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get discoverModeExplore => 'Explorer';
+
+  @override
+  String get discoverModeSwipe => 'Swiper';
+
+  @override
+  String get discoverSearchHint => 'Films, séries';
+
+  @override
+  String get discoverSearchHintWithBooks => 'Films, séries, livres';
+
+  @override
+  String get discoverSearchLabel => 'Rechercher';
+
+  @override
+  String get discoverSearchClear => 'Effacer la recherche';
+
+  @override
+  String get discoverTypeAll => 'Tout';
+
+  @override
+  String get discoverTypeFilms => 'Films';
+
+  @override
+  String get discoverTypeSeries => 'Séries';
+
+  @override
+  String get discoverTypeBooks => 'Livres';
+
+  @override
+  String get discoverTrendingWeek => 'Tendances de la semaine';
+
+  @override
+  String get discoverResults => 'Résultats';
+
+  @override
+  String discoverResultsCount(int count) {
+    return 'Résultats · $count';
+  }
+
+  @override
+  String get discoverNoResults => 'Aucun résultat avec ces filtres.';
+
+  @override
+  String discoverNoResultsFor(String query) {
+    return 'Aucun résultat pour « $query ».';
+  }
+
+  @override
+  String get discoverOfflineMessage =>
+      'vérifiez votre connexion et réessayez. Vos listes et votre historique restent disponibles.';
+
+  @override
+  String get discoverSwipeSoonTitle => 'Le mode Swiper arrive bientôt';
+
+  @override
+  String get discoverSwipeSoonMessage =>
+      'Faites défiler des suggestions une à une pour remplir vos listes.';
+
+  @override
+  String get discoverConnectTmdb => 'Connexion à TMDB';
 }

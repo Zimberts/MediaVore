@@ -35,6 +35,11 @@ abstract class MediaRepository {
     String sortBy = 'popularity.desc',
   });
 
+  /// Films and series trending this week, mixed.
+  ///
+  /// Throws an [AppException] on failure, like [searchMedia].
+  Future<List<MediaItem>> getTrendingMedia({int page = 1});
+
   /// Checks a TMDB credential with TMDB before it is saved.
   ///
   /// Completes when TMDB accepts [credential]; throws an [AppException]
