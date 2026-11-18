@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,9 +19,11 @@ void main() {
     when(() => mockPrefs.getInt(any())).thenReturn(null);
     when(() => mockPrefs.getDouble(any())).thenReturn(null);
     when(() => mockPrefs.getBool(any())).thenReturn(null);
+    when(() => mockPrefs.getString(any())).thenReturn(null);
     when(() => mockPrefs.setInt(any(), any())).thenAnswer((_) async => true);
     when(() => mockPrefs.setDouble(any(), any())).thenAnswer((_) async => true);
     when(() => mockPrefs.setBool(any(), any())).thenAnswer((_) async => true);
+    when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
 
     provider = SettingsProvider(mockPrefs, FakeTmdbCredentialStore());
   });
@@ -32,15 +35,14 @@ void main() {
         expect(provider.displayMode, DisplayMode.grid);
         expect(provider.gridSize, 3.0);
         expect(provider.themeMode, ThemeMode.system);
-        expect(provider.lightAppThemeIndex, 0);
+        expect(provider.lightPalette, AppPalette.paper);
+        expect(provider.darkPalette, AppPalette.ink);
         expect(provider.notificationCenterDebug, false);
       },
     );
 
     test('should load notificationCenterDebug from SharedPreferences', () {
-      when(
-        () => mockPrefs.getBool('notificationCenterDebug'),
-      ).thenReturn(true);
+      when(() => mockPrefs.getBool('notificationCenterDebug')).thenReturn(true);
 
       final newProvider = SettingsProvider(
         mockPrefs,
@@ -112,11 +114,27 @@ void main() {
       ).called(1);
     });
 
-    test('setLightAppTheme should update state and save to prefs', () async {
-      await provider.setLightAppTheme(2);
+    test('setLightPalette should update state and save its id', () async {
+      await provider.setLightPalette(AppPaletteId.mist);
 
-      expect(provider.lightAppThemeIndex, 2);
-      verify(() => mockPrefs.setInt('lightAppTheme', 2)).called(1);
+      expect(provider.lightPalette, AppPalette.mist);
+      verify(() => mockPrefs.setString('lightPalette', 'mist')).called(1);
+    });
+
+    test('setDarkPalette should update state and save its id', () async {
+      await provider.setDarkPalette(AppPaletteId.oled);
+
+      expect(provider.darkPalette, AppPalette.oled);
+      verify(() => mockPrefs.setString('darkPalette', 'oled')).called(1);
+    });
+
+    test('should ignore a palette of the other brightness', () async {
+      await provider.setLightPalette(AppPaletteId.night);
+      await provider.setDarkPalette(AppPaletteId.sand);
+
+      expect(provider.lightPalette, AppPalette.paper);
+      expect(provider.darkPalette, AppPalette.ink);
+      verifyNever(() => mockPrefs.setString(any(), any()));
     });
 
     test(
@@ -133,24 +151,105 @@ void main() {
   });
 
   group('SettingsProvider - Palettes', () {
-    test(
-      'lightPalette should return the palette corresponding to the current index',
-      () async {
-        await provider.setLightAppTheme(1); // Parchment
-        expect(
-          provider.lightPalette.runtimeType.toString(),
-          contains('Parchment'),
-        );
-      },
-    );
+    SettingsProvider build() =>
+        SettingsProvider(mockPrefs, FakeTmdbCredentialStore());
 
-    test(
-      'darkPalette should return the palette corresponding to the current index',
-      () async {
-        await provider.setDarkAppTheme(1); // Slate
-        expect(provider.darkPalette.runtimeType.toString(), contains('Slate'));
-      },
-    );
+    test('should load the palettes stored by identifier', () {
+      when(() => mockPrefs.getString('lightPalette')).thenReturn('sand');
+      when(() => mockPrefs.getString('darkPalette')).thenReturn('night');
+
+      final loaded = build();
+
+      expect(loaded.lightPalette, AppPalette.sand);
+      expect(loaded.darkPalette, AppPalette.night);
+    });
+
+    test('should fall back to the defaults on an unknown identifier', () {
+      when(() => mockPrefs.getString('lightPalette')).thenReturn('unknown_theme');
+      when(() => mockPrefs.getString('darkPalette')).thenReturn('');
+
+      final loaded = build();
+
+      expect(loaded.lightPalette, AppPalette.paper);
+      expect(loaded.darkPalette, AppPalette.ink);
+    });
+
+    test('should fall back to the default when the stored palette has the '
+        'other brightness', () {
+      when(() => mockPrefs.getString('lightPalette')).thenReturn('oled');
+      when(() => mockPrefs.getString('darkPalette')).thenReturn('paper');
+
+      final loaded = build();
+
+      expect(loaded.lightPalette, AppPalette.paper);
+      expect(loaded.darkPalette, AppPalette.ink);
+    });
+  });
+
+  group('SettingsProvider - Migration from v1.3.0', () {
+    // v1.3.0 stored an index into lists of palettes that no longer exist:
+    // light 0..4 (Default, Parchment, Mint, Solarized, Pinky),
+    // dark 0..3 (Default, Slate, Midnight, Espresso).
+    Future<SettingsProvider> buildWith(Map<String, Object> values) async {
+      SharedPreferences.setMockInitialValues(values);
+      final prefs = await SharedPreferences.getInstance();
+      return SettingsProvider(prefs, FakeTmdbCredentialStore());
+    }
+
+    test('should start on the default palettes with a custom legacy '
+        'palette', () async {
+      for (var light = 0; light < 5; light++) {
+        for (var dark = 0; dark < 4; dark++) {
+          final migrated = await buildWith({
+            'lightAppTheme': light,
+            'darkAppTheme': dark,
+          });
+
+          expect(migrated.lightPalette, AppPalette.paper);
+          expect(migrated.darkPalette, AppPalette.ink);
+        }
+      }
+    });
+
+    test('should start on the default palettes with an out-of-range legacy '
+        'index', () async {
+      final migrated = await buildWith({
+        'lightAppTheme': 42,
+        'darkAppTheme': -1,
+      });
+
+      expect(migrated.lightPalette, AppPalette.paper);
+      expect(migrated.darkPalette, AppPalette.ink);
+    });
+
+    test('should keep the other settings and leave the legacy keys '
+        'untouched', () async {
+      final migrated = await buildWith({
+        'lightAppTheme': 4,
+        'darkAppTheme': 3,
+        'themeMode': ThemeMode.dark.index,
+        'gridSize': 4.0,
+      });
+      final prefs = await SharedPreferences.getInstance();
+
+      expect(migrated.themeMode, ThemeMode.dark);
+      expect(migrated.gridSize, 4.0);
+      expect(prefs.getInt('lightAppTheme'), 4);
+      expect(prefs.getInt('darkAppTheme'), 3);
+      expect(migrated.lightPalette.toThemeData().brightness, Brightness.light);
+      expect(migrated.darkPalette.toThemeData().brightness, Brightness.dark);
+    });
+
+    test('should persist a palette picked after the migration', () async {
+      final migrated = await buildWith({'lightAppTheme': 2});
+      await migrated.setLightPalette(AppPaletteId.sand);
+
+      final prefs = await SharedPreferences.getInstance();
+      final reloaded = SettingsProvider(prefs, FakeTmdbCredentialStore());
+
+      expect(prefs.getString('lightPalette'), 'sand');
+      expect(reloaded.lightPalette, AppPalette.sand);
+    });
   });
 
   group('SettingsProvider - Language', () {

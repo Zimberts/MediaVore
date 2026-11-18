@@ -8,6 +8,8 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/di/injection.config.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/theme/font_licenses.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
@@ -36,6 +38,7 @@ Locale _resolveLocale(List<Locale>? deviceLocales, Iterable<Locale> _) =>
 Future<void> main() async {
   debugPrint('--- App Starting ---');
   WidgetsFlutterBinding.ensureInitialized();
+  registerFontLicenses();
   runApp(const BootstrapperApp());
 }
 
@@ -121,7 +124,7 @@ class _BootstrapperAppState extends State<BootstrapperApp> {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.dark),
+      theme: AppPalette.defaultDark.toThemeData(),
       localizationsDelegates: _localizationsDelegates,
       supportedLocales: _supportedLocales,
       localeListResolutionCallback: _resolveLocale,

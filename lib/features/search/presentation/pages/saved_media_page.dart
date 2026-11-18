@@ -85,7 +85,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final newColor = context.appColors.logicFlow;
+    final newColor = context.appColors.primary;
     if (_lastThemeColor != newColor) {
       _lastThemeColor = newColor;
       _prepareCroppedLogo();
@@ -115,7 +115,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
       canvas.drawCircle(
         center,
         radius,
-        ui.Paint()..color = _lastThemeColor ?? Colors.blue,
+        ui.Paint()..color = _lastThemeColor ?? AppPalette.defaultLight.primary,
       );
 
       // 2. Draw white border for contrast against QR modules
@@ -532,7 +532,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                   color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: colors.logicFlow.withValues(alpha: 0.2),
+                    color: colors.primary.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -559,7 +559,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                         backgroundColor: Colors.transparent,
                         eyeStyle: QrEyeStyle(
                           eyeShape: QrEyeShape.circle,
-                          color: colors.logicFlow,
+                          color: colors.primary,
                         ),
                         dataModuleStyle: QrDataModuleStyle(
                           dataModuleShape: QrDataModuleShape.circle,
@@ -607,7 +607,7 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                     Text(
                       context.l10n.listsQrCaption,
                       style: TextStyle(
-                        color: colors.logicFlow,
+                        color: colors.primary,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -853,12 +853,12 @@ class SavedMediaPageState extends State<SavedMediaPage> {
                   ListTile(
                     leading: Icon(
                       _isReversed ? Icons.swap_vert_circle : Icons.swap_vert,
-                      color: _isReversed ? colors.logicFlow : null,
+                      color: _isReversed ? colors.primary : null,
                     ),
                     title: Text(context.l10n.listsReverseOrder),
                     trailing: Switch(
                       value: _isReversed,
-                      activeThumbColor: colors.logicFlow,
+                      activeThumbColor: colors.primary,
                       onChanged: (value) {
                         setState(() {
                           _isReversed = value;
@@ -891,17 +891,17 @@ class SavedMediaPageState extends State<SavedMediaPage> {
     final isSelected = _sortMethod == method;
     final colors = context.appColors;
     return ListTile(
-      leading: Icon(icon, color: isSelected ? colors.logicFlow : null),
+      leading: Icon(icon, color: isSelected ? colors.primary : null),
       title: Text(
         label,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? colors.logicFlow : null,
+          color: isSelected ? colors.primary : null,
         ),
       ),
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
       trailing: isSelected
-          ? Icon(Icons.check_circle, color: colors.logicFlow)
+          ? Icon(Icons.check_circle, color: colors.primary)
           : null,
       onTap: () {
         setState(() {

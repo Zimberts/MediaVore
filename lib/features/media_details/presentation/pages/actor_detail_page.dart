@@ -129,7 +129,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                               child: Icon(
                                 Icons.broken_image,
                                 size: 64,
-                                color: colors.comments,
+                                color: colors.text2,
                               ),
                             ),
                           ),
@@ -140,7 +140,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                             child: Icon(
                               Icons.person,
                               size: 100,
-                              color: colors.comments,
+                              color: colors.text2,
                             ),
                           ),
                         ),
@@ -298,7 +298,7 @@ class _ActorIconText extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: context.appColors.comments),
+        Icon(icon, size: 16, color: context.appColors.text2),
         const SizedBox(width: 4),
         Text(text, style: Theme.of(context).textTheme.bodySmall),
       ],

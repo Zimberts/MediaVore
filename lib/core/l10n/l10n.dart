@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/l10n/generated/app_localizations.dart';
 
 export 'package:mediavore/l10n/generated/app_localizations.dart';
@@ -15,6 +16,42 @@ extension AppLocalizationsX on BuildContext {
 /// Strings in [fallbackAppLanguage], for code without a [BuildContext].
 AppLocalizations get fallbackLocalizations =>
     lookupAppLocalizations(fallbackAppLanguage.locale);
+
+/// Localized display name of a palette.
+String paletteName(AppLocalizations l10n, AppPaletteId id) {
+  switch (id) {
+    case AppPaletteId.paper:
+      return l10n.paletteNamePaper;
+    case AppPaletteId.sand:
+      return l10n.paletteNameSand;
+    case AppPaletteId.mist:
+      return l10n.paletteNameMist;
+    case AppPaletteId.ink:
+      return l10n.paletteNameInk;
+    case AppPaletteId.night:
+      return l10n.paletteNameNight;
+    case AppPaletteId.oled:
+      return l10n.paletteNameOled;
+    case AppPaletteId.classicLight:
+      return l10n.paletteNameClassicLight;
+    case AppPaletteId.parchment:
+      return l10n.paletteNameParchment;
+    case AppPaletteId.mint:
+      return l10n.paletteNameMint;
+    case AppPaletteId.solarizedLight:
+      return l10n.paletteNameSolarizedLight;
+    case AppPaletteId.pinky:
+      return l10n.paletteNamePinky;
+    case AppPaletteId.classicDark:
+      return l10n.paletteNameClassicDark;
+    case AppPaletteId.slate:
+      return l10n.paletteNameSlate;
+    case AppPaletteId.midnight:
+      return l10n.paletteNameMidnight;
+    case AppPaletteId.espresso:
+      return l10n.paletteNameEspresso;
+  }
+}
 
 /// Localized TMDB `status` (TMDB always returns it in English).
 String localizedMediaStatus(AppLocalizations l10n, String status) {

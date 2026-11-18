@@ -340,7 +340,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final onToast = contrastingForeground(colors.logicFlow);
+    final onToast = colors.onPrimary;
     final statusBarHeight = MediaQuery.of(context).padding.top;
     final appBarHeight = kToolbarHeight;
 
@@ -396,7 +396,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: colors.logicFlow,
+                color: colors.primary,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(

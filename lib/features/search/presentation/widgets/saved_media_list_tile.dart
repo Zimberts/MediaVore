@@ -50,7 +50,7 @@ class MediaListTile extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
-        color: isSelected ? colors.logicFlow.withValues(alpha: 0.1) : null,
+        color: isSelected ? colors.primary.withValues(alpha: 0.1) : null,
         child: ListTile(
           leading: PosterWithBadge(item: item, provider: provider),
           title: Row(
@@ -80,7 +80,7 @@ class MediaListTile extends StatelessWidget {
               Icon(
                 isTv ? Icons.tv : Icons.movie,
                 size: 12,
-                color: colors.comments,
+                color: colors.text2,
               ),
               const SizedBox(width: 4),
               Flexible(

@@ -174,7 +174,7 @@ class MediaGridItem extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: colors.logicFlow, width: 3),
+                  border: Border.all(color: colors.primary, width: 3),
                 ),
               ),
             ),
@@ -193,7 +193,7 @@ class MediaGridItem extends StatelessWidget {
                   isSelected
                       ? Icons.check_circle
                       : Icons.radio_button_unchecked,
-                  color: isSelected ? colors.logicFlow : colors.placeholder,
+                  color: isSelected ? colors.primary : colors.placeholder,
                   size: 20,
                 ),
               ),

@@ -60,7 +60,7 @@ class _SeenManagerState extends State<SeenManager> {
       return IconButton(
         icon: Icon(
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
-          color: isSeen ? colors.success : colors.comments,
+          color: isSeen ? colors.success : colors.text2,
         ),
         tooltip: isSeen
             ? context.l10n.seenOpenHistory
@@ -87,7 +87,7 @@ class _SeenManagerState extends State<SeenManager> {
       trailing: IconButton(
         icon: Icon(
           isSeen ? Icons.check_circle : Icons.check_circle_outline,
-          color: isSeen ? colors.success : colors.comments,
+          color: isSeen ? colors.success : colors.text2,
         ),
         tooltip: isSeen
             ? context.l10n.seenOpenHistory
@@ -257,7 +257,7 @@ class _SeenManagerState extends State<SeenManager> {
                     itemBuilder: (context, index) {
                       final seenEntry = history[index];
                       return ListTile(
-                        leading: Icon(Icons.event, color: colors.comments),
+                        leading: Icon(Icons.event, color: colors.text2),
                         title: Text(
                           DateFormat.yMMMd().add_Hm().format(
                             seenEntry.seenDate,
@@ -363,7 +363,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                 children: [
                   Icon(
                     isMovie ? Icons.movie : Icons.tv,
-                    color: colors.logicFlow,
+                    color: colors.primary,
                     size: 24,
                   ),
                   const SizedBox(width: 12),
@@ -373,8 +373,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       children: [
                         Text(
                           context.l10n.commonMarkAsSeen,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(color: colors.comments),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleSmall?.copyWith(color: colors.text2),
                         ),
                         Text(
                           widget.item.title,
@@ -395,7 +396,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     tooltip: _isTextEntry
                         ? context.l10n.seenUseCalendar
                         : context.l10n.seenTypeDate,
-                    color: colors.logicFlow,
+                    color: colors.primary,
                   ),
                 ],
               ),
@@ -457,14 +458,14 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   ),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: colors.logicFlow.withValues(alpha: 0.5),
+                      color: colors.primary.withValues(alpha: 0.5),
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.access_time, color: colors.logicFlow),
+                      Icon(Icons.access_time, color: colors.primary),
                       const SizedBox(width: 12),
                       Text(
                         context.l10n.seenTimeLabel(
@@ -498,8 +499,8 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   const SizedBox(width: 8),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colors.logicFlow,
-                      foregroundColor: contrastingForeground(colors.logicFlow),
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

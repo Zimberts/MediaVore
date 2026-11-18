@@ -70,3 +70,22 @@ flutter:
     - .env
     - assets/icon/
     - assets/achievements/
+    - assets/fonts/bricolage_grotesque/OFL.txt
+    - assets/fonts/inter/OFL.txt
+  fonts:
+    - family: Bricolage Grotesque
+      fonts:
+        - asset: assets/fonts/bricolage_grotesque/BricolageGrotesque24pt-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/bricolage_grotesque/BricolageGrotesque24pt-Bold.ttf
+          weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/inter/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/inter/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/inter/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/inter/Inter-Bold.ttf
+          weight: 700

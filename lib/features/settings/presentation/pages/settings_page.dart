@@ -123,27 +123,24 @@ class SettingsPage extends StatelessWidget {
             title: Text(l10n.settingsLightTheme),
             enabled: settings.themeMode != ThemeMode.dark,
             trailing: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: settings.lightAppThemeIndex,
+              child: DropdownButton<AppPaletteId>(
+                key: const Key('settings_light_palette_dropdown'),
+                value: settings.lightPalette.id,
                 isDense: true,
                 padding: EdgeInsets.zero,
                 borderRadius: BorderRadius.circular(12),
                 elevation: 3,
                 onChanged: settings.themeMode != ThemeMode.dark
-                    ? (themeIndex) => themeIndex != null
-                          ? settings.setLightAppTheme(themeIndex)
-                          : null
+                    ? (id) => id != null ? settings.setLightPalette(id) : null
                     : null,
                 style: dropdownStyle,
                 alignment: Alignment.centerRight,
                 icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                disabledHint: Text(
-                  lightThemes[settings.lightAppThemeIndex].name,
-                ),
-                items: lightThemes.asMap().entries.map((entry) {
+                disabledHint: Text(paletteName(l10n, settings.lightPalette.id)),
+                items: AppPalette.lightPalettes.map((palette) {
                   return DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value.name),
+                    value: palette.id,
+                    child: Text(paletteName(l10n, palette.id)),
                   );
                 }).toList(),
               ),
@@ -153,25 +150,24 @@ class SettingsPage extends StatelessWidget {
             title: Text(l10n.settingsDarkTheme),
             enabled: settings.themeMode != ThemeMode.light,
             trailing: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: settings.darkAppThemeIndex,
+              child: DropdownButton<AppPaletteId>(
+                key: const Key('settings_dark_palette_dropdown'),
+                value: settings.darkPalette.id,
                 isDense: true,
                 padding: EdgeInsets.zero,
                 borderRadius: BorderRadius.circular(12),
                 elevation: 3,
                 onChanged: settings.themeMode != ThemeMode.light
-                    ? (themeIndex) => themeIndex != null
-                          ? settings.setDarkAppTheme(themeIndex)
-                          : null
+                    ? (id) => id != null ? settings.setDarkPalette(id) : null
                     : null,
                 style: dropdownStyle,
                 alignment: Alignment.centerRight,
                 icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                disabledHint: Text(darkThemes[settings.darkAppThemeIndex].name),
-                items: darkThemes.asMap().entries.map((entry) {
+                disabledHint: Text(paletteName(l10n, settings.darkPalette.id)),
+                items: AppPalette.darkPalettes.map((palette) {
                   return DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value.name),
+                    value: palette.id,
+                    child: Text(paletteName(l10n, palette.id)),
                   );
                 }).toList(),
               ),

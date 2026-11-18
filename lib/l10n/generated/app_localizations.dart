@@ -422,6 +422,96 @@ abstract class AppLocalizations {
   /// **'Dark Theme'**
   String get settingsDarkTheme;
 
+  /// No description provided for @paletteNamePaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper'**
+  String get paletteNamePaper;
+
+  /// No description provided for @paletteNameSand.
+  ///
+  /// In en, this message translates to:
+  /// **'Sand'**
+  String get paletteNameSand;
+
+  /// No description provided for @paletteNameMist.
+  ///
+  /// In en, this message translates to:
+  /// **'Mist'**
+  String get paletteNameMist;
+
+  /// No description provided for @paletteNameInk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ink'**
+  String get paletteNameInk;
+
+  /// No description provided for @paletteNameNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Night'**
+  String get paletteNameNight;
+
+  /// No description provided for @paletteNameOled.
+  ///
+  /// In en, this message translates to:
+  /// **'OLED black'**
+  String get paletteNameOled;
+
+  /// No description provided for @paletteNameClassicLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic Light'**
+  String get paletteNameClassicLight;
+
+  /// No description provided for @paletteNameParchment.
+  ///
+  /// In en, this message translates to:
+  /// **'Parchment'**
+  String get paletteNameParchment;
+
+  /// No description provided for @paletteNameMint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mint'**
+  String get paletteNameMint;
+
+  /// No description provided for @paletteNameSolarizedLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Solarized Light'**
+  String get paletteNameSolarizedLight;
+
+  /// No description provided for @paletteNamePinky.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinky'**
+  String get paletteNamePinky;
+
+  /// No description provided for @paletteNameClassicDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic Dark'**
+  String get paletteNameClassicDark;
+
+  /// No description provided for @paletteNameSlate.
+  ///
+  /// In en, this message translates to:
+  /// **'Slate'**
+  String get paletteNameSlate;
+
+  /// No description provided for @paletteNameMidnight.
+  ///
+  /// In en, this message translates to:
+  /// **'Midnight'**
+  String get paletteNameMidnight;
+
+  /// No description provided for @paletteNameEspresso.
+  ///
+  /// In en, this message translates to:
+  /// **'Espresso'**
+  String get paletteNameEspresso;
+
   /// No description provided for @navProfile.
   ///
   /// In en, this message translates to:
