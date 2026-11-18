@@ -262,6 +262,7 @@ class _MediaVoreAppState extends State<MediaVoreApp>
             return SearchProvider(
               repo,
               localeService: locator<LocaleService>(),
+              prefs: locator<SharedPreferences>(),
             );
           },
         ),

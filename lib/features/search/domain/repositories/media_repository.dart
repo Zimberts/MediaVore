@@ -1,4 +1,5 @@
 import 'package:mediavore/core/domain/entities/actor_details.dart';
+import 'package:mediavore/core/domain/entities/liked_item_info.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -172,6 +173,9 @@ abstract class MediaRepository {
 
   /// Gets all liked media entries (format "id:type").
   Future<List<String>> getLikedEntries();
+
+  /// Gets all liked items with titles.
+  Future<List<LikedItemInfo>> getLikedItems();
 
   /// Toggles notification for a media item.
   Future<void> toggleNotification(MediaItem item, {bool autoNotify = false});

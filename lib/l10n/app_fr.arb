@@ -476,6 +476,8 @@
   "discoverNoResultsFor": "Aucun résultat pour « {query} ».",
   "discoverOfflineMessage": "vérifiez votre connexion et réessayez. Vos listes et votre historique restent disponibles.",
   "discoverPeopleSection": "Personnes",
+  "discoverBecauseYouLiked": "Parce que vous avez aimé {title}",
+  "discoverBecauseYouWatched": "Parce que vous regardez {title}",
   "discoverSwipeSoonTitle": "Le mode Swiper arrive bientôt",
   "discoverSwipeSoonMessage": "Faites défiler des suggestions une à une pour remplir vos listes.",
   "discoverConnectTmdb": "Connexion à TMDB",

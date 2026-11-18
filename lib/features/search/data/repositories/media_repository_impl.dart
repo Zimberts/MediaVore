@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/cache/cache_warmup_policy.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
+import 'package:mediavore/core/domain/entities/liked_item_info.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
@@ -576,6 +577,21 @@ class MediaRepositoryImpl implements MediaRepository {
     await _ensureInitialized();
     final items = await localDataSource.getLikedItems();
     return items.map((e) => '${e.tmdbId}:${e.type}').toList();
+  }
+
+  @override
+  Future<List<LikedItemInfo>> getLikedItems() async {
+    await _ensureInitialized();
+    final items = await localDataSource.getLikedItems();
+    return items
+        .map(
+          (e) => LikedItemInfo(
+            tmdbId: e.tmdbId,
+            type: e.type == 'tv' ? MediaType.tv : MediaType.movie,
+            title: e.title,
+          ),
+        )
+        .toList();
   }
 
   // Releases (notifications)

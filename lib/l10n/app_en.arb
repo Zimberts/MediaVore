@@ -1137,6 +1137,22 @@
   },
   "discoverOfflineMessage": "check your connection and try again. Your lists and your history remain available.",
   "discoverPeopleSection": "People",
+  "discoverBecauseYouLiked": "Because you liked {title}",
+  "@discoverBecauseYouLiked": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverBecauseYouWatched": "Because you watched {title}",
+  "@discoverBecauseYouWatched": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "discoverSwipeSoonTitle": "Swipe mode is coming soon",
   "discoverSwipeSoonMessage": "Go through suggestions one by one to fill your lists.",
   "discoverConnectTmdb": "Connect to TMDB",

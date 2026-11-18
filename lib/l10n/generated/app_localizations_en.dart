@@ -1742,6 +1742,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverPeopleSection => 'People';
 
   @override
+  String discoverBecauseYouLiked(String title) {
+    return 'Because you liked $title';
+  }
+
+  @override
+  String discoverBecauseYouWatched(String title) {
+    return 'Because you watched $title';
+  }
+
+  @override
   String get discoverSwipeSoonTitle => 'Swipe mode is coming soon';
 
   @override
