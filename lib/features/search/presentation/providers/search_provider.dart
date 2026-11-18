@@ -4,6 +4,7 @@ import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
@@ -31,6 +32,7 @@ class SearchProvider with ChangeNotifier {
   }
 
   List<MediaItem> _searchResults = [];
+  List<PersonSummary> _peopleResults = [];
   bool _isLoading = false;
   bool _isCacheLoading = false;
   bool _isDbSizeLoading = false;
@@ -73,6 +75,7 @@ class SearchProvider with ChangeNotifier {
   bool _isQuickAddOmissionsLoading = false;
 
   List<MediaItem> get items => _searchResults; // For SearchPage
+  List<PersonSummary> get peopleResults => _peopleResults;
   bool get isLoading => _isLoading;
   bool get isCacheLoading => _isCacheLoading;
   bool get isDbSizeLoading => _isDbSizeLoading;
@@ -451,8 +454,9 @@ class SearchProvider with ChangeNotifier {
     if (items.isEmpty) return;
     await repository.addAllToList(items, listName);
     final currentEntries = _listEntries[listName] ?? [];
-    final newEntries =
-        items.map((item) => '${item.id}:${item.mediaType.name}').toList();
+    final newEntries = items
+        .map((item) => '${item.id}:${item.mediaType.name}')
+        .toList();
     _listEntries[listName] = [
       ...currentEntries,
       ...newEntries.where((e) => !currentEntries.contains(e)),
@@ -659,8 +663,10 @@ class SearchProvider with ChangeNotifier {
 
     try {
       if (isTrending) {
+        _peopleResults = [];
         _searchResults = await repository.getTrendingMedia(page: _currentPage);
       } else if (_isDiscoverMode && _currentQuery.isEmpty) {
+        _peopleResults = [];
         final List<MediaItem> rawResults;
         if (_filters.type == null) {
           final movies = _filters.isEmpty
@@ -735,6 +741,15 @@ class SearchProvider with ChangeNotifier {
         _searchResults = results;
         if (rawResults.isEmpty) _hasMore = false;
       } else {
+        final peopleFuture = (!_filters.hasActiveFilters &&
+                _currentQuery.isNotEmpty &&
+                _filters.type == null)
+            ? repository.searchPeople(_currentQuery).catchError((e) {
+                debugPrint('[SearchProvider] searchPeople error: $e');
+                return <PersonSummary>[];
+              })
+            : null;
+
         final collected = <MediaItem>[];
         var pagesFetched = 0;
 
@@ -806,12 +821,19 @@ class SearchProvider with ChangeNotifier {
           _currentPage++;
         }
 
+        if (peopleFuture != null) {
+          _peopleResults = await peopleFuture;
+        } else {
+          _peopleResults = [];
+        }
+
         sortMediaItems(collected, _filters.sort, query: _currentQuery);
         _searchResults = collected;
       }
       _isOffline = false;
     } catch (e) {
       _searchResults = [];
+      _peopleResults = [];
       _setSearchError(e, 'searchMedia');
     } finally {
       _isLoading = false;
@@ -1022,6 +1044,7 @@ class SearchProvider with ChangeNotifier {
 
   void clearSearch() {
     _searchResults = [];
+    _peopleResults = [];
     _currentQuery = '';
     _currentPage = 1;
     _hasMore = true;
@@ -1145,16 +1168,20 @@ class SearchProvider with ChangeNotifier {
     required int targetEpisode,
   }) async {
     try {
-      final details =
-          await repository.getMediaDetails(tvId, type: MediaType.tv);
+      final details = await repository.getMediaDetails(
+        tvId,
+        type: MediaType.tv,
+      );
       final seasons = details.item.seasons ?? [];
 
       final allCandidates = <CandidateEpisode>[];
       for (final s in seasons) {
         if (s.seasonNumber <= 0 || s.seasonNumber > targetSeason) continue;
         try {
-          final sDetails =
-              await repository.getSeasonDetails(tvId, s.seasonNumber);
+          final sDetails = await repository.getSeasonDetails(
+            tvId,
+            s.seasonNumber,
+          );
           final episodes = sDetails['episodes'] as List? ?? [];
           for (final ep in episodes) {
             if (ep is Map<String, dynamic>) {

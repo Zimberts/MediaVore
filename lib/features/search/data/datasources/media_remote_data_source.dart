@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
@@ -192,6 +193,21 @@ class MediaRemoteDataSource {
     });
   }
 
+  /// Searches for people (actors, directors, etc.) via `/search/person`.
+  Future<List<PersonSummary>> searchPeople(String query, {int page = 1}) {
+    return _guard('searching people', () async {
+      final response = await _tmdbGet(
+        'https://api.themoviedb.org/3/search/person',
+        queryParameters: {'query': query, 'page': page},
+      );
+
+      final List results = response.data['results'] ?? [];
+      return results
+          .map((m) => PersonSummary.fromJson(Map<String, dynamic>.from(m)))
+          .toList();
+    });
+  }
+
   /// Fetches the details for a single media item from the TMDB API.
   Future<MediaItem> getMediaItem(int id, {MediaType type = MediaType.movie}) {
     final path = type == MediaType.tv ? 'tv' : 'movie';
@@ -257,29 +273,25 @@ class MediaRemoteDataSource {
 
       return MediaDetailsBundle(
         item: MediaItem.fromJson(data),
-        credits: part(
-          'credits',
-          (raw) {
-            final map = Map<String, dynamic>.from(raw as Map);
-            if (data['created_by'] is List &&
-                (data['created_by'] as List).isNotEmpty) {
-              final existingCrew = List.from(map['crew'] as List? ?? const []);
-              for (final creator in (data['created_by'] as List)) {
-                if (creator is Map) {
-                  existingCrew.insert(0, {
-                    'id': creator['id'],
-                    'name': creator['name'],
-                    'job': 'Creator',
-                    'profile_path': creator['profile_path'],
-                  });
-                }
+        credits: part('credits', (raw) {
+          final map = Map<String, dynamic>.from(raw as Map);
+          if (data['created_by'] is List &&
+              (data['created_by'] as List).isNotEmpty) {
+            final existingCrew = List.from(map['crew'] as List? ?? const []);
+            for (final creator in (data['created_by'] as List)) {
+              if (creator is Map) {
+                existingCrew.insert(0, {
+                  'id': creator['id'],
+                  'name': creator['name'],
+                  'job': 'Creator',
+                  'profile_path': creator['profile_path'],
+                });
               }
-              map['crew'] = existingCrew;
             }
-            return map;
-          },
-          {'cast': [], 'crew': []},
-        ),
+            map['crew'] = existingCrew;
+          }
+          return map;
+        }, {'cast': [], 'crew': []}),
         similar: part(
           'similar',
           (raw) => _parseResults(raw['results'] as List, path),

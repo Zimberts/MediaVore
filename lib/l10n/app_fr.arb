@@ -475,6 +475,7 @@
   "discoverNoResults": "Aucun résultat avec ces filtres.",
   "discoverNoResultsFor": "Aucun résultat pour « {query} ».",
   "discoverOfflineMessage": "vérifiez votre connexion et réessayez. Vos listes et votre historique restent disponibles.",
+  "discoverPeopleSection": "Personnes",
   "discoverSwipeSoonTitle": "Le mode Swiper arrive bientôt",
   "discoverSwipeSoonMessage": "Faites défiler des suggestions une à une pour remplir vos listes.",
   "discoverConnectTmdb": "Connexion à TMDB",

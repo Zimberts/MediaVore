@@ -11,6 +11,7 @@ import 'package:mediavore/features/achievements/presentation/providers/achieveme
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
@@ -57,6 +58,18 @@ class MockMediaRepository extends Mock implements MediaRepository {
           as Future<List<MediaItem>>;
     } catch (_) {
       return Future.value(<MediaItem>[]);
+    }
+  }
+
+  @override
+  Future<List<PersonSummary>> searchPeople(String query, {int page = 1}) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#searchPeople, [query], {#page: page}),
+          )
+          as Future<List<PersonSummary>>;
+    } catch (_) {
+      return Future.value(<PersonSummary>[]);
     }
   }
 

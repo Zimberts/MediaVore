@@ -1136,6 +1136,7 @@
     }
   },
   "discoverOfflineMessage": "check your connection and try again. Your lists and your history remain available.",
+  "discoverPeopleSection": "People",
   "discoverSwipeSoonTitle": "Swipe mode is coming soon",
   "discoverSwipeSoonMessage": "Go through suggestions one by one to fill your lists.",
   "discoverConnectTmdb": "Connect to TMDB",

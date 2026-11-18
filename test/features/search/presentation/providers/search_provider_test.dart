@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -211,6 +212,222 @@ void main() {
         ),
       ).called(1);
     });
+
+    test(
+      'searchMedia with query and no filters searches people concurrently and populates peopleResults',
+      () async {
+        const tPeople = [
+          PersonSummary(
+            id: 100,
+            name: 'Denis Villeneuve',
+            profilePath: '/villeneuve.jpg',
+            knownForDepartment: 'Directing',
+          ),
+        ];
+
+        when(
+          () => mockRepository.searchMedia(
+            any(),
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            originalLanguage: any(named: 'originalLanguage'),
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => []);
+
+        when(
+          () => mockRepository.searchPeople('Villeneuve'),
+        ).thenAnswer((_) async => tPeople);
+
+        await provider.searchMedia('Villeneuve');
+
+        verify(() => mockRepository.searchPeople('Villeneuve')).called(1);
+        expect(provider.peopleResults, equals(tPeople));
+
+        provider.clearSearch();
+        expect(provider.peopleResults, isEmpty);
+      },
+    );
+
+    test('searchPeople failure does not fail searchMedia', () async {
+      when(
+        () => mockRepository.searchMedia(
+          any(),
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          originalLanguage: any(named: 'originalLanguage'),
+          type: MediaType.movie,
+        ),
+      ).thenAnswer(
+        (_) async => [
+          const MediaItem(
+            id: 1,
+            title: 'Dune',
+            overview: '',
+            releaseDate: '2021',
+          ),
+        ],
+      );
+
+      when(
+        () => mockRepository.searchMedia(
+          any(),
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          originalLanguage: any(named: 'originalLanguage'),
+          type: MediaType.tv,
+        ),
+      ).thenAnswer((_) async => []);
+
+      when(
+        () => mockRepository.searchPeople(any()),
+      ).thenThrow(Exception('TMDB person endpoint timeout'));
+
+      await provider.searchMedia('Villeneuve');
+
+      expect(provider.items, hasLength(1));
+      expect(provider.items.first.title, 'Dune');
+      expect(provider.peopleResults, isEmpty);
+      expect(provider.error, isNull);
+    });
+
+    test('searchMedia with active filters does not search people', () async {
+      provider.setFilters(type: MediaType.movie);
+
+      when(
+        () => mockRepository.searchMedia(
+          any(),
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          originalLanguage: any(named: 'originalLanguage'),
+          type: any(named: 'type'),
+        ),
+      ).thenAnswer((_) async => []);
+
+      await provider.searchMedia('Villeneuve');
+
+      verifyNever(() => mockRepository.searchPeople(any()));
+      expect(provider.peopleResults, isEmpty);
+    });
+
+    test(
+      'searchMedia with query and no filters searches people concurrently and populates peopleResults',
+      () async {
+        const tPeople = [
+          PersonSummary(
+            id: 100,
+            name: 'Denis Villeneuve',
+            profilePath: '/villeneuve.jpg',
+            knownForDepartment: 'Directing',
+          ),
+        ];
+
+        when(
+          () => mockRepository.searchMedia(
+            any(),
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            originalLanguage: any(named: 'originalLanguage'),
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => []);
+
+        when(
+          () => mockRepository.searchPeople('Villeneuve'),
+        ).thenAnswer((_) async => tPeople);
+
+        await provider.searchMedia('Villeneuve');
+
+        verify(() => mockRepository.searchPeople('Villeneuve')).called(1);
+        expect(provider.peopleResults, equals(tPeople));
+
+        provider.clearSearch();
+        expect(provider.peopleResults, isEmpty);
+      },
+    );
+
+    test(
+      'searchPeople failure does not fail searchMedia',
+      () async {
+        when(
+          () => mockRepository.searchMedia(
+            any(),
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            originalLanguage: any(named: 'originalLanguage'),
+            type: MediaType.movie,
+          ),
+        ).thenAnswer(
+          (_) async => [
+            const MediaItem(
+              id: 1,
+              title: 'Dune',
+              overview: '',
+              releaseDate: '2021',
+            ),
+          ],
+        );
+
+        when(
+          () => mockRepository.searchMedia(
+            any(),
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            originalLanguage: any(named: 'originalLanguage'),
+            type: MediaType.tv,
+          ),
+        ).thenAnswer((_) async => []);
+
+        when(
+          () => mockRepository.searchPeople(any()),
+        ).thenThrow(Exception('TMDB person endpoint timeout'));
+
+        await provider.searchMedia('Villeneuve');
+
+        expect(provider.items, hasLength(1));
+        expect(provider.items.first.title, 'Dune');
+        expect(provider.peopleResults, isEmpty);
+        expect(provider.error, isNull);
+      },
+    );
+
+    test(
+      'searchMedia with active filters does not search people',
+      () async {
+        provider.setFilters(type: MediaType.movie);
+
+        when(
+          () => mockRepository.searchMedia(
+            any(),
+            page: any(named: 'page'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            originalLanguage: any(named: 'originalLanguage'),
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => []);
+
+        await provider.searchMedia('Villeneuve');
+
+        verifyNever(() => mockRepository.searchPeople(any()));
+        expect(provider.peopleResults, isEmpty);
+      },
+    );
   });
 
   group('SearchProvider - Media Details Enrichment', () {

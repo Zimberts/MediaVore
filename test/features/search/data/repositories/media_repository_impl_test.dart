@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
@@ -1641,66 +1642,69 @@ void main() {
   });
 
   group('addAllToList', () {
-    test('should cache each item and delegate atomically to localDataSource', () async {
-      final items = [
-        const MediaItem(
-          id: 10,
-          title: 'Mad Max',
-          overview: '',
-          releaseDate: '1979-04-12',
-          mediaType: MediaType.movie,
-        ),
-        const MediaItem(
-          id: 11,
-          title: 'Mad Max 2',
-          overview: '',
-          releaseDate: '1981-12-24',
-          mediaType: MediaType.movie,
-        ),
-      ];
-
-      when(() => mockCache.cacheItem(any())).thenAnswer((_) async {});
-      when(
-        () => mockLocalDataSource.addAllToList(
-          items: any(named: 'items'),
-          listName: any(named: 'listName'),
-        ),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockRemoteDataSource.getMediaDetailsBundle(
-          any(),
-          type: any(named: 'type'),
-        ),
-      ).thenAnswer((invocation) async {
-        final id = invocation.positionalArguments[0] as int;
-        return MediaDetailsBundle(
-          item: MediaItem(
-            id: id,
-            title: 'Film $id',
+    test(
+      'should cache each item and delegate atomically to localDataSource',
+      () async {
+        final items = [
+          const MediaItem(
+            id: 10,
+            title: 'Mad Max',
             overview: '',
-            releaseDate: '1980',
+            releaseDate: '1979-04-12',
             mediaType: MediaType.movie,
           ),
-          credits: const {'cast': [], 'crew': []},
-          similar: const [],
-          recommendations: const [],
-          watchProviders: const {},
-          videos: const [],
-        );
-      });
-      when(() => mockCache.cacheDetails(any())).thenAnswer((_) async {});
+          const MediaItem(
+            id: 11,
+            title: 'Mad Max 2',
+            overview: '',
+            releaseDate: '1981-12-24',
+            mediaType: MediaType.movie,
+          ),
+        ];
 
-      await repository.addAllToList(items, 'watchlist');
+        when(() => mockCache.cacheItem(any())).thenAnswer((_) async {});
+        when(
+          () => mockLocalDataSource.addAllToList(
+            items: any(named: 'items'),
+            listName: any(named: 'listName'),
+          ),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRemoteDataSource.getMediaDetailsBundle(
+            any(),
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((invocation) async {
+          final id = invocation.positionalArguments[0] as int;
+          return MediaDetailsBundle(
+            item: MediaItem(
+              id: id,
+              title: 'Film $id',
+              overview: '',
+              releaseDate: '1980',
+              mediaType: MediaType.movie,
+            ),
+            credits: const {'cast': [], 'crew': []},
+            similar: const [],
+            recommendations: const [],
+            watchProviders: const {},
+            videos: const [],
+          );
+        });
+        when(() => mockCache.cacheDetails(any())).thenAnswer((_) async {});
 
-      verify(() => mockCache.cacheItem(items[0])).called(1);
-      verify(() => mockCache.cacheItem(items[1])).called(1);
-      verify(
-        () => mockLocalDataSource.addAllToList(
-          items: items,
-          listName: 'watchlist',
-        ),
-      ).called(1);
-    });
+        await repository.addAllToList(items, 'watchlist');
+
+        verify(() => mockCache.cacheItem(items[0])).called(1);
+        verify(() => mockCache.cacheItem(items[1])).called(1);
+        verify(
+          () => mockLocalDataSource.addAllToList(
+            items: items,
+            listName: 'watchlist',
+          ),
+        ).called(1);
+      },
+    );
 
     test('should no-op when items is empty', () async {
       await repository.addAllToList(const [], 'watchlist');
@@ -1710,6 +1714,21 @@ void main() {
           listName: any(named: 'listName'),
         ),
       );
+    });
+  });
+
+  group('searchPeople', () {
+    test('delegates to remoteDataSource after initialization', () async {
+      const tResults = [PersonSummary(id: 1, name: 'Denis Villeneuve')];
+      when(
+        () => mockRemoteDataSource.searchPeople('Villeneuve', page: 1),
+      ).thenAnswer((_) async => tResults);
+
+      final result = await repository.searchPeople('Villeneuve', page: 1);
+      expect(result, tResults);
+      verify(
+        () => mockRemoteDataSource.searchPeople('Villeneuve', page: 1),
+      ).called(1);
     });
   });
 }

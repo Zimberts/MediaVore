@@ -2954,6 +2954,12 @@ abstract class AppLocalizations {
   /// **'check your connection and try again. Your lists and your history remain available.'**
   String get discoverOfflineMessage;
 
+  /// No description provided for @discoverPeopleSection.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get discoverPeopleSection;
+
   /// No description provided for @discoverSwipeSoonTitle.
   ///
   /// In en, this message translates to:
