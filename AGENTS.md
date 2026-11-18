@@ -95,3 +95,50 @@ hook once: `pip install pre-commit && pre-commit install --hook-type commit-msg`
 Verify with `flutter analyze` and `flutter test` before considering a change done.
 CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `dart format --set-exit-if-changed lib test` (non-blocking for now), `flutter test --coverage`. `pr-title.yml` checks the PR title and every commit subject
 against Conventional Commits. `release.yml` runs on every push to `main`: `ci.yml` analyze/test, then release-please (release PR `chore(release): vX.Y.Z`; merging it tags and builds the APK + AAB, checked for 16 KB page alignment by `tool/check_16kb_alignment.sh`). Never bump `version:` or push tags by hand; see `DOCS/releasing.md`.
+
+### Stacked PRs & Restacking After Squash Merge
+
+PRs are merged into `main` via **Squash and Merge** (required by `release-please` so each PR title becomes a single commit on `main`).
+When a parent branch `A` is squash-merged, its squashed commit arrives on `main` with a brand new SHA. Stacked child branches (`main` ← `A` ← `B` ← `C`) still contain the original un-squashed commits of `A`. A standard merge or naive rebase replays those commits and triggers false conflicts.
+
+**Procedure to update stacked branches after parent merge:**
+
+1. **One-time Git setup:**
+   ```bash
+   git config --global rebase.updateRefs true
+   ```
+   Keep "Automatically delete head branches" enabled on GitHub so merged parent branches trigger automatic retargeting of child PRs to `main`.
+
+2. **Rebase child branch using `--onto`:**
+   ```bash
+   git fetch origin
+   git rebase --onto origin/main <old-parent-tip-or-branch> <child-branch>
+   ```
+   - For a single child `feat/302-xxx` previously based on `feat/301-xxx`:
+     ```bash
+     git checkout feat/302-xxx
+     git rebase --onto origin/main <old-tip-of-301> feat/302-xxx
+     ```
+   - For a multi-level stack (`main` ← `A` ← `B` ← `C`), checkout the **top** of the stack (`C`) with `rebase.updateRefs true`:
+     ```bash
+     git switch feat/303-xxx
+     git rebase --onto origin/main <old-tip-of-301>
+     ```
+     `--update-refs` automatically moves intermediate branch refs (`B`) along with `C`.
+   - If the local parent branch ref was already deleted, find `<old-parent-tip>` via `git merge-base` or the last commit SHA of the parent branch from its PR.
+
+3. **Verify clean commit log:**
+   ```bash
+   git log --oneline --graph origin/main..<child-branch>
+   ```
+   Must display **only** the commits specific to the child branch(es), without replaying squashed parent commits.
+
+4. **Force push with lease:**
+   ```bash
+   git push --force-with-lease origin <child-branch>
+   # If stacked branches were updated via updateRefs:
+   git push --force-with-lease origin feat/302-xxx feat/303-xxx
+   ```
+
+5. **Merge order:**
+   Always merge in topological order (parent first, child next), one PR at a time. Keep dependency stacks shallow (2-3 levels max). Once a foundation PR is merged, branch new work directly off `main`.
