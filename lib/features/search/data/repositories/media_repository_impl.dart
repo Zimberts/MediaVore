@@ -613,6 +613,12 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<List<QuickAddOptOut>> getQuickAddOptOuts() async {
+    await _ensureInitialized();
+    return _quickAdd.getQuickAddOptOuts();
+  }
+
+  @override
   Future<void> refreshQuickAddItems() async {
     await _ensureInitialized();
     return _quickAdd.refreshQuickAddItems();

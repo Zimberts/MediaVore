@@ -1818,4 +1818,314 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaTypeTv => 'Series';
+
+  @override
+  String detailEpisodeRuntime(int minutes) {
+    return '~$minutes min';
+  }
+
+  @override
+  String detailSeenTimes(int count) {
+    return 'Seen $count times';
+  }
+
+  @override
+  String get detailSeriesFinished => 'Finished';
+
+  @override
+  String get detailMoreActions => 'More actions';
+
+  @override
+  String get detailShare => 'Share';
+
+  @override
+  String get detailShareHint => 'Link to the title page';
+
+  @override
+  String detailAddToList(String name) {
+    return 'Add to “$name”';
+  }
+
+  @override
+  String detailInListRemove(String name) {
+    return 'In “$name”, tap to remove';
+  }
+
+  @override
+  String get detailChooseList => 'Choose a list';
+
+  @override
+  String detailChooseListOthers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Choose another list (in $count others)',
+      one: 'Choose another list (in 1 other)',
+      zero: 'Choose another list',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String detailAddedToList(String name) {
+    return 'Added to “$name”';
+  }
+
+  @override
+  String detailRemovedFromList(String name) {
+    return 'Removed from “$name”';
+  }
+
+  @override
+  String get detailReadMore => 'Read more';
+
+  @override
+  String get detailReadLess => 'Show less';
+
+  @override
+  String get detailInfos => 'Info';
+
+  @override
+  String get detailInfoDirection => 'Directed by';
+
+  @override
+  String get detailInfoCreation => 'Created by';
+
+  @override
+  String get detailOriginalTitle => 'Original title';
+
+  @override
+  String get detailCountry => 'Country';
+
+  @override
+  String get detailLanguage => 'Language';
+
+  @override
+  String detailCountryName(String code) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'US': 'United States',
+      'GB': 'United Kingdom',
+      'FR': 'France',
+      'DE': 'Germany',
+      'IT': 'Italy',
+      'ES': 'Spain',
+      'CA': 'Canada',
+      'JP': 'Japan',
+      'KR': 'South Korea',
+      'CN': 'China',
+      'HK': 'Hong Kong',
+      'TW': 'Taiwan',
+      'IN': 'India',
+      'AU': 'Australia',
+      'NZ': 'New Zealand',
+      'BE': 'Belgium',
+      'CH': 'Switzerland',
+      'NL': 'Netherlands',
+      'SE': 'Sweden',
+      'NO': 'Norway',
+      'DK': 'Denmark',
+      'FI': 'Finland',
+      'IS': 'Iceland',
+      'IE': 'Ireland',
+      'PT': 'Portugal',
+      'BR': 'Brazil',
+      'MX': 'Mexico',
+      'AR': 'Argentina',
+      'CL': 'Chile',
+      'CO': 'Colombia',
+      'RU': 'Russia',
+      'PL': 'Poland',
+      'CZ': 'Czechia',
+      'AT': 'Austria',
+      'HU': 'Hungary',
+      'GR': 'Greece',
+      'TR': 'Turkey',
+      'IL': 'Israel',
+      'IR': 'Iran',
+      'EG': 'Egypt',
+      'ZA': 'South Africa',
+      'TH': 'Thailand',
+      'ID': 'Indonesia',
+      'PH': 'Philippines',
+      'UA': 'Ukraine',
+      'RO': 'Romania',
+      'LU': 'Luxembourg',
+      'other': '$code',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String detailLanguageName(String code) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'en': 'English',
+      'fr': 'French',
+      'de': 'German',
+      'it': 'Italian',
+      'es': 'Spanish',
+      'pt': 'Portuguese',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'zh': 'Chinese',
+      'cn': 'Cantonese',
+      'hi': 'Hindi',
+      'ru': 'Russian',
+      'sv': 'Swedish',
+      'no': 'Norwegian',
+      'da': 'Danish',
+      'fi': 'Finnish',
+      'nl': 'Dutch',
+      'pl': 'Polish',
+      'tr': 'Turkish',
+      'ar': 'Arabic',
+      'he': 'Hebrew',
+      'fa': 'Persian',
+      'th': 'Thai',
+      'id': 'Indonesian',
+      'el': 'Greek',
+      'cs': 'Czech',
+      'hu': 'Hungarian',
+      'ro': 'Romanian',
+      'uk': 'Ukrainian',
+      'is': 'Icelandic',
+      'ta': 'Tamil',
+      'te': 'Telugu',
+      'tl': 'Tagalog',
+      'xx': 'No language',
+      'other': '$code',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String detailInYourLists(String lists) {
+    return 'In your lists: $lists';
+  }
+
+  @override
+  String detailRating(String rating) {
+    return '$rating out of 10 on TMDB';
+  }
+
+  @override
+  String inProgressTitle(int count) {
+    return 'In progress · $count';
+  }
+
+  @override
+  String inProgressPausedChip(int count) {
+    return 'Paused · $count';
+  }
+
+  @override
+  String get inProgressSortRecent => 'Recent';
+
+  @override
+  String get inProgressSortAlmostDone => 'Almost done';
+
+  @override
+  String get inProgressSortAlphabetical => 'A–Z';
+
+  @override
+  String get inProgressEmptyFiltered => 'Nothing matches these filters.';
+
+  @override
+  String inProgressMoreActions(String title) {
+    return 'More actions for $title';
+  }
+
+  @override
+  String get inProgressRemoveFromQuickAdd => 'Remove from quick add';
+
+  @override
+  String get inProgressRemoveFromQuickAddSubtitle =>
+      'The series will no longer appear in In progress';
+
+  @override
+  String get inProgressOpenDetails => 'Open details';
+
+  @override
+  String get inProgressRemovedMessage => 'Series removed from quick add';
+
+  @override
+  String inProgressRemovedSection(int count) {
+    return 'Removed from quick add · $count';
+  }
+
+  @override
+  String get inProgressRestore => 'Restore';
+
+  @override
+  String inProgressRestoreLabel(String title) {
+    return 'Restore $title';
+  }
+
+  @override
+  String get inProgressRestoredMessage => 'Series restored';
+
+  @override
+  String get debugMissingEpisodesTitle => 'Debug — missing episodes';
+
+  @override
+  String get debugMissingEpisodesSubtitle =>
+      'Expected next episodes that are not shown above.';
+
+  @override
+  String get debugRecompute => 'Recompute';
+
+  @override
+  String get debugNothingOmitted => 'Nothing omitted.';
+
+  @override
+  String debugGroupCount(String title, int count) {
+    return '$title · $count';
+  }
+
+  @override
+  String debugTitleWithEpisode(String title, String episode) {
+    return '$title · $episode';
+  }
+
+  @override
+  String debugTitleAfterEpisode(String title, String episode) {
+    return '$title · after $episode';
+  }
+
+  @override
+  String get debugQuickAddOptedOut => 'Removed from quick add';
+
+  @override
+  String get debugQuickAddOptedOutDetail => 'Removed manually';
+
+  @override
+  String get debugQuickAddNotReleased => 'Next episode not aired yet';
+
+  @override
+  String debugQuickAddNotReleasedDetail(String date) {
+    return 'Airs on $date';
+  }
+
+  @override
+  String get debugQuickAddNotReleasedUnknown => 'Air date unknown';
+
+  @override
+  String get debugQuickAddNotPopulated => 'Not added to quick add';
+
+  @override
+  String get debugQuickAddNotPopulatedDetail =>
+      'Aired episode missing from quick add: try Recompute';
+
+  @override
+  String get debugQuickAddNoAirDate => 'No air date';
+
+  @override
+  String get debugQuickAddNoAirDateDetail =>
+      'The episode has no known air date';
+
+  @override
+  String get debugQuickAddNoCacheData => 'Season data not cached';
+
+  @override
+  String get debugQuickAddNoCacheDataDetail =>
+      'Tap Recompute to fetch the season';
 }

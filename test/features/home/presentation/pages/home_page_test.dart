@@ -11,8 +11,11 @@ import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/widgets/media_progress_bar.dart';
 import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/features/home/presentation/pages/home_page.dart';
+import 'package:mediavore/features/home/presentation/pages/in_progress_page.dart';
+import 'package:mediavore/features/home/presentation/providers/home_session_provider.dart';
 import 'package:mediavore/features/home/presentation/widgets/connect_tmdb_card.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_card.dart';
+import 'package:mediavore/features/home/presentation/widgets/in_progress_row.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_thumbnail.dart';
 import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -180,6 +183,7 @@ void main() {
   late _FakeHomeRepository repository;
   late SearchProvider searchProvider;
   late MockSharedPreferences prefs;
+  late HomeSessionProvider session;
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
@@ -188,6 +192,7 @@ void main() {
   setUp(() {
     repository = _FakeHomeRepository();
     prefs = MockSharedPreferences();
+    session = HomeSessionProvider();
     when(() => prefs.getInt(any())).thenReturn(null);
     when(() => prefs.getDouble(any())).thenReturn(null);
     when(() => prefs.getBool(any())).thenReturn(null);
@@ -232,6 +237,7 @@ void main() {
         providers: [
           ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
           ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+          ChangeNotifierProvider<HomeSessionProvider>.value(value: session),
         ],
         child: MaterialApp(
           theme: palette.toThemeData(),
@@ -427,12 +433,49 @@ void main() {
         await tester.tap(find.text('See all (20)'));
         await tester.pumpAndSettle();
 
-        final page = tester.widget<NotificationCenterPage>(
-          find.byType(NotificationCenterPage),
+        expect(find.byType(InProgressPage), findsOneWidget);
+        expect(find.text('In progress · 20'), findsOneWidget);
+        expect(session.inProgressPausedOnly, isFalse);
+        expect(find.byKey(const ValueKey('in_progress_row_1')), findsOneWidget);
+
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+        await tester.dragUntilVisible(
+          find.byKey(const Key('home_more_in_progress')),
+          find.byKey(const ValueKey('home_thumbnail_4')),
+          const Offset(-300, 0),
         );
-        expect(page.initialTab, NotificationCenterTab.quickAdd);
-        // The former Quick Add list, with every series.
-        expect(find.text('Show 1'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('home_more_in_progress')));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(InProgressPage), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should open the list on "Paused" from the paused row, and clear it from "See all"',
+      (tester) async {
+        addTwentySeries(paused: 2);
+        await pumpHome(tester);
+
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('home_paused')),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.tap(find.byKey(const Key('home_paused')));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(InProgressPage), findsOneWidget);
+        expect(session.inProgressPausedOnly, isTrue);
+        expect(find.byType(InProgressRow), findsNWidgets(2));
+
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('See all (18)'));
+        await tester.pumpAndSettle();
+
+        expect(session.inProgressPausedOnly, isFalse);
       },
     );
 

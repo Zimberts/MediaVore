@@ -38,6 +38,16 @@ class MockMediaRepository extends Mock implements MediaRepository {
   }
 
   @override
+  Future<List<QuickAddOptOut>> getQuickAddOptOuts() {
+    try {
+      return super.noSuchMethod(Invocation.method(#getQuickAddOptOuts, []))
+          as Future<List<QuickAddOptOut>>;
+    } catch (_) {
+      return Future.value(<QuickAddOptOut>[]);
+    }
+  }
+
+  @override
   Future<List<MediaItem>> getListMediaItems(String listName) {
     try {
       return super.noSuchMethod(

@@ -31,7 +31,8 @@ Key wiring:
   initialized in `main.dart` via `await init(locator)`.
 - **State** — provider `ChangeNotifier`, wired in `MultiProvider` in `main.dart`
   (`SearchProvider`, `SettingsProvider`, `AchievementProvider`, and the session states
-  `SwipeSessionProvider` / `TogetherSessionProvider`, which must outlive a change of tab).
+  `SwipeSessionProvider` / `TogetherSessionProvider` / `HomeSessionProvider`, which must
+  outlive a change of tab or of page).
 - **Tabs** — `AppTab` (`lib/core/navigation/app_tab.dart`); never a tab index. The selected
   tab lives in `SearchProvider.selectedTab`; the shell is `MainPage` + `AppTabBar`.
 - **Errors** — `AppException` hierarchy in `lib/core/error/exceptions.dart`.

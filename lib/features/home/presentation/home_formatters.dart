@@ -49,3 +49,13 @@ String formatHomeDate(AppLocalizations l10n, DateTime date) {
   }
   return toBeginningOfSentenceCase(text);
 }
+
+/// Medium date, "Nov 14, 2026" / "14 nov. 2026".
+String formatMediumDate(AppLocalizations l10n, DateTime date) {
+  try {
+    return DateFormat.yMMMd(l10n.localeName).format(date);
+  } on Exception {
+    // See [formatHomeDate].
+    return DateFormat.yMMMd('en_US').format(date);
+  }
+}

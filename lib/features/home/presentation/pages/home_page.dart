@@ -4,7 +4,6 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_card.dart';
-import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/filter_chip_row.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
@@ -12,6 +11,8 @@ import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/home/presentation/home_formatters.dart';
+import 'package:mediavore/features/home/presentation/in_progress_actions.dart';
+import 'package:mediavore/features/home/presentation/pages/in_progress_page.dart';
 import 'package:mediavore/features/home/presentation/widgets/connect_tmdb_card.dart';
 import 'package:mediavore/features/home/presentation/widgets/home_link_row.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_card.dart';
@@ -83,51 +84,19 @@ class _HomePageState extends State<HomePage> {
   Future<void> _markSeen(InProgressItem item) async {
     if (!_marking.add(item.tmdbId)) return;
     setState(() {});
-    final l10n = context.l10n;
-    final provider = context.read<SearchProvider>();
-    final episode = l10n.homeEpisodeCode(item.seasonNumber, item.episodeNumber);
     try {
-      final undo = await provider.markNextEpisodeSeen(item);
-      showAppMessage(
-        l10n.homeEpisodeSeenMessage(episode, item.title ?? l10n.commonUnknown),
-        actionLabel: l10n.commonUndo,
-        onAction: () async {
-          try {
-            await undo();
-          } catch (e) {
-            debugPrint('[HomePage] undo mark as seen failed: $e');
-          }
-        },
-      );
-    } catch (e) {
-      debugPrint('[HomePage] mark as seen failed: $e');
+      await markInProgressEpisodeSeen(context, item);
     } finally {
       _marking.remove(item.tmdbId);
       if (mounted) setState(() {});
     }
   }
 
-  Future<void> _openSeries(InProgressItem item) async {
-    final provider = context.read<SearchProvider>();
-    MediaItem media;
-    try {
-      media = (await provider.getMediaDetails(item.tmdbId, MediaType.tv)).item;
-    } catch (_) {
-      // Offline or without a key: the page loads what it can by itself.
-      media = MediaItem(
-        id: item.tmdbId,
-        title: item.title ?? '',
-        posterPath: item.posterPath,
-        overview: '',
-        releaseDate: '',
-        mediaType: MediaType.tv,
-      );
-    }
-    if (mounted) await MediaDetailPage.show(context, media);
-  }
+  Future<void> _openSeries(InProgressItem item) =>
+      openInProgressSeries(context, item);
 
-  /// Until "In progress" (#305) and "Upcoming" (#306) have their own pages,
-  /// the full lists stay the ones of the former Alerts screen.
+  /// Until "Upcoming" (#306) has its own page, the releases stay the ones of
+  /// the former Alerts screen.
   void _openLegacyAlerts(NotificationCenterTab tab) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -136,7 +105,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openInProgress() => _openLegacyAlerts(NotificationCenterTab.quickAdd);
+  void _openInProgress({bool pausedOnly = false}) =>
+      InProgressPage.show(context, pausedOnly: pausedOnly);
 
   void _openTmdbCredential() {
     Navigator.of(
@@ -190,7 +160,7 @@ class _HomePageState extends State<HomePage> {
           icon: Icons.schedule,
           title: l10n.homePausedTitle(pausedCount),
           subtitle: l10n.homePausedSubtitle(InProgressItem.pauseAfter.inDays),
-          onTap: _openInProgress,
+          onTap: () => _openInProgress(pausedOnly: true),
         ),
       // Releases need the network: the TMDB card stands in without a key.
       if (hasTmdbKey) _buildUpcoming(l10n, provider.notifiedItems.length),
