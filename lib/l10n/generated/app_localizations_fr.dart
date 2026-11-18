@@ -233,10 +233,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get paletteNameEspresso => 'Expresso';
 
   @override
-  String get navProfile => 'Profil';
+  String get navProfile => 'Moi';
 
   @override
-  String get profileTitle => 'Profil';
+  String get profileTitle => 'Moi';
 
   @override
   String get profileStats => 'Statistiques';
@@ -256,8 +256,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileSettings => 'Paramètres';
 
   @override
-  String get profileSettingsSubtitle =>
-      'Apparence, clé TMDB, données et notifications.';
+  String get profileSettingsSubtitle => 'Apparence, affichage et préférences.';
 
   @override
   String get settingsSectionListsDisplay => 'Affichage des listes';
@@ -1718,4 +1717,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String libraryListScope(String title, String type) {
     return '$title · $type';
   }
+
+  @override
+  String profileActiveDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jours actifs sur les 30 derniers',
+      one: '1 jour actif sur les 30 derniers',
+      zero: 'Aucun jour actif sur les 30 derniers',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profileMoviesWatched => 'Films vus';
+
+  @override
+  String get profileEpisodesAndScreen => 'Épisodes et écran';
+
+  @override
+  String profileScreenTime(int hours) {
+    return '$hours h d\'écran';
+  }
+
+  @override
+  String get profileAllStats => 'Toutes les statistiques';
+
+  @override
+  String profileAchievementsSeeAll(int unlocked, int total) {
+    return 'Tout voir · $unlocked sur $total';
+  }
+
+  @override
+  String get profileUnlocked => 'Débloqué';
 }

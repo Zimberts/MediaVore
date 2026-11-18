@@ -19,32 +19,19 @@ void main() {
     child: const MaterialApp(home: SettingsPage()),
   );
 
-  /// Vertical position of the first ListTile, to compare section order.
-  double firstTileTop(WidgetTester tester) =>
-      tester.getTopLeft(find.byType(ListTile).first).dy;
-
   group('SettingsPage TMDB credential', () {
-    testWidgets('should be the first item while unset', (tester) async {
-      await tester.pumpWidget(app(await settingsWith('')));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'is no longer present in SettingsPage as it moved to ProfilePage',
+      (tester) async {
+        await tester.pumpWidget(app(await settingsWith('')));
+        await tester.pumpAndSettle();
 
-      final credentialTile = find.byKey(const Key('settings_tmdb_credential'));
-      expect(credentialTile, findsOneWidget);
-      expect(tester.getTopLeft(credentialTile).dy, firstTileTop(tester));
-    });
-
-    testWidgets('should not be first once set', (tester) async {
-      await tester.pumpWidget(
-        app(await settingsWith('0123456789abcdef0123456789abcdef')),
-      );
-      await tester.pumpAndSettle();
-
-      final firstTile = tester.widget<ListTile>(find.byType(ListTile).first);
-      expect(firstTile.key, isNot(const Key('settings_tmdb_credential')));
-      expect(
-        find.byKey(const Key('settings_language_dropdown')),
-        findsOneWidget,
-      );
-    });
+        expect(find.byKey(const Key('settings_tmdb_credential')), findsNothing);
+        expect(
+          find.byKey(const Key('settings_language_dropdown')),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

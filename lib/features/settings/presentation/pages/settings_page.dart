@@ -3,8 +3,6 @@ import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/app_version.dart';
-import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
-import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -22,35 +20,10 @@ class SettingsPage extends StatelessWidget {
       fontSize: 13,
     );
 
-    final credentialMissing = settings.tmdbApiKey.isEmpty;
-    final apiSection = <Widget>[
-      _SectionHeader(title: l10n.settingsSectionApi),
-      ListTile(
-        key: const Key('settings_tmdb_credential'),
-        leading: const Icon(Icons.key),
-        title: Text(l10n.settingsTmdbCredential),
-        subtitle: Text(
-          credentialMissing
-              ? l10n.settingsNotSet
-              : '••••••••${settings.tmdbApiKey.length > 4 ? settings.tmdbApiKey.substring(settings.tmdbApiKey.length - 4) : ''}',
-        ),
-        trailing: const Icon(Icons.edit),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const TmdbCredentialPage()),
-          );
-        },
-      ),
-      const Divider(),
-    ];
-
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
-          // Without a credential nothing loads: put it first.
-          if (credentialMissing) ...apiSection,
           _SectionHeader(title: l10n.settingsSectionAppearance),
           ListTile(
             leading: const Icon(Icons.language),
@@ -182,23 +155,6 @@ class SettingsPage extends StatelessWidget {
             onChanged: (val) => settings.setHideNonReleased(val),
           ),
           const Divider(),
-          _SectionHeader(title: l10n.settingsSectionStorage),
-          ListTile(
-            leading: const Icon(Icons.storage),
-            title: Text(l10n.settingsStorage),
-            subtitle: Text(l10n.settingsStorageSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const DataCacheSettingsPage(),
-                ),
-              );
-            },
-          ),
-          const Divider(),
-          if (!credentialMissing) ...apiSection,
           _SectionHeader(title: l10n.settingsSectionAbout),
           AboutListTile(
             icon: const Icon(Icons.info_outline),

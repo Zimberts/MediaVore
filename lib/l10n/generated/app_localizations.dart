@@ -503,13 +503,13 @@ abstract class AppLocalizations {
   /// No description provided for @navProfile.
   ///
   /// In en, this message translates to:
-  /// **'Profile'**
+  /// **'Me'**
   String get navProfile;
 
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
-  /// **'Profile'**
+  /// **'Me'**
   String get profileTitle;
 
   /// No description provided for @profileStats.
@@ -545,7 +545,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileSettingsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Appearance, TMDB key, data and notifications.'**
+  /// **'Appearance, display and preferences.'**
   String get profileSettingsSubtitle;
 
   /// No description provided for @settingsSectionListsDisplay.
@@ -2893,6 +2893,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{title} · {type}'**
   String libraryListScope(String title, String type);
+
+  /// No description provided for @profileActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No active days in the last 30 days} =1{1 active day in the last 30 days} other{{count} active days in the last 30 days}}'**
+  String profileActiveDays(int count);
+
+  /// No description provided for @profileMoviesWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Movies watched'**
+  String get profileMoviesWatched;
+
+  /// No description provided for @profileEpisodesAndScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes & screen'**
+  String get profileEpisodesAndScreen;
+
+  /// No description provided for @profileScreenTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h screen time'**
+  String profileScreenTime(int hours);
+
+  /// No description provided for @profileAllStats.
+  ///
+  /// In en, this message translates to:
+  /// **'All statistics'**
+  String get profileAllStats;
+
+  /// No description provided for @profileAchievementsSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all · {unlocked} of {total}'**
+  String profileAchievementsSeeAll(int unlocked, int total);
+
+  /// No description provided for @profileUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked'**
+  String get profileUnlocked;
 }
 
 class _AppLocalizationsDelegate
