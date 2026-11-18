@@ -3517,36 +3517,36 @@
     {
         "id": "curator_50",
         "title": "Collector",
-        "description": "Have 50 titles in your lists (watchlist included)",
+        "description": "Have 25 titles in your lists (watchlist included)",
         "iconPath": "assets/achievements/curator_50.png",
         "type": "list_items",
         "group": "curator",
         "tier": 2,
         "params": {
-            "target": 50
+            "target": 25
         },
         "translations": {
             "fr": {
                 "title": "Collectionneur",
-                "description": "Avoir 50 titres dans ses listes (watchlist comprise)"
+                "description": "Avoir 25 titres dans ses listes (watchlist comprise)"
             }
         }
     },
     {
         "id": "curator_200",
         "title": "Museum Director",
-        "description": "Have 200 titles in your lists (watchlist included)",
+        "description": "Have 100 titles in your lists (watchlist included)",
         "iconPath": "assets/achievements/curator_200.png",
         "type": "list_items",
         "group": "curator",
         "tier": 3,
         "params": {
-            "target": 200
+            "target": 100
         },
         "translations": {
             "fr": {
                 "title": "Directeur de musée",
-                "description": "Avoir 200 titres dans ses listes (watchlist comprise)"
+                "description": "Avoir 100 titres dans ses listes (watchlist comprise)"
             }
         }
     },
@@ -3604,6 +3604,120 @@
             "fr": {
                 "title": "Tour de Babel",
                 "description": "Regarder des titres en 15 langues originales différentes"
+            }
+        }
+    },
+    {
+        "id": "swipe_decisions_10",
+        "title": "Quick Sorter",
+        "description": "Sort 10 titles by swiping",
+        "iconPath": "assets/achievements/swipe_decisions_10.png",
+        "type": "swipe_decisions",
+        "group": "swipe_decisions",
+        "groupTitle": "Swipe discovery",
+        "tier": 1,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Découverte par swipe",
+                "title": "Trieur express",
+                "description": "Trier 10 titres en swipant"
+            }
+        },
+        "category": "discovery"
+    },
+    {
+        "id": "swipe_decisions_50",
+        "title": "Intuitive Explorer",
+        "description": "Sort 50 titles by swiping",
+        "iconPath": "assets/achievements/swipe_decisions_50.png",
+        "type": "swipe_decisions",
+        "group": "swipe_decisions",
+        "tier": 2,
+        "params": {
+            "target": 50
+        },
+        "translations": {
+            "fr": {
+                "title": "Explorateur intuitif",
+                "description": "Trier 50 titres en swipant"
+            }
+        }
+    },
+    {
+        "id": "swipe_decisions_200",
+        "title": "Swipe Master",
+        "description": "Sort 200 titles by swiping",
+        "iconPath": "assets/achievements/swipe_decisions_200.png",
+        "type": "swipe_decisions",
+        "group": "swipe_decisions",
+        "tier": 3,
+        "params": {
+            "target": 200
+        },
+        "translations": {
+            "fr": {
+                "title": "Maître du swipe",
+                "description": "Trier 200 titres en swipant"
+            }
+        }
+    },
+    {
+        "id": "together_choices_1",
+        "title": "First Agreement",
+        "description": "Make 1 choice together",
+        "iconPath": "assets/achievements/together_choices_1.png",
+        "type": "together_choices",
+        "group": "together_choices",
+        "groupTitle": "Together decisions",
+        "tier": 1,
+        "params": {
+            "target": 1
+        },
+        "translations": {
+            "fr": {
+                "groupTitle": "Choix à plusieurs",
+                "title": "Premier accord",
+                "description": "Faire 1 choix à plusieurs"
+            }
+        },
+        "category": "together"
+    },
+    {
+        "id": "together_choices_10",
+        "title": "Harmony",
+        "description": "Make 10 choices together",
+        "iconPath": "assets/achievements/together_choices_10.png",
+        "type": "together_choices",
+        "group": "together_choices",
+        "tier": 2,
+        "params": {
+            "target": 10
+        },
+        "translations": {
+            "fr": {
+                "title": "En harmonie",
+                "description": "Faire 10 choix à plusieurs"
+            }
+        }
+    },
+    {
+        "id": "together_choices_25",
+        "title": "Perfect Match",
+        "description": "Make 25 choices together",
+        "iconPath": "assets/achievements/together_choices_25.png",
+        "type": "together_choices",
+        "group": "together_choices",
+        "tier": 3,
+        "params": {
+            "target": 25
+        },
+        "translations": {
+            "fr": {
+                "title": "Accord parfait",
+                "description": "Faire 25 choix à plusieurs"
             }
         }
     }

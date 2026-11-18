@@ -4,6 +4,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/together/presentation/models/together_vote_engine.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
@@ -54,6 +55,9 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
     if (_engine.isFinished && !_hasIncrementedChoice) {
       _hasIncrementedChoice = true;
       context.read<TogetherSessionProvider>().incrementTogetherChoicesCount();
+      try {
+        context.read<AchievementProvider>().refresh();
+      } catch (_) {}
     }
     if (mounted) setState(() {});
   }

@@ -111,7 +111,7 @@ void main() {
               reason: 'Category should only be on first tier (${def['id']})');
         }
       }
-      expect(seen.length, 55);
+      expect(seen.length, 57);
     });
 
     test('should have the required fields on every entry', () {
@@ -160,6 +160,8 @@ void main() {
         'backup_export',
         'list_items',
         'distinct_languages',
+        'swipe_decisions',
+        'together_choices',
       };
       for (final def in defs) {
         final params = Map<String, dynamic>.from(def['params'] as Map);
