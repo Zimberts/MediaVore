@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Someone taking part in a "Together" session, with the list they shared.
 @immutable
@@ -160,5 +161,21 @@ class TogetherSessionProvider extends ChangeNotifier {
     _selectedListName = 'watchlist';
     _hideSeen = false;
     notifyListeners();
+  }
+
+  static const String togetherChoicesKey = 'together_choices_count';
+
+  /// Increments the local counter of choices made together.
+  Future<int> incrementTogetherChoicesCount({SharedPreferences? prefs}) async {
+    final p = prefs ?? await SharedPreferences.getInstance();
+    final count = (p.getInt(togetherChoicesKey) ?? 0) + 1;
+    await p.setInt(togetherChoicesKey, count);
+    return count;
+  }
+
+  /// Retrieves the current local count of choices made together.
+  Future<int> getTogetherChoicesCount({SharedPreferences? prefs}) async {
+    final p = prefs ?? await SharedPreferences.getInstance();
+    return p.getInt(togetherChoicesKey) ?? 0;
   }
 }

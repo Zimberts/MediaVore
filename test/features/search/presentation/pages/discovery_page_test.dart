@@ -543,7 +543,7 @@ void main() {
   });
 
   group('DiscoveryPage Swipe', () {
-    testWidgets('should show a waiting screen and come back to Explore', (
+    testWidgets('should show swipe screen and come back to Explore', (
       tester,
     ) async {
       stubTrending((page) => page == 1 ? [_item(1, 'Trend')] : []);
