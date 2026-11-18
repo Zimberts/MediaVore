@@ -2229,4 +2229,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debugReleaseNoDate => 'No date stored';
+
+  @override
+  String get listsSortOrderManual => 'Manual order';
+
+  @override
+  String get listsSortOrderReleaseDate => 'Release date';
+
+  @override
+  String get listsSortOrderShuffle => 'Shuffle';
+
+  @override
+  String listsSortOrderReversed(String order) {
+    return '$order (reversed)';
+  }
+
+  @override
+  String listsHeaderSubtitle(int count, String order) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+      zero: '0 items',
+    );
+    return '$_temp0 · $order';
+  }
+
+  @override
+  String get listsDisplayGrid2 => 'Grid (2 columns)';
+
+  @override
+  String get listsDisplayGrid3 => 'Grid (3 columns)';
+
+  @override
+  String get listsDisplayGrid4 => 'Grid (4 columns)';
+
+  @override
+  String get listsDisplayDetailedList => 'Detailed list';
+
+  @override
+  String get listsActionShare => 'Share list';
+
+  @override
+  String get listsActionSelect => 'Select';
+
+  @override
+  String get listsSelectAll => 'All';
+
+  @override
+  String get listsDeselectAll => 'None';
+
+  @override
+  String get listsRemove => 'Remove';
+
+  @override
+  String listsRemovedNotification(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items removed',
+      one: '1 item removed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listsFillBySwiping => 'Fill by swiping';
 }

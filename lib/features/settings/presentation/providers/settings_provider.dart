@@ -61,9 +61,16 @@ class SettingsProvider with ChangeNotifier {
         displayModeIndex = 0;
       }
       _displayMode = DisplayMode.values[displayModeIndex];
+      // v1.3.0 'swipe' mode falls back to grid in v1.4.0 (#312).
+      if (_displayMode == DisplayMode.swipe) {
+        _displayMode = DisplayMode.grid;
+      }
     }
 
-    _gridSize = _prefs.getDouble('gridSize') ?? 3.0;
+    final double? storedGridSize = _prefs.getDouble('gridSize');
+    if (storedGridSize != null) {
+      _gridSize = storedGridSize.clamp(2.0, 4.0);
+    }
     _hideNonReleased = _prefs.getBool('hideNonReleased') ?? false;
     _notificationCenterDebug =
         _prefs.getBool('notificationCenterDebug') ?? false;
@@ -99,14 +106,16 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> setDisplayMode(DisplayMode mode) async {
-    _displayMode = mode;
-    await _prefs.setInt('displayMode', mode.index);
+    final effective = mode == DisplayMode.swipe ? DisplayMode.grid : mode;
+    _displayMode = effective;
+    await _prefs.setInt('displayMode', effective.index);
     notifyListeners();
   }
 
   Future<void> setGridSize(double size) async {
-    _gridSize = size;
-    await _prefs.setDouble('gridSize', size);
+    final clamped = size.clamp(2.0, 4.0);
+    _gridSize = clamped;
+    await _prefs.setDouble('gridSize', clamped);
     notifyListeners();
   }
 

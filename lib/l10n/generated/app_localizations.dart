@@ -3541,6 +3541,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No date stored'**
   String get debugReleaseNoDate;
+
+  /// No description provided for @listsSortOrderManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual order'**
+  String get listsSortOrderManual;
+
+  /// No description provided for @listsSortOrderReleaseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Release date'**
+  String get listsSortOrderReleaseDate;
+
+  /// No description provided for @listsSortOrderShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get listsSortOrderShuffle;
+
+  /// No description provided for @listsSortOrderReversed.
+  ///
+  /// In en, this message translates to:
+  /// **'{order} (reversed)'**
+  String listsSortOrderReversed(String order);
+
+  /// No description provided for @listsHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 items} =1{1 item} other{{count} items}} · {order}'**
+  String listsHeaderSubtitle(int count, String order);
+
+  /// No description provided for @listsDisplayGrid2.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid (2 columns)'**
+  String get listsDisplayGrid2;
+
+  /// No description provided for @listsDisplayGrid3.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid (3 columns)'**
+  String get listsDisplayGrid3;
+
+  /// No description provided for @listsDisplayGrid4.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid (4 columns)'**
+  String get listsDisplayGrid4;
+
+  /// No description provided for @listsDisplayDetailedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed list'**
+  String get listsDisplayDetailedList;
+
+  /// No description provided for @listsActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share list'**
+  String get listsActionShare;
+
+  /// No description provided for @listsActionSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get listsActionSelect;
+
+  /// No description provided for @listsSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get listsSelectAll;
+
+  /// No description provided for @listsDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get listsDeselectAll;
+
+  /// No description provided for @listsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get listsRemove;
+
+  /// No description provided for @listsRemovedNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item removed} other{{count} items removed}}'**
+  String listsRemovedNotification(int count);
+
+  /// No description provided for @listsFillBySwiping.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill by swiping'**
+  String get listsFillBySwiping;
 }
 
 class _AppLocalizationsDelegate

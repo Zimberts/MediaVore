@@ -479,7 +479,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(SavedMediaPage), findsOneWidget);
 
-      await tester.tap(find.text('Search a movie or series').hitTestable());
+      await tester.tap(find.text('Fill by swiping').hitTestable());
       await tester.pumpAndSettle();
 
       expect(find.byType(SavedMediaPage), findsNothing);
