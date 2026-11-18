@@ -2444,23 +2444,23 @@ abstract class AppLocalizations {
   /// **'Import complete'**
   String get progressImportComplete;
 
-  /// No description provided for @mediaKindFilm.
+  /// No description provided for @mediaKindMovie.
   ///
   /// In en, this message translates to:
   /// **'Movie'**
-  String get mediaKindFilm;
+  String get mediaKindMovie;
 
-  /// No description provided for @mediaKindSerie.
+  /// No description provided for @mediaKindSeries.
   ///
   /// In en, this message translates to:
   /// **'Series'**
-  String get mediaKindSerie;
+  String get mediaKindSeries;
 
-  /// No description provided for @mediaKindLivre.
+  /// No description provided for @mediaKindBook.
   ///
   /// In en, this message translates to:
   /// **'Book'**
-  String get mediaKindLivre;
+  String get mediaKindBook;
 
   /// No description provided for @commonSeeAll.
   ///

@@ -175,7 +175,7 @@ class MediaPosterCard extends StatelessWidget {
   }
 
   BorderRadius get _radius {
-    if (data.kind == MediaKind.livre) {
+    if (data.kind == MediaKind.book) {
       return BorderRadius.horizontal(
         left: Radius.circular(compact ? 2 : 3),
         right: Radius.circular(compact ? 5 : 8),
@@ -369,7 +369,7 @@ class _PosterFace extends StatelessWidget {
               ),
             ),
           ),
-        if (data.kind == MediaKind.livre) const _Spine(),
+        if (data.kind == MediaKind.book) const _Spine(),
         ..._badges(context),
         if (_showCaption)
           PositionedDirectional(
@@ -391,7 +391,7 @@ class _PosterFace extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         ColoredBox(color: data.kind.background(colors)),
-        if (data.kind == MediaKind.livre) const _Spine(),
+        if (data.kind == MediaKind.book) const _Spine(),
         if (compact)
           Center(
             child: Icon(
@@ -403,7 +403,7 @@ class _PosterFace extends StatelessWidget {
         else
           Padding(
             padding: EdgeInsetsDirectional.fromSTEB(
-              data.kind == MediaKind.livre ? 12 : 8,
+              data.kind == MediaKind.book ? 12 : 8,
               34,
               8,
               8,

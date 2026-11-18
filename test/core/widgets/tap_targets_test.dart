@@ -88,7 +88,7 @@ void main() {
             child: MediaPosterCard(
               data: const MediaPosterData(
                 title: 'Dune',
-                kind: MediaKind.film,
+                kind: MediaKind.movie,
                 caption: '2021',
               ),
               onTap: onTap,

@@ -92,7 +92,7 @@ void main() {
       );
 
       expect(data.title, 'Dune');
-      expect(data.kind, MediaKind.serie);
+      expect(data.kind, MediaKind.series);
       expect(data.imageUrl, 'https://image.tmdb.org/t/p/w92/p.jpg');
       expect(data.caption, '2021 · 1 season');
       expect(data.seen, MediaSeenState.inProgress);

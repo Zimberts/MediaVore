@@ -9,7 +9,7 @@ import '../../helpers/pump_app.dart';
 
 void main() {
   /// App with a tab bar, the way `main.dart` wires the host.
-  Widget app({AppPalette palette = AppPalette.papier}) => testApp(
+  Widget app({AppPalette palette = AppPalette.paper}) => testApp(
     Scaffold(
       appBar: AppBar(title: const Text('Home')),
       body: const Center(child: Text('Home body')),

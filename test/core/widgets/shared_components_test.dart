@@ -23,9 +23,9 @@ void main() {
 
     group('TypeChip on $name', () {
       for (final (kind, en, fr) in [
-        (MediaKind.film, 'Movie', 'Film'),
-        (MediaKind.serie, 'Series', 'Série'),
-        (MediaKind.livre, 'Book', 'Livre'),
+        (MediaKind.movie, 'Movie', 'Film'),
+        (MediaKind.series, 'Series', 'Série'),
+        (MediaKind.book, 'Book', 'Livre'),
       ]) {
         testWidgets('should show an icon only and name ${kind.name}', (
           tester,
@@ -62,7 +62,7 @@ void main() {
         final handle = tester.ensureSemantics();
         await tester.pumpWidget(
           testApp(
-            const TypeChip(kind: MediaKind.serie, extra: '3'),
+            const TypeChip(kind: MediaKind.series, extra: '3'),
             palette: palette,
           ),
         );
@@ -259,7 +259,7 @@ void main() {
               width: 200,
               child: MediaProgressBar(
                 value: 3,
-                kind: MediaKind.serie,
+                kind: MediaKind.series,
                 semanticLabel: '12 / 12 episodes',
               ),
             ),

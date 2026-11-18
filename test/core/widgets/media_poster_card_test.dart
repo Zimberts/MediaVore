@@ -25,7 +25,7 @@ void main() {
     String title = 'Dune',
     bool withImage = true,
     String? caption = '2021 · 2h 35m',
-    MediaKind kind = MediaKind.film,
+    MediaKind kind = MediaKind.movie,
     MediaSeenState seen = MediaSeenState.none,
     double? rating = 7.8,
   }) => MediaPosterData(
@@ -39,7 +39,7 @@ void main() {
 
   Widget card(
     MediaPosterData data, {
-    AppPalette palette = AppPalette.papier,
+    AppPalette palette = AppPalette.paper,
     double width = 110,
     MediaPosterVariant variant = MediaPosterVariant.captionOnImage,
     bool compact = false,
@@ -244,7 +244,7 @@ void main() {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
         card(
-          data(kind: MediaKind.serie, seen: MediaSeenState.seen),
+          data(kind: MediaKind.series, seen: MediaSeenState.seen),
           onTap: () {},
           locale: const Locale('fr'),
         ),
@@ -276,7 +276,7 @@ void main() {
     testWidgets('should show a heart on a liked title', (tester) async {
       MediaPosterData liked() => const MediaPosterData(
         title: 'Dune',
-        kind: MediaKind.film,
+        kind: MediaKind.movie,
         caption: '2021',
         liked: true,
       );
@@ -363,7 +363,7 @@ void main() {
 
     testWidgets('should draw a book as a cover with a spine', (tester) async {
       await tester.pumpWidget(
-        card(data(kind: MediaKind.livre, caption: '1965 · 612 p.')),
+        card(data(kind: MediaKind.book, caption: '1965 · 612 p.')),
       );
 
       final clip = tester.widget<ClipRRect>(

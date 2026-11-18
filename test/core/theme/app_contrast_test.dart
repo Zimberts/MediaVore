@@ -92,9 +92,9 @@ void main() {
 
       test('should keep text at AA on media tints (poster without image)', () {
         final tints = {
-          'filmBg': palette.filmBg,
-          'serieBg': palette.serieBg,
-          'livreBg': palette.livreBg,
+          'movieBg': palette.movieBg,
+          'seriesBg': palette.seriesBg,
+          'bookBg': palette.bookBg,
         };
         tints.forEach((tintName, tint) {
           expectContrast(palette.text, tint, _aaText, 'text/$tintName');

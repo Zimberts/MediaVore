@@ -6,14 +6,14 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 
 /// One light and one dark palette: enough to exercise both brightnesses.
-const List<AppPalette> testPalettes = [AppPalette.papier, AppPalette.encre];
+const List<AppPalette> testPalettes = [AppPalette.paper, AppPalette.ink];
 
 /// App shell for widget tests: real theme (tokens) and localizations.
 ///
 /// [builder] is forwarded to `MaterialApp.builder`.
 Widget testApp(
   Widget child, {
-  AppPalette palette = AppPalette.papier,
+  AppPalette palette = AppPalette.paper,
   Locale locale = const Locale('en'),
   TransitionBuilder? builder,
   bool scaffold = true,

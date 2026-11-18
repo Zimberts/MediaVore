@@ -1382,13 +1382,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progressImportComplete => 'Import complete';
 
   @override
-  String get mediaKindFilm => 'Movie';
+  String get mediaKindMovie => 'Movie';
 
   @override
-  String get mediaKindSerie => 'Series';
+  String get mediaKindSeries => 'Series';
 
   @override
-  String get mediaKindLivre => 'Book';
+  String get mediaKindBook => 'Book';
 
   @override
   String get commonSeeAll => 'See all';
