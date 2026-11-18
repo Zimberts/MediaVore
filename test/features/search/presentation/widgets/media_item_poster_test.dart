@@ -31,7 +31,7 @@ void main() {
   );
 
   group('mediaItemCaption', () {
-    test('should join the year and the runtime of a film', () {
+    test('should join the year and the runtime of a movie', () {
       expect(mediaItemCaption(l10n, item(runtime: 155)), '2021 · 2h 35m');
     });
 
@@ -57,7 +57,7 @@ void main() {
       expect(mediaItemSeenState(item(), 0), MediaSeenState.none);
     });
 
-    test('should be seen for a film with a viewing', () {
+    test('should be seen for a movie with a viewing', () {
       expect(mediaItemSeenState(item(), 2), MediaSeenState.seen);
     });
 

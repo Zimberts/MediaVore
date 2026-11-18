@@ -5,7 +5,7 @@ import 'package:mediavore/core/widgets/media_kind.dart';
 
 /// Media type badge: an icon alone, tinted with the color of the type.
 ///
-/// The name of the type ("Film", "Série", "Livre") is never drawn but is
+/// The name of the type ("Movie", "Series", "Book") is never drawn but is
 /// exposed to screen readers. [extra] adds a short text next to the icon.
 class TypeChip extends StatelessWidget {
   const TypeChip({super.key, required this.kind, this.extra});

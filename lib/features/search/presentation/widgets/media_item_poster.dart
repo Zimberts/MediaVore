@@ -5,7 +5,7 @@ import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 
-/// Caption of a poster: "year · length" (runtime of a film, seasons of a
+/// Caption of a poster: "year · length" (runtime of a movie, seasons of a
 /// series), with whatever part is known.
 String mediaItemCaption(AppLocalizations l10n, MediaItem item) {
   final year = item.releaseDate.length >= 4
@@ -19,7 +19,7 @@ String mediaItemCaption(AppLocalizations l10n, MediaItem item) {
 }
 
 /// Seen state of [item] given how many of its viewings are logged: a series
-/// is seen once every episode is, a film as soon as it has one viewing.
+/// is seen once every episode is, a movie as soon as it has one viewing.
 MediaSeenState mediaItemSeenState(MediaItem item, int seenCount) {
   if (seenCount <= 0) return MediaSeenState.none;
   if (item.mediaType != MediaType.tv) return MediaSeenState.seen;

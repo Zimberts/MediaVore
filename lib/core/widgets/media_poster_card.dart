@@ -28,7 +28,7 @@ const MediaPosterVariant kDefaultPosterVariant =
 /// How much of a title has been watched or read.
 enum MediaSeenState { none, inProgress, seen }
 
-/// Minimal display model of a poster, shared by films, series and books.
+/// Minimal display model of a poster, shared by movies, series and books.
 @immutable
 class MediaPosterData {
   const MediaPosterData({
@@ -65,7 +65,7 @@ class MediaPosterData {
   bool get hasImage => image != null || imageUrl != null;
 }
 
-/// Poster of a film or a series, or cover of a book (drawn with a spine).
+/// Poster of a movie or a series, or cover of a book (drawn with a spine).
 ///
 /// Text never sits directly on the image: the caption is written over a dark
 /// veil, and the title is only drawn when the image is missing (a real poster
