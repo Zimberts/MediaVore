@@ -1569,5 +1569,58 @@
       }
     }
   },
-  "listsFillBySwiping": "Fill by swiping"
+  "listsFillBySwiping": "Fill by swiping",
+  "filtersTitle": "Filters",
+  "filtersSortBy": "Sort by",
+  "filtersSortRelevance": "Relevance",
+  "filtersSortRating": "Top rated",
+  "filtersSortRecent": "Most recent",
+  "filtersSortOldest": "Oldest",
+  "filtersPeriod": "Release year",
+  "filtersPeriodAll": "All",
+  "filtersPeriodBefore1990": "Before 1990",
+  "filtersPeriod1990s": "1990–1999",
+  "filtersPeriod2000s": "2000–2009",
+  "filtersPeriod2010s": "2010–2019",
+  "filtersPeriod2020plus": "2020 and later",
+  "filtersRatingTitle": "Minimum rating",
+  "filtersRatingSubtitle": "Movies and TV shows",
+  "filtersRatingAll": "All",
+  "filtersRating7Plus": "7+",
+  "filtersRating8Plus": "8+",
+  "filtersDurationTitle": "Duration",
+  "filtersDurationSubtitle": "Movies only",
+  "filtersDurationNotApplicable": "Not applicable to TV shows",
+  "filtersDurationAll": "All",
+  "filtersDurationUnder105": "Under 1h 45m",
+  "filtersDuration105To150": "1h 45m to 2h 30m",
+  "filtersDurationOver150": "Over 2h 30m",
+  "filtersHideSeen": "Hide what I've already seen or read",
+  "filtersClearAll": "Clear all",
+  "filtersShowResults": "Show results",
+  "filtersShowNResults": "Show {count} results",
+  "@filtersShowNResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filtersChipSort": "Sort: {sort}",
+  "@filtersChipSort": {
+    "placeholders": {
+      "sort": {
+        "type": "String"
+      }
+    }
+  },
+  "filtersChipRating": "Rating {rating}+",
+  "@filtersChipRating": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "filtersChipHideSeen": "Unseen"
 }

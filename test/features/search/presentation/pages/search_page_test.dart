@@ -4,7 +4,9 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/l10n/generated/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import '../../../../helpers/mocks.dart';
@@ -19,6 +21,7 @@ void main() {
     registerFallbackValue(Uri());
     registerFallbackValue(FakeMediaItem());
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(const SearchFilters());
     registerFallbackValue(
       const MediaItem(
         id: 0,
@@ -88,6 +91,7 @@ void main() {
         originalLanguage: any(named: 'originalLanguage'),
         type: any(named: 'type'),
         sortBy: any(named: 'sortBy'),
+        filters: any(named: 'filters'),
       ),
     ).thenAnswer((_) async => []);
 
@@ -105,7 +109,9 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: AppPalette.paper.toThemeData(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const SearchPage(),
       ),
     );
@@ -225,16 +231,14 @@ void main() {
       await tester.tap(find.byKey(const Key('discovery_filters')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Discovery Filters'), findsOneWidget);
+      expect(find.byType(SearchFilterSheet), findsOneWidget);
 
-      // Select TV Show type from dropdown
-      await tester.tap(find.text('Both'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('TV Shows').last);
+      // Select TV Show type from choice chips
+      await tester.tap(find.text('TV Shows').first);
       await tester.pumpAndSettle();
 
       // Apply
-      await tester.tap(find.text('Apply'));
+      await tester.tap(find.text('Show results'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
@@ -247,6 +251,7 @@ void main() {
           minRating: any(named: 'minRating'),
           originalLanguage: any(named: 'originalLanguage'),
           sortBy: any(named: 'sortBy'),
+          filters: any(named: 'filters'),
         ),
       ).called(1);
     });

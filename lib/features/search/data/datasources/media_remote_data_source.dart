@@ -7,6 +7,7 @@ import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 
 /// Handles data fetching from the TMDB API.
 @lazySingleton
@@ -158,9 +159,6 @@ class MediaRemoteDataSource {
     final path = (type == MediaType.tv) ? 'tv' : 'movie';
     return _guard('searching', () async {
       final params = <String, dynamic>{'query': query, 'page': page};
-      if (genreIds != null && genreIds.isNotEmpty) {
-        params['with_genres'] = genreIds.join(',');
-      }
       if (releaseYear != null) {
         if (type == MediaType.movie) {
           params['primary_release_year'] = releaseYear;
@@ -168,7 +166,6 @@ class MediaRemoteDataSource {
           params['first_air_date_year'] = releaseYear;
         }
       }
-      if (minRating != null) params['vote_average.gte'] = minRating;
 
       debugPrint('[Remote] searchMedia -> /search/$path params=$params');
       final response = await _tmdbGet(
@@ -469,6 +466,7 @@ class MediaRemoteDataSource {
   /// Backwards-compatible wrapper for discover with filter naming used elsewhere.
   Future<List<MediaItem>> discoverMedia({
     int page = 1,
+    SearchFilters? filters,
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
@@ -477,6 +475,32 @@ class MediaRemoteDataSource {
     String sortBy = 'popularity.desc',
   }) async {
     final mediaType = type == MediaType.tv ? 'tv' : 'movie';
+    if (filters != null) {
+      final params = filters.toDiscoverParams(
+        type,
+        page: page,
+        originalLanguage: originalLanguage,
+      );
+      return _guard('discovering', () async {
+        final response = await _tmdbGet(
+          'https://api.themoviedb.org/3/discover/$mediaType',
+          queryParameters: params,
+        );
+        final List results = response.data['results'];
+        return results
+            .map((m) {
+              final data = Map<String, dynamic>.from(m);
+              if (data['media_type'] == null) data['media_type'] = mediaType;
+              return MediaItem.fromJson(data);
+            })
+            .where(
+              (m) =>
+                  m.mediaType == MediaType.movie || m.mediaType == MediaType.tv,
+            )
+            .toList();
+      });
+    }
+
     return await discover(
       mediaType: mediaType,
       sortBy: sortBy,

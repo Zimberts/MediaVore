@@ -24,6 +24,7 @@ void main() {
       ),
     );
     registerFallbackValue(ImportMode.append);
+    registerFallbackValue(const SearchFilters());
     registerFallbackValue(
       const MediaItem(id: 0, title: '', overview: '', releaseDate: ''),
     );
@@ -99,11 +100,13 @@ void main() {
         when(
           () => mockRepository.discoverMedia(
             page: any(named: 'page'),
+            filters: any(named: 'filters'),
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
             originalLanguage: any(named: 'originalLanguage'),
             type: any(named: 'type'),
+            sortBy: any(named: 'sortBy'),
           ),
         ).thenAnswer((_) async => []);
 
@@ -113,6 +116,7 @@ void main() {
         verify(
           () => mockRepository.discoverMedia(
             page: 1,
+            filters: any(named: 'filters'),
             minRating: 7,
             type: MediaType.movie,
           ),
@@ -120,6 +124,7 @@ void main() {
         verify(
           () => mockRepository.discoverMedia(
             page: 1,
+            filters: any(named: 'filters'),
             minRating: 7,
             type: MediaType.tv,
           ),

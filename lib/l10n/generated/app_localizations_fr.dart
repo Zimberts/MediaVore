@@ -2321,4 +2321,106 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get listsFillBySwiping => 'Remplir en swipant';
+
+  @override
+  String get filtersTitle => 'Filtres';
+
+  @override
+  String get filtersSortBy => 'Trier par';
+
+  @override
+  String get filtersSortRelevance => 'Pertinence';
+
+  @override
+  String get filtersSortRating => 'Mieux notés';
+
+  @override
+  String get filtersSortRecent => 'Plus récents';
+
+  @override
+  String get filtersSortOldest => 'Plus anciens';
+
+  @override
+  String get filtersPeriod => 'Année de sortie';
+
+  @override
+  String get filtersPeriodAll => 'Toutes';
+
+  @override
+  String get filtersPeriodBefore1990 => 'Avant 1990';
+
+  @override
+  String get filtersPeriod1990s => '1990–1999';
+
+  @override
+  String get filtersPeriod2000s => '2000–2009';
+
+  @override
+  String get filtersPeriod2010s => '2010–2019';
+
+  @override
+  String get filtersPeriod2020plus => '2020 et après';
+
+  @override
+  String get filtersRatingTitle => 'Note minimale';
+
+  @override
+  String get filtersRatingSubtitle => 'Films et séries';
+
+  @override
+  String get filtersRatingAll => 'Toutes';
+
+  @override
+  String get filtersRating7Plus => '7+';
+
+  @override
+  String get filtersRating8Plus => '8+';
+
+  @override
+  String get filtersDurationTitle => 'Durée';
+
+  @override
+  String get filtersDurationSubtitle => 'Films uniquement';
+
+  @override
+  String get filtersDurationNotApplicable => 'Non applicable aux séries';
+
+  @override
+  String get filtersDurationAll => 'Toutes';
+
+  @override
+  String get filtersDurationUnder105 => 'Moins de 1 h 45';
+
+  @override
+  String get filtersDuration105To150 => '1 h 45 à 2 h 30';
+
+  @override
+  String get filtersDurationOver150 => 'Plus de 2 h 30';
+
+  @override
+  String get filtersHideSeen => 'Masquer ce que j\'ai déjà vu ou lu';
+
+  @override
+  String get filtersClearAll => 'Tout effacer';
+
+  @override
+  String get filtersShowResults => 'Afficher les résultats';
+
+  @override
+  String filtersShowNResults(int count) {
+    return 'Afficher $count résultats';
+  }
+
+  @override
+  String filtersChipSort(String sort) {
+    return 'Tri : $sort';
+  }
+
+  @override
+  String filtersChipRating(String rating) {
+    return 'Note $rating+';
+  }
+
+  @override
+  String get filtersChipHideSeen => 'Non vus';
 }

@@ -3,6 +3,7 @@ import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 
 enum ImportMode { append, replace, merge }
 
@@ -27,6 +28,7 @@ abstract class MediaRepository {
   /// Throws an [AppException] on failure, like [searchMedia].
   Future<List<MediaItem>> discoverMedia({
     int page = 1,
+    SearchFilters? filters,
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,

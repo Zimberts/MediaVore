@@ -11,9 +11,10 @@ import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/search/presentation/providers/search_error.dart';
-import 'package:mediavore/features/search/presentation/providers/search_relevance.dart';
 
+export 'package:mediavore/features/search/domain/entities/search_filters.dart';
 export 'package:mediavore/features/search/presentation/providers/search_error.dart';
 
 class SearchProvider with ChangeNotifier {
@@ -54,11 +55,8 @@ class SearchProvider with ChangeNotifier {
   bool _isImporting = false;
 
   // Filter states
-  List<int>? _genreIds;
-  int? _releaseYear;
-  double? _minRating;
+  SearchFilters _filters = const SearchFilters();
   String? _originalLanguage;
-  MediaType? _filterType;
   bool _isDiscoverMode = false;
 
   List<SeenItem> _seenItems = [];
@@ -125,29 +123,23 @@ class SearchProvider with ChangeNotifier {
   bool get isImporting => _isImporting;
 
   // Filter getters
-  List<int>? get genreIds => _genreIds;
-  int? get releaseYear => _releaseYear;
-  double? get minRating => _minRating;
+  SearchFilters get filters => _filters;
+  List<int>? get genreIds =>
+      _filters.genreIds.isEmpty ? null : _filters.genreIds.toList();
+  int? get releaseYear => _filters.exactYear;
+  double? get minRating => _filters.minRating;
   String? get originalLanguage => _originalLanguage;
-  MediaType? get filterType => _filterType;
+  MediaType? get filterType => _filters.type;
   bool get isDiscoverMode => _isDiscoverMode;
   String get currentQuery => _currentQuery;
 
   /// Whether a filter of Discover (type, genres, year, rating, language) is
   /// set.
   bool get hasActiveFilters =>
-      _filterType != null ||
-      (_genreIds?.isNotEmpty ?? false) ||
-      _releaseYear != null ||
-      _minRating != null ||
-      _originalLanguage != null;
+      _filters.hasActiveFilters || _originalLanguage != null;
 
   /// Whether the list shows the trends of the week: no query and no filter.
   bool get isTrending => _currentQuery.isEmpty && !hasActiveFilters;
-
-  void _sortByRelevance(List<MediaItem> items) =>
-      sortMediaByRelevance(items, _currentQuery);
-
   Future<void> _init() async {
     await loadListNames();
     await _loadAllListEntries();
@@ -548,27 +540,47 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Maximum number of TMDB pages to fetch in a single search/filter batch.
+  static const int maxSearchPagesBatch = 5;
+
+  /// Target number of filtered items per batch to fill the screen.
+  static const int targetItemsPerBatch = 20;
+
   void setFilters({
+    SearchFilters? filters,
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
     String? originalLanguage,
     MediaType? type,
+    SearchReleasePeriod? period,
+    SearchSort? sort,
+    MovieDuration? duration,
+    bool? hideSeen,
   }) {
-    _genreIds = genreIds;
-    _releaseYear = releaseYear;
-    _minRating = minRating;
-    _originalLanguage = originalLanguage;
-    _filterType = type;
+    if (filters != null) {
+      _filters = filters;
+    } else {
+      _filters = _filters.copyWith(
+        type: type != null ? () => type : null,
+        genreIds: genreIds?.toSet(),
+        exactYear: releaseYear != null ? () => releaseYear : null,
+        minRating: minRating != null ? () => minRating : null,
+        period: period,
+        sort: sort,
+        duration: duration,
+        hideSeen: hideSeen,
+      );
+    }
+    if (originalLanguage != null) {
+      _originalLanguage = originalLanguage;
+    }
     notifyListeners();
   }
 
   void clearFilters() {
-    _genreIds = null;
-    _releaseYear = null;
-    _minRating = null;
+    _filters = const SearchFilters();
     _originalLanguage = null;
-    _filterType = null;
     notifyListeners();
   }
 
@@ -608,72 +620,153 @@ class SearchProvider with ChangeNotifier {
       if (isTrending) {
         _searchResults = await repository.getTrendingMedia(page: _currentPage);
       } else if (_isDiscoverMode && _currentQuery.isEmpty) {
-        if (_filterType == null) {
-          // Both types mode
-          final movies = await repository.discoverMedia(
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.movie,
-          );
-          final tv = await repository.discoverMedia(
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.tv,
-          );
-          _searchResults = [...movies, ...tv];
-          _sortByRelevance(_searchResults);
+        final List<MediaItem> rawResults;
+        if (_filters.type == null) {
+          final movies = _filters.isEmpty
+              ? await repository.discoverMedia(
+                  page: _currentPage,
+                  genreIds: null,
+                  releaseYear: null,
+                  minRating: null,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.movie,
+                )
+              : await repository.discoverMedia(
+                  page: _currentPage,
+                  filters: _filters,
+                  genreIds: _filters.genreIds.isEmpty
+                      ? null
+                      : _filters.genreIds.toList(),
+                  releaseYear: _filters.exactYear,
+                  minRating: _filters.minRating,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.movie,
+                );
+          final tv = _filters.isEmpty
+              ? await repository.discoverMedia(
+                  page: _currentPage,
+                  genreIds: null,
+                  releaseYear: null,
+                  minRating: null,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.tv,
+                )
+              : await repository.discoverMedia(
+                  page: _currentPage,
+                  filters: _filters,
+                  genreIds: _filters.genreIds.isEmpty
+                      ? null
+                      : _filters.genreIds.toList(),
+                  releaseYear: _filters.exactYear,
+                  minRating: _filters.minRating,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.tv,
+                );
+          rawResults = [...movies, ...tv];
         } else {
-          _searchResults = await repository.discoverMedia(
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: _filterType!,
-          );
+          rawResults = _filters.isEmpty
+              ? await repository.discoverMedia(
+                  page: _currentPage,
+                  genreIds: null,
+                  releaseYear: null,
+                  minRating: null,
+                  originalLanguage: _originalLanguage,
+                  type: _filters.type!,
+                )
+              : await repository.discoverMedia(
+                  page: _currentPage,
+                  filters: _filters,
+                  genreIds: _filters.genreIds.isEmpty
+                      ? null
+                      : _filters.genreIds.toList(),
+                  releaseYear: _filters.exactYear,
+                  minRating: _filters.minRating,
+                  originalLanguage: _originalLanguage,
+                  type: _filters.type!,
+                );
         }
+
+        var results = _filters.hideSeen
+            ? rawResults.where((item) => getSeenCount(item) == 0).toList()
+            : rawResults;
+
+        sortMediaItems(results, _filters.sort, query: _currentQuery);
+        _searchResults = results;
+        if (rawResults.isEmpty) _hasMore = false;
       } else {
-        if (_filterType == null) {
-          final movies = await repository.searchMedia(
-            _currentQuery,
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.movie,
-          );
-          final tv = await repository.searchMedia(
-            _currentQuery,
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.tv,
-          );
-          _searchResults = [...movies, ...tv];
-          _sortByRelevance(_searchResults);
-        } else {
-          _searchResults = await repository.searchMedia(
-            _currentQuery,
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: _filterType,
-          );
-          if (_currentQuery.isNotEmpty) {
-            _sortByRelevance(_searchResults);
+        final collected = <MediaItem>[];
+        var pagesFetched = 0;
+
+        while (pagesFetched < maxSearchPagesBatch && _hasMore) {
+          final pageToFetch = _currentPage;
+          final List<MediaItem> pageResults;
+
+          if (_filters.type == null) {
+            final movies = await repository.searchMedia(
+              _currentQuery,
+              page: pageToFetch,
+              genreIds: _filters.genreIds.isEmpty
+                  ? null
+                  : _filters.genreIds.toList(),
+              releaseYear: _filters.exactYear,
+              minRating: _filters.minRating,
+              originalLanguage: _originalLanguage,
+              type: MediaType.movie,
+            );
+            final tv = await repository.searchMedia(
+              _currentQuery,
+              page: pageToFetch,
+              genreIds: _filters.genreIds.isEmpty
+                  ? null
+                  : _filters.genreIds.toList(),
+              releaseYear: _filters.exactYear,
+              minRating: _filters.minRating,
+              originalLanguage: _originalLanguage,
+              type: MediaType.tv,
+            );
+            pageResults = [...movies, ...tv];
+            if (movies.isEmpty && tv.isEmpty) {
+              _hasMore = false;
+            }
+          } else {
+            pageResults = await repository.searchMedia(
+              _currentQuery,
+              page: pageToFetch,
+              genreIds: _filters.genreIds.isEmpty
+                  ? null
+                  : _filters.genreIds.toList(),
+              releaseYear: _filters.exactYear,
+              minRating: _filters.minRating,
+              originalLanguage: _originalLanguage,
+              type: _filters.type,
+            );
+            if (pageResults.isEmpty) {
+              _hasMore = false;
+            }
           }
+
+          pagesFetched++;
+
+          final filtered = pageResults
+              .where(
+                (item) => matchesSearchFilters(
+                  item,
+                  _filters,
+                  isSeen: (item) => getSeenCount(item) > 0,
+                ),
+              )
+              .toList();
+
+          collected.addAll(filtered);
+
+          if (!_hasMore) break;
+          if (!_filters.hasClientFilters) break;
+          if (collected.length >= targetItemsPerBatch) break;
+          _currentPage++;
         }
+
+        sortMediaItems(collected, _filters.sort, query: _currentQuery);
+        _searchResults = collected;
       }
       _isOffline = false;
     } catch (e) {
@@ -695,84 +788,168 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _currentPage++;
-      List<MediaItem> results;
       if (isTrending) {
-        results = await repository.getTrendingMedia(page: _currentPage);
+        _currentPage++;
+        final results = await repository.getTrendingMedia(page: _currentPage);
+        if (results.isEmpty) {
+          _hasMore = false;
+        } else {
+          _searchResults.addAll(results);
+        }
       } else if (_isDiscoverMode && _currentQuery.isEmpty) {
-        if (_filterType == null) {
-          final movies = await repository.discoverMedia(
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.movie,
-          );
-          final tv = await repository.discoverMedia(
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.tv,
-          );
-          results = [...movies, ...tv]
-            ..sort((a, b) => b.voteAverage?.compareTo(a.voteAverage ?? 0) ?? 0);
+        _currentPage++;
+        final List<MediaItem> rawResults;
+        if (_filters.type == null) {
+          final movies = _filters.isEmpty
+              ? await repository.discoverMedia(
+                  page: _currentPage,
+                  genreIds: null,
+                  releaseYear: null,
+                  minRating: null,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.movie,
+                )
+              : await repository.discoverMedia(
+                  page: _currentPage,
+                  filters: _filters,
+                  genreIds: _filters.genreIds.isEmpty
+                      ? null
+                      : _filters.genreIds.toList(),
+                  releaseYear: _filters.exactYear,
+                  minRating: _filters.minRating,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.movie,
+                );
+          final tv = _filters.isEmpty
+              ? await repository.discoverMedia(
+                  page: _currentPage,
+                  genreIds: null,
+                  releaseYear: null,
+                  minRating: null,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.tv,
+                )
+              : await repository.discoverMedia(
+                  page: _currentPage,
+                  filters: _filters,
+                  genreIds: _filters.genreIds.isEmpty
+                      ? null
+                      : _filters.genreIds.toList(),
+                  releaseYear: _filters.exactYear,
+                  minRating: _filters.minRating,
+                  originalLanguage: _originalLanguage,
+                  type: MediaType.tv,
+                );
+          rawResults = [...movies, ...tv];
         } else {
-          results = await repository.discoverMedia(
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: _filterType!,
-          );
+          rawResults = _filters.isEmpty
+              ? await repository.discoverMedia(
+                  page: _currentPage,
+                  genreIds: null,
+                  releaseYear: null,
+                  minRating: null,
+                  originalLanguage: _originalLanguage,
+                  type: _filters.type!,
+                )
+              : await repository.discoverMedia(
+                  page: _currentPage,
+                  filters: _filters,
+                  genreIds: _filters.genreIds.isEmpty
+                      ? null
+                      : _filters.genreIds.toList(),
+                  releaseYear: _filters.exactYear,
+                  minRating: _filters.minRating,
+                  originalLanguage: _originalLanguage,
+                  type: _filters.type!,
+                );
         }
-      } else {
-        if (_filterType == null) {
-          final movies = await repository.searchMedia(
-            _currentQuery,
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.movie,
-          );
-          final tv = await repository.searchMedia(
-            _currentQuery,
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: MediaType.tv,
-          );
-          results = [...movies, ...tv];
-          if (_currentQuery.isNotEmpty) {
-            _sortByRelevance(results);
-          }
-        } else {
-          results = await repository.searchMedia(
-            _currentQuery,
-            page: _currentPage,
-            genreIds: _genreIds,
-            releaseYear: _releaseYear,
-            minRating: _minRating,
-            originalLanguage: _originalLanguage,
-            type: _filterType,
-          );
-          if (_currentQuery.isNotEmpty) {
-            _sortByRelevance(results);
-          }
-        }
-      }
 
-      if (results.isEmpty) {
-        _hasMore = false;
+        final filtered = _filters.hideSeen
+            ? rawResults.where((item) => getSeenCount(item) == 0).toList()
+            : rawResults;
+
+        sortMediaItems(filtered, _filters.sort, query: _currentQuery);
+
+        if (rawResults.isEmpty) {
+          _hasMore = false;
+        } else {
+          _searchResults.addAll(filtered);
+        }
       } else {
-        _searchResults.addAll(results);
+        _currentPage++;
+        final collected = <MediaItem>[];
+        var pagesFetched = 0;
+
+        while (pagesFetched < maxSearchPagesBatch && _hasMore) {
+          final pageToFetch = _currentPage;
+          final List<MediaItem> pageResults;
+
+          if (_filters.type == null) {
+            final movies = await repository.searchMedia(
+              _currentQuery,
+              page: pageToFetch,
+              genreIds: _filters.genreIds.isEmpty
+                  ? null
+                  : _filters.genreIds.toList(),
+              releaseYear: _filters.exactYear,
+              minRating: _filters.minRating,
+              originalLanguage: _originalLanguage,
+              type: MediaType.movie,
+            );
+            final tv = await repository.searchMedia(
+              _currentQuery,
+              page: pageToFetch,
+              genreIds: _filters.genreIds.isEmpty
+                  ? null
+                  : _filters.genreIds.toList(),
+              releaseYear: _filters.exactYear,
+              minRating: _filters.minRating,
+              originalLanguage: _originalLanguage,
+              type: MediaType.tv,
+            );
+            pageResults = [...movies, ...tv];
+            if (movies.isEmpty && tv.isEmpty) {
+              _hasMore = false;
+            }
+          } else {
+            pageResults = await repository.searchMedia(
+              _currentQuery,
+              page: pageToFetch,
+              genreIds: _filters.genreIds.isEmpty
+                  ? null
+                  : _filters.genreIds.toList(),
+              releaseYear: _filters.exactYear,
+              minRating: _filters.minRating,
+              originalLanguage: _originalLanguage,
+              type: _filters.type,
+            );
+            if (pageResults.isEmpty) {
+              _hasMore = false;
+            }
+          }
+
+          pagesFetched++;
+
+          final filtered = pageResults
+              .where(
+                (item) => matchesSearchFilters(
+                  item,
+                  _filters,
+                  isSeen: (item) => getSeenCount(item) > 0,
+                ),
+              )
+              .toList();
+
+          collected.addAll(filtered);
+
+          if (!_hasMore) break;
+          if (!_filters.hasClientFilters) break;
+          if (collected.length >= targetItemsPerBatch) break;
+          _currentPage++;
+        }
+
+        sortMediaItems(collected, _filters.sort, query: _currentQuery);
+        _searchResults.addAll(collected);
       }
       _isOffline = false;
     } catch (e) {

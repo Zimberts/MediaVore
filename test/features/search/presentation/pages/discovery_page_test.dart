@@ -10,6 +10,7 @@ import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
 import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
@@ -37,6 +38,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(const SearchFilters());
   });
 
   void stubTrending(List<MediaItem> Function(int page) pageOf) {
@@ -77,6 +79,7 @@ void main() {
     when(
       () => repository.discoverMedia(
         page: any(named: 'page'),
+        filters: any(named: 'filters'),
         genreIds: any(named: 'genreIds'),
         releaseYear: any(named: 'releaseYear'),
         minRating: any(named: 'minRating'),
@@ -334,6 +337,7 @@ void main() {
         () => repository.discoverMedia(
           page: 1,
           type: MediaType.tv,
+          filters: any(named: 'filters'),
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),
           minRating: any(named: 'minRating'),
@@ -372,7 +376,7 @@ void main() {
       await tester.tap(find.byKey(const Key('discovery_filters')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Discovery Filters'), findsOneWidget);
+      expect(find.byType(SearchFilterSheet), findsOneWidget);
     });
 
     testWidgets('should load the next page when scrolling to the end', (
@@ -642,5 +646,53 @@ void main() {
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       handle.dispose();
     });
+  });
+
+  testWidgets('DiscoveryPage displays active filter badge and removable chips', (
+    WidgetTester tester,
+  ) async {
+    when(
+      () => repository.discoverMedia(
+        page: any(named: 'page'),
+        filters: any(named: 'filters'),
+        genreIds: any(named: 'genreIds'),
+        releaseYear: any(named: 'releaseYear'),
+        minRating: any(named: 'minRating'),
+        originalLanguage: any(named: 'originalLanguage'),
+        type: any(named: 'type'),
+        sortBy: any(named: 'sortBy'),
+      ),
+    ).thenAnswer((_) async => []);
+
+    searchProvider.setFilters(
+      filters: const SearchFilters(type: MediaType.movie, minRating: 7.0),
+    );
+
+    await pumpPage(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    // Filter badge should show count '2'
+    expect(find.text('2'), findsOneWidget);
+
+    // Active filter chips should be visible (Movies, Rating 7+, and Clear all)
+    expect(find.text('Movies'), findsOneWidget);
+    expect(find.text('Rating 7+'), findsOneWidget);
+    expect(find.text('Clear all'), findsOneWidget);
+
+    // Remove the Movies filter by deleting its chip
+    final moviesChip = tester.widget<InputChip>(
+      find.widgetWithText(InputChip, 'Movies'),
+    );
+    moviesChip.onDeleted?.call();
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    // Type filter should now be null, badge should show '1'
+    expect(searchProvider.filters.type, isNull);
+    expect(find.text('1'), findsOneWidget);
   });
 }

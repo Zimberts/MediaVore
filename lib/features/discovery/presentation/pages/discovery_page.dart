@@ -4,7 +4,6 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:provider/provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
@@ -19,6 +18,8 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
+import 'package:mediavore/features/search/presentation/widgets/active_filter_chips.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
 
 /// Discover tab: Explore (permanent search, type chips, trends of the week or
 /// results in a 3-column grid) or Swipe.
@@ -96,186 +97,13 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
   void _openFilterDialog() async {
     final provider = context.read<SearchProvider>();
-
-    // Local state for the dialog
-    MediaType? selectedType = provider.filterType; // null means "Both"
-    List<int> selectedGenres = List.from(provider.genreIds ?? []);
-    int? selectedYear = provider.releaseYear;
-    double selectedRating = provider.minRating ?? 0.0;
-
-    await showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          Map<int, String> genres;
-          if (selectedType == MediaType.movie) {
-            genres = GenreUtils.movieGenres;
-          } else if (selectedType == MediaType.tv) {
-            genres = GenreUtils.tvGenres;
-          } else {
-            genres = GenreUtils.getAllGenres();
-          }
-
-          return AlertDialog(
-            title: Text(context.l10n.discoveryFiltersTitle),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.seenMediaType,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    DropdownButton<MediaType?>(
-                      value: selectedType,
-                      isExpanded: true,
-                      items: [
-                        DropdownMenuItem(
-                          value: null,
-                          child: Text(context.l10n.discoveryBoth),
-                        ),
-                        DropdownMenuItem(
-                          value: MediaType.movie,
-                          child: Text(context.l10n.commonMovies),
-                        ),
-                        DropdownMenuItem(
-                          value: MediaType.tv,
-                          child: Text(context.l10n.commonTvShows),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        setDialogState(() {
-                          selectedType = v;
-                          selectedGenres.clear();
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      context.l10n.discoveryReleaseYear,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 50,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: 51,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: ChoiceChip(
-                                label: Text(context.l10n.discoveryAnyYear),
-                                selected: selectedYear == null,
-                                onSelected: (selected) {
-                                  if (selected) {
-                                    setDialogState(() => selectedYear = null);
-                                  }
-                                },
-                              ),
-                            );
-                          }
-                          final year = DateTime.now().year - (index - 1);
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: Text(year.toString()),
-                              selected: selectedYear == year,
-                              onSelected: (selected) {
-                                setDialogState(
-                                  () => selectedYear = selected ? year : null,
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const Divider(),
-                    Text(
-                      context.l10n.discoveryMinRating(
-                        selectedRating.toStringAsFixed(1),
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Slider(
-                      value: selectedRating,
-                      min: 0,
-                      max: 9,
-                      divisions: 18,
-                      label: selectedRating.toStringAsFixed(1),
-                      onChanged: (v) =>
-                          setDialogState(() => selectedRating = v),
-                    ),
-                    const Divider(),
-                    Text(
-                      context.l10n.discoveryGenres,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: genres.entries.map((entry) {
-                        final isSelected = selectedGenres.contains(entry.key);
-                        return FilterChip(
-                          label: Text(
-                            GenreUtils.localizedName(context.l10n, entry.key),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setDialogState(() {
-                              if (selected) {
-                                selectedGenres.add(entry.key);
-                              } else {
-                                selectedGenres.remove(entry.key);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  setDialogState(() {
-                    selectedType = null;
-                    selectedGenres.clear();
-                    selectedYear = null;
-                    selectedRating = 0.0;
-                  });
-                },
-                child: Text(context.l10n.discoveryReset),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(context.l10n.commonCancel),
-              ),
-              TextButton(
-                onPressed: () {
-                  provider.setFilters(
-                    type: selectedType,
-                    genreIds: selectedGenres.isEmpty ? null : selectedGenres,
-                    releaseYear: selectedYear,
-                    minRating: selectedRating > 0 ? selectedRating : null,
-                  );
-                  _refreshDiscovery();
-                  Navigator.pop(ctx);
-                },
-                child: Text(context.l10n.discoveryApply),
-              ),
-            ],
-          );
-        },
-      ),
+    await SearchFilterSheet.show(
+      context,
+      initialFilters: provider.filters,
+      onApply: (newFilters) {
+        provider.setFilters(filters: newFilters);
+        _refreshDiscovery();
+      },
     );
   }
 
@@ -283,11 +111,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     final provider = context.read<SearchProvider>();
     if (provider.filterType == type) return;
     provider.setFilters(
-      type: type,
-      genreIds: provider.genreIds,
-      releaseYear: provider.releaseYear,
-      minRating: provider.minRating,
-      originalLanguage: provider.originalLanguage,
+      filters: provider.filters.copyWith(type: () => type),
     );
     _refreshDiscovery();
   }
@@ -414,22 +238,31 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           ),
         ),
         const SizedBox(width: 8),
-        IconButton.outlined(
-          key: const Key('discovery_filters'),
-          constraints: const BoxConstraints(
-            minWidth: kMinTapTarget,
-            minHeight: kMinTapTarget,
-          ),
-          style: IconButton.styleFrom(
-            backgroundColor: colors.surface,
-            side: BorderSide(color: colors.border),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-          icon: const Icon(Icons.tune, size: 20),
-          tooltip: l10n.discoveryFiltersTitle,
-          onPressed: _openFilterDialog,
+        Consumer<SearchProvider>(
+          builder: (context, provider, _) {
+            final count = provider.filters.activeCount;
+            return IconButton.outlined(
+              key: const Key('discovery_filters'),
+              constraints: const BoxConstraints(
+                minWidth: kMinTapTarget,
+                minHeight: kMinTapTarget,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: colors.surface,
+                side: BorderSide(color: colors.border),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: Badge(
+                isLabelVisible: count > 0,
+                label: Text('$count'),
+                child: const Icon(Icons.tune, size: 20),
+              ),
+              tooltip: l10n.discoveryFiltersTitle,
+              onPressed: _openFilterDialog,
+            );
+          },
         ),
       ],
     );
@@ -665,6 +498,21 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                     _buildSearchRow(l10n),
                     const SizedBox(height: 4),
                     _buildTypeChips(l10n, provider.filterType),
+                    if (provider.filters.hasActiveFilters) ...[
+                      const SizedBox(height: 8),
+                      ActiveFilterChips(
+                        filters: provider.filters,
+                        onFilterChanged: (newFilters) {
+                          provider.setFilters(filters: newFilters);
+                          _refreshDiscovery();
+                        },
+                        onClearAll: () {
+                          provider.clearFilters();
+                          _controller.clear();
+                          _refreshDiscovery();
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ),

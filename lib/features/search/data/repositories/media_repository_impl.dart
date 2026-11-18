@@ -21,6 +21,7 @@ import 'package:mediavore/features/search/data/services/notification_refresh_ser
 import 'package:mediavore/features/search/data/services/quick_add_service.dart';
 import 'package:mediavore/features/search/data/services/repository_lifecycle.dart';
 import 'package:mediavore/features/search/data/services/seen_service.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 /// Implementation of the [MediaRepository] that uses a remote and a local data source.
@@ -168,6 +169,7 @@ class MediaRepositoryImpl implements MediaRepository {
   @override
   Future<List<MediaItem>> discoverMedia({
     int page = 1,
+    SearchFilters? filters,
     List<int>? genreIds,
     int? releaseYear,
     double? minRating,
@@ -178,6 +180,7 @@ class MediaRepositoryImpl implements MediaRepository {
     await _ensureInitialized();
     final results = await remoteDataSource.discoverMedia(
       page: page,
+      filters: filters,
       genreIds: genreIds,
       releaseYear: releaseYear,
       minRating: minRating,

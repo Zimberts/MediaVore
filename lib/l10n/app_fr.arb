@@ -612,5 +612,58 @@
   "listsDeselectAll": "Aucun",
   "listsRemove": "Retirer",
   "listsRemovedNotification": "{count, plural, =1{1 élément retiré} other{{count} éléments retirés}}",
-  "listsFillBySwiping": "Remplir en swipant"
+  "listsFillBySwiping": "Remplir en swipant",
+  "filtersTitle": "Filtres",
+  "filtersSortBy": "Trier par",
+  "filtersSortRelevance": "Pertinence",
+  "filtersSortRating": "Mieux notés",
+  "filtersSortRecent": "Plus récents",
+  "filtersSortOldest": "Plus anciens",
+  "filtersPeriod": "Année de sortie",
+  "filtersPeriodAll": "Toutes",
+  "filtersPeriodBefore1990": "Avant 1990",
+  "filtersPeriod1990s": "1990–1999",
+  "filtersPeriod2000s": "2000–2009",
+  "filtersPeriod2010s": "2010–2019",
+  "filtersPeriod2020plus": "2020 et après",
+  "filtersRatingTitle": "Note minimale",
+  "filtersRatingSubtitle": "Films et séries",
+  "filtersRatingAll": "Toutes",
+  "filtersRating7Plus": "7+",
+  "filtersRating8Plus": "8+",
+  "filtersDurationTitle": "Durée",
+  "filtersDurationSubtitle": "Films uniquement",
+  "filtersDurationNotApplicable": "Non applicable aux séries",
+  "filtersDurationAll": "Toutes",
+  "filtersDurationUnder105": "Moins de 1 h 45",
+  "filtersDuration105To150": "1 h 45 à 2 h 30",
+  "filtersDurationOver150": "Plus de 2 h 30",
+  "filtersHideSeen": "Masquer ce que j'ai déjà vu ou lu",
+  "filtersClearAll": "Tout effacer",
+  "filtersShowResults": "Afficher les résultats",
+  "filtersShowNResults": "Afficher {count} résultats",
+  "@filtersShowNResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filtersChipSort": "Tri : {sort}",
+  "@filtersChipSort": {
+    "placeholders": {
+      "sort": {
+        "type": "String"
+      }
+    }
+  },
+  "filtersChipRating": "Note {rating}+",
+  "@filtersChipRating": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "filtersChipHideSeen": "Non vus"
 }
