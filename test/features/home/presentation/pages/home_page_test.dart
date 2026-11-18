@@ -17,7 +17,6 @@ import 'package:mediavore/features/home/presentation/widgets/connect_tmdb_card.d
 import 'package:mediavore/features/home/presentation/widgets/in_progress_card.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_row.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_thumbnail.dart';
-import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
@@ -478,21 +477,6 @@ void main() {
         expect(session.inProgressPausedOnly, isFalse);
       },
     );
-
-    testWidgets('should open the releases from the "Upcoming" slot', (
-      tester,
-    ) async {
-      await pumpHome(tester);
-
-      expect(find.text('Upcoming'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('home_upcoming_releases')));
-      await tester.pumpAndSettle();
-
-      final page = tester.widget<NotificationCenterPage>(
-        find.byType(NotificationCenterPage),
-      );
-      expect(page.initialTab, NotificationCenterTab.releases);
-    });
   });
 
   group('HomePage mark as seen', () {

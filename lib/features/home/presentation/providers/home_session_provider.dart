@@ -8,6 +8,7 @@ class HomeSessionProvider extends ChangeNotifier {
   MediaKind? _inProgressKind;
   InProgressSort _inProgressSort = InProgressSort.recent;
   bool _inProgressPausedOnly = false;
+  MediaKind? _upcomingKind;
 
   /// Kind shown on "In progress"; `null` = all kinds.
   MediaKind? get inProgressKind => _inProgressKind;
@@ -32,6 +33,15 @@ class HomeSessionProvider extends ChangeNotifier {
   void setInProgressPausedOnly(bool pausedOnly) {
     if (_inProgressPausedOnly == pausedOnly) return;
     _inProgressPausedOnly = pausedOnly;
+    notifyListeners();
+  }
+
+  /// Kind shown on "Upcoming"; `null` = all kinds.
+  MediaKind? get upcomingKind => _upcomingKind;
+
+  void setUpcomingKind(MediaKind? kind) {
+    if (_upcomingKind == kind) return;
+    _upcomingKind = kind;
     notifyListeners();
   }
 }

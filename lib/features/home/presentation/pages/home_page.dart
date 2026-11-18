@@ -13,12 +13,15 @@ import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/home/presentation/home_formatters.dart';
 import 'package:mediavore/features/home/presentation/in_progress_actions.dart';
 import 'package:mediavore/features/home/presentation/pages/in_progress_page.dart';
+import 'package:mediavore/features/home/presentation/pages/upcoming_page.dart';
+import 'package:mediavore/features/home/presentation/widgets/upcoming_rows_card.dart';
+import 'package:mediavore/core/utils/notification_center_filter.dart';
+import 'package:mediavore/core/utils/release_groups.dart';
 import 'package:mediavore/features/home/presentation/widgets/connect_tmdb_card.dart';
 import 'package:mediavore/features/home/presentation/widgets/home_link_row.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_card.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_thumbnail.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
@@ -47,6 +50,9 @@ class HomePage extends StatefulWidget {
 
   /// Thumbnails of "Also in progress" before the "+n" tile.
   static const int alsoInProgressCount = 10;
+
+  /// Releases of "Upcoming" before "See all".
+  static const int upcomingCount = 5;
 
   /// Posters of "To watch tonight".
   static const int tonightCount = 3;
@@ -95,16 +101,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openSeries(InProgressItem item) =>
       openInProgressSeries(context, item);
 
-  /// Until "Upcoming" (#306) has its own page, the releases stay the ones of
-  /// the former Alerts screen.
-  void _openLegacyAlerts(NotificationCenterTab tab) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => NotificationCenterPage(initialTab: tab),
-      ),
-    );
-  }
-
   void _openInProgress({bool pausedOnly = false}) =>
       InProgressPage.show(context, pausedOnly: pausedOnly);
 
@@ -123,6 +119,9 @@ class _HomePageState extends State<HomePage> {
     final provider = context.watch<SearchProvider>();
     final hasTmdbKey = context.select<SettingsProvider, bool>(
       (settings) => settings.tmdbApiKey.isNotEmpty,
+    );
+    final debug = context.select<SettingsProvider, bool>(
+      (settings) => settings.notificationCenterDebug,
     );
     final now = widget.clock();
 
@@ -163,7 +162,7 @@ class _HomePageState extends State<HomePage> {
           onTap: () => _openInProgress(pausedOnly: true),
         ),
       // Releases need the network: the TMDB card stands in without a key.
-      if (hasTmdbKey) _buildUpcoming(l10n, provider.notifiedItems.length),
+      if (hasTmdbKey) _buildUpcoming(l10n, provider, now, debug: debug),
     ];
 
     return ColoredBox(
@@ -441,21 +440,91 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// Slot of the "Upcoming" section (#306); until then it leads to the
-  /// releases of the former Alerts screen.
-  Widget _buildUpcoming(AppLocalizations l10n, int followedCount) {
+  String _periodLabel(AppLocalizations l10n, ReleasePeriod period) =>
+      switch (period) {
+        ReleasePeriod.released => l10n.upcomingGroupReleased,
+        ReleasePeriod.thisWeek => l10n.upcomingGroupThisWeek,
+        ReleasePeriod.thisMonth => l10n.upcomingGroupThisMonth,
+        ReleasePeriod.later => l10n.upcomingGroupLater,
+      };
+
+  /// "Upcoming": at most [HomePage.upcomingCount] releases grouped by
+  /// period, each group with its full count, then the rows leading to the
+  /// full page.
+  Widget _buildUpcoming(
+    AppLocalizations l10n,
+    SearchProvider provider,
+    DateTime now, {
+    required bool debug,
+  }) {
+    final textTheme = Theme.of(context).textTheme;
+    final filtered = filterReleases(
+      items: provider.notifiedItems,
+      seenItems: provider.seenItems,
+      now: now,
+    );
+    final groups = groupReleases(filtered.visible, now: now);
+    void open() => UpcomingPage.show(context);
+
+    var left = HomePage.upcomingCount;
+    final blocks = <Widget>[];
+    for (final period in ReleasePeriod.values) {
+      final items = groups.of(period);
+      final shown = items.take(left).toList();
+      if (shown.isEmpty) continue;
+      left -= shown.length;
+      blocks.addAll([
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 6),
+          child: Text(
+            l10n.upcomingGroupCount(_periodLabel(l10n, period), items.length),
+            style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+        UpcomingRowsCard(
+          key: ValueKey('home_upcoming_${period.name}'),
+          items: shown,
+          now: now,
+        ),
+        const SizedBox(height: 6),
+      ]);
+    }
+
     return Column(
       key: const Key('home_upcoming'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(title: l10n.homeUpcomingTitle),
-        HomeLinkRow(
-          key: const Key('home_upcoming_releases'),
-          icon: Icons.event_outlined,
-          title: l10n.homeUpcomingRow,
-          subtitle: l10n.homeUpcomingSubtitle(followedCount),
-          onTap: () => _openLegacyAlerts(NotificationCenterTab.releases),
+        SectionHeader(
+          title: l10n.upcomingTitle(groups.datedCount),
+          onAction: groups.datedCount > HomePage.upcomingCount ? open : null,
         ),
+        if (blocks.isEmpty)
+          Text(
+            '${l10n.notifNoReleases} ${l10n.notifNoReleasesHint}',
+            style: textTheme.bodySmall,
+          )
+        else
+          ...blocks,
+        if (groups.undated.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          HomeLinkRow(
+            key: const Key('home_upcoming_undated'),
+            icon: Icons.schedule,
+            title: l10n.upcomingUndatedRow(groups.undated.length),
+            subtitle: l10n.upcomingUndatedRowSubtitle,
+            onTap: open,
+          ),
+        ],
+        if (debug) ...[
+          const SizedBox(height: 10),
+          HomeLinkRow(
+            key: const Key('home_upcoming_debug'),
+            icon: Icons.bug_report_outlined,
+            title: l10n.upcomingDebugRow(filtered.omitted.length),
+            subtitle: l10n.upcomingDebugRowSubtitle,
+            onTap: open,
+          ),
+        ],
       ],
     );
   }
