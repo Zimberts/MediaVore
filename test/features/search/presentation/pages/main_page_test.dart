@@ -8,6 +8,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
@@ -411,7 +412,13 @@ void main() {
       await goTo(tester, AppTab.together);
 
       togetherSession.addParticipant(
-        const TogetherParticipant(name: 'Lea', entries: ['1:movie', '2:tv']),
+        const TogetherParticipant(
+          name: 'Lea',
+          entries: [
+            SharedMediaEntry(1, MediaType.movie),
+            SharedMediaEntry(2, MediaType.tv),
+          ],
+        ),
       );
       togetherSession.castVote('Lea', '1:movie');
 
@@ -423,7 +430,10 @@ void main() {
           .read<TogetherSessionProvider>();
       expect(session, same(togetherSession));
       expect(session.participants.single.name, 'Lea');
-      expect(session.participants.single.entries, ['1:movie', '2:tv']);
+      expect(session.participants.single.entries, [
+        const SharedMediaEntry(1, MediaType.movie),
+        const SharedMediaEntry(2, MediaType.tv),
+      ]);
       expect(session.votes, {
         'Lea': {'1:movie'},
       });
@@ -489,14 +499,15 @@ void main() {
   });
 
   group('Together tab', () {
-    testWidgets('should show a coming soon screen', (tester) async {
+    testWidgets('should show session setup screen', (tester) async {
       await tester.pumpWidget(
         createWidgetUnderTest(locale: const Locale('fr')),
       );
       await tester.pumpAndSettle();
       await goTo(tester, AppTab.together);
 
-      expect(find.text('Choisir à plusieurs arrive bientôt'), findsOneWidget);
+      expect(find.byType(TogetherPage), findsOneWidget);
+      expect(find.text('Préparation de la séance'), findsOneWidget);
     });
   });
 

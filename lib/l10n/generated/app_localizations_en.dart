@@ -2861,6 +2861,113 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get togetherSessionSetup => 'Session Setup';
+
+  @override
+  String get togetherWeAreChoosing => 'We are choosing';
+
+  @override
+  String get togetherChoiceAny => 'Movie or Series';
+
+  @override
+  String get togetherChoiceMovie => 'A Movie';
+
+  @override
+  String get togetherChoiceTv => 'A Series';
+
+  @override
+  String get togetherMyListLabel => 'My list:';
+
+  @override
+  String get togetherWarningNotice =>
+      'The QR code contains your list: anyone scanning it can view it.';
+
+  @override
+  String get togetherScanQrButton => 'Scan a friend\'s QR';
+
+  @override
+  String get togetherParticipantsTitle => 'Participants';
+
+  @override
+  String get togetherYouHost => 'Me (Host)';
+
+  @override
+  String togetherItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles',
+      one: '1 title',
+      zero: '0 titles',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get togetherScanPrompt => 'Scan at least one friend to continue';
+
+  @override
+  String get togetherSeeCommonTitles => 'See common titles';
+
+  @override
+  String togetherCommonCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count in common',
+      one: '1 title in common',
+      zero: 'No titles in common',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String togetherAlmostSection(int k, int n) {
+    return 'Almost: in $k of $n lists';
+  }
+
+  @override
+  String togetherVoteLimitNotice(int count) {
+    return 'Voting includes the 6 highest rated titles (out of $count)';
+  }
+
+  @override
+  String get togetherEmptyCommonTitle => 'No titles in common';
+
+  @override
+  String get togetherEmptyCommonMessage =>
+      'None of your titles match across all lists. Check the \"Almost\" section below!';
+
+  @override
+  String get togetherRandomPick => 'Random pick';
+
+  @override
+  String get togetherSwipeVote => 'Vote by swiping';
+
+  @override
+  String get togetherWatchThis => 'Let\'s watch this!';
+
+  @override
+  String get togetherResetSession => 'Reset session';
+
+  @override
+  String get togetherResetConfirm =>
+      'Reset this session and clear all scanned participants?';
+
+  @override
+  String get togetherHideSeen => 'Hide watched';
+
+  @override
+  String togetherMultiQrPart(int current, int total) {
+    return 'Part $current of $total';
+  }
+
+  @override
+  String togetherScanNextPart(int current, int total) {
+    return 'Scan next QR part ($current/$total)';
+  }
+
+  @override
   String get swiperTitle => 'Swiper';
 
   @override

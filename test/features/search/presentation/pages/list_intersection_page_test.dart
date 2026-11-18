@@ -92,7 +92,7 @@ void main() {
         ChangeNotifierProvider<SearchProvider>.value(value: provider),
       ],
       child: MaterialApp(
-        theme: DefaultDarkPalette().toThemeData(),
+        theme: AppPalette.ink.toThemeData(),
         locale: const Locale('fr'),
         localizationsDelegates: const [
           AppLocalizations.delegate,
