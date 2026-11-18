@@ -115,6 +115,7 @@ Future<_i174.GetIt> init(
       warmupPolicy: gh<_i356.CacheWarmupPolicy>(),
       localeService: gh<_i903.LocaleService>(),
       credentialStore: gh<_i1033.TmdbCredentialStore>(),
+      prefs: gh<_i460.SharedPreferences>(),
       autoInit: gh<bool>(),
     ),
   );

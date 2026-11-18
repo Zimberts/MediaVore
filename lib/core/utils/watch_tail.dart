@@ -68,15 +68,22 @@ class WatchTail {
 /// Returns the furthest-along watched episode from [seenTvItems], or `null` when
 /// there is no episode-level seen entry.
 ///
+/// When [seenSince] is provided, only entries seen at or after that instant
+/// are considered, scoping the tail to a viewing cycle starting at [seenSince].
+///
 /// The highest position (season, then episode) wins regardless of the order the
 /// entries were created; [SeenItemModel.seenDate] only decides between entries
 /// for the same episode. This keeps the tail on the furthest progress rather
 /// than on whichever episode was marked most recently.
 ///
 /// Entries without a season/episode (e.g. a generic "show" mark) are ignored.
-WatchTail? findLatestTail(Iterable<SeenItemModel> seenTvItems) {
+WatchTail? findLatestTail(
+  Iterable<SeenItemModel> seenTvItems, {
+  DateTime? seenSince,
+}) {
   WatchTail? tail;
   for (final item in seenTvItems) {
+    if (seenSince != null && item.seenDate.isBefore(seenSince)) continue;
     final season = item.seasonNumber;
     final episode = item.episodeNumber;
     if (season == null || episode == null) continue;

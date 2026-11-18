@@ -1979,6 +1979,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get detailSeriesFinished => 'Terminée';
 
   @override
+  String get rewatchSeriesAction => 'Revoir la série';
+
+  @override
+  String rewatchStartedMessage(String cycle) {
+    return '${cycle}e visionnage commencé · les précédents sont conservés';
+  }
+
+  @override
+  String episodeAlreadySeenOn(String date) {
+    return 'Déjà vu le $date';
+  }
+
+  @override
+  String detailSeriesRewatching(String cycle, int season, int episode) {
+    return '${cycle}e visionnage · Prochain : S$season É$episode';
+  }
+
+  @override
+  String detailSeriesWatchedTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vue $count fois',
+      one: 'Vue 1 fois',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get detailMoreActions => 'Plus d\'actions';
 
   @override

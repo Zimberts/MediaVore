@@ -17,8 +17,13 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 class InProgressService {
   final MediaListLocalDataSource localDataSource;
   final MediaCache cache;
+  final DateTime? Function(int tmdbId)? getRewatchStart;
 
-  InProgressService({required this.localDataSource, required this.cache});
+  InProgressService({
+    required this.localDataSource,
+    required this.cache,
+    this.getRewatchStart,
+  });
 
   /// Series in progress, most recent activity first.
   Future<List<InProgressItem>> getInProgressItems({DateTime? now}) async {
@@ -43,6 +48,10 @@ class InProgressService {
     final seenEpisodes = <int, Set<(int, int)>>{};
     for (final seen in await localDataSource.getAllSeenItems()) {
       if (seen.type != 'tv' || !nextBySeries.containsKey(seen.tmdbId)) continue;
+      final rewatchStart = getRewatchStart?.call(seen.tmdbId);
+      if (rewatchStart != null && seen.seenDate.isBefore(rewatchStart)) {
+        continue;
+      }
       final previous = lastSeen[seen.tmdbId];
       if (previous == null || seen.seenDate.isAfter(previous)) {
         lastSeen[seen.tmdbId] = seen.seenDate;

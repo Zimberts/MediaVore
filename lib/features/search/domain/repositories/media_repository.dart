@@ -306,6 +306,15 @@ abstract class MediaRepository {
 
   /// Clears all swipe decisions from local storage.
   Future<void> clearAllSwipeDecisions();
+
+  /// Date when a series rewatch cycle was started, or null if not rewatching.
+  DateTime? getSeriesRewatchStart(int tmdbId);
+
+  /// Record the start of a new series rewatch cycle.
+  Future<void> setSeriesRewatchStart(int tmdbId, DateTime date);
+
+  /// Clear any active series rewatch cycle.
+  Future<void> clearSeriesRewatchStart(int tmdbId);
 }
 
 class NotifiedItem {

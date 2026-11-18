@@ -6,6 +6,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/seen_manager.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -79,9 +80,14 @@ class MediaDetailSeasons extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.appColors;
+    final provider = context.watch<SearchProvider>();
+    final rewatchStart = provider.getSeriesRewatchStart(item.id);
+    final effectiveSeen = rewatchStart != null
+        ? seenStatus.where((s) => !s.seenDate.isBefore(rewatchStart)).toList()
+        : seenStatus;
     final seasons = item.seasons ?? const <TVSeason>[];
     final total = item.numberOfEpisodes;
-    final seenTotal = seenStatus
+    final seenTotal = effectiveSeen
         .where((s) => s.seasonNumber != null && s.episodeNumber != null)
         .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
         .toSet()
@@ -106,12 +112,17 @@ class MediaDetailSeasons extends StatelessWidget {
             ),
           ),
         ],
-        for (final season in seasons) _season(context, season),
+        for (final season in seasons)
+          _season(context, season, rewatchStart: rewatchStart),
       ],
     );
   }
 
-  Widget _season(BuildContext context, TVSeason season) {
+  Widget _season(
+    BuildContext context,
+    TVSeason season, {
+    DateTime? rewatchStart,
+  }) {
     final l10n = context.l10n;
     final colors = context.appColors;
     final theme = Theme.of(context);
@@ -122,7 +133,10 @@ class MediaDetailSeasons extends StatelessWidget {
     final seasonNumber = season.seasonNumber;
     final isExpanded = expandedSeason == seasonNumber;
     final isLoading = loadingSeasons[seasonNumber] ?? false;
-    final seenInSeason = seenStatus
+    final effectiveSeen = rewatchStart != null
+        ? seenStatus.where((s) => !s.seenDate.isBefore(rewatchStart)).toList()
+        : seenStatus;
+    final seenInSeason = effectiveSeen
         .where((s) => s.seasonNumber == seasonNumber && s.episodeNumber != null)
         .map((s) => s.episodeNumber)
         .toSet()
@@ -237,6 +251,7 @@ class MediaDetailSeasons extends StatelessWidget {
               episodes: episodes,
               hideNonReleased: hideNonReleased,
               advanced: advanced,
+              rewatchStart: rewatchStart,
             ),
           ],
         ],
@@ -250,6 +265,7 @@ class MediaDetailSeasons extends StatelessWidget {
     required List<dynamic> episodes,
     required bool hideNonReleased,
     required bool advanced,
+    DateTime? rewatchStart,
   }) {
     final l10n = context.l10n;
     final colors = context.appColors;
@@ -299,15 +315,23 @@ class MediaDetailSeasons extends StatelessWidget {
             .toList();
         history.sort((a, b) => b.seenDate.compareTo(a.seenDate));
 
+        final hasSeenInCurrentCycle = rewatchStart != null
+            ? history.any((s) => !s.seenDate.isBefore(rewatchStart))
+            : history.isNotEmpty;
+
         final String? seenSubtitle;
         if (history.isNotEmpty) {
           final mostRecent = history.first.seenDate;
           final dateStr = advanced
               ? Formatters.formatSeenDateTime(mostRecent, l10n.localeName)
               : Formatters.formatSeenDate(mostRecent, l10n.localeName);
-          seenSubtitle = history.length > 1
-              ? l10n.seenSummaryMultiple(history.length, dateStr)
-              : l10n.seenSummaryOnce(dateStr);
+          if (rewatchStart != null && !hasSeenInCurrentCycle) {
+            seenSubtitle = l10n.episodeAlreadySeenOn(dateStr);
+          } else {
+            seenSubtitle = history.length > 1
+                ? l10n.seenSummaryMultiple(history.length, dateStr)
+                : l10n.seenSummaryOnce(dateStr);
+          }
         } else {
           seenSubtitle = null;
         }
@@ -342,7 +366,7 @@ class MediaDetailSeasons extends StatelessWidget {
                         Text(
                           metaParts,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: history.isNotEmpty
+                            color: hasSeenInCurrentCycle
                                 ? colors.series
                                 : colors.text2,
                           ),

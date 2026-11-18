@@ -20,6 +20,42 @@ import 'package:mediavore/features/media_details/data/models/swipe_decision_mode
 class MockDio extends Mock implements Dio {}
 
 class MockMediaRepository extends Mock implements MediaRepository {
+  final Map<int, DateTime> _rewatchStarts = {};
+
+  @override
+  DateTime? getSeriesRewatchStart(int tmdbId) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#getSeriesRewatchStart, [tmdbId]),
+          ) as DateTime?;
+    } catch (_) {
+      return _rewatchStarts[tmdbId];
+    }
+  }
+
+  @override
+  Future<void> setSeriesRewatchStart(int tmdbId, DateTime date) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#setSeriesRewatchStart, [tmdbId, date]),
+          ) as Future<void>;
+    } catch (_) {
+      _rewatchStarts[tmdbId] = date;
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<void> clearSeriesRewatchStart(int tmdbId) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#clearSeriesRewatchStart, [tmdbId]),
+          ) as Future<void>;
+    } catch (_) {
+      _rewatchStarts.remove(tmdbId);
+      return Future.value();
+    }
+  }
   @override
   Future<List<QuickAddItem>> getQuickAddItems() {
     try {

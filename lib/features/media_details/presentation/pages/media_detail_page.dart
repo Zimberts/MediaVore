@@ -480,7 +480,11 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           ),
                   ),
                   if (!isTv) MediaDetailMovieViewings(item: item),
-                  if (isTv) WatchNextButton(item: item),
+                  if (isTv)
+                    WatchNextButton(
+                      item: item,
+                      onSeenChanged: _fetchSeenStatus,
+                    ),
                   if (_isLoading)
                     const Center(
                       child: Padding(
