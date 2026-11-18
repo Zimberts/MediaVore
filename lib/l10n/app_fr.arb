@@ -389,5 +389,13 @@
   "progressRefetchDone": "Récupération terminée !",
   "progressProcessingItem": "Traitement de {title}...",
   "progressSavingEntries": "Enregistrement des entrées...",
-  "progressImportComplete": "Import terminé"
+  "progressImportComplete": "Import terminé",
+  "mediaKindMovie": "Film",
+  "mediaKindSeries": "Série",
+  "mediaKindBook": "Livre",
+  "commonSeeAll": "Tout voir",
+  "offlineBannerTitle": "Hors ligne",
+  "posterInProgress": "En cours",
+  "posterLiked": "Aimé",
+  "posterRating": "Note {rating}"
 }

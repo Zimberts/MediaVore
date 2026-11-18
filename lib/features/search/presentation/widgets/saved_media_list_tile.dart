@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/presentation/widgets/poster_with_badge.dart';
+import 'package:mediavore/core/widgets/app_tap_target.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
+import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 
@@ -52,7 +54,18 @@ class MediaListTile extends StatelessWidget {
       child: Container(
         color: isSelected ? colors.primary.withValues(alpha: 0.1) : null,
         child: ListTile(
-          leading: PosterWithBadge(item: item, provider: provider),
+          leading: SizedBox(
+            width: 50,
+            child: MediaPosterCard(
+              compact: true,
+              data: mediaItemPosterData(
+                context,
+                item,
+                seenCount: provider.getSeenCount(item),
+                imageSize: 'w92',
+              ),
+            ),
+          ),
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -103,7 +116,11 @@ class MediaListTile extends StatelessWidget {
               : isManualSort
               ? ReorderableDragStartListener(
                   index: index,
-                  child: const Icon(Icons.drag_handle),
+                  child: const SizedBox(
+                    width: kMinTapTarget,
+                    height: kMinTapTarget,
+                    child: Icon(Icons.drag_handle),
+                  ),
                 )
               : null,
         ),

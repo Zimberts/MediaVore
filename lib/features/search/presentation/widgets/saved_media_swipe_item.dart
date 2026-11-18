@@ -3,7 +3,8 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/like_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/presentation/widgets/poster_with_badge.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
+import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
 
 class MediaSwipeItem extends StatelessWidget {
   final MediaItem item;
@@ -37,11 +38,14 @@ class MediaSwipeItem extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: PosterWithBadge(
-                    item: item,
-                    provider: provider,
-                    width: double.infinity,
-                    height: double.infinity,
+                  child: Center(
+                    child: MediaPosterCard(
+                      data: mediaItemPosterData(
+                        context,
+                        item,
+                        seenCount: provider.getSeenCount(item),
+                      ),
+                    ),
                   ),
                 ),
               ),

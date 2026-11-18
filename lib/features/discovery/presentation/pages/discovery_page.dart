@@ -10,7 +10,8 @@ import 'package:mediavore/features/media_details/presentation/pages/media_detail
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
+import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 
 class DiscoveryPage extends StatefulWidget {
@@ -23,6 +24,8 @@ class DiscoveryPage extends StatefulWidget {
 }
 
 class _DiscoveryPageState extends State<DiscoveryPage> {
+  static const double _gridPadding = 8;
+
   bool _showSearch = false;
   final TextEditingController _controller = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -529,13 +532,6 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                       }
 
                       final item = items[index];
-                      final seenCount = provider.getSeenCount(item);
-                      final isSeen = seenCount > 0;
-                      final isFinished =
-                          item.mediaType == MediaType.tv &&
-                              item.numberOfEpisodes != null
-                          ? seenCount >= item.numberOfEpisodes!
-                          : isSeen;
 
                       String lengthText = '';
                       if (item.mediaType == MediaType.tv) {
@@ -559,62 +555,14 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                           ),
                           leading: SizedBox(
                             width: 50,
-                            height: 75,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: item.posterPath != null
-                                      ? CachedNetworkImage(
-                                          imageUrl:
-                                              'https://image.tmdb.org/t/p/w92${item.posterPath}',
-                                          fit: BoxFit.cover,
-                                          height: double.infinity,
-                                          width: double.infinity,
-                                          placeholder: (context, url) =>
-                                              Container(
-                                                color: colors.placeholder,
-                                              ),
-                                          errorWidget: (context, url, error) =>
-                                              const Icon(Icons.error),
-                                        )
-                                      : Container(
-                                          color: colors.placeholder,
-                                          height: double.infinity,
-                                          width: double.infinity,
-                                          child: Icon(
-                                            Icons.movie,
-                                            color: colors.text2,
-                                          ),
-                                        ),
-                                ),
-                                if (isSeen)
-                                  Positioned(
-                                    bottom: -4,
-                                    right: -4,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: isFinished
-                                            ? colors.seenBadge
-                                            : colors.badgeBg,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: colors.badgeText,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.all(2),
-                                      child: Icon(
-                                        isFinished
-                                            ? Icons.done_all
-                                            : Icons.check,
-                                        size: 10,
-                                        color: colors.badgeText,
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                            child: MediaPosterCard(
+                              compact: true,
+                              data: mediaItemPosterData(
+                                context,
+                                item,
+                                seenCount: provider.getSeenCount(item),
+                                imageSize: 'w92',
+                              ),
                             ),
                           ),
                           title: Row(
@@ -674,238 +622,38 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                       );
                     },
                   )
-                : GridView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: settings.gridSize.round(),
-                      childAspectRatio: 0.65,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                    ),
-                    itemCount: items.length + (hasFooter ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == items.length) {
-                        return _buildListFooter(provider);
-                      }
+                : LayoutBuilder(
+                    builder: (context, constraints) => GridView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(_gridPadding),
+                      gridDelegate: MediaPosterCard.gridDelegate(
+                        context: context,
+                        width: constraints.maxWidth - 2 * _gridPadding,
+                        crossAxisCount: settings.gridSize.round(),
+                      ),
+                      itemCount: items.length + (hasFooter ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == items.length) {
+                          return _buildListFooter(provider);
+                        }
 
-                      final item = items[index];
-                      final seenCount = provider.getSeenCount(item);
-                      final isSeen = seenCount > 0;
-                      final isFinished =
-                          item.mediaType == MediaType.tv &&
-                              item.numberOfEpisodes != null
-                          ? seenCount >= item.numberOfEpisodes!
-                          : isSeen;
-
-                      String lengthText = '';
-                      if (item.mediaType == MediaType.tv) {
-                        lengthText = context.l10n.mediaSeasonShort(
-                          '${item.numberOfSeasons ?? "?"}',
+                        final item = items[index];
+                        return MediaPosterCard(
+                          data: mediaItemPosterData(
+                            context,
+                            item,
+                            seenCount: provider.getSeenCount(item),
+                            liked: provider.isLiked(item),
+                          ),
+                          onTap: () => MediaDetailPage.show(context, item),
+                          action: WatchlistIconButton(
+                            item: item,
+                            iconSize: 18,
+                            onImage: true,
+                          ),
                         );
-                      } else if (item.runtime != null) {
-                        lengthText = '${item.runtime}m';
-                      }
-
-                      return GestureDetector(
-                        onTap: () => MediaDetailPage.show(context, item),
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  if (item.posterPath != null)
-                                    CachedNetworkImage(
-                                      imageUrl:
-                                          'https://image.tmdb.org/t/p/w342${item.posterPath}',
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          Container(color: colors.placeholder),
-                                      errorWidget: (context, url, error) =>
-                                          const Icon(Icons.error),
-                                    )
-                                  else
-                                    Container(
-                                      color: colors.placeholder,
-                                      child: Icon(
-                                        Icons.movie,
-                                        color: colors.text2,
-                                      ),
-                                    ),
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.bottomCenter,
-                                          end: Alignment.topCenter,
-                                          colors: [
-                                            Colors.black87,
-                                            Colors.transparent,
-                                          ],
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.only(
-                                        left: 6,
-                                        top: 24,
-                                        bottom: 6,
-                                        right: 18,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  item.title,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              if (provider.isLiked(item))
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        left: 4.0,
-                                                      ),
-                                                  child: Icon(
-                                                    Icons.favorite,
-                                                    size: 10,
-                                                    color: colors.likeHeart,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            '${item.releaseDate.length >= 4 ? item.releaseDate.substring(0, 4) : ""} • $lengthText',
-                                            style: const TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 9,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Overlay elements that don't need clipping or need different positioning
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (item.voteAverage != null &&
-                                      item.voteAverage! > 0)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 2,
-                                      ),
-                                      margin: const EdgeInsets.only(right: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black87,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.star,
-                                            color: colors.ratingStar,
-                                            size: 10,
-                                          ),
-                                          const SizedBox(width: 2),
-                                          Text(
-                                            item.voteAverage!.toStringAsFixed(
-                                              1,
-                                            ),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  Container(
-                                    height: 22,
-                                    width: 22,
-                                    decoration: BoxDecoration(
-                                      color: Colors.black87,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: WatchlistIconButton(
-                                      item: item,
-                                      iconSize: 14,
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Positioned(
-                              top: 4,
-                              left: 4,
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Icon(
-                                  item.mediaType == MediaType.tv
-                                      ? Icons.tv
-                                      : Icons.movie,
-                                  color: Colors.white,
-                                  size: 10,
-                                ),
-                              ),
-                            ),
-                            if (isSeen)
-                              Positioned(
-                                right: -4,
-                                bottom: -4,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: isFinished
-                                        ? colors.seenBadge
-                                        : colors.badgeBg,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: colors.badgeText,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.all(2),
-                                  child: Icon(
-                                    isFinished ? Icons.done_all : Icons.check,
-                                    size: 10,
-                                    color: colors.badgeText,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
+                      },
+                    ),
                   ),
           );
         },

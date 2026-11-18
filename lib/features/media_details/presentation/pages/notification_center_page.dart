@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -392,32 +393,24 @@ class _QuickAddTabState extends State<_QuickAddTab> {
                           );
                           await provider.loadQuickAddItems();
                           if (context.mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            // Remove any existing SnackBar immediately so the new one appears
-                            messenger.removeCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text(context.l10n.notifStreakOptedOut),
-                                duration: const Duration(seconds: 4),
-                                action: SnackBarAction(
-                                  label: context.l10n.commonUndo,
-                                  onPressed: () async {
-                                    try {
-                                      await provider.clearOptOutSeries(
-                                        tmdbId,
-                                        seasonNumber: qa.seasonNumber,
-                                        episodeNumber: qa.episodeNumber,
-                                      );
-                                      // Restore the exact dismissed quick-add entry directly
-                                      await provider.addQuickAddItem(qa);
-                                    } catch (e) {
-                                      debugPrint(
-                                        '[NotificationCenter] undo streak opt-out failed: $e',
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
+                            showAppMessage(
+                              context.l10n.notifStreakOptedOut,
+                              actionLabel: context.l10n.commonUndo,
+                              onAction: () async {
+                                try {
+                                  await provider.clearOptOutSeries(
+                                    tmdbId,
+                                    seasonNumber: qa.seasonNumber,
+                                    episodeNumber: qa.episodeNumber,
+                                  );
+                                  // Restore the exact dismissed quick-add entry directly
+                                  await provider.addQuickAddItem(qa);
+                                } catch (e) {
+                                  debugPrint(
+                                    '[NotificationCenter] undo streak opt-out failed: $e',
+                                  );
+                                }
+                              },
                             );
                           }
                         } catch (e) {
