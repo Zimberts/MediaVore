@@ -1422,4 +1422,163 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get togetherSoonMessage =>
       'Compare your lists with friends and vote for what to watch.';
+
+  @override
+  String get homeTitle => 'Tonight';
+
+  @override
+  String get homeRefreshReleases => 'Refresh releases';
+
+  @override
+  String get homeOfflineMessage =>
+      'releases will be refreshed when the network is back.';
+
+  @override
+  String get homeResume => 'Resume';
+
+  @override
+  String homeEpisodeCode(int season, int episode) {
+    return 'S$season E$episode';
+  }
+
+  @override
+  String homeNextEpisode(String episode) {
+    return 'Next: $episode';
+  }
+
+  @override
+  String homeMarkEpisodeSeen(String episode, String title) {
+    return 'Mark $episode of $title as seen';
+  }
+
+  @override
+  String homeEpisodeSeenMessage(String episode, String title) {
+    return '$episode seen · $title';
+  }
+
+  @override
+  String get homeTonightTitle => 'To watch tonight';
+
+  @override
+  String get homeTonightOtherIdea => 'Another idea';
+
+  @override
+  String homeTonightSource(String list, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles not seen yet',
+      one: '1 title not seen yet',
+    );
+    return 'From your list \"$list\" · $_temp0';
+  }
+
+  @override
+  String get homeChooseTogether => 'Choose together';
+
+  @override
+  String get homeChooseTogetherSubtitle => 'Compare your lists and vote';
+
+  @override
+  String get homeEmptyTitle => 'Nothing planned tonight.';
+
+  @override
+  String homeEmptyMessage(String list) {
+    return 'Add films or series to your list \"$list\" to find them here.';
+  }
+
+  @override
+  String get homeEmptyAction => 'Discover titles';
+
+  @override
+  String homeAlsoInProgress(int count) {
+    return 'Also in progress · $count';
+  }
+
+  @override
+  String homeSeeAllCount(int count) {
+    return 'See all ($count)';
+  }
+
+  @override
+  String get homeRecentAreInResume => 'The most recent ones are in \"Resume\".';
+
+  @override
+  String homeFilterAll(int count) {
+    return 'All · $count';
+  }
+
+  @override
+  String homeFilterSeries(int count) {
+    return 'Series · $count';
+  }
+
+  @override
+  String homeFilterBooks(int count) {
+    return 'Books · $count';
+  }
+
+  @override
+  String homeMoreInProgress(int count) {
+    return '$count more, see all';
+  }
+
+  @override
+  String homePausedTitle(int count) {
+    return '$count paused';
+  }
+
+  @override
+  String homePausedSubtitle(int days) {
+    return 'No activity for more than $days days';
+  }
+
+  @override
+  String get homeAgoToday => 'today';
+
+  @override
+  String get homeAgoYesterday => 'yesterday';
+
+  @override
+  String homeAgoDays(int count) {
+    return '$count d ago';
+  }
+
+  @override
+  String homeAgoWeeks(int count) {
+    return '$count wk ago';
+  }
+
+  @override
+  String homeAgoMonths(int count) {
+    return '$count mo ago';
+  }
+
+  @override
+  String get homeConnectTmdbTitle => 'Connect TMDB';
+
+  @override
+  String get homeConnectTmdbMessage =>
+      'MediaVore gets posters, release dates and new episodes from TMDB. You need a free personal key.';
+
+  @override
+  String get homeConnectTmdbAction => 'Connect to TMDB';
+
+  @override
+  String get homeUpcomingTitle => 'Upcoming';
+
+  @override
+  String get homeUpcomingRow => 'Releases and alerts';
+
+  @override
+  String homeUpcomingSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles followed',
+      one: '1 title followed',
+      zero: 'No title followed',
+    );
+    return '$_temp0';
+  }
 }

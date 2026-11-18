@@ -2521,6 +2521,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compare your lists with friends and vote for what to watch.'**
   String get togetherSoonMessage;
+
+  /// No description provided for @homeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonight'**
+  String get homeTitle;
+
+  /// No description provided for @homeRefreshReleases.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh releases'**
+  String get homeRefreshReleases;
+
+  /// No description provided for @homeOfflineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'releases will be refreshed when the network is back.'**
+  String get homeOfflineMessage;
+
+  /// No description provided for @homeResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get homeResume;
+
+  /// No description provided for @homeEpisodeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'S{season} E{episode}'**
+  String homeEpisodeCode(int season, int episode);
+
+  /// No description provided for @homeNextEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {episode}'**
+  String homeNextEpisode(String episode);
+
+  /// No description provided for @homeMarkEpisodeSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {episode} of {title} as seen'**
+  String homeMarkEpisodeSeen(String episode, String title);
+
+  /// No description provided for @homeEpisodeSeenMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{episode} seen · {title}'**
+  String homeEpisodeSeenMessage(String episode, String title);
+
+  /// No description provided for @homeTonightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'To watch tonight'**
+  String get homeTonightTitle;
+
+  /// No description provided for @homeTonightOtherIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Another idea'**
+  String get homeTonightOtherIdea;
+
+  /// No description provided for @homeTonightSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From your list \"{list}\" · {count, plural, =1{1 title not seen yet} other{{count} titles not seen yet}}'**
+  String homeTonightSource(String list, int count);
+
+  /// No description provided for @homeChooseTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose together'**
+  String get homeChooseTogether;
+
+  /// No description provided for @homeChooseTogetherSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare your lists and vote'**
+  String get homeChooseTogetherSubtitle;
+
+  /// No description provided for @homeEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing planned tonight.'**
+  String get homeEmptyTitle;
+
+  /// No description provided for @homeEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add films or series to your list \"{list}\" to find them here.'**
+  String homeEmptyMessage(String list);
+
+  /// No description provided for @homeEmptyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover titles'**
+  String get homeEmptyAction;
+
+  /// No description provided for @homeAlsoInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Also in progress · {count}'**
+  String homeAlsoInProgress(int count);
+
+  /// No description provided for @homeSeeAllCount.
+  ///
+  /// In en, this message translates to:
+  /// **'See all ({count})'**
+  String homeSeeAllCount(int count);
+
+  /// No description provided for @homeRecentAreInResume.
+  ///
+  /// In en, this message translates to:
+  /// **'The most recent ones are in \"Resume\".'**
+  String get homeRecentAreInResume;
+
+  /// No description provided for @homeFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All · {count}'**
+  String homeFilterAll(int count);
+
+  /// No description provided for @homeFilterSeries.
+  ///
+  /// In en, this message translates to:
+  /// **'Series · {count}'**
+  String homeFilterSeries(int count);
+
+  /// No description provided for @homeFilterBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Books · {count}'**
+  String homeFilterBooks(int count);
+
+  /// No description provided for @homeMoreInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more, see all'**
+  String homeMoreInProgress(int count);
+
+  /// No description provided for @homePausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} paused'**
+  String homePausedTitle(int count);
+
+  /// No description provided for @homePausedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity for more than {days} days'**
+  String homePausedSubtitle(int days);
+
+  /// No description provided for @homeAgoToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get homeAgoToday;
+
+  /// No description provided for @homeAgoYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get homeAgoYesterday;
+
+  /// No description provided for @homeAgoDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} d ago'**
+  String homeAgoDays(int count);
+
+  /// No description provided for @homeAgoWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} wk ago'**
+  String homeAgoWeeks(int count);
+
+  /// No description provided for @homeAgoMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} mo ago'**
+  String homeAgoMonths(int count);
+
+  /// No description provided for @homeConnectTmdbTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect TMDB'**
+  String get homeConnectTmdbTitle;
+
+  /// No description provided for @homeConnectTmdbMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'MediaVore gets posters, release dates and new episodes from TMDB. You need a free personal key.'**
+  String get homeConnectTmdbMessage;
+
+  /// No description provided for @homeConnectTmdbAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to TMDB'**
+  String get homeConnectTmdbAction;
+
+  /// No description provided for @homeUpcomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get homeUpcomingTitle;
+
+  /// No description provided for @homeUpcomingRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Releases and alerts'**
+  String get homeUpcomingRow;
+
+  /// No description provided for @homeUpcomingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No title followed} =1{1 title followed} other{{count} titles followed}}'**
+  String homeUpcomingSubtitle(int count);
 }
 
 class _AppLocalizationsDelegate

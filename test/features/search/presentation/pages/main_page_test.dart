@@ -12,7 +12,7 @@ import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
 import 'package:mediavore/features/library/presentation/pages/library_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/notification_center_page.dart';
+import 'package:mediavore/features/home/presentation/pages/home_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
@@ -201,7 +201,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(searchProvider.selectedTab, AppTab.home);
-      expect(find.byType(NotificationCenterPage).hitTestable(), findsOneWidget);
+      expect(find.byType(HomePage).hitTestable(), findsOneWidget);
     });
 
     testWidgets('should switch to the tapped tab', (tester) async {
@@ -213,7 +213,7 @@ void main() {
         AppTab.library: LibraryPage,
         AppTab.together: TogetherPage,
         AppTab.me: ProfilePage,
-        AppTab.home: NotificationCenterPage,
+        AppTab.home: HomePage,
       };
       for (final entry in pages.entries) {
         await goTo(tester, entry.key);
@@ -309,7 +309,7 @@ void main() {
       // Asking for a tab that is not shown falls back to the first one.
       searchProvider.setSelectedTab(AppTab.together);
       await tester.pumpAndSettle();
-      expect(find.byType(NotificationCenterPage).hitTestable(), findsOneWidget);
+      expect(find.byType(HomePage).hitTestable(), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

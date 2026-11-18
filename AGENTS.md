@@ -22,7 +22,7 @@ The layers are **asymmetric** — do not assume every feature has all three:
 | --- | --- |
 | `achievements`, `search` | full `data` + `domain` + `presentation` |
 | `media_details` | `data` + `presentation` (no `domain`; entities in `lib/core`) |
-| `discovery`, `library`, `profile`, `settings`, `together` | `presentation` only |
+| `discovery`, `home`, `library`, `profile`, `settings`, `together` | `presentation` only |
 
 Key wiring:
 

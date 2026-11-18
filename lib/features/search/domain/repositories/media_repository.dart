@@ -202,6 +202,15 @@ abstract class MediaRepository {
   /// QuickAdd: returns current quick-add entries (next episodes the user can quickly mark seen)
   Future<List<QuickAddItem>> getQuickAddItems();
 
+  /// Series in progress (one entry per series with a next aired episode to
+  /// watch), most recent activity first. Local data only.
+  Future<List<InProgressItem>> getInProgressItems();
+
+  /// Titles of a list, in the order of the list, as known locally (cached
+  /// TMDB data, else the title stored with the entry). Never reaches the
+  /// network.
+  Future<List<MediaItem>> getListMediaItems(String listName);
+
   /// QuickAdd: diagnostic list of expected next episodes that are NOT shown.
   ///
   /// Read-only; never persists. Uses runtime/cached data only unless
@@ -315,6 +324,48 @@ class QuickAddItem {
     this.posterPath,
     this.runtime,
   });
+}
+
+/// A series the viewer is in the middle of, as shown on the Home screen.
+class InProgressItem {
+  /// A series without any viewing for longer than this is "paused".
+  static const Duration pauseAfter = Duration(days: 30);
+
+  /// Quick Add entry of the next episode to watch (season and episode are
+  /// always set).
+  final QuickAddItem next;
+
+  /// Distinct episodes seen, specials excluded.
+  final int seenEpisodes;
+
+  /// Episodes of the series, or `null` when the count is not cached.
+  final int? totalEpisodes;
+
+  /// Share of the series seen, from 0 to 1; `null` when [totalEpisodes] is
+  /// unknown (no progress bar rather than a misleading 0 %).
+  final double? progress;
+
+  /// Date of the last viewing of the series.
+  final DateTime lastActivity;
+
+  /// No viewing for more than 30 days.
+  final bool paused;
+
+  InProgressItem({
+    required this.next,
+    required this.seenEpisodes,
+    required this.totalEpisodes,
+    required this.progress,
+    required this.lastActivity,
+    required this.paused,
+  });
+
+  int get tmdbId => next.tmdbId;
+  String? get title => next.title;
+  String? get posterPath => next.posterPath;
+  int get seasonNumber => next.seasonNumber!;
+  int get episodeNumber => next.episodeNumber!;
+  int? get runtime => next.runtime;
 }
 
 /// Why an expected next episode is not present in the Quick Add list.

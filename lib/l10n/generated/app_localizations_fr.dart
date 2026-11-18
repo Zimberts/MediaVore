@@ -1442,4 +1442,164 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get togetherSoonMessage =>
       'Comparez vos listes entre amis et votez pour ce que vous allez regarder.';
+
+  @override
+  String get homeTitle => 'Ce soir';
+
+  @override
+  String get homeRefreshReleases => 'Actualiser les sorties';
+
+  @override
+  String get homeOfflineMessage =>
+      'les sorties seront actualisées au retour du réseau.';
+
+  @override
+  String get homeResume => 'Reprendre';
+
+  @override
+  String homeEpisodeCode(int season, int episode) {
+    return 'S$season É$episode';
+  }
+
+  @override
+  String homeNextEpisode(String episode) {
+    return 'Prochain : $episode';
+  }
+
+  @override
+  String homeMarkEpisodeSeen(String episode, String title) {
+    return 'Marquer $episode de $title comme vu';
+  }
+
+  @override
+  String homeEpisodeSeenMessage(String episode, String title) {
+    return '$episode vu · $title';
+  }
+
+  @override
+  String get homeTonightTitle => 'À voir ce soir';
+
+  @override
+  String get homeTonightOtherIdea => 'Autre idée';
+
+  @override
+  String homeTonightSource(String list, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titres pas encore vus',
+      one: '1 titre pas encore vu',
+    );
+    return 'Depuis votre liste « $list » · $_temp0';
+  }
+
+  @override
+  String get homeChooseTogether => 'Choisir à plusieurs';
+
+  @override
+  String get homeChooseTogetherSubtitle => 'Comparez vos listes et votez';
+
+  @override
+  String get homeEmptyTitle => 'Rien de prévu ce soir.';
+
+  @override
+  String homeEmptyMessage(String list) {
+    return 'Ajoutez des films ou des séries à votre liste « $list » pour les retrouver ici.';
+  }
+
+  @override
+  String get homeEmptyAction => 'Découvrir des titres';
+
+  @override
+  String homeAlsoInProgress(int count) {
+    return 'Aussi en cours · $count';
+  }
+
+  @override
+  String homeSeeAllCount(int count) {
+    return 'Tout voir ($count)';
+  }
+
+  @override
+  String get homeRecentAreInResume =>
+      'Les plus récents sont dans « Reprendre ».';
+
+  @override
+  String homeFilterAll(int count) {
+    return 'Tout · $count';
+  }
+
+  @override
+  String homeFilterSeries(int count) {
+    return 'Séries · $count';
+  }
+
+  @override
+  String homeFilterBooks(int count) {
+    return 'Livres · $count';
+  }
+
+  @override
+  String homeMoreInProgress(int count) {
+    return '$count de plus, tout voir';
+  }
+
+  @override
+  String homePausedTitle(int count) {
+    return '$count en pause';
+  }
+
+  @override
+  String homePausedSubtitle(int days) {
+    return 'Sans activité depuis plus de $days jours';
+  }
+
+  @override
+  String get homeAgoToday => 'aujourd\'hui';
+
+  @override
+  String get homeAgoYesterday => 'hier';
+
+  @override
+  String homeAgoDays(int count) {
+    return 'il y a $count j';
+  }
+
+  @override
+  String homeAgoWeeks(int count) {
+    return 'il y a $count sem.';
+  }
+
+  @override
+  String homeAgoMonths(int count) {
+    return 'il y a $count mois';
+  }
+
+  @override
+  String get homeConnectTmdbTitle => 'Connecter TMDB';
+
+  @override
+  String get homeConnectTmdbMessage =>
+      'MediaVore récupère les affiches, les dates de sortie et les nouveaux épisodes sur TMDB. Il faut une clé personnelle, gratuite.';
+
+  @override
+  String get homeConnectTmdbAction => 'Connexion à TMDB';
+
+  @override
+  String get homeUpcomingTitle => 'À venir';
+
+  @override
+  String get homeUpcomingRow => 'Sorties et alertes';
+
+  @override
+  String homeUpcomingSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titres suivis',
+      one: '1 titre suivi',
+      zero: 'Aucun titre suivi',
+    );
+    return '$_temp0';
+  }
 }

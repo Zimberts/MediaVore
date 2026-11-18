@@ -9,7 +9,7 @@ TMDB search/discovery and the central `MediaRepository`. Full `data` + `domain` 
 - `lib/features/search/data/repositories/media_repository_impl.dart` — facade: awaits
   initialization, then delegates to `lib/features/search/data/services/`
   (`RepositoryLifecycle`, `MediaDetailsService`, `NextEpisodeScanner`, `QuickAddService`,
-  `NotificationRefreshService`, `SeenService`, `CacheWarmupService`,
+  `InProgressService`, `NotificationRefreshService`, `SeenService`, `CacheWarmupService`,
   `ImportExportService`). Lists and likes stay in the facade.
 - `lib/features/search/data/datasources/media_remote_data_source.dart`
 - `lib/features/search/data/models/movie.dart`

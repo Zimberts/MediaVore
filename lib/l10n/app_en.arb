@@ -853,5 +853,179 @@
   "navMe": "Me",
   "librarySectionLists": "Lists",
   "togetherSoonTitle": "Choosing together is coming soon",
-  "togetherSoonMessage": "Compare your lists with friends and vote for what to watch."
+  "togetherSoonMessage": "Compare your lists with friends and vote for what to watch.",
+  "homeTitle": "Tonight",
+  "homeRefreshReleases": "Refresh releases",
+  "homeOfflineMessage": "releases will be refreshed when the network is back.",
+  "homeResume": "Resume",
+  "homeEpisodeCode": "S{season} E{episode}",
+  "@homeEpisodeCode": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNextEpisode": "Next: {episode}",
+  "@homeNextEpisode": {
+    "placeholders": {
+      "episode": {
+        "type": "String"
+      }
+    }
+  },
+  "homeMarkEpisodeSeen": "Mark {episode} of {title} as seen",
+  "@homeMarkEpisodeSeen": {
+    "placeholders": {
+      "episode": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEpisodeSeenMessage": "{episode} seen · {title}",
+  "@homeEpisodeSeenMessage": {
+    "placeholders": {
+      "episode": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTonightTitle": "To watch tonight",
+  "homeTonightOtherIdea": "Another idea",
+  "homeTonightSource": "From your list \"{list}\" · {count, plural, =1{1 title not seen yet} other{{count} titles not seen yet}}",
+  "@homeTonightSource": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeChooseTogether": "Choose together",
+  "homeChooseTogetherSubtitle": "Compare your lists and vote",
+  "homeEmptyTitle": "Nothing planned tonight.",
+  "homeEmptyMessage": "Add films or series to your list \"{list}\" to find them here.",
+  "@homeEmptyMessage": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEmptyAction": "Discover titles",
+  "homeAlsoInProgress": "Also in progress · {count}",
+  "@homeAlsoInProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSeeAllCount": "See all ({count})",
+  "@homeSeeAllCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeRecentAreInResume": "The most recent ones are in \"Resume\".",
+  "homeFilterAll": "All · {count}",
+  "@homeFilterAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFilterSeries": "Series · {count}",
+  "@homeFilterSeries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFilterBooks": "Books · {count}",
+  "@homeFilterBooks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeMoreInProgress": "{count} more, see all",
+  "@homeMoreInProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePausedTitle": "{count} paused",
+  "@homePausedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePausedSubtitle": "No activity for more than {days} days",
+  "@homePausedSubtitle": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAgoToday": "today",
+  "homeAgoYesterday": "yesterday",
+  "homeAgoDays": "{count} d ago",
+  "@homeAgoDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAgoWeeks": "{count} wk ago",
+  "@homeAgoWeeks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAgoMonths": "{count} mo ago",
+  "@homeAgoMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeConnectTmdbTitle": "Connect TMDB",
+  "homeConnectTmdbMessage": "MediaVore gets posters, release dates and new episodes from TMDB. You need a free personal key.",
+  "homeConnectTmdbAction": "Connect to TMDB",
+  "homeUpcomingTitle": "Upcoming",
+  "homeUpcomingRow": "Releases and alerts",
+  "homeUpcomingSubtitle": "{count, plural, =0{No title followed} =1{1 title followed} other{{count} titles followed}}",
+  "@homeUpcomingSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
