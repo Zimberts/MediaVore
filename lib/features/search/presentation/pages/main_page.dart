@@ -334,10 +334,11 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
     if (isMainPageCurrent) {
       final provider = widget.mainPageContext.read<SearchProvider>();
       if (provider.selectedTab == AppTab.library) {
-        // Library segment, plus the search bar of the history
-        topOffset += 56;
+        // Library title, segment and type chips instead of an app bar, plus
+        // the app bar and the search bar of the history.
+        topOffset += 96;
         if (provider.librarySection == LibrarySection.history) {
-          topOffset += 60;
+          topOffset += 116;
         }
       }
     } else if (isMediaDetails) {

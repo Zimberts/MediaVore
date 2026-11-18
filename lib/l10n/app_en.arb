@@ -1060,5 +1060,17 @@
   "discoverOfflineMessage": "check your connection and try again. Your lists and your history remain available.",
   "discoverSwipeSoonTitle": "Swipe mode is coming soon",
   "discoverSwipeSoonMessage": "Go through suggestions one by one to fill your lists.",
-  "discoverConnectTmdb": "Connect to TMDB"
+  "discoverConnectTmdb": "Connect to TMDB",
+  "libraryTypeAll": "All",
+  "libraryTypeChip": "{label} · {count}",
+  "@libraryTypeChip": {"placeholders": {"label": {"type": "String"}, "count": {"type": "int"}}},
+  "libraryListRowLabel": "{name}, {count, plural, =0{no items} =1{1 item} other{{count} items}}, {films, plural, =0{no movies} =1{1 movie} other{{films} movies}}, {series, plural, =0{no series} =1{1 series} other{{series} series}}",
+  "@libraryListRowLabel": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}, "films": {"type": "int"}, "series": {"type": "int"}}},
+  "libraryListImported": "List “{name}” added",
+  "@libraryListImported": {"placeholders": {"name": {"type": "String"}}},
+  "libraryListNameTaken": "A list named “{name}” already exists",
+  "@libraryListNameTaken": {"placeholders": {"name": {"type": "String"}}},
+  "libraryListEmptyForType": "Nothing of this type in this list",
+  "libraryListScope": "{title} · {type}",
+  "@libraryListScope": {"placeholders": {"title": {"type": "String"}, "type": {"type": "String"}}}
 }

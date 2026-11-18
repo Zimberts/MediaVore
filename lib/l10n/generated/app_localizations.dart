@@ -2851,6 +2851,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connect to TMDB'**
   String get discoverConnectTmdb;
+
+  /// No description provided for @libraryTypeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libraryTypeAll;
+
+  /// No description provided for @libraryTypeChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} · {count}'**
+  String libraryTypeChip(String label, int count);
+
+  /// No description provided for @libraryListRowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {count, plural, =0{no items} =1{1 item} other{{count} items}}, {films, plural, =0{no movies} =1{1 movie} other{{films} movies}}, {series, plural, =0{no series} =1{1 series} other{{series} series}}'**
+  String libraryListRowLabel(String name, int count, int films, int series);
+
+  /// No description provided for @libraryListImported.
+  ///
+  /// In en, this message translates to:
+  /// **'List “{name}” added'**
+  String libraryListImported(String name);
+
+  /// No description provided for @libraryListNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'A list named “{name}” already exists'**
+  String libraryListNameTaken(String name);
+
+  /// No description provided for @libraryListEmptyForType.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing of this type in this list'**
+  String get libraryListEmptyForType;
+
+  /// No description provided for @libraryListScope.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} · {type}'**
+  String libraryListScope(String title, String type);
 }
 
 class _AppLocalizationsDelegate

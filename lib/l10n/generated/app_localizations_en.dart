@@ -1644,4 +1644,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverConnectTmdb => 'Connect to TMDB';
+
+  @override
+  String get libraryTypeAll => 'All';
+
+  @override
+  String libraryTypeChip(String label, int count) {
+    return '$label · $count';
+  }
+
+  @override
+  String libraryListRowLabel(String name, int count, int films, int series) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+      zero: 'no items',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      films,
+      locale: localeName,
+      other: '$films movies',
+      one: '1 movie',
+      zero: 'no movies',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      series,
+      locale: localeName,
+      other: '$series series',
+      one: '1 series',
+      zero: 'no series',
+    );
+    return '$name, $_temp0, $_temp1, $_temp2';
+  }
+
+  @override
+  String libraryListImported(String name) {
+    return 'List “$name” added';
+  }
+
+  @override
+  String libraryListNameTaken(String name) {
+    return 'A list named “$name” already exists';
+  }
+
+  @override
+  String get libraryListEmptyForType => 'Nothing of this type in this list';
+
+  @override
+  String libraryListScope(String title, String type) {
+    return '$title · $type';
+  }
 }

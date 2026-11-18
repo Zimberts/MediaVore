@@ -14,6 +14,7 @@ import 'package:mediavore/features/discovery/presentation/providers/swipe_sessio
 import 'package:mediavore/features/library/presentation/pages/library_page.dart';
 import 'package:mediavore/features/home/presentation/pages/home_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
+import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/together/presentation/pages/together_page.dart';
@@ -343,7 +344,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await goTo(tester, AppTab.library);
-      final listsState = tester.state(find.byType(SavedMediaPage));
+      final listsState = tester.state(find.byType(ListsOverview));
       await tester.tap(find.text('History').last);
       await tester.pumpAndSettle();
       expect(find.byType(SeenHistoryPage).hitTestable(), findsOneWidget);
@@ -355,7 +356,7 @@ void main() {
       expect(searchProvider.librarySection, LibrarySection.history);
       expect(find.byType(SeenHistoryPage).hitTestable(), findsOneWidget);
       expect(
-        tester.state(find.byType(SavedMediaPage, skipOffstage: false)),
+        tester.state(find.byType(ListsOverview, skipOffstage: false)),
         same(listsState),
       );
     });
@@ -454,13 +455,13 @@ void main() {
       await goTo(tester, AppTab.library);
 
       expect(find.byType(AppSegmented<LibrarySection>), findsOneWidget);
-      expect(find.byType(SavedMediaPage).hitTestable(), findsOneWidget);
+      expect(find.byType(ListsOverview).hitTestable(), findsOneWidget);
       expect(find.byType(SeenHistoryPage).hitTestable(), findsNothing);
 
       await tester.tap(find.text('History').last);
       await tester.pumpAndSettle();
       expect(find.byType(SeenHistoryPage).hitTestable(), findsOneWidget);
-      expect(find.byType(SavedMediaPage).hitTestable(), findsNothing);
+      expect(find.byType(ListsOverview).hitTestable(), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -470,10 +471,14 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
       await goTo(tester, AppTab.library);
+      await tester.tap(find.byKey(const ValueKey('library_list_watchlist')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SavedMediaPage), findsOneWidget);
 
       await tester.tap(find.text('Search a movie or series').hitTestable());
       await tester.pumpAndSettle();
 
+      expect(find.byType(SavedMediaPage), findsNothing);
       expect(searchProvider.selectedTab, AppTab.discover);
       expect(find.byType(SearchPage).hitTestable(), findsOneWidget);
     });
@@ -533,7 +538,7 @@ void main() {
       expect(find.text('Import List'), findsNothing);
       expect(searchProvider.selectedTab, AppTab.library);
       expect(searchProvider.librarySection, LibrarySection.lists);
-      expect(find.byType(SavedMediaPage).hitTestable(), findsOneWidget);
+      expect(find.byType(ListsOverview).hitTestable(), findsOneWidget);
     });
 
     testWidgets('should open the import dialog for the initial link', (
