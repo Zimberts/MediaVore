@@ -33,7 +33,8 @@ applyTo:
   Tiers are 1..n, consecutive, in file order, with increasing targets. `tier` is not
   persisted, so inserting a level is safe; only `id` is.
 - The first tier of each group carries `groupTitle` (family name shown on the card) and
-  `translations.<code>.groupTitle`; other tiers don't.
+  `translations.<code>.groupTitle`, as well as `category` (`movies`, `tv`, `books`, `discovery`,
+  `together`, `regularity`); other tiers don't.
 - Never raise the target of an existing id (unlocks are recomputed from history and
   would be lost); lowering is fine.
 - `genre` achievements use `params.genreId` (TMDB movie genre id), never a genre name.

@@ -1416,6 +1416,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get achievementsOverall => 'Progression globale';
 
   @override
+  String get achievementsCategoryMovies => 'Films';
+
+  @override
+  String get achievementsCategoryTv => 'Séries';
+
+  @override
+  String get achievementsCategoryBooks => 'Livres';
+
+  @override
+  String get achievementsCategoryDiscovery => 'Découverte';
+
+  @override
+  String get achievementsCategoryTogether => 'Ensemble';
+
+  @override
+  String get achievementsCategoryRegularity => 'Régularité';
+
+  @override
   String achievementsUnlockedCount(int unlocked, int total) {
     return 'Vous avez débloqué $unlocked badges sur $total';
   }

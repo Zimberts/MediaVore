@@ -1390,6 +1390,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementsOverall => 'Overall Progress';
 
   @override
+  String get achievementsCategoryMovies => 'Movies';
+
+  @override
+  String get achievementsCategoryTv => 'Series';
+
+  @override
+  String get achievementsCategoryBooks => 'Books';
+
+  @override
+  String get achievementsCategoryDiscovery => 'Discovery';
+
+  @override
+  String get achievementsCategoryTogether => 'Together';
+
+  @override
+  String get achievementsCategoryRegularity => 'Regularity';
+
+  @override
   String achievementsUnlockedCount(int unlocked, int total) {
     return 'You\'ve unlocked $unlocked out of $total badges';
   }

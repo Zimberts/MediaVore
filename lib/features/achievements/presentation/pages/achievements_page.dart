@@ -8,6 +8,66 @@ import 'package:mediavore/features/achievements/presentation/providers/achieveme
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+const List<String> achievementOrderedCategories = [
+  'movies',
+  'tv',
+  'books',
+  'discovery',
+  'together',
+  'regularity',
+];
+
+String categoryTitle(BuildContext context, String categoryId) {
+  switch (categoryId) {
+    case 'movies':
+      return context.l10n.achievementsCategoryMovies;
+    case 'tv':
+      return context.l10n.achievementsCategoryTv;
+    case 'books':
+      return context.l10n.achievementsCategoryBooks;
+    case 'discovery':
+      return context.l10n.achievementsCategoryDiscovery;
+    case 'together':
+      return context.l10n.achievementsCategoryTogether;
+    case 'regularity':
+      return context.l10n.achievementsCategoryRegularity;
+    default:
+      return categoryId;
+  }
+}
+
+Color categoryColor(BuildContext context, String categoryId) {
+  final colors = context.appColors;
+  switch (categoryId) {
+    case 'movies':
+      return colors.movie;
+    case 'tv':
+      return colors.series;
+    case 'books':
+      return colors.book;
+    case 'discovery':
+      return colors.warning;
+    case 'together':
+      return colors.duo;
+    case 'regularity':
+      return colors.success;
+    default:
+      return colors.primary;
+  }
+}
+
+sealed class _AchievementsListItem {}
+
+class _CategoryHeaderItem extends _AchievementsListItem {
+  final String categoryId;
+  _CategoryHeaderItem(this.categoryId);
+}
+
+class _FamilyCardItem extends _AchievementsListItem {
+  final AchievementFamily family;
+  _FamilyCardItem(this.family);
+}
+
 class AchievementsPage extends StatefulWidget {
   static const routeName = '/achievements';
 
@@ -73,10 +133,44 @@ class _AchievementsPageState extends State<AchievementsPage> {
     _scrollToAchievement(id);
   }
 
+  List<_AchievementsListItem> _buildListItems(
+    List<AchievementFamily> families,
+  ) {
+    final listItems = <_AchievementsListItem>[];
+    for (final cat in achievementOrderedCategories) {
+      final inCat = families.where((f) => f.category == cat).toList();
+      if (inCat.isEmpty) continue;
+      listItems.add(_CategoryHeaderItem(cat));
+      for (final fam in inCat) {
+        listItems.add(_FamilyCardItem(fam));
+      }
+    }
+
+    // Include any unrecognized categories at the end if present
+    final remaining = families
+        .where((f) => !achievementOrderedCategories.contains(f.category))
+        .toList();
+    if (remaining.isNotEmpty) {
+      final extraCats = remaining.map((f) => f.category).toSet();
+      for (final cat in extraCats) {
+        listItems.add(_CategoryHeaderItem(cat));
+        for (final fam in remaining.where((f) => f.category == cat)) {
+          listItems.add(_FamilyCardItem(fam));
+        }
+      }
+    }
+
+    return listItems;
+  }
+
   void _scrollToAchievement(String id) {
     if (!_itemScrollController.isAttached) return;
     final provider = context.read<AchievementProvider>();
-    final index = provider.families.indexWhere((f) => f.contains(id));
+    final listItems = _buildListItems(provider.families);
+
+    final index = listItems.indexWhere(
+      (item) => item is _FamilyCardItem && item.family.contains(id),
+    );
     if (index != -1) {
       _itemScrollController.scrollTo(
         index: index,
@@ -97,6 +191,8 @@ class _AchievementsPageState extends State<AchievementsPage> {
     final totalCount = provider.achievements.length;
     final completedFamilies = families.where((f) => f.isCompleted).length;
 
+    final listItems = _buildListItems(families);
+
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.profileAchievements)),
       body: families.isEmpty
@@ -112,16 +208,36 @@ class _AchievementsPageState extends State<AchievementsPage> {
                 Expanded(
                   child: ScrollablePositionedList.builder(
                     itemScrollController: _itemScrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: families.length,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    itemCount: listItems.length,
                     itemBuilder: (context, index) {
-                      final family = families[index];
-                      final focusedId = _focusedId;
-                      return _FamilyCard(
-                        family: family,
-                        isHighlighted:
-                            focusedId != null && family.contains(focusedId),
-                      );
+                      final item = listItems[index];
+                      if (item is _CategoryHeaderItem) {
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            top: index == 0 ? 12 : 24,
+                            bottom: 12,
+                          ),
+                          child: Text(
+                            categoryTitle(context, item.categoryId),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        );
+                      } else if (item is _FamilyCardItem) {
+                        final family = item.family;
+                        final focusedId = _focusedId;
+                        return _FamilyCard(
+                          family: family,
+                          isHighlighted:
+                              focusedId != null && family.contains(focusedId),
+                        );
+                      }
+                      return const SizedBox.shrink();
                     },
                   ),
                 ),
@@ -234,14 +350,22 @@ class _FamilyCard extends StatelessWidget {
     final next = family.next;
     final isUnlocked = current.isUnlocked;
     final languageCode = context.l10n.localeName;
+    final catColor = categoryColor(context, family.category);
+
+    final title = (family.isTiered && isUnlocked)
+        ? context.l10n.achievementsLevelTitle(
+            family.highestUnlocked?.tier ?? 1,
+            family.titleFor(languageCode),
+          )
+        : family.titleFor(languageCode);
 
     return AnimatedContainer(
       duration: const Duration(seconds: 1),
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: isHighlighted
-            ? Border.all(color: colors.primary, width: 2)
+            ? Border.all(color: catColor, width: 2)
             : null,
       ),
       child: Card(
@@ -253,34 +377,66 @@ class _FamilyCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _AchievementBadge(
                   isUnlocked: isUnlocked,
                   isCompleted: family.isCompleted,
+                  categoryColor: catColor,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        family.titleFor(languageCode),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          if (family.isTiered) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${family.unlockedCount}/${family.tiers.length}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
+                      const SizedBox(height: 4),
                       Text(
                         current.descriptionFor(languageCode),
                         style: TextStyle(color: colors.text2),
                       ),
                       if (family.isTiered) ...[
-                        const SizedBox(height: 6),
-                        _TierDots(family: family),
+                        const SizedBox(height: 8),
+                        _TierDots(family: family, color: catColor),
                       ],
                       if (next != null && next.progress > 0) ...[
                         const SizedBox(height: 8),
-                        _ProgressBar(achievement: next),
+                        _ProgressBar(achievement: next, color: catColor),
                         const SizedBox(height: 4),
                         Text(
                           family.isTiered && isUnlocked
@@ -293,13 +449,25 @@ class _FamilyCard extends StatelessWidget {
                         ),
                       ],
                       if (family.isCompleted && current.unlockedAt != null) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           family.isTiered
                               ? context.l10n.achievementsAllLevelsCompleted
                               : context.l10n.achievementsUnlockedOn(
                                   _formatDate(current.unlockedAt!),
                                 ),
+                          style: TextStyle(
+                            color: colors.success,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ] else if (isUnlocked && current.unlockedAt != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          context.l10n.achievementsUnlockedOn(
+                            _formatDate(current.unlockedAt!),
+                          ),
                           style: TextStyle(
                             color: colors.success,
                             fontSize: 12,
@@ -319,6 +487,7 @@ class _FamilyCard extends StatelessWidget {
   }
 
   void _showTiers(BuildContext context, AchievementFamily family) {
+    final catColor = categoryColor(context, family.category);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -340,7 +509,12 @@ class _FamilyCard extends StatelessWidget {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
-            for (final tier in family.tiers) _TierTile(achievement: tier),
+            for (final tier in family.tiers)
+              _TierTile(
+                achievement: tier,
+                isNextGoal: tier == family.next,
+                categoryColor: catColor,
+              ),
           ],
         ),
       ),
@@ -350,8 +524,14 @@ class _FamilyCard extends StatelessWidget {
 
 class _TierTile extends StatelessWidget {
   final Achievement achievement;
+  final bool isNextGoal;
+  final Color categoryColor;
 
-  const _TierTile({required this.achievement});
+  const _TierTile({
+    required this.achievement,
+    required this.isNextGoal,
+    required this.categoryColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -362,7 +542,11 @@ class _TierTile extends StatelessWidget {
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: _AchievementBadge(isUnlocked: isUnlocked, size: 44),
+      leading: _AchievementBadge(
+        isUnlocked: isUnlocked,
+        categoryColor: categoryColor,
+        size: 44,
+      ),
       title: Text(
         achievement.tier != null
             ? context.l10n.achievementsLevelTitle(achievement.tier!, title)
@@ -385,13 +569,18 @@ class _TierTile extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             )
-          else ...[
-            _ProgressBar(achievement: achievement),
-            const SizedBox(height: 2),
-            Text(
-              achievement.progressLabel ?? '',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+          else if (isNextGoal) ...[
+            _ProgressBar(achievement: achievement, color: categoryColor),
+            const SizedBox(height: 4),
+            if (achievement.progressLabel != null &&
+                achievement.progressLabel!.isNotEmpty)
+              Text(
+                achievement.progressLabel!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: categoryColor,
+                    ),
+              ),
           ],
         ],
       ),
@@ -403,23 +592,26 @@ class _AchievementBadge extends StatelessWidget {
   final bool isUnlocked;
   final bool isCompleted;
   final double size;
+  final Color? categoryColor;
 
   const _AchievementBadge({
     required this.isUnlocked,
     this.isCompleted = false,
     this.size = 64,
+    this.categoryColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final tint = categoryColor ?? colors.primary;
     return Opacity(
-      opacity: isUnlocked ? 1.0 : 0.3,
+      opacity: isUnlocked ? 1.0 : 0.35,
       child: Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: colors.primary.withValues(alpha: 0.1),
+          color: tint.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -429,7 +621,7 @@ class _AchievementBadge extends StatelessWidget {
               ? Icons.stars
               : Icons.stars_outlined,
           size: size / 2,
-          color: isUnlocked ? colors.primary : colors.text2,
+          color: isUnlocked ? tint : colors.text2,
         ),
       ),
     );
@@ -438,12 +630,14 @@ class _AchievementBadge extends StatelessWidget {
 
 class _TierDots extends StatelessWidget {
   final AchievementFamily family;
+  final Color? color;
 
-  const _TierDots({required this.family});
+  const _TierDots({required this.family, this.color});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final activeColor = color ?? colors.primary;
     return Row(
       children: [
         for (final tier in family.tiers)
@@ -452,7 +646,7 @@ class _TierDots extends StatelessWidget {
             child: Icon(
               tier.isUnlocked ? Icons.circle : Icons.circle_outlined,
               size: 10,
-              color: tier.isUnlocked ? colors.primary : colors.text2,
+              color: tier.isUnlocked ? activeColor : colors.text2,
             ),
           ),
         const SizedBox(width: 4),
@@ -472,16 +666,22 @@ class _TierDots extends StatelessWidget {
 
 class _ProgressBar extends StatelessWidget {
   final Achievement achievement;
+  final Color? color;
 
-  const _ProgressBar({required this.achievement});
+  const _ProgressBar({required this.achievement, this.color});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return LinearProgressIndicator(
-      value: achievement.progress,
-      backgroundColor: colors.primary.withValues(alpha: 0.1),
-      valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+    final activeColor = color ?? colors.primary;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: LinearProgressIndicator(
+        value: achievement.progress,
+        minHeight: 6,
+        backgroundColor: activeColor.withValues(alpha: 0.12),
+        valueColor: AlwaysStoppedAnimation<Color>(activeColor),
+      ),
     );
   }
 }

@@ -802,6 +802,12 @@
   "actorBiography": "Biography",
   "actorKnownFor": "Known For",
   "achievementsOverall": "Overall Progress",
+  "achievementsCategoryMovies": "Movies",
+  "achievementsCategoryTv": "Series",
+  "achievementsCategoryBooks": "Books",
+  "achievementsCategoryDiscovery": "Discovery",
+  "achievementsCategoryTogether": "Together",
+  "achievementsCategoryRegularity": "Regularity",
   "achievementsUnlockedCount": "You've unlocked {unlocked} out of {total} badges",
   "@achievementsUnlockedCount": {
     "placeholders": {
