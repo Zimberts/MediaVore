@@ -127,6 +127,9 @@ void main() {
   testWidgets('SettingsPage displays previous episodes setting and updates value', (
     WidgetTester tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
 
     await tester.pumpWidget(

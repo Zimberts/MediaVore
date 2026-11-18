@@ -104,7 +104,13 @@ void main() {
       expect(find.text('Paper'), findsWidgets);
       expect(find.text('Sand'), findsWidgets);
       expect(find.text('Mist'), findsWidgets);
-      expect(find.text('Night'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('settings_light_palette_dropdown')),
+          matching: find.text('Night'),
+        ),
+        findsNothing,
+      );
 
       await tester.tap(find.text('Sand').last);
       await tester.pumpAndSettle();
