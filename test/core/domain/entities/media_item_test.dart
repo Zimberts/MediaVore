@@ -230,4 +230,63 @@ void main() {
       expect(MediaItem.fromJson(item.toJson()).originalTitle, isNull);
     });
   });
+
+  group('belongs_to_collection', () {
+    test('should parse belongs_to_collection from json', () {
+      final item = MediaItem.fromJson({
+        'id': 124198,
+        'title': 'Mad Max: Fury Road',
+        'media_type': 'movie',
+        'overview': '',
+        'release_date': '2015-05-15',
+        'belongs_to_collection': {
+          'id': 8945,
+          'name': 'Mad Max Collection',
+        },
+      });
+
+      expect(item.collectionId, 8945);
+      expect(item.collectionName, 'Mad Max Collection');
+    });
+
+    test('should survive a toJson / fromJson round trip for collection', () {
+      const item = MediaItem(
+        id: 124198,
+        title: 'Mad Max: Fury Road',
+        overview: '',
+        releaseDate: '2015-05-15',
+        mediaType: MediaType.movie,
+        collectionId: 8945,
+        collectionName: 'Mad Max Collection',
+      );
+
+      final json = item.toJson();
+      expect(json['belongs_to_collection'], {
+        'id': 8945,
+        'name': 'Mad Max Collection',
+      });
+
+      final restored = MediaItem.fromJson(json);
+      expect(restored.collectionId, 8945);
+      expect(restored.collectionName, 'Mad Max Collection');
+      expect(restored, item);
+    });
+
+    test('should serialize null belongs_to_collection when item has no collection', () {
+      const item = MediaItem(
+        id: 1,
+        title: 'Standalone Film',
+        overview: '',
+        releaseDate: '2020-01-01',
+        mediaType: MediaType.movie,
+      );
+
+      final json = item.toJson();
+      expect(json['belongs_to_collection'], isNull);
+
+      final restored = MediaItem.fromJson(json);
+      expect(restored.collectionId, isNull);
+      expect(restored.collectionName, isNull);
+    });
+  });
 }

@@ -1823,5 +1823,57 @@
       }
     }
   },
-  "personOfflineNoData": "No cached information for this person."
+  "personOfflineNoData": "No cached information for this person.",
+  "sagaHeader": "Saga · {name}",
+  "@sagaHeader": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sagaHeaderDefault": "Saga",
+  "sagaSeenCount": "{seen, plural, =0{0 of {total} films seen} =1{1 of {total} films seen} other{{seen} of {total} films seen}}",
+  "@sagaSeenCount": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sagaCurrentItem": "This title",
+  "sagaUpcoming": "Upcoming",
+  "sagaUpcomingWithYear": "Upcoming ({year})",
+  "@sagaUpcomingWithYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "sagaAddMissing": "{count, plural, =1{Add 1 missing film to \"{list}\"} other{Add {count} missing films to \"{list}\"}}",
+  "@sagaAddMissing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "sagaMissingAdded": "{count, plural, =1{1 film added to \"{list}\"} other{{count} films added to \"{list}\"}}",
+  "@sagaMissingAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  }
 }

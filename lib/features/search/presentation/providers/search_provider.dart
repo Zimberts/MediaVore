@@ -445,6 +445,30 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adds multiple [items] to [listName] in one operation, notifying listeners once.
+  Future<void> addAllToList(List<MediaItem> items, String listName) async {
+    if (items.isEmpty) return;
+    await repository.addAllToList(items, listName);
+    final currentEntries = _listEntries[listName] ?? [];
+    final newEntries =
+        items.map((item) => '${item.id}:${item.mediaType.name}').toList();
+    _listEntries[listName] = [
+      ...currentEntries,
+      ...newEntries.where((e) => !currentEntries.contains(e)),
+    ];
+    if (listName == 'watchlist') {
+      for (final item in items) {
+        _watchlistIds.add(item.id.toString());
+      }
+    }
+    _listPreviews[listName] = await repository.getListPreviews(listName);
+    if (listName == tonightListName) {
+      await _loadTonightListItems(notify: false);
+    }
+    await updateCacheSize();
+    notifyListeners();
+  }
+
   Future<void> removeFromList(MediaItem item, String listName) async {
     final entry = '${item.id}:${item.mediaType.name}';
     final currentEntries = _listEntries[listName] ?? [];

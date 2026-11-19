@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
@@ -25,6 +26,24 @@ class MediaListLocalDataSource {
       () =>
           _addToListInTxn(id: id, type: type, listName: listName, title: title),
     );
+  }
+
+  /// Atomically adds [items] to [listName] in order, skipping any already present.
+  Future<void> addAllToList({
+    required List<MediaItem> items,
+    required String listName,
+  }) async {
+    if (items.isEmpty) return;
+    await _isar.writeTxn(() async {
+      for (final item in items) {
+        await _addToListInTxn(
+          id: item.id,
+          type: item.mediaType.name,
+          listName: listName,
+          title: item.title,
+        );
+      }
+    });
   }
 
   /// Must run inside a write transaction.

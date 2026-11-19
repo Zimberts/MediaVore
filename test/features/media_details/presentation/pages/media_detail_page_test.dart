@@ -10,6 +10,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/person_page.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_saga.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -469,6 +470,53 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PersonPage), findsOneWidget);
+    });
+
+    testWidgets('displays MediaDetailSaga when movie has collection parts', (
+      WidgetTester tester,
+    ) async {
+      const tSagaMovie = MediaItem(
+        id: 1,
+        title: 'The Fellowship of the Ring',
+        overview: '',
+        releaseDate: '2001-12-19',
+        mediaType: MediaType.movie,
+        collectionId: 119,
+        collectionName: 'The Lord of the Rings Collection',
+      );
+      const tSagaMovie2 = MediaItem(
+        id: 2,
+        title: 'The Two Towers',
+        overview: '',
+        releaseDate: '2002-12-18',
+        mediaType: MediaType.movie,
+        collectionId: 119,
+        collectionName: 'The Lord of the Rings Collection',
+      );
+      final tSagaDetails = MediaDetails(
+        item: tSagaMovie,
+        cast: const [],
+        collection: const [tSagaMovie, tSagaMovie2],
+      );
+
+      when(
+        () => mockMediaRepository.getMediaDetails(1),
+      ).thenAnswer((_) async => tSagaDetails);
+
+      await tester.pumpWidget(createWidgetUnderTest(item: tSagaMovie));
+      await tester.pumpAndSettle();
+
+      final sagaFinder = find.byType(MediaDetailSaga);
+      await tester.scrollUntilVisible(
+        sagaFinder,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(sagaFinder, findsOneWidget);
+      expect(
+        find.text('Saga · The Lord of the Rings Collection'),
+        findsOneWidget,
+      );
     });
   });
 }

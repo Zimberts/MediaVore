@@ -2733,4 +2733,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get personOfflineNoData => 'No cached information for this person.';
+
+  @override
+  String sagaHeader(String name) {
+    return 'Saga · $name';
+  }
+
+  @override
+  String get sagaHeaderDefault => 'Saga';
+
+  @override
+  String sagaSeenCount(int seen, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seen,
+      locale: localeName,
+      other: '$seen of $total films seen',
+      one: '1 of $total films seen',
+      zero: '0 of $total films seen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sagaCurrentItem => 'This title';
+
+  @override
+  String get sagaUpcoming => 'Upcoming';
+
+  @override
+  String sagaUpcomingWithYear(String year) {
+    return 'Upcoming ($year)';
+  }
+
+  @override
+  String sagaAddMissing(int count, String list) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Add $count missing films to \"$list\"',
+      one: 'Add 1 missing film to \"$list\"',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sagaMissingAdded(int count, String list) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count films added to \"$list\"',
+      one: '1 film added to \"$list\"',
+    );
+    return '$_temp0';
+  }
 }

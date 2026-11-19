@@ -293,6 +293,12 @@ class MediaItem extends Equatable {
               'season_number': lastSeasonNumber,
             }
           : null,
+      'belongs_to_collection': (collectionId != null || collectionName != null)
+          ? {
+              'id': collectionId,
+              'name': collectionName,
+            }
+          : null,
     };
   }
 

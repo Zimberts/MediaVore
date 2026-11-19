@@ -1639,4 +1639,77 @@ void main() {
       verifyNever(() => mockLocalDataSource.addQuickAddItem(any()));
     });
   });
+
+  group('addAllToList', () {
+    test('should cache each item and delegate atomically to localDataSource', () async {
+      final items = [
+        const MediaItem(
+          id: 10,
+          title: 'Mad Max',
+          overview: '',
+          releaseDate: '1979-04-12',
+          mediaType: MediaType.movie,
+        ),
+        const MediaItem(
+          id: 11,
+          title: 'Mad Max 2',
+          overview: '',
+          releaseDate: '1981-12-24',
+          mediaType: MediaType.movie,
+        ),
+      ];
+
+      when(() => mockCache.cacheItem(any())).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.addAllToList(
+          items: any(named: 'items'),
+          listName: any(named: 'listName'),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockRemoteDataSource.getMediaDetailsBundle(
+          any(),
+          type: any(named: 'type'),
+        ),
+      ).thenAnswer((invocation) async {
+        final id = invocation.positionalArguments[0] as int;
+        return MediaDetailsBundle(
+          item: MediaItem(
+            id: id,
+            title: 'Film $id',
+            overview: '',
+            releaseDate: '1980',
+            mediaType: MediaType.movie,
+          ),
+          credits: const {'cast': [], 'crew': []},
+          similar: const [],
+          recommendations: const [],
+          watchProviders: const {},
+          videos: const [],
+        );
+      });
+      when(() => mockCache.cacheDetails(any())).thenAnswer((_) async {});
+
+      await repository.addAllToList(items, 'watchlist');
+
+      verify(() => mockCache.cacheItem(items[0])).called(1);
+      verify(() => mockCache.cacheItem(items[1])).called(1);
+      verify(
+        () => mockLocalDataSource.addAllToList(
+          items: items,
+          listName: 'watchlist',
+        ),
+      ).called(1);
+    });
+
+    test('should no-op when items is empty', () async {
+      await repository.addAllToList(const [], 'watchlist');
+      verifyNever(
+        () => mockLocalDataSource.addAllToList(
+          items: any(named: 'items'),
+          listName: any(named: 'listName'),
+        ),
+      );
+    });
+  });
 }

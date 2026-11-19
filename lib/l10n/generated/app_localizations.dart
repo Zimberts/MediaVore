@@ -4273,6 +4273,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No cached information for this person.'**
   String get personOfflineNoData;
+
+  /// No description provided for @sagaHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga · {name}'**
+  String sagaHeader(String name);
+
+  /// No description provided for @sagaHeaderDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga'**
+  String get sagaHeaderDefault;
+
+  /// No description provided for @sagaSeenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{seen, plural, =0{0 of {total} films seen} =1{1 of {total} films seen} other{{seen} of {total} films seen}}'**
+  String sagaSeenCount(int seen, int total);
+
+  /// No description provided for @sagaCurrentItem.
+  ///
+  /// In en, this message translates to:
+  /// **'This title'**
+  String get sagaCurrentItem;
+
+  /// No description provided for @sagaUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get sagaUpcoming;
+
+  /// No description provided for @sagaUpcomingWithYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming ({year})'**
+  String sagaUpcomingWithYear(String year);
+
+  /// No description provided for @sagaAddMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Add 1 missing film to \"{list}\"} other{Add {count} missing films to \"{list}\"}}'**
+  String sagaAddMissing(int count, String list);
+
+  /// No description provided for @sagaMissingAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 film added to \"{list}\"} other{{count} films added to \"{list}\"}}'**
+  String sagaMissingAdded(int count, String list);
 }
 
 class _AppLocalizationsDelegate
