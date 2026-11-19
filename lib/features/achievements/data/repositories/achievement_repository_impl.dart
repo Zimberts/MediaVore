@@ -9,6 +9,9 @@ import 'package:mediavore/features/achievements/domain/repositories/achievement_
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
+import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -29,12 +32,16 @@ class AchievementRepositoryImpl implements AchievementRepository {
   /// Export dates for `backup_export`; without it that type stays at 0.
   final ExportLog? exportLog;
 
+  /// SharedPreferences store for usage counters like `together_choices`.
+  final SharedPreferences? prefs;
+
   AchievementRepositoryImpl(
     this._isar,
     this._localDataSource, {
     this.definitionsLoader,
     this.mediaSource,
     this.exportLog,
+    this.prefs,
   });
 
   /// Types that depend on cached TMDB data or on the current watchlist rather
@@ -47,6 +54,8 @@ class AchievementRepositoryImpl implements AchievementRepository {
     'saga_complete',
     'watchlist_clear',
     'list_items',
+    'swipe_decisions',
+    'together_choices',
     ..._titleTypes,
   };
 
@@ -163,6 +172,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
       _isar.achievementModels.watchLazy(),
       _isar.seenItemModels.watchLazy(),
       _isar.mediaListItems.watchLazy(), // watchlist_clear
+      _isar.swipeDecisionModels.watchLazy(), // swipe_decisions
     ]).asyncMap((_) => getAchievements());
   }
 
@@ -350,6 +360,18 @@ class AchievementRepositoryImpl implements AchievementRepository {
         final count = usage.listTitles;
         if (count == null) break;
         // Current state, no history: dated when observed.
+        return _ProgressData(
+          (count / target).clamp(0.0, 1.0),
+          '$count/$target',
+          milestoneReachedAt: count >= target ? DateTime.now() : null,
+        );
+      case 'swipe_decisions':
+        final dates = usage.swipeDates;
+        if (dates == null) break;
+        return _datesMilestone(dates, target);
+      case 'together_choices':
+        final count = usage.togetherChoices;
+        if (count == null) break;
         return _ProgressData(
           (count / target).clamp(0.0, 1.0),
           '$count/$target',
@@ -844,7 +866,36 @@ class AchievementRepositoryImpl implements AchievementRepository {
         debugPrint('Achievements: lists unavailable: $e');
       }
     }
-    return _UsageData(exportDays, listTitles);
+    List<DateTime>? swipeDates;
+    if (types.contains('swipe_decisions')) {
+      try {
+        final decisions = await _localDataSource.getSwipeDecisions();
+        swipeDates = decisions.map((d) => d.decidedAt).toList();
+      } catch (e) {
+        debugPrint('Achievements: swipe decisions unavailable: $e');
+      }
+    }
+    int? togetherChoices;
+    if (types.contains('together_choices')) {
+      try {
+        SharedPreferences? p = prefs;
+        if (p == null) {
+          try {
+            p = await SharedPreferences.getInstance();
+          } catch (_) {}
+        }
+        togetherChoices =
+            p?.getInt(TogetherSessionProvider.togetherChoicesKey) ?? 0;
+      } catch (e) {
+        debugPrint('Achievements: together choices unavailable: $e');
+      }
+    }
+    return _UsageData(
+      exportDays,
+      listTitles,
+      swipeDates: swipeDates,
+      togetherChoices: togetherChoices,
+    );
   }
 
   /// Seen titles with their cached metadata and, when [withAirDates], the
@@ -1008,7 +1059,18 @@ class _UsageData {
   /// Distinct titles over every list (watchlist included); null when unread.
   final int? listTitles;
 
-  const _UsageData(this.exportDays, this.listTitles);
+  /// Dates of recorded swipe decisions; null when unread.
+  final List<DateTime>? swipeDates;
+
+  /// Total together choices counter; null when unread.
+  final int? togetherChoices;
+
+  const _UsageData(
+    this.exportDays,
+    this.listTitles, {
+    this.swipeDates,
+    this.togetherChoices,
+  });
 }
 
 class _ProgressData {

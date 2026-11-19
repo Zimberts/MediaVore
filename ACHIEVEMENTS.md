@@ -85,6 +85,8 @@ historical ids still present, known types, valid genre ids, and consistent tiers
 | `backup_export` | `target` | calendar days with a data export saved or shared |
 | `list_items` | `target` | distinct titles over every list, watchlist included (current state) |
 | `distinct_languages` | `target` | distinct original languages (TMDB `original_language`, `xx` excluded) among the titles seen |
+| `swipe_decisions` | `target` | titles sorted by swiping |
+| `together_choices` | `target` | choices made together in a Together session |
 
 The collection types (`season_complete`, `series_complete`, `up_to_date`,
 `saga_complete`, `watchlist_clear`) read TMDB data from the local cache only (season sizes, last aired
@@ -175,8 +177,10 @@ Achievements based on the user's own ratings are not defined: the app has no rat
 | `short_movie` | 1, 10, 50 movies of 40 to 80 min |
 | `long_runner` | 5, 10, 20 seasons of the same series |
 | `archivist` | 1, 5, 12 days with a backup |
-| `curator` | 10, 50, 200 titles in the lists |
+| `curator` | 10, 25, 100 titles in the lists |
 | `polyglot` | 3, 7, 15 original languages |
+| `swipe_decisions` | 10, 50, 200 titles sorted by swiping |
+| `together_choices` | 1, 10, 25 choices made together |
 
 Watch time follows a 1-2-5 scale in hours, capped by one year. Historical ids were
 kept and their targets only lowered: `runtime_1000` = 10 h (was 1000 min),

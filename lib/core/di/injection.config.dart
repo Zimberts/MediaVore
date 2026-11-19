@@ -78,6 +78,16 @@ Future<_i174.GetIt> init(
   gh.lazySingleton<_i216.DefinitionsLoader>(
     () => _i719.AssetDefinitionsLoader(),
   );
+  gh.lazySingleton<_i282.AchievementRepository>(
+    () => _i445.AchievementRepositoryImpl(
+      gh<_i214.Isar>(),
+      gh<_i801.MediaListLocalDataSource>(),
+      definitionsLoader: gh<_i216.DefinitionsLoader>(),
+      mediaSource: gh<_i248.AchievementMediaSource>(),
+      exportLog: gh<_i1038.ExportLog>(),
+      prefs: gh<_i460.SharedPreferences>(),
+    ),
+  );
   await gh.singletonAsync<_i1033.TmdbCredentialStore>(
     () => registerModule.tmdbCredentialStore(
       gh<_i558.FlutterSecureStorage>(),
@@ -90,15 +100,6 @@ Future<_i174.GetIt> init(
       dio: gh<_i361.Dio>(),
       credentials: gh<_i1033.TmdbCredentialStore>(),
       locale: gh<_i903.LocaleService>(),
-    ),
-  );
-  gh.lazySingleton<_i282.AchievementRepository>(
-    () => _i445.AchievementRepositoryImpl(
-      gh<_i214.Isar>(),
-      gh<_i801.MediaListLocalDataSource>(),
-      definitionsLoader: gh<_i216.DefinitionsLoader>(),
-      mediaSource: gh<_i248.AchievementMediaSource>(),
-      exportLog: gh<_i1038.ExportLog>(),
     ),
   );
   gh.lazySingleton<_i393.AchievementProvider>(
