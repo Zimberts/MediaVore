@@ -1176,6 +1176,66 @@ class SearchProvider with ChangeNotifier {
     };
   }
 
+  /// Marks [item] as seen through [markAsSeen] and returns the action that
+  /// undoes it: the viewing just logged is deleted, Quick Add is refreshed
+  /// and the title returns to the watchlist if marking it had removed it.
+  Future<Future<void> Function()> markItemSeen(SeenItem item) async {
+    final seenDate = item.seenDate;
+    final wasInWatchlist = _watchlistIds.contains('${item.tmdbId}');
+    final isEpisode = item.type == MediaType.tv;
+
+    await markAsSeen(item);
+
+    return () async {
+      final viewings = await repository.getSeenStatus(item.tmdbId, item.type);
+      for (final viewing in viewings) {
+        final id = viewing.id;
+        if (id != null &&
+            viewing.seasonNumber == item.seasonNumber &&
+            viewing.episodeNumber == item.episodeNumber &&
+            _sameInstant(viewing.seenDate, seenDate)) {
+          await repository.deleteSeenEntry(id);
+        }
+      }
+
+      if (isEpisode) {
+        for (final queued in await repository.getQuickAddItems()) {
+          final id = queued.isarId;
+          if (id != null &&
+              queued.tmdbId == item.tmdbId &&
+              _sameInstant(queued.insertedAt, seenDate)) {
+            await repository.removeQuickAddItemById(id);
+          }
+        }
+        await repository.populateQuickAddFromSeenHistory(tmdbId: item.tmdbId);
+      }
+
+      if (wasInWatchlist && !_watchlistIds.contains('${item.tmdbId}')) {
+        try {
+          final details = await repository.getMediaDetails(
+            item.tmdbId,
+            type: item.type,
+          );
+          await toggleInList(details.item, 'watchlist');
+        } catch (_) {
+          final fallback = MediaItem(
+            id: item.tmdbId,
+            title: item.title,
+            overview: '',
+            releaseDate: '',
+            mediaType: item.type,
+          );
+          await toggleInList(fallback, 'watchlist');
+        }
+      }
+
+      await loadAllSeenStatus();
+      await loadNotifiedItems();
+      await updateSeenDbSize();
+      await loadQuickAddItems();
+    };
+  }
+
   /// Marks the release [item] as seen (the film, or the notified episode)
   /// through [markAsSeen] and returns the action that undoes it: the viewing
   /// just logged is deleted, the Quick Add queue is computed again and the
@@ -1273,6 +1333,14 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> deleteSeenEntry(int id) async {
     await repository.deleteSeenEntry(id);
+    await loadAllSeenStatus();
+    await loadNotifiedItems();
+    await updateSeenDbSize();
+    await loadQuickAddItems();
+  }
+
+  Future<void> updateSeenEntry(SeenItem item) async {
+    await repository.updateSeenEntry(item);
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();

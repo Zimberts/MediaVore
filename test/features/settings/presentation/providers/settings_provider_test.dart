@@ -38,6 +38,7 @@ void main() {
         expect(provider.lightPalette, AppPalette.paper);
         expect(provider.darkPalette, AppPalette.ink);
         expect(provider.notificationCenterDebug, false);
+        expect(provider.advancedTracking, false);
       },
     );
 
@@ -50,6 +51,18 @@ void main() {
       );
 
       expect(newProvider.notificationCenterDebug, true);
+    });
+
+    test('should load advancedTracking from SharedPreferences', () {
+      when(() => mockPrefs.getBool(SettingsProvider.advancedTrackingKey))
+          .thenReturn(true);
+
+      final newProvider = SettingsProvider(
+        mockPrefs,
+        FakeTmdbCredentialStore(),
+      );
+
+      expect(newProvider.advancedTracking, true);
     });
 
     test('should load values from SharedPreferences', () {
@@ -157,6 +170,18 @@ void main() {
         expect(provider.notificationCenterDebug, true);
         verify(
           () => mockPrefs.setBool('notificationCenterDebug', true),
+        ).called(1);
+      },
+    );
+
+    test(
+      'setAdvancedTracking should update state and save to prefs',
+      () async {
+        await provider.setAdvancedTracking(true);
+
+        expect(provider.advancedTracking, true);
+        verify(
+          () => mockPrefs.setBool(SettingsProvider.advancedTrackingKey, true),
         ).called(1);
       },
     );

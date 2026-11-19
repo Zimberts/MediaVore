@@ -155,6 +155,15 @@ class SettingsPage extends StatelessWidget {
             onChanged: (val) => settings.setHideNonReleased(val),
           ),
           const Divider(),
+          _SectionHeader(title: l10n.settingsSectionTracking),
+          SwitchListTile(
+            key: const Key('settings_advanced_tracking'),
+            title: Text(l10n.settingsAdvancedTracking),
+            subtitle: Text(l10n.settingsAdvancedTrackingSubtitle),
+            value: settings.advancedTracking,
+            onChanged: (val) => settings.setAdvancedTracking(val),
+          ),
+          const Divider(),
           _SectionHeader(title: l10n.settingsSectionAbout),
           AboutListTile(
             icon: const Icon(Icons.info_outline),

@@ -11,6 +11,7 @@ class SettingsProvider with ChangeNotifier {
   /// Preference keys of the selected palettes (stable identifiers).
   static const String lightPaletteKey = 'lightPalette';
   static const String darkPaletteKey = 'darkPalette';
+  static const String advancedTrackingKey = 'advancedTracking';
 
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
@@ -28,6 +29,7 @@ class SettingsProvider with ChangeNotifier {
   double _gridSize = 3.0;
   bool _hideNonReleased = false;
   bool _notificationCenterDebug = false;
+  bool _advancedTracking = false;
 
   AppPalette _lightPalette = AppPalette.defaultLight;
   AppPalette _darkPalette = AppPalette.defaultDark;
@@ -38,6 +40,7 @@ class SettingsProvider with ChangeNotifier {
   double get gridSize => _gridSize;
   bool get hideNonReleased => _hideNonReleased;
   bool get notificationCenterDebug => _notificationCenterDebug;
+  bool get advancedTracking => _advancedTracking;
 
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
@@ -74,6 +77,7 @@ class SettingsProvider with ChangeNotifier {
     _hideNonReleased = _prefs.getBool('hideNonReleased') ?? false;
     _notificationCenterDebug =
         _prefs.getBool('notificationCenterDebug') ?? false;
+    _advancedTracking = _prefs.getBool(advancedTrackingKey) ?? false;
 
     // Palettes are stored by stable identifier. Up to v1.3.0 they were
     // stored as an index (`lightAppTheme` / `darkAppTheme`) into lists of
@@ -128,6 +132,12 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setNotificationCenterDebug(bool enabled) async {
     _notificationCenterDebug = enabled;
     await _prefs.setBool('notificationCenterDebug', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setAdvancedTracking(bool enabled) async {
+    _advancedTracking = enabled;
+    await _prefs.setBool(advancedTrackingKey, enabled);
     notifyListeners();
   }
 
