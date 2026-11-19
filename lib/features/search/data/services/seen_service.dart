@@ -72,6 +72,41 @@ class SeenService {
     await quickAdd.queueNextAfterSeen(item);
   }
 
+  Future<void> markManyAsSeen(List<SeenItem> items) async {
+    if (items.isEmpty) return;
+
+    final models = <SeenItemModel>[];
+    for (final item in items) {
+      final enriched = await details.resolveRuntimeAndGenres(
+        tmdbId: item.tmdbId,
+        type: item.type,
+        seasonNumber: item.seasonNumber,
+        episodeNumber: item.episodeNumber,
+        runtime: item.runtime,
+        genres: item.genres,
+      );
+      models.add(
+        SeenItemModel(
+          tmdbId: item.tmdbId,
+          type: item.type.name,
+          title: item.title,
+          posterPath: item.posterPath,
+          seenDate: item.seenDate,
+          seasonNumber: item.seasonNumber,
+          episodeNumber: item.episodeNumber,
+          runtime: enriched.runtime,
+          genres: enriched.genres,
+        ),
+      );
+    }
+
+    await localDataSource.markManyAsSeen(models);
+
+    final lastItem = items.last;
+    await notifications.refreshAfterSeen(lastItem);
+    await quickAdd.queueNextAfterSeen(lastItem);
+  }
+
   Future<void> removeFromSeen(
     int tmdbId,
     MediaType type, {

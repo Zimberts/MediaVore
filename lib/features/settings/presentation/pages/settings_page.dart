@@ -224,6 +224,40 @@ class SettingsPage extends StatelessWidget {
             value: settings.advancedTracking,
             onChanged: (val) => settings.setAdvancedTracking(val),
           ),
+          ListTile(
+            key: const Key('settings_previous_episodes'),
+            title: Text(l10n.settingsPreviousEpisodes),
+            subtitle: Text(l10n.settingsPreviousEpisodesSubtitle),
+            trailing: DropdownButtonHideUnderline(
+              child: DropdownButton<PreviousEpisodesBehavior>(
+                value: settings.previousEpisodes,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: (val) {
+                  if (val != null) settings.setPreviousEpisodes(val);
+                },
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                items: [
+                  DropdownMenuItem(
+                    value: PreviousEpisodesBehavior.ask,
+                    child: Text(l10n.settingsPreviousEpisodesAsk),
+                  ),
+                  DropdownMenuItem(
+                    value: PreviousEpisodesBehavior.all,
+                    child: Text(l10n.settingsPreviousEpisodesAll),
+                  ),
+                  DropdownMenuItem(
+                    value: PreviousEpisodesBehavior.one,
+                    child: Text(l10n.settingsPreviousEpisodesOne),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const Divider(),
           _SectionHeader(title: l10n.settingsSectionAbout),
           AboutListTile(

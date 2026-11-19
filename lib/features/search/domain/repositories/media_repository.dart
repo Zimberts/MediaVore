@@ -106,6 +106,7 @@ abstract class MediaRepository {
 
   /// Marks a media item (movie or episode) as seen.
   Future<void> markAsSeen(SeenItem item);
+  Future<void> markManyAsSeen(List<SeenItem> items);
 
   /// Removes all seen entries for a specific media item (optionally filtered by season/episode).
   Future<void> removeFromSeen(

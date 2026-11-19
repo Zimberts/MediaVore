@@ -443,6 +443,12 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> markManyAsSeen(List<SeenItem> items) async {
+    await _ensureInitialized();
+    return _seen.markManyAsSeen(items);
+  }
+
+  @override
   Future<void> removeFromSeen(
     int tmdbId,
     MediaType type, {

@@ -5,26 +5,89 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/unseen_episodes.dart';
 import 'package:mediavore/core/widgets/app_dialog.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
+/// Result from the viewing date/time picker dialog.
+class SeenDateTimeResult {
+  final DateTime date;
+  final bool markPrevious;
+
+  const SeenDateTimeResult({
+    required this.date,
+    this.markPrevious = false,
+  });
+}
+
 /// Opens the date and time picker dialog for a viewing.
-/// Returns the chosen [DateTime], or `null` if cancelled.
-Future<DateTime?> showSeenDateTimePickerDialog(
+Future<SeenDateTimeResult?> showSeenDateTimePickerDialog(
   BuildContext context, {
   required MediaItem item,
   required DateTime initialDate,
   bool isEditing = false,
+  List<CandidateEpisode> previousEpisodes = const [],
 }) {
-  return showDialog<DateTime>(
+  return showDialog<SeenDateTimeResult>(
     context: context,
     builder: (dialogContext) => _SeenDateTimePickerDialog(
       item: item,
       initialDate: initialDate,
       isEditing: isEditing,
+      previousEpisodes: previousEpisodes,
+    ),
+  );
+}
+
+/// Displays the previous unseen episodes confirmation dialog in simple mode.
+Future<({bool markAll, bool rememberChoice})?> showPreviousEpisodesDialog({
+  required BuildContext context,
+  required int count,
+}) {
+  bool remember = false;
+  return showDialog<({bool markAll, bool rememberChoice})>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setState) {
+        final l10n = context.l10n;
+        return AlertDialog(
+          title: Text(l10n.settingsPreviousEpisodes),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.seenPreviousUnseenPrompt(count)),
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                value: remember,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text(l10n.seenRememberChoice),
+                onChanged: (val) => setState(() => remember = val ?? false),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(
+                dialogContext,
+                (markAll: false, rememberChoice: remember),
+              ),
+              child: Text(l10n.seenPreviousOnlyThis),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(
+                dialogContext,
+                (markAll: true, rememberChoice: remember),
+              ),
+              child: Text(l10n.seenPreviousMarkAll),
+            ),
+          ],
+        );
+      },
     ),
   );
 }
@@ -206,6 +269,82 @@ class _SeenManagerState extends State<SeenManager> {
   ) async {
     final item = widget.item;
     final l10n = context.l10n;
+    final isEpisode = item.mediaType == MediaType.tv &&
+        widget.seasonNumber != null &&
+        widget.episodeNumber != null;
+
+    if (isEpisode) {
+      final settings = Provider.of<SettingsProvider?>(context, listen: false);
+      final behavior =
+          settings?.previousEpisodes ?? PreviousEpisodesBehavior.ask;
+
+      List<CandidateEpisode> previous = [];
+      if (behavior != PreviousEpisodesBehavior.one) {
+        previous = await provider.getPreviousUnseenEpisodes(
+          tvId: item.id,
+          targetSeason: widget.seasonNumber!,
+          targetEpisode: widget.episodeNumber!,
+        );
+      }
+
+      bool markAll = false;
+      if (previous.isNotEmpty) {
+        if (behavior == PreviousEpisodesBehavior.all) {
+          markAll = true;
+        } else if (behavior == PreviousEpisodesBehavior.ask) {
+          if (!context.mounted) return;
+          final choice = await showPreviousEpisodesDialog(
+            context: context,
+            count: previous.length,
+          );
+          if (choice == null) return;
+          markAll = choice.markAll;
+          if (choice.rememberChoice && settings != null) {
+            await settings.setPreviousEpisodes(
+              markAll
+                  ? PreviousEpisodesBehavior.all
+                  : PreviousEpisodesBehavior.one,
+            );
+          }
+        }
+      }
+
+      if (markAll && previous.isNotEmpty) {
+        final now = DateTime.now();
+        final batch = <SeenItem>[];
+        for (int i = 0; i < previous.length; i++) {
+          final ep = previous[i];
+          final offsetSeconds = previous.length - i;
+          batch.add(
+            SeenItem(
+              tmdbId: item.id,
+              type: MediaType.tv,
+              title: item.title,
+              posterPath: item.posterPath,
+              seasonNumber: ep.seasonNumber,
+              episodeNumber: ep.episodeNumber,
+              runtime: ep.runtime,
+              seenDate: now.subtract(Duration(seconds: offsetSeconds)),
+            ),
+          );
+        }
+        batch.add(
+          SeenItem(
+            tmdbId: item.id,
+            type: MediaType.tv,
+            title: item.title,
+            posterPath: item.posterPath,
+            seasonNumber: widget.seasonNumber,
+            episodeNumber: widget.episodeNumber,
+            seenDate: now,
+          ),
+        );
+        await provider.markManyAsSeen(batch);
+        showAppMessage(l10n.seenBatchAddedMessage(batch.length));
+        return;
+      }
+    }
+
     final undo = await provider.markItemSeen(
       SeenItem(
         tmdbId: item.id,
@@ -232,25 +371,72 @@ class _SeenManagerState extends State<SeenManager> {
     final item = widget.item;
     final seasonNumber = widget.seasonNumber;
     final episodeNumber = widget.episodeNumber;
+    final isEpisode = item.mediaType == MediaType.tv &&
+        seasonNumber != null &&
+        episodeNumber != null;
 
-    final DateTime? finalDateTime = await showSeenDateTimePickerDialog(
+    List<CandidateEpisode> previous = [];
+    if (isEpisode) {
+      previous = await provider.getPreviousUnseenEpisodes(
+        tvId: item.id,
+        targetSeason: seasonNumber,
+        targetEpisode: episodeNumber,
+      );
+    }
+
+    if (!context.mounted) return;
+    final result = await showSeenDateTimePickerDialog(
       context,
       item: item,
       initialDate: DateTime.now(),
+      previousEpisodes: previous,
     );
 
-    if (finalDateTime != null) {
-      await provider.markAsSeen(
-        SeenItem(
-          tmdbId: item.id,
-          type: item.mediaType,
-          title: item.title,
-          posterPath: item.posterPath,
-          seasonNumber: seasonNumber,
-          episodeNumber: episodeNumber,
-          seenDate: finalDateTime,
-        ),
-      );
+    if (result != null) {
+      if (result.markPrevious && previous.isNotEmpty) {
+        final targetDate = result.date;
+        final batch = <SeenItem>[];
+        for (int i = 0; i < previous.length; i++) {
+          final ep = previous[i];
+          final offsetSeconds = previous.length - i;
+          batch.add(
+            SeenItem(
+              tmdbId: item.id,
+              type: MediaType.tv,
+              title: item.title,
+              posterPath: item.posterPath,
+              seasonNumber: ep.seasonNumber,
+              episodeNumber: ep.episodeNumber,
+              runtime: ep.runtime,
+              seenDate: targetDate.subtract(Duration(seconds: offsetSeconds)),
+            ),
+          );
+        }
+        batch.add(
+          SeenItem(
+            tmdbId: item.id,
+            type: MediaType.tv,
+            title: item.title,
+            posterPath: item.posterPath,
+            seasonNumber: seasonNumber,
+            episodeNumber: episodeNumber,
+            seenDate: targetDate,
+          ),
+        );
+        await provider.markManyAsSeen(batch);
+      } else {
+        await provider.markAsSeen(
+          SeenItem(
+            tmdbId: item.id,
+            type: item.mediaType,
+            title: item.title,
+            posterPath: item.posterPath,
+            seasonNumber: seasonNumber,
+            episodeNumber: episodeNumber,
+            seenDate: result.date,
+          ),
+        );
+      }
     }
   }
 
@@ -365,12 +551,12 @@ class _EpisodeSeenHistorySheet extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               onTap: () async {
-                final date = await showSeenDateTimePickerDialog(
+                final result = await showSeenDateTimePickerDialog(
                   context,
                   item: item,
                   initialDate: DateTime.now(),
                 );
-                if (date != null) {
+                if (result != null) {
                   await provider.markAsSeen(
                     SeenItem(
                       tmdbId: item.id,
@@ -379,7 +565,7 @@ class _EpisodeSeenHistorySheet extends StatelessWidget {
                       posterPath: item.posterPath,
                       seasonNumber: seasonNumber,
                       episodeNumber: episodeNumber,
-                      seenDate: date,
+                      seenDate: result.date,
                     ),
                   );
                 }
@@ -421,15 +607,16 @@ class _EpisodeSeenHistorySheet extends StatelessWidget {
                             icon: const Icon(Icons.edit_outlined),
                             tooltip: l10n.seenEditViewing,
                             onPressed: () async {
-                              final newDate = await showSeenDateTimePickerDialog(
+                              final result =
+                                  await showSeenDateTimePickerDialog(
                                 context,
                                 item: item,
                                 initialDate: seenEntry.seenDate,
                                 isEditing: true,
                               );
-                              if (newDate != null) {
+                              if (result != null) {
                                 await provider.updateSeenEntry(
-                                  seenEntry.copyWith(seenDate: newDate),
+                                  seenEntry.copyWith(seenDate: result.date),
                                 );
                               }
                             },
@@ -491,11 +678,13 @@ class _SeenDateTimePickerDialog extends StatefulWidget {
   final MediaItem item;
   final DateTime initialDate;
   final bool isEditing;
+  final List<CandidateEpisode> previousEpisodes;
 
   const _SeenDateTimePickerDialog({
     required this.item,
     required this.initialDate,
     this.isEditing = false,
+    this.previousEpisodes = const [],
   });
 
   @override
@@ -508,6 +697,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
   late TimeOfDay _selectedTime;
   bool _isTextEntry = false;
   late TextEditingController _dateController;
+  bool _markPrevious = false;
 
   @override
   void initState() {
@@ -517,6 +707,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
     _dateController = TextEditingController(
       text: DateFormat('dd/MM/yyyy').format(_selectedDate),
     );
+    _markPrevious = widget.previousEpisodes.isNotEmpty;
   }
 
   @override
@@ -692,6 +883,21 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                   ),
                 ),
               ),
+              if (widget.previousEpisodes.isNotEmpty && !widget.isEditing) ...[
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  value: _markPrevious,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    l10n.seenPreviousUnseenPrompt(
+                      widget.previousEpisodes.length,
+                    ),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  onChanged: (val) =>
+                      setState(() => _markPrevious = val ?? false),
+                ),
+              ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -738,7 +944,13 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                           return;
                         }
 
-                        Navigator.pop(context, result);
+                        Navigator.pop(
+                          context,
+                          SeenDateTimeResult(
+                            date: result,
+                            markPrevious: _markPrevious,
+                          ),
+                        );
                       } catch (_) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(l10n.seenInvalidDate)),

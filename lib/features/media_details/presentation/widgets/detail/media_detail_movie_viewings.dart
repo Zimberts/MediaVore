@@ -124,15 +124,15 @@ class _MovieViewingTile extends StatelessWidget {
             icon: const Icon(Icons.edit_outlined),
             tooltip: l10n.seenEditViewing,
             onPressed: () async {
-              final newDate = await showSeenDateTimePickerDialog(
+              final result = await showSeenDateTimePickerDialog(
                 context,
                 item: item,
                 initialDate: seenEntry.seenDate,
                 isEditing: true,
               );
-              if (newDate != null) {
+              if (result != null) {
                 await provider.updateSeenEntry(
-                  seenEntry.copyWith(seenDate: newDate),
+                  seenEntry.copyWith(seenDate: result.date),
                 );
               }
             },
