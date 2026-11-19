@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/app_version.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
+import 'package:mediavore/core/widgets/app_segmented.dart';
+import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -42,187 +48,153 @@ class SettingsPage extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
+          // 1. Apparence
           _SectionHeader(title: l10n.settingsSectionAppearance),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: Text(l10n.settingsLanguage),
-            trailing: DropdownButtonHideUnderline(
+
+          // Language: Segmented if <= 3 options (System + <=2 languages), else dropdown
+          if (supportedAppLanguages.length <= 2)
+            _buildSegmentedOption<AppLanguage?>(
+              context: context,
+              label: l10n.settingsLanguage,
               key: const Key('settings_language_dropdown'),
-              // `null` value = follow the device ("System").
-              child: DropdownButton<AppLanguage?>(
-                value: settings.appLanguageOverride,
-                isDense: true,
-                padding: EdgeInsets.zero,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 3,
-                onChanged: settings.setAppLanguage,
-                style: dropdownStyle,
-                alignment: Alignment.centerRight,
-                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                items: [
-                  DropdownMenuItem<AppLanguage?>(
-                    value: null,
-                    child: Text(l10n.settingsLanguageSystem),
+              selected: settings.appLanguageOverride,
+              onChanged: (lang) => settings.setAppLanguage(lang),
+              segments: [
+                AppSegment(
+                  value: null,
+                  label: l10n.settingsLanguageSystem,
+                ),
+                for (final language in supportedAppLanguages)
+                  AppSegment(
+                    value: language,
+                    label: language.nativeName,
                   ),
-                  for (final language in supportedAppLanguages)
+              ],
+            )
+          else
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: Text(l10n.settingsLanguage),
+              trailing: DropdownButtonHideUnderline(
+                key: const Key('settings_language_dropdown'),
+                child: DropdownButton<AppLanguage?>(
+                  value: settings.appLanguageOverride,
+                  isDense: true,
+                  padding: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(12),
+                  elevation: 3,
+                  onChanged: settings.setAppLanguage,
+                  style: dropdownStyle,
+                  alignment: Alignment.centerRight,
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                  items: [
                     DropdownMenuItem<AppLanguage?>(
-                      value: language,
-                      child: Text(language.nativeName),
+                      value: null,
+                      child: Text(l10n.settingsLanguageSystem),
                     ),
-                ],
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.public),
-            title: Text(l10n.settingsWatchProvidersCountry),
-            subtitle: Text(l10n.settingsWatchProvidersCountrySubtitle),
-            trailing: DropdownButtonHideUnderline(
-              key: const Key('settings_watch_providers_country_dropdown'),
-              child: DropdownButton<String?>(
-                value: settings.watchProvidersCountry,
-                isDense: true,
-                padding: EdgeInsets.zero,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 3,
-                onChanged: settings.setWatchProvidersCountry,
-                style: dropdownStyle,
-                alignment: Alignment.centerRight,
-                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                items: [
-                  DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text(
-                      l10n.settingsWatchProvidersCountrySystem(
-                        l10n.detailCountryName(
-                          settings.resolveWatchProvidersCountry(),
-                        ),
+                    for (final language in supportedAppLanguages)
+                      DropdownMenuItem<AppLanguage?>(
+                        value: language,
+                        child: Text(language.nativeName),
                       ),
-                    ),
-                  ),
-                  for (final code in [
-                    ...supportedWatchProviderCountries,
-                    if (settings.watchProvidersCountry != null &&
-                        !supportedWatchProviderCountries.contains(
-                          settings.watchProvidersCountry,
-                        ))
-                      settings.watchProvidersCountry!,
-                  ])
-                    DropdownMenuItem<String?>(
-                      value: code,
-                      child: Text(l10n.detailCountryName(code)),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          ListTile(
-            title: Text(l10n.settingsThemeMode),
-            trailing: DropdownButtonHideUnderline(
-              child: DropdownButton<ThemeMode>(
-                value: settings.themeMode,
-                isDense: true,
-                padding: EdgeInsets.zero,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 3,
-                onChanged: (mode) {
-                  if (mode != null) settings.setThemeMode(mode);
-                },
-                style: dropdownStyle,
-                alignment: Alignment.centerRight,
-                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                selectedItemBuilder: (context) => ThemeMode.values.map((mode) {
-                  return Container(
-                    alignment: Alignment.centerRight,
-                    child: Text(_getThemeModeName(l10n, mode)),
-                  );
-                }).toList(),
-                items: ThemeMode.values.map((mode) {
-                  return DropdownMenuItem(
-                    value: mode,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(_getThemeModeIcon(mode), size: 14),
-                        const SizedBox(width: 6),
-                        Text(_getThemeModeName(l10n, mode)),
-                      ],
-                    ),
-                  );
-                }).toList(),
+
+          // Theme Mode
+          _buildSegmentedOption<ThemeMode>(
+            context: context,
+            label: l10n.settingsThemeMode,
+            key: const Key('settings_theme_mode_segmented'),
+            selected: settings.themeMode,
+            onChanged: (mode) => settings.setThemeMode(mode),
+            segments: [
+              AppSegment(
+                value: ThemeMode.system,
+                label: _getThemeModeName(l10n, ThemeMode.system),
+                icon: Icons.brightness_auto,
               ),
-            ),
+              AppSegment(
+                value: ThemeMode.light,
+                label: _getThemeModeName(l10n, ThemeMode.light),
+                icon: Icons.light_mode,
+              ),
+              AppSegment(
+                value: ThemeMode.dark,
+                label: _getThemeModeName(l10n, ThemeMode.dark),
+                icon: Icons.dark_mode,
+              ),
+            ],
           ),
-          ListTile(
-            title: Text(l10n.settingsLightTheme),
+
+          // Light Theme Palette
+          _buildSegmentedOption<AppPaletteId>(
+            context: context,
+            label: l10n.settingsLightTheme,
+            key: const Key('settings_light_palette_dropdown'),
+            selected: settings.lightPalette.id,
             enabled: settings.themeMode != ThemeMode.dark,
-            trailing: DropdownButtonHideUnderline(
-              child: DropdownButton<AppPaletteId>(
-                key: const Key('settings_light_palette_dropdown'),
-                value: settings.lightPalette.id,
-                isDense: true,
-                padding: EdgeInsets.zero,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 3,
-                onChanged: settings.themeMode != ThemeMode.dark
-                    ? (id) => id != null ? settings.setLightPalette(id) : null
-                    : null,
-                style: dropdownStyle,
-                alignment: Alignment.centerRight,
-                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                disabledHint: Text(paletteName(l10n, settings.lightPalette.id)),
-                items: AppPalette.lightPalettes.map((palette) {
-                  return DropdownMenuItem(
-                    value: palette.id,
-                    child: Text(paletteName(l10n, palette.id)),
-                  );
-                }).toList(),
+            onChanged: (id) => settings.setLightPalette(id),
+            segments: [
+              AppSegment(
+                value: AppPaletteId.paper,
+                label: paletteName(l10n, AppPaletteId.paper),
               ),
-            ),
+              AppSegment(
+                value: AppPaletteId.sand,
+                label: paletteName(l10n, AppPaletteId.sand),
+              ),
+              AppSegment(
+                value: AppPaletteId.mist,
+                label: paletteName(l10n, AppPaletteId.mist),
+              ),
+            ],
           ),
-          ListTile(
-            title: Text(l10n.settingsDarkTheme),
+
+          // Dark Theme Palette
+          _buildSegmentedOption<AppPaletteId>(
+            context: context,
+            label: l10n.settingsDarkTheme,
+            key: const Key('settings_dark_palette_dropdown'),
+            selected: settings.darkPalette.id,
             enabled: settings.themeMode != ThemeMode.light,
-            trailing: DropdownButtonHideUnderline(
-              child: DropdownButton<AppPaletteId>(
-                key: const Key('settings_dark_palette_dropdown'),
-                value: settings.darkPalette.id,
-                isDense: true,
-                padding: EdgeInsets.zero,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 3,
-                onChanged: settings.themeMode != ThemeMode.light
-                    ? (id) => id != null ? settings.setDarkPalette(id) : null
-                    : null,
-                style: dropdownStyle,
-                alignment: Alignment.centerRight,
-                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                disabledHint: Text(paletteName(l10n, settings.darkPalette.id)),
-                items: AppPalette.darkPalettes.map((palette) {
-                  return DropdownMenuItem(
-                    value: palette.id,
-                    child: Text(paletteName(l10n, palette.id)),
-                  );
-                }).toList(),
+            onChanged: (id) => settings.setDarkPalette(id),
+            segments: [
+              AppSegment(
+                value: AppPaletteId.ink,
+                label: paletteName(l10n, AppPaletteId.ink),
               ),
-            ),
+              AppSegment(
+                value: AppPaletteId.night,
+                label: paletteName(l10n, AppPaletteId.night),
+              ),
+              AppSegment(
+                value: AppPaletteId.oled,
+                label: paletteName(l10n, AppPaletteId.oled),
+              ),
+            ],
           ),
           const Divider(),
-          _SectionHeader(title: l10n.settingsSectionListsDisplay),
-          SwitchListTile(
-            title: Text(l10n.settingsHideNonReleased),
-            subtitle: Text(l10n.settingsHideNonReleasedSubtitle),
-            value: settings.hideNonReleased,
-            onChanged: (val) => settings.setHideNonReleased(val),
-          ),
-          SwitchListTile(
-            key: const Key('settings_swipe_mode_switch'),
-            title: Text(l10n.swiperSettingTitle),
-            subtitle: Text(l10n.swiperSettingSubtitle),
-            value: settings.isSwipeModeEnabled,
-            onChanged: (val) => settings.setSwipeModeEnabled(val),
+
+          // 2. Jeu et étapes
+          _SectionHeader(title: l10n.settingsSectionGame),
+          ListTile(
+            key: const Key('settings_achievements_tile'),
+            leading: const Icon(Icons.emoji_events_outlined),
+            title: Text(l10n.profileAchievements),
+            subtitle: Text(l10n.settingsAchievementsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AchievementsPage()),
+              );
+            },
           ),
           const Divider(),
+
+          // 3. Suivi
           _SectionHeader(title: l10n.settingsSectionTracking),
           SwitchListTile(
             key: const Key('settings_advanced_tracking'),
@@ -265,7 +237,86 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
+          SwitchListTile(
+            key: const Key('settings_hide_non_released'),
+            title: Text(l10n.settingsHideNonReleased),
+            subtitle: Text(l10n.settingsHideNonReleasedSubtitle),
+            value: settings.hideNonReleased,
+            onChanged: (val) => settings.setHideNonReleased(val),
+          ),
+          ListTile(
+            key: const Key('settings_watch_providers_country_tile'),
+            leading: const Icon(Icons.public),
+            title: Text(l10n.settingsWatchProvidersCountry),
+            subtitle: Text(l10n.settingsWatchProvidersCountrySubtitle),
+            trailing: DropdownButtonHideUnderline(
+              key: const Key('settings_watch_providers_country_dropdown'),
+              child: DropdownButton<String?>(
+                value: settings.watchProvidersCountry,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: settings.setWatchProvidersCountry,
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text(
+                      l10n.settingsWatchProvidersCountrySystem(
+                        l10n.detailCountryName(
+                          settings.resolveWatchProvidersCountry(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  for (final code in [
+                    ...supportedWatchProviderCountries,
+                    if (settings.watchProvidersCountry != null &&
+                        !supportedWatchProviderCountries.contains(
+                          settings.watchProvidersCountry,
+                        ))
+                      settings.watchProvidersCountry!,
+                  ])
+                    DropdownMenuItem<String?>(
+                      value: code,
+                      child: Text(l10n.detailCountryName(code)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SwitchListTile(
+            key: const Key('settings_swipe_mode_switch'),
+            title: Text(l10n.swiperSettingTitle),
+            subtitle: Text(l10n.swiperSettingSubtitle),
+            value: settings.isSwipeModeEnabled,
+            onChanged: (val) => settings.setSwipeModeEnabled(val),
+          ),
+          if (settings.isSwipeModeEnabled) const _SwipeResetTile(),
           const Divider(),
+
+          // 4. Stockage
+          _SectionHeader(title: l10n.settingsSectionStorage),
+          ListTile(
+            leading: const Icon(Icons.storage),
+            title: Text(l10n.settingsStorage),
+            subtitle: Text(l10n.settingsStorageSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DataCacheSettingsPage(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
+
+          // 5. À propos
           _SectionHeader(title: l10n.settingsSectionAbout),
           AboutListTile(
             icon: const Icon(Icons.info_outline),
@@ -275,9 +326,52 @@ class SettingsPage extends StatelessWidget {
               Text(l10n.settingsAboutDescription),
               const SizedBox(height: 8),
               Text(l10n.settingsAboutJustWatch),
+              const SizedBox(height: 8),
+              Text(l10n.settingsAboutTmdb),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentedOption<T>({
+    required BuildContext context,
+    required String label,
+    required Key key,
+    required T selected,
+    required List<AppSegment<T>> segments,
+    required ValueChanged<T> onChanged,
+    bool enabled = true,
+  }) {
+    final theme = Theme.of(context);
+    final colors = context.appColors;
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.45,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 8),
+            IgnorePointer(
+              ignoring: !enabled,
+              child: AppSegmented<T>(
+                key: key,
+                segments: segments,
+                selected: selected,
+                onChanged: onChanged,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -292,16 +386,91 @@ class SettingsPage extends StatelessWidget {
         return l10n.settingsThemeModeDark;
     }
   }
+}
 
-  IconData _getThemeModeIcon(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.system:
-        return Icons.brightness_auto;
-      case ThemeMode.light:
-        return Icons.light_mode;
-      case ThemeMode.dark:
-        return Icons.dark_mode;
+class _SwipeResetTile extends StatefulWidget {
+  const _SwipeResetTile();
+
+  @override
+  State<_SwipeResetTile> createState() => _SwipeResetTileState();
+}
+
+class _SwipeResetTileState extends State<_SwipeResetTile> {
+  int _discardedCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCount();
+  }
+
+  Future<void> _loadCount() async {
+    try {
+      if (locator.isRegistered<MediaRepository>()) {
+        final decisions = await locator<MediaRepository>().getSwipeDecisions();
+        if (mounted) {
+          setState(() {
+            _discardedCount =
+                decisions.where((d) => d.decision == 'discarded').length;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _confirmReset(BuildContext context) {
+    final l10n = context.l10n;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.swiperResetConfirmTitle),
+        content: Text(l10n.swiperResetConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            key: const Key('settings_swipe_reset_confirm'),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              if (locator.isRegistered<MediaRepository>()) {
+                await locator<MediaRepository>().clearAllSwipeDecisions();
+              }
+              if (mounted) {
+                setState(() => _discardedCount = 0);
+                showAppMessage(l10n.swiperResetSuccessToast);
+              }
+            },
+            child: Text(l10n.swiperResetButton),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const Key('settings_swipe_reset_tile'),
+      leading: const Icon(Icons.swipe),
+      title: Text(l10n.swiperTitle),
+      subtitle: Text(
+        _isLoading ? '…' : l10n.swiperDiscardedCount(_discardedCount),
+      ),
+      trailing: TextButton(
+        key: const Key('settings_swipe_reset_button'),
+        onPressed: () => _confirmReset(context),
+        child: Text(l10n.swiperResetButton),
+      ),
+    );
   }
 }
 

@@ -340,7 +340,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataSeenDbSize => 'Seen Database Size';
 
   @override
-  String get dataRefetchRuntimes => 'Refetch Media Runtimes';
+  String get dataRefetchRuntimes => 'Refetch missing data';
 
   @override
   String get dataRefetchRuntimesSubtitle =>
@@ -3095,4 +3095,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String togetherWatchingToast(String title) {
     return 'Enjoy watching $title!';
   }
+
+  @override
+  String get settingsSectionGame => 'Game & Milestones';
+
+  @override
+  String get settingsAchievementsSubtitle => 'View your badges and challenges';
+
+  @override
+  String swiperDiscardedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count discarded titles',
+      one: '1 discarded title',
+      zero: 'No discarded titles',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get swiperResetButton => 'Reset';
+
+  @override
+  String get swiperResetConfirmTitle => 'Reset swipe choices?';
+
+  @override
+  String get swiperResetConfirmMessage =>
+      'Titles you previously discarded will be able to appear again in swipe mode. Your earned achievements remain unlocked.';
+
+  @override
+  String get swiperResetSuccessToast => 'Swipe choices reset';
+
+  @override
+  String get settingsAboutTmdb =>
+      'This product uses the TMDB API but is not endorsed or certified by TMDB.';
 }

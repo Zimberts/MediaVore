@@ -121,7 +121,7 @@
   "dataWipeCacheMessage": "This will delete ALL cached posters and details. You will need internet to see them again.",
   "dataSectionData": "Data Management",
   "dataSeenDbSize": "Seen Database Size",
-  "dataRefetchRuntimes": "Refetch Media Runtimes",
+  "dataRefetchRuntimes": "Refetch missing data",
   "dataRefetchRuntimesSubtitle": "Fetch missing runtimes and genres for your history.",
   "dataRefetchTitle": "Refetch Data",
   "dataRefetchMessage": "This will check your seen history and fetch any missing runtimes or genres from TMDb. This might take a while.",
@@ -2205,5 +2205,20 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsSectionGame": "Game & Milestones",
+  "settingsAchievementsSubtitle": "View your badges and challenges",
+  "swiperDiscardedCount": "{count, plural, =0{No discarded titles} =1{1 discarded title} other{{count} discarded titles}}",
+  "@swiperDiscardedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "swiperResetButton": "Reset",
+  "swiperResetConfirmTitle": "Reset swipe choices?",
+  "swiperResetConfirmMessage": "Titles you previously discarded will be able to appear again in swipe mode. Your earned achievements remain unlocked.",
+  "swiperResetSuccessToast": "Swipe choices reset",
+  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB."
 }

@@ -701,7 +701,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataRefetchRuntimes.
   ///
   /// In en, this message translates to:
-  /// **'Refetch Media Runtimes'**
+  /// **'Refetch missing data'**
   String get dataRefetchRuntimes;
 
   /// No description provided for @dataRefetchRuntimesSubtitle.
@@ -4759,6 +4759,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enjoy watching {title}!'**
   String togetherWatchingToast(String title);
+
+  /// No description provided for @settingsSectionGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Game & Milestones'**
+  String get settingsSectionGame;
+
+  /// No description provided for @settingsAchievementsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View your badges and challenges'**
+  String get settingsAchievementsSubtitle;
+
+  /// No description provided for @swiperDiscardedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No discarded titles} =1{1 discarded title} other{{count} discarded titles}}'**
+  String swiperDiscardedCount(int count);
+
+  /// No description provided for @swiperResetButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get swiperResetButton;
+
+  /// No description provided for @swiperResetConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset swipe choices?'**
+  String get swiperResetConfirmTitle;
+
+  /// No description provided for @swiperResetConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Titles you previously discarded will be able to appear again in swipe mode. Your earned achievements remain unlocked.'**
+  String get swiperResetConfirmMessage;
+
+  /// No description provided for @swiperResetSuccessToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe choices reset'**
+  String get swiperResetSuccessToast;
+
+  /// No description provided for @settingsAboutTmdb.
+  ///
+  /// In en, this message translates to:
+  /// **'This product uses the TMDB API but is not endorsed or certified by TMDB.'**
+  String get settingsAboutTmdb;
 }
 
 class _AppLocalizationsDelegate

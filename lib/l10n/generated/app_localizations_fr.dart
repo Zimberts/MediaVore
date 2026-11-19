@@ -341,7 +341,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dataSeenDbSize => 'Taille de la base des vus';
 
   @override
-  String get dataRefetchRuntimes => 'Récupérer les durées';
+  String get dataRefetchRuntimes => 'Récupérer les données manquantes';
 
   @override
   String get dataRefetchRuntimesSubtitle =>
@@ -3119,4 +3119,39 @@ class AppLocalizationsFr extends AppLocalizations {
   String togetherWatchingToast(String title) {
     return 'Bon visionnage de $title !';
   }
+
+  @override
+  String get settingsSectionGame => 'Jeu et étapes';
+
+  @override
+  String get settingsAchievementsSubtitle => 'Voir vos badges et défis';
+
+  @override
+  String swiperDiscardedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titres écartés',
+      one: '1 titre écarté',
+      zero: 'Aucun titre écarté',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get swiperResetButton => 'Réinitialiser';
+
+  @override
+  String get swiperResetConfirmTitle => 'Réinitialiser les choix de swipe ?';
+
+  @override
+  String get swiperResetConfirmMessage =>
+      'Les titres que vous aviez écartés pourront réapparaître dans le mode swipe. Les succès déjà obtenus sont conservés.';
+
+  @override
+  String get swiperResetSuccessToast => 'Choix de swipe réinitialisés';
+
+  @override
+  String get settingsAboutTmdb =>
+      'Ce produit utilise l\'API TMDB mais n\'est ni approuvé ni certifié par TMDB.';
 }
