@@ -152,6 +152,12 @@ abstract class AppLocalizations {
   /// **'Open Settings'**
   String get commonOpenSettings;
 
+  /// No description provided for @navSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get navSearch;
+
   /// No description provided for @navDiscover.
   ///
   /// In en, this message translates to:
@@ -169,6 +175,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'History'**
   String get navHistory;
+
+  /// No description provided for @navAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts'**
+  String get navAlerts;
 
   /// No description provided for @emptyStateSearchAction.
   ///
@@ -2570,6 +2582,102 @@ abstract class AppLocalizations {
   /// **'Book'**
   String get mediaKindBook;
 
+  /// No description provided for @swiperTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swiper'**
+  String get swiperTitle;
+
+  /// No description provided for @swiperAddTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to'**
+  String get swiperAddTo;
+
+  /// No description provided for @swiperPass.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass'**
+  String get swiperPass;
+
+  /// No description provided for @swiperDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get swiperDiscard;
+
+  /// No description provided for @swiperAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get swiperAdd;
+
+  /// No description provided for @swiperUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get swiperUndo;
+
+  /// No description provided for @swiperAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} added to {list}'**
+  String swiperAddedMessage(String title, String list);
+
+  /// No description provided for @swiperDiscardedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Discarded'**
+  String get swiperDiscardedMessage;
+
+  /// No description provided for @swiperSagaAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga {title} added ({count} movies)'**
+  String swiperSagaAddedMessage(String title, int count);
+
+  /// No description provided for @swiperSagaDiscardedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga discarded'**
+  String get swiperSagaDiscardedMessage;
+
+  /// No description provided for @swiperEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No more movies'**
+  String get swiperEmptyTitle;
+
+  /// No description provided for @swiperEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve gone through all available movies for now.'**
+  String get swiperEmptyMessage;
+
+  /// No description provided for @swiperSessionStats.
+  ///
+  /// In en, this message translates to:
+  /// **'{added} added · {discarded} discarded'**
+  String swiperSessionStats(int added, int discarded);
+
+  /// No description provided for @swiperSettingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe discovery'**
+  String get swiperSettingTitle;
+
+  /// No description provided for @swiperSettingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover movies card by card and quickly add them to your lists'**
+  String get swiperSettingSubtitle;
+
+  /// No description provided for @swiperSagaBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Saga ({count} movies)'**
+  String swiperSagaBadge(int count);
+
   /// No description provided for @commonSeeAll.
   ///
   /// In en, this message translates to:
@@ -4544,101 +4652,113 @@ abstract class AppLocalizations {
   /// **'Scan next QR part ({current}/{total})'**
   String togetherScanNextPart(int current, int total);
 
-  /// No description provided for @swiperTitle.
+  /// No description provided for @togetherLeaveVoteTitle.
   ///
   /// In en, this message translates to:
-  /// **'Swiper'**
-  String get swiperTitle;
+  /// **'Leave voting'**
+  String get togetherLeaveVoteTitle;
 
-  /// No description provided for @swiperAddTo.
+  /// No description provided for @togetherLeaveVoteConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Add to'**
-  String get swiperAddTo;
+  /// **'Votes already cast will be lost. Participants will remain in the session.'**
+  String get togetherLeaveVoteConfirm;
 
-  /// No description provided for @swiperPass.
+  /// No description provided for @togetherLeaveVoteButton.
   ///
   /// In en, this message translates to:
-  /// **'Pass'**
-  String get swiperPass;
+  /// **'Leave'**
+  String get togetherLeaveVoteButton;
 
-  /// No description provided for @swiperDiscard.
+  /// No description provided for @togetherYourTurn.
   ///
   /// In en, this message translates to:
-  /// **'Discard'**
-  String get swiperDiscard;
+  /// **'Your turn to vote'**
+  String get togetherYourTurn;
 
-  /// No description provided for @swiperAdd.
+  /// No description provided for @togetherHostStartVote.
   ///
   /// In en, this message translates to:
-  /// **'Add'**
-  String get swiperAdd;
+  /// **'I\'m voting'**
+  String get togetherHostStartVote;
 
-  /// No description provided for @swiperUndo.
+  /// No description provided for @togetherPassPhone.
   ///
   /// In en, this message translates to:
-  /// **'Undo'**
-  String get swiperUndo;
+  /// **'Pass the phone to {name}'**
+  String togetherPassPhone(String name);
 
-  /// No description provided for @swiperAddedMessage.
+  /// No description provided for @togetherParticipantStartVote.
   ///
   /// In en, this message translates to:
-  /// **'{title} added to {list}'**
-  String swiperAddedMessage(String title, String list);
+  /// **'Let\'s go!'**
+  String get togetherParticipantStartVote;
 
-  /// No description provided for @swiperDiscardedMessage.
+  /// No description provided for @togetherVoteProgress.
   ///
   /// In en, this message translates to:
-  /// **'Discarded'**
-  String get swiperDiscardedMessage;
+  /// **'Title {current} of {total}'**
+  String togetherVoteProgress(int current, int total);
 
-  /// No description provided for @swiperSagaAddedMessage.
+  /// No description provided for @togetherVoterTurn.
   ///
   /// In en, this message translates to:
-  /// **'Saga {title} added ({count} movies)'**
-  String swiperSagaAddedMessage(String title, int count);
+  /// **'{name}\'s turn'**
+  String togetherVoterTurn(String name);
 
-  /// No description provided for @swiperSagaDiscardedMessage.
+  /// No description provided for @togetherVoteYes.
   ///
   /// In en, this message translates to:
-  /// **'Saga discarded'**
-  String get swiperSagaDiscardedMessage;
+  /// **'Yes'**
+  String get togetherVoteYes;
 
-  /// No description provided for @swiperEmptyTitle.
+  /// No description provided for @togetherVoteNo.
   ///
   /// In en, this message translates to:
-  /// **'No more movies'**
-  String get swiperEmptyTitle;
+  /// **'No'**
+  String get togetherVoteNo;
 
-  /// No description provided for @swiperEmptyMessage.
+  /// No description provided for @togetherTonightChoice.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve gone through all available movies for now.'**
-  String get swiperEmptyMessage;
+  /// **'Tonight\'s choice'**
+  String get togetherTonightChoice;
 
-  /// No description provided for @swiperSessionStats.
+  /// No description provided for @togetherUnanimousVote.
   ///
   /// In en, this message translates to:
-  /// **'{added} added · {discarded} discarded'**
-  String swiperSessionStats(int added, int discarded);
+  /// **'Unanimous!'**
+  String get togetherUnanimousVote;
 
-  /// No description provided for @swiperSettingTitle.
+  /// No description provided for @togetherVoteCountFraction.
   ///
   /// In en, this message translates to:
-  /// **'Swipe discovery'**
-  String get swiperSettingTitle;
+  /// **'{count} votes out of {total}'**
+  String togetherVoteCountFraction(int count, int total);
 
-  /// No description provided for @swiperSettingSubtitle.
+  /// No description provided for @togetherTieBadge.
   ///
   /// In en, this message translates to:
-  /// **'Discover movies card by card and quickly add them to your lists'**
-  String get swiperSettingSubtitle;
+  /// **'Tie'**
+  String get togetherTieBadge;
 
-  /// No description provided for @swiperSagaBadge.
+  /// No description provided for @togetherOtherTitles.
   ///
   /// In en, this message translates to:
-  /// **'Saga ({count} movies)'**
-  String swiperSagaBadge(int count);
+  /// **'Other titles'**
+  String get togetherOtherTitles;
+
+  /// No description provided for @togetherReviewList.
+  ///
+  /// In en, this message translates to:
+  /// **'Review list'**
+  String get togetherReviewList;
+
+  /// No description provided for @togetherWatchingToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy watching {title}!'**
+  String togetherWatchingToast(String title);
 }
 
 class _AppLocalizationsDelegate

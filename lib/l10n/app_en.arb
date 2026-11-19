@@ -9,9 +9,11 @@
   "commonSave": "Save",
   "commonImport": "Import",
   "commonOpenSettings": "Open Settings",
+  "navSearch": "Search",
   "navDiscover": "Discover",
   "navMyLists": "My Lists",
   "navHistory": "History",
+  "navAlerts": "Alerts",
   "emptyStateSearchAction": "Search a movie or series",
   "importListTitle": "Import List",
   "importListMessage": "{count, plural, =1{You are about to import a list with 1 item.} other{You are about to import a list with {count} items.}}",
@@ -913,6 +915,59 @@
   "mediaKindMovie": "Movie",
   "mediaKindSeries": "Series",
   "mediaKindBook": "Book",
+  "swiperTitle": "Swiper",
+  "swiperAddTo": "Add to",
+  "swiperPass": "Pass",
+  "swiperDiscard": "Discard",
+  "swiperAdd": "Add",
+  "swiperUndo": "Undo",
+  "swiperAddedMessage": "{title} added to {list}",
+  "@swiperAddedMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "swiperDiscardedMessage": "Discarded",
+  "swiperSagaAddedMessage": "Saga {title} added ({count} movies)",
+  "@swiperSagaAddedMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "swiperSagaDiscardedMessage": "Saga discarded",
+  "swiperEmptyTitle": "No more movies",
+  "swiperEmptyMessage": "You've gone through all available movies for now.",
+  "swiperSessionStats": "{added} added · {discarded} discarded",
+  "@swiperSessionStats": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "discarded": {
+        "type": "int"
+      }
+    }
+  },
+  "swiperSettingTitle": "Swipe discovery",
+  "swiperSettingSubtitle": "Discover movies card by card and quickly add them to your lists",
+  "swiperSagaBadge": "Saga ({count} movies)",
+  "@swiperSagaBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "commonSeeAll": "See all",
   "offlineBannerTitle": "Offline",
   "posterInProgress": "In progress",
@@ -2036,6 +2091,65 @@
       },
       "total": {
         "type": "int"
+      }
+    }
+  },
+  "togetherLeaveVoteTitle": "Leave voting",
+  "togetherLeaveVoteConfirm": "Votes already cast will be lost. Participants will remain in the session.",
+  "togetherLeaveVoteButton": "Leave",
+  "togetherYourTurn": "Your turn to vote",
+  "togetherHostStartVote": "I'm voting",
+  "togetherPassPhone": "Pass the phone to {name}",
+  "@togetherPassPhone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "togetherParticipantStartVote": "Let's go!",
+  "togetherVoteProgress": "Title {current} of {total}",
+  "@togetherVoteProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "togetherVoterTurn": "{name}'s turn",
+  "@togetherVoterTurn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "togetherVoteYes": "Yes",
+  "togetherVoteNo": "No",
+  "togetherTonightChoice": "Tonight's choice",
+  "togetherUnanimousVote": "Unanimous!",
+  "togetherVoteCountFraction": "{count} votes out of {total}",
+  "@togetherVoteCountFraction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "togetherTieBadge": "Tie",
+  "togetherOtherTitles": "Other titles",
+  "togetherReviewList": "Review list",
+  "togetherWatchingToast": "Enjoy watching {title}!",
+  "@togetherWatchingToast": {
+    "placeholders": {
+      "title": {
+        "type": "String"
       }
     }
   },

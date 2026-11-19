@@ -10,6 +10,8 @@ import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/together/presentation/models/together_vote_engine.dart';
+import 'package:mediavore/features/together/presentation/pages/together_vote_page.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -437,6 +439,33 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
                   onPressed: commonSorted.isNotEmpty
                       ? () {
                           session.startVote();
+                          final candidates = commonSorted.take(6).map((entry) {
+                            final key = '${entry.id}:${entry.type.name}';
+                            final item = _mediaCache[key] ??
+                                MediaItem(
+                                  id: entry.id,
+                                  title: 'Title ${entry.id}',
+                                  overview: '',
+                                  releaseDate: '',
+                                  mediaType: entry.type,
+                                );
+                            return TogetherVoteCandidate(item: item);
+                          }).toList();
+
+                          final participantNames = [
+                            l10n.togetherYouHost,
+                            for (final p in session.participants) p.name,
+                          ];
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TogetherVotePage(
+                                candidates: candidates,
+                                participants: participantNames,
+                              ),
+                            ),
+                          );
                         }
                       : null,
                   icon: const Icon(Icons.how_to_vote),

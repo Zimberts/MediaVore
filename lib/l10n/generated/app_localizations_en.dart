@@ -37,6 +37,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonOpenSettings => 'Open Settings';
 
   @override
+  String get navSearch => 'Search';
+
+  @override
   String get navDiscover => 'Discover';
 
   @override
@@ -44,6 +47,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navHistory => 'History';
+
+  @override
+  String get navAlerts => 'Alerts';
 
   @override
   String get emptyStateSearchAction => 'Search a movie or series';
@@ -1486,6 +1492,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaKindBook => 'Book';
+
+  @override
+  String get swiperTitle => 'Swiper';
+
+  @override
+  String get swiperAddTo => 'Add to';
+
+  @override
+  String get swiperPass => 'Pass';
+
+  @override
+  String get swiperDiscard => 'Discard';
+
+  @override
+  String get swiperAdd => 'Add';
+
+  @override
+  String get swiperUndo => 'Undo';
+
+  @override
+  String swiperAddedMessage(String title, String list) {
+    return '$title added to $list';
+  }
+
+  @override
+  String get swiperDiscardedMessage => 'Discarded';
+
+  @override
+  String swiperSagaAddedMessage(String title, int count) {
+    return 'Saga $title added ($count movies)';
+  }
+
+  @override
+  String get swiperSagaDiscardedMessage => 'Saga discarded';
+
+  @override
+  String get swiperEmptyTitle => 'No more movies';
+
+  @override
+  String get swiperEmptyMessage =>
+      'You\'ve gone through all available movies for now.';
+
+  @override
+  String swiperSessionStats(int added, int discarded) {
+    return '$added added · $discarded discarded';
+  }
+
+  @override
+  String get swiperSettingTitle => 'Swipe discovery';
+
+  @override
+  String get swiperSettingSubtitle =>
+      'Discover movies card by card and quickly add them to your lists';
+
+  @override
+  String swiperSagaBadge(int count) {
+    return 'Saga ($count movies)';
+  }
 
   @override
   String get commonSeeAll => 'See all';
@@ -2968,60 +3032,67 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get swiperTitle => 'Swiper';
+  String get togetherLeaveVoteTitle => 'Leave voting';
 
   @override
-  String get swiperAddTo => 'Add to';
+  String get togetherLeaveVoteConfirm =>
+      'Votes already cast will be lost. Participants will remain in the session.';
 
   @override
-  String get swiperPass => 'Pass';
+  String get togetherLeaveVoteButton => 'Leave';
 
   @override
-  String get swiperDiscard => 'Discard';
+  String get togetherYourTurn => 'Your turn to vote';
 
   @override
-  String get swiperAdd => 'Add';
+  String get togetherHostStartVote => 'I\'m voting';
 
   @override
-  String get swiperUndo => 'Undo';
-
-  @override
-  String swiperAddedMessage(String title, String list) {
-    return '$title added to $list';
+  String togetherPassPhone(String name) {
+    return 'Pass the phone to $name';
   }
 
   @override
-  String get swiperDiscardedMessage => 'Discarded';
+  String get togetherParticipantStartVote => 'Let\'s go!';
 
   @override
-  String swiperSagaAddedMessage(String title, int count) {
-    return 'Saga $title added ($count movies)';
+  String togetherVoteProgress(int current, int total) {
+    return 'Title $current of $total';
   }
 
   @override
-  String get swiperSagaDiscardedMessage => 'Saga discarded';
-
-  @override
-  String get swiperEmptyTitle => 'No more movies';
-
-  @override
-  String get swiperEmptyMessage =>
-      'You\'ve gone through all available movies for now.';
-
-  @override
-  String swiperSessionStats(int added, int discarded) {
-    return '$added added · $discarded discarded';
+  String togetherVoterTurn(String name) {
+    return '$name\'s turn';
   }
 
   @override
-  String get swiperSettingTitle => 'Swipe discovery';
+  String get togetherVoteYes => 'Yes';
 
   @override
-  String get swiperSettingSubtitle =>
-      'Discover movies card by card and quickly add them to your lists';
+  String get togetherVoteNo => 'No';
 
   @override
-  String swiperSagaBadge(int count) {
-    return 'Saga ($count movies)';
+  String get togetherTonightChoice => 'Tonight\'s choice';
+
+  @override
+  String get togetherUnanimousVote => 'Unanimous!';
+
+  @override
+  String togetherVoteCountFraction(int count, int total) {
+    return '$count votes out of $total';
+  }
+
+  @override
+  String get togetherTieBadge => 'Tie';
+
+  @override
+  String get togetherOtherTitles => 'Other titles';
+
+  @override
+  String get togetherReviewList => 'Review list';
+
+  @override
+  String togetherWatchingToast(String title) {
+    return 'Enjoy watching $title!';
   }
 }

@@ -37,6 +37,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonOpenSettings => 'Ouvrir les paramètres';
 
   @override
+  String get navSearch => 'Recherche';
+
+  @override
   String get navDiscover => 'Découvrir';
 
   @override
@@ -44,6 +47,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get navHistory => 'Historique';
+
+  @override
+  String get navAlerts => 'Alertes';
 
   @override
   String get emptyStateSearchAction => 'Chercher un film ou une série';
@@ -1513,6 +1519,64 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mediaKindBook => 'Livre';
+
+  @override
+  String get swiperTitle => 'Swiper';
+
+  @override
+  String get swiperAddTo => 'Ajouter à';
+
+  @override
+  String get swiperPass => 'Passer';
+
+  @override
+  String get swiperDiscard => 'Écarter';
+
+  @override
+  String get swiperAdd => 'Ajouter';
+
+  @override
+  String get swiperUndo => 'Annuler';
+
+  @override
+  String swiperAddedMessage(String title, String list) {
+    return '$title ajouté à $list';
+  }
+
+  @override
+  String get swiperDiscardedMessage => 'Écarté';
+
+  @override
+  String swiperSagaAddedMessage(String title, int count) {
+    return 'Saga $title ajoutée ($count films)';
+  }
+
+  @override
+  String get swiperSagaDiscardedMessage => 'Saga écartée';
+
+  @override
+  String get swiperEmptyTitle => 'Plus de films';
+
+  @override
+  String get swiperEmptyMessage =>
+      'Vous avez passé en revue tous les films disponibles pour le moment.';
+
+  @override
+  String swiperSessionStats(int added, int discarded) {
+    return '$added ajoutés · $discarded écartés';
+  }
+
+  @override
+  String get swiperSettingTitle => 'Découverte par swipe';
+
+  @override
+  String get swiperSettingSubtitle =>
+      'Découvrir des films carte par carte et les ajouter rapidement à vos listes';
+
+  @override
+  String swiperSagaBadge(int count) {
+    return 'Saga ($count films)';
+  }
 
   @override
   String get commonSeeAll => 'Tout voir';
@@ -2992,60 +3056,67 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get swiperTitle => 'Swiper';
+  String get togetherLeaveVoteTitle => 'Quitter le vote';
 
   @override
-  String get swiperAddTo => 'Ajouter à';
+  String get togetherLeaveVoteConfirm =>
+      'Les votes déjà donnés seront perdus. Les participants restent dans la séance.';
 
   @override
-  String get swiperPass => 'Passer';
+  String get togetherLeaveVoteButton => 'Quitter';
 
   @override
-  String get swiperDiscard => 'Écarter';
+  String get togetherYourTurn => 'À vous de voter';
 
   @override
-  String get swiperAdd => 'Ajouter';
+  String get togetherHostStartVote => 'Je vote';
 
   @override
-  String get swiperUndo => 'Annuler';
-
-  @override
-  String swiperAddedMessage(String title, String list) {
-    return '$title ajouté à $list';
+  String togetherPassPhone(String name) {
+    return 'Passez le téléphone à $name';
   }
 
   @override
-  String get swiperDiscardedMessage => 'Écarté';
+  String get togetherParticipantStartVote => 'C\'est parti !';
 
   @override
-  String swiperSagaAddedMessage(String title, int count) {
-    return 'Saga $title ajoutée ($count films)';
+  String togetherVoteProgress(int current, int total) {
+    return 'Titre $current sur $total';
   }
 
   @override
-  String get swiperSagaDiscardedMessage => 'Saga écartée';
-
-  @override
-  String get swiperEmptyTitle => 'Plus de films';
-
-  @override
-  String get swiperEmptyMessage =>
-      'Vous avez passé en revue tous les films disponibles pour le moment.';
-
-  @override
-  String swiperSessionStats(int added, int discarded) {
-    return '$added ajoutés · $discarded écartés';
+  String togetherVoterTurn(String name) {
+    return 'Tour de $name';
   }
 
   @override
-  String get swiperSettingTitle => 'Découverte par swipe';
+  String get togetherVoteYes => 'Oui';
 
   @override
-  String get swiperSettingSubtitle =>
-      'Découvrir des films carte par carte et les ajouter rapidement à vos listes';
+  String get togetherVoteNo => 'Non';
 
   @override
-  String swiperSagaBadge(int count) {
-    return 'Saga ($count films)';
+  String get togetherTonightChoice => 'Le choix du soir';
+
+  @override
+  String get togetherUnanimousVote => 'Unanimité !';
+
+  @override
+  String togetherVoteCountFraction(int count, int total) {
+    return '$count votes sur $total';
+  }
+
+  @override
+  String get togetherTieBadge => 'Égalité';
+
+  @override
+  String get togetherOtherTitles => 'Autres titres';
+
+  @override
+  String get togetherReviewList => 'Revoir la liste';
+
+  @override
+  String togetherWatchingToast(String title) {
+    return 'Bon visionnage de $title !';
   }
 }
