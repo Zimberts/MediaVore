@@ -13,6 +13,7 @@ import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
+import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 
 class MockDio extends Mock implements Dio {}
 
@@ -135,6 +136,70 @@ class MockMediaRepository extends Mock implements MediaRepository {
   Future<void> updateSeenEntry(SeenItem item) {
     try {
       return super.noSuchMethod(Invocation.method(#updateSeenEntry, [item]))
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<Set<int>> getDecidedTmdbIds() {
+    try {
+      return super.noSuchMethod(Invocation.method(#getDecidedTmdbIds, []))
+          as Future<Set<int>>;
+    } catch (_) {
+      return Future.value(<int>{});
+    }
+  }
+
+  @override
+  Future<List<SwipeDecisionModel>> getSwipeDecisions() {
+    try {
+      return super.noSuchMethod(Invocation.method(#getSwipeDecisions, []))
+          as Future<List<SwipeDecisionModel>>;
+    } catch (_) {
+      return Future.value(<SwipeDecisionModel>[]);
+    }
+  }
+
+  @override
+  Future<void> recordSwipeDecision(SwipeDecisionModel decision) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#recordSwipeDecision, [decision]),
+          )
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<void> recordSwipeDecisions(List<SwipeDecisionModel> decisions) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#recordSwipeDecisions, [decisions]),
+          )
+          as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
+
+  @override
+  Future<SwipeDecisionModel?> undoLastSwipeDecision() {
+    try {
+      return super.noSuchMethod(Invocation.method(#undoLastSwipeDecision, []))
+          as Future<SwipeDecisionModel?>;
+    } catch (_) {
+      return Future.value(null);
+    }
+  }
+
+  @override
+  Future<void> clearAllSwipeDecisions() {
+    try {
+      return super.noSuchMethod(Invocation.method(#clearAllSwipeDecisions, []))
           as Future<void>;
     } catch (_) {
       return Future.value();

@@ -178,6 +178,30 @@ void main() {
       verifyNever(() => mockPrefs.setString(any(), any()));
     });
 
+    test('setSwipeModeEnabled should update state and save to prefs', () async {
+      when(
+        () => mockPrefs.setBool('swipeModeEnabled', true),
+      ).thenAnswer((_) async => true);
+
+      await provider.setSwipeModeEnabled(true);
+
+      expect(provider.isSwipeModeEnabled, true);
+      verify(() => mockPrefs.setBool('swipeModeEnabled', true)).called(1);
+    });
+
+    test('setSwipeTargetList should update state and save to prefs', () async {
+      when(
+        () => mockPrefs.setString('swipeTargetList', 'Favorites'),
+      ).thenAnswer((_) async => true);
+
+      await provider.setSwipeTargetList('Favorites');
+
+      expect(provider.swipeTargetList, 'Favorites');
+      verify(
+        () => mockPrefs.setString('swipeTargetList', 'Favorites'),
+      ).called(1);
+    });
+
     test(
       'setNotificationCenterDebug should update state and save to prefs',
       () async {

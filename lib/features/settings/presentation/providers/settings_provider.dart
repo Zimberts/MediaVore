@@ -38,6 +38,8 @@ class SettingsProvider with ChangeNotifier {
   bool _advancedTracking = false;
   PreviousEpisodesBehavior _previousEpisodes = PreviousEpisodesBehavior.ask;
   String? _watchProvidersCountry;
+  bool _swipeModeEnabled = false;
+  String _swipeTargetList = 'watchlist';
 
   AppPalette _lightPalette = AppPalette.defaultLight;
   AppPalette _darkPalette = AppPalette.defaultDark;
@@ -51,6 +53,8 @@ class SettingsProvider with ChangeNotifier {
   bool get advancedTracking => _advancedTracking;
   PreviousEpisodesBehavior get previousEpisodes => _previousEpisodes;
   String? get watchProvidersCountry => _watchProvidersCountry;
+  bool get isSwipeModeEnabled => _swipeModeEnabled;
+  String get swipeTargetList => _swipeTargetList;
 
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
@@ -96,6 +100,8 @@ class SettingsProvider with ChangeNotifier {
         orElse: () => PreviousEpisodesBehavior.ask,
       );
     }
+    _swipeModeEnabled = _prefs.getBool('swipeModeEnabled') ?? false;
+    _swipeTargetList = _prefs.getString('swipeTargetList') ?? 'watchlist';
 
     // Palettes are stored by stable identifier. Up to v1.3.0 they were
     // stored as an index (`lightAppTheme` / `darkAppTheme`) into lists of
@@ -156,6 +162,18 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setAdvancedTracking(bool enabled) async {
     _advancedTracking = enabled;
     await _prefs.setBool(advancedTrackingKey, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setSwipeModeEnabled(bool enabled) async {
+    _swipeModeEnabled = enabled;
+    await _prefs.setBool('swipeModeEnabled', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setSwipeTargetList(String listName) async {
+    _swipeTargetList = listName;
+    await _prefs.setString('swipeTargetList', listName);
     notifyListeners();
   }
 

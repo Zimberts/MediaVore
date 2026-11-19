@@ -750,5 +750,21 @@
   "sagaMissingAdded": "{count, plural, =1{1 film ajouté à « {list} »} other{{count} films ajoutés à « {list} »}}",
   "detailSeasonEpisodes": "{count, plural, =1{1 épisode} other{{count} épisodes}}",
   "detailSeasonSeenShort": "{seen}/{total} vus",
-  "detailEpisodeNumber": "Épisode {number}"
+  "detailEpisodeNumber": "Épisode {number}",
+  "swiperTitle": "Swiper",
+  "swiperAddTo": "Ajouter à",
+  "swiperPass": "Passer",
+  "swiperDiscard": "Écarter",
+  "swiperAdd": "Ajouter",
+  "swiperUndo": "Annuler",
+  "swiperAddedMessage": "{title} ajouté à {list}",
+  "swiperDiscardedMessage": "Écarté",
+  "swiperSagaAddedMessage": "Saga {title} ajoutée ({count} films)",
+  "swiperSagaDiscardedMessage": "Saga écartée",
+  "swiperEmptyTitle": "Plus de films",
+  "swiperEmptyMessage": "Vous avez passé en revue tous les films disponibles pour le moment.",
+  "swiperSessionStats": "{added} ajoutés · {discarded} écartés",
+  "swiperSettingTitle": "Découverte par swipe",
+  "swiperSettingSubtitle": "Découvrir des films carte par carte et les ajouter rapidement à vos listes",
+  "swiperSagaBadge": "Saga ({count} films)"
 }
