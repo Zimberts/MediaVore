@@ -76,6 +76,13 @@ void main() {
     when(() => mockSearchProvider.markItemSeen(any())).thenAnswer(
       (_) async => () async {},
     );
+    when(
+      () => mockSearchProvider.getPreviousUnseenEpisodes(
+        tvId: any(named: 'tvId'),
+        targetSeason: any(named: 'targetSeason'),
+        targetEpisode: any(named: 'targetEpisode'),
+      ),
+    ).thenAnswer((_) async => []);
   });
 
   Widget buildWidget({
