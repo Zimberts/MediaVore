@@ -492,12 +492,10 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           ],
                         ),
                       ],
-                      if (details?.watchProviders != null) ...[
-                        gap,
+                      if (details?.watchProviders != null)
                         MediaDetailWatchProviders(
                           watchProviders: details!.watchProviders,
                         ),
-                      ],
                       MediaDetailSynopsis(text: item.overview),
                       MediaDetailTrailers(
                         videos: details?.videos,

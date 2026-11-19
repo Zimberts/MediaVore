@@ -1,6 +1,7 @@
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'cast_member.dart';
 import 'crew_member.dart';
+import 'watch_providers.dart';
 
 class MediaDetails {
   final MediaItem item;
@@ -11,6 +12,9 @@ class MediaDetails {
   final List<MediaItem>? collection;
   final Map<String, dynamic>? watchProviders;
   final List<Map<String, dynamic>>? videos;
+
+  WatchProviders? get parsedWatchProviders =>
+      watchProviders != null ? WatchProviders.fromJson(watchProviders) : null;
 
   MediaDetails({
     required this.item,
@@ -53,8 +57,8 @@ class MediaDetails {
           : null,
       collection: json['collection'] != null
           ? (json['collection'] as List)
-            .map((i) => MediaItem.fromJson(i))
-            .toList()
+                .map((i) => MediaItem.fromJson(i))
+                .toList()
           : null,
       watchProviders: json['watch_providers'],
       videos: json['videos'] != null

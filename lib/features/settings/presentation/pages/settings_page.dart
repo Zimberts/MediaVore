@@ -9,6 +9,24 @@ import 'package:provider/provider.dart';
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
+  static const List<String> supportedWatchProviderCountries = [
+    'FR',
+    'BE',
+    'CH',
+    'CA',
+    'US',
+    'GB',
+    'DE',
+    'ES',
+    'IT',
+    'AU',
+    'BR',
+    'JP',
+    'KR',
+    'NL',
+    'PT',
+  ];
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
@@ -50,6 +68,49 @@ class SettingsPage extends StatelessWidget {
                     DropdownMenuItem<AppLanguage?>(
                       value: language,
                       child: Text(language.nativeName),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.public),
+            title: Text(l10n.settingsWatchProvidersCountry),
+            subtitle: Text(l10n.settingsWatchProvidersCountrySubtitle),
+            trailing: DropdownButtonHideUnderline(
+              key: const Key('settings_watch_providers_country_dropdown'),
+              child: DropdownButton<String?>(
+                value: settings.watchProvidersCountry,
+                isDense: true,
+                padding: EdgeInsets.zero,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 3,
+                onChanged: settings.setWatchProvidersCountry,
+                style: dropdownStyle,
+                alignment: Alignment.centerRight,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text(
+                      l10n.settingsWatchProvidersCountrySystem(
+                        l10n.detailCountryName(
+                          settings.resolveWatchProvidersCountry(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  for (final code in [
+                    ...supportedWatchProviderCountries,
+                    if (settings.watchProvidersCountry != null &&
+                        !supportedWatchProviderCountries.contains(
+                          settings.watchProvidersCountry,
+                        ))
+                      settings.watchProvidersCountry!,
+                  ])
+                    DropdownMenuItem<String?>(
+                      value: code,
+                      child: Text(l10n.detailCountryName(code)),
                     ),
                 ],
               ),
@@ -169,7 +230,11 @@ class SettingsPage extends StatelessWidget {
             icon: const Icon(Icons.info_outline),
             applicationName: l10n.appTitle,
             applicationVersion: appVersion,
-            aboutBoxChildren: [Text(l10n.settingsAboutDescription)],
+            aboutBoxChildren: [
+              Text(l10n.settingsAboutDescription),
+              const SizedBox(height: 8),
+              Text(l10n.settingsAboutJustWatch),
+            ],
           ),
         ],
       ),

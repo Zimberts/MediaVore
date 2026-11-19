@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
@@ -7,11 +9,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum DisplayMode { list, grid, swipe }
 
+enum PreviousEpisodesBehavior { ask, all, one }
+
 class SettingsProvider with ChangeNotifier {
   /// Preference keys of the selected palettes (stable identifiers).
   static const String lightPaletteKey = 'lightPalette';
   static const String darkPaletteKey = 'darkPalette';
   static const String advancedTrackingKey = 'advancedTracking';
+  static const String previousEpisodesKey = 'previousEpisodes';
+  static const String watchProvidersCountryKey = 'watchProvidersCountry';
 
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
@@ -30,6 +36,8 @@ class SettingsProvider with ChangeNotifier {
   bool _hideNonReleased = false;
   bool _notificationCenterDebug = false;
   bool _advancedTracking = false;
+  PreviousEpisodesBehavior _previousEpisodes = PreviousEpisodesBehavior.ask;
+  String? _watchProvidersCountry;
 
   AppPalette _lightPalette = AppPalette.defaultLight;
   AppPalette _darkPalette = AppPalette.defaultDark;
@@ -41,6 +49,8 @@ class SettingsProvider with ChangeNotifier {
   bool get hideNonReleased => _hideNonReleased;
   bool get notificationCenterDebug => _notificationCenterDebug;
   bool get advancedTracking => _advancedTracking;
+  PreviousEpisodesBehavior get previousEpisodes => _previousEpisodes;
+  String? get watchProvidersCountry => _watchProvidersCountry;
 
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
@@ -78,6 +88,14 @@ class SettingsProvider with ChangeNotifier {
     _notificationCenterDebug =
         _prefs.getBool('notificationCenterDebug') ?? false;
     _advancedTracking = _prefs.getBool(advancedTrackingKey) ?? false;
+    _watchProvidersCountry = _prefs.getString(watchProvidersCountryKey);
+    final storedPrevious = _prefs.getString(previousEpisodesKey);
+    if (storedPrevious != null) {
+      _previousEpisodes = PreviousEpisodesBehavior.values.firstWhere(
+        (b) => b.name == storedPrevious,
+        orElse: () => PreviousEpisodesBehavior.ask,
+      );
+    }
 
     // Palettes are stored by stable identifier. Up to v1.3.0 they were
     // stored as an index (`lightAppTheme` / `darkAppTheme`) into lists of
@@ -139,6 +157,48 @@ class SettingsProvider with ChangeNotifier {
     _advancedTracking = enabled;
     await _prefs.setBool(advancedTrackingKey, enabled);
     notifyListeners();
+  }
+
+  Future<void> setPreviousEpisodes(PreviousEpisodesBehavior value) async {
+    _previousEpisodes = value;
+    await _prefs.setString(previousEpisodesKey, value.name);
+    notifyListeners();
+  }
+
+  Future<void> setWatchProvidersCountry(String? countryCode) async {
+    final normalized = countryCode?.trim().toUpperCase();
+    if (normalized == null || normalized.isEmpty) {
+      _watchProvidersCountry = null;
+      await _prefs.remove(watchProvidersCountryKey);
+    } else {
+      _watchProvidersCountry = normalized;
+      await _prefs.setString(watchProvidersCountryKey, normalized);
+    }
+    notifyListeners();
+  }
+
+  /// Effective country code for watch providers: the user override if set,
+  /// otherwise the device's country code, falling back to 'FR'.
+  String resolveWatchProvidersCountry([Locale? deviceLocale]) {
+    if (_watchProvidersCountry != null && _watchProvidersCountry!.isNotEmpty) {
+      return _watchProvidersCountry!;
+    }
+    if (deviceLocale != null &&
+        deviceLocale.countryCode != null &&
+        deviceLocale.countryCode!.isNotEmpty) {
+      return deviceLocale.countryCode!.toUpperCase();
+    }
+    for (final locale in PlatformDispatcher.instance.locales) {
+      final code = locale.countryCode;
+      if (code != null && code.isNotEmpty) {
+        return code.toUpperCase();
+      }
+    }
+    final defaultCode = PlatformDispatcher.instance.locale.countryCode;
+    if (defaultCode != null && defaultCode.isNotEmpty) {
+      return defaultCode.toUpperCase();
+    }
+    return 'FR';
   }
 
   /// Selects the palette used in light mode. Ignores a dark palette.

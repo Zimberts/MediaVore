@@ -4129,6 +4129,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Viewings'**
   String get seenVisionnagesSectionTitle;
+
+  /// No description provided for @settingsPreviousEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Unseen previous episodes'**
+  String get settingsPreviousEpisodes;
+
+  /// No description provided for @settingsPreviousEpisodesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Behavior when marking an episode while earlier episodes are unseen'**
+  String get settingsPreviousEpisodesSubtitle;
+
+  /// No description provided for @settingsPreviousEpisodesAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get settingsPreviousEpisodesAsk;
+
+  /// No description provided for @settingsPreviousEpisodesAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All seen'**
+  String get settingsPreviousEpisodesAll;
+
+  /// No description provided for @settingsPreviousEpisodesOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave unseen'**
+  String get settingsPreviousEpisodesOne;
+
+  /// No description provided for @seenPreviousUnseenPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 previous episode is unseen. Mark it as seen too?} other{{count} previous episodes are unseen. Mark them as seen too?}}'**
+  String seenPreviousUnseenPrompt(int count);
+
+  /// No description provided for @seenPreviousMarkAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, mark all as seen'**
+  String get seenPreviousMarkAll;
+
+  /// No description provided for @seenPreviousOnlyThis.
+  ///
+  /// In en, this message translates to:
+  /// **'No, only this episode'**
+  String get seenPreviousOnlyThis;
+
+  /// No description provided for @seenRememberChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember my choice'**
+  String get seenRememberChoice;
+
+  /// No description provided for @seenBatchAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as seen · {count, plural, =1{1 episode} other{{count} episodes}}'**
+  String seenBatchAddedMessage(int count);
+
+  /// No description provided for @detailWhereToWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Where to watch'**
+  String get detailWhereToWatch;
+
+  /// No description provided for @detailWatchFlatrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Stream'**
+  String get detailWatchFlatrate;
+
+  /// No description provided for @detailWatchRent.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent'**
+  String get detailWatchRent;
+
+  /// No description provided for @detailWatchBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get detailWatchBuy;
+
+  /// No description provided for @detailWatchFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get detailWatchFree;
+
+  /// No description provided for @detailWatchJustWatchAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Data provided by JustWatch'**
+  String get detailWatchJustWatchAttribution;
+
+  /// No description provided for @settingsWatchProvidersCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Platforms country'**
+  String get settingsWatchProvidersCountry;
+
+  /// No description provided for @settingsWatchProvidersCountrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Region used for streaming offers'**
+  String get settingsWatchProvidersCountrySubtitle;
+
+  /// No description provided for @settingsWatchProvidersCountrySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System ({country})'**
+  String settingsWatchProvidersCountrySystem(String country);
+
+  /// No description provided for @settingsAboutJustWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming data provided by JustWatch.'**
+  String get settingsAboutJustWatch;
 }
 
 class _AppLocalizationsDelegate

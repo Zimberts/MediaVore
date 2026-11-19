@@ -1768,5 +1768,46 @@
   "seenOrdinal": "{ordinal, select, 1{1st} 2{2nd} 3{3rd} other{{ordinal}th}} viewing",
   "@seenOrdinal": {"placeholders": {"ordinal": {"type": "String"}}},
   "seenEditViewing": "Edit date",
-  "seenVisionnagesSectionTitle": "Viewings"
+  "seenVisionnagesSectionTitle": "Viewings",
+  "settingsPreviousEpisodes": "Unseen previous episodes",
+  "settingsPreviousEpisodesSubtitle": "Behavior when marking an episode while earlier episodes are unseen",
+  "settingsPreviousEpisodesAsk": "Ask",
+  "settingsPreviousEpisodesAll": "All seen",
+  "settingsPreviousEpisodesOne": "Leave unseen",
+  "seenPreviousUnseenPrompt": "{count, plural, =1{1 previous episode is unseen. Mark it as seen too?} other{{count} previous episodes are unseen. Mark them as seen too?}}",
+  "@seenPreviousUnseenPrompt": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seenPreviousMarkAll": "Yes, mark all as seen",
+  "seenPreviousOnlyThis": "No, only this episode",
+  "seenRememberChoice": "Remember my choice",
+  "seenBatchAddedMessage": "Marked as seen · {count, plural, =1{1 episode} other{{count} episodes}}",
+  "@seenBatchAddedMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailWhereToWatch": "Where to watch",
+  "detailWatchFlatrate": "Stream",
+  "detailWatchRent": "Rent",
+  "detailWatchBuy": "Buy",
+  "detailWatchFree": "Free",
+  "detailWatchJustWatchAttribution": "Data provided by JustWatch",
+  "settingsWatchProvidersCountry": "Platforms country",
+  "settingsWatchProvidersCountrySubtitle": "Region used for streaming offers",
+  "settingsWatchProvidersCountrySystem": "System ({country})",
+  "@settingsWatchProvidersCountrySystem": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAboutJustWatch": "Streaming data provided by JustWatch."
 }
