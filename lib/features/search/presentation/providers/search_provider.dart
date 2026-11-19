@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:flutter/material.dart';
@@ -1236,6 +1237,36 @@ class SearchProvider with ChangeNotifier {
             if ((isLastEpisode || noNext) && discontinued) {
               await toggleInList(mediaItem, 'watchlist');
             }
+
+            // If a rewatch was in progress and all episodes have been seen in this cycle,
+            // clear the active rewatch cycle.
+            final rewatchStart = getSeriesRewatchStart(item.tmdbId);
+            if (rewatchStart != null) {
+              final allSeen = await repository.getSeenStatus(
+                item.tmdbId,
+                MediaType.tv,
+              );
+              final details = await repository.getMediaDetails(
+                item.tmdbId,
+                type: MediaType.tv,
+              );
+              final total = details.item.numberOfEpisodes ?? 0;
+              final inCycle = allSeen
+                  .where(
+                    (s) =>
+                        !s.seenDate.isBefore(rewatchStart) &&
+                        s.seasonNumber != null &&
+                        s.episodeNumber != null &&
+                        s.seasonNumber! > 0,
+                  )
+                  .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
+                  .toSet()
+                  .length;
+              if (total > 0 && inCycle >= total) {
+                await repository.clearSeriesRewatchStart(item.tmdbId);
+                await prefs?.remove('series_rewatch_start_${item.tmdbId}');
+              }
+            }
           } catch (e) {
             debugPrint(
               '[SearchProvider] markAsSeen watchlist cleanup failed: $e',
@@ -1847,7 +1878,12 @@ class SearchProvider with ChangeNotifier {
       int nextE = 1;
 
       if (seen.isNotEmpty) {
-        final episodeSeen = seen
+        final rewatchStart = getSeriesRewatchStart(tmdbId);
+        final filteredSeen = rewatchStart != null
+            ? seen.where((s) => !s.seenDate.isBefore(rewatchStart)).toList()
+            : seen;
+
+        final episodeSeen = filteredSeen
             .where((s) => s.seasonNumber != null && s.episodeNumber != null)
             .toList();
         if (episodeSeen.isNotEmpty) {
@@ -1928,6 +1964,144 @@ class SearchProvider with ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Start timestamp of an active rewatch cycle for [tmdbId], or `null` if none.
+  DateTime? getSeriesRewatchStart(int tmdbId) {
+    return repository.getSeriesRewatchStart(tmdbId) ??
+        (prefs?.getString('series_rewatch_start_$tmdbId') != null
+            ? DateTime.tryParse(prefs!.getString('series_rewatch_start_$tmdbId')!)
+            : null);
+  }
+
+  /// Calculates the number of complete viewing cycles for [item] given [seen].
+  static int calculateCompletedCycles(
+    MediaItem item,
+    Iterable<SeenItem> seen,
+  ) {
+    final episodeSeen = seen
+        .where(
+          (s) =>
+              s.seasonNumber != null &&
+              s.episodeNumber != null &&
+              s.seasonNumber! > 0,
+        )
+        .toList();
+    if (episodeSeen.isEmpty) return 0;
+
+    final counts = <String, int>{};
+    for (final s in episodeSeen) {
+      final key = '${s.seasonNumber!}:${s.episodeNumber!}';
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+
+    final total = item.numberOfEpisodes ?? 0;
+    if (total > 0 && counts.length < total) {
+      return 0;
+    }
+    return counts.values.reduce(math.min);
+  }
+
+  /// Checks whether [item] (a TV series) has all episodes watched in the current cycle.
+  Future<bool> isSeriesCompleted(MediaItem item) async {
+    if (item.mediaType != MediaType.tv) return false;
+    final seen = await repository.getSeenStatus(item.id, MediaType.tv);
+    final total = item.numberOfEpisodes ?? 0;
+    if (total == 0) return false;
+
+    final rewatchStart = getSeriesRewatchStart(item.id);
+    if (rewatchStart != null) {
+      final inCycle = seen
+          .where(
+            (s) =>
+                !s.seenDate.isBefore(rewatchStart) &&
+                s.seasonNumber != null &&
+                s.episodeNumber != null &&
+                s.seasonNumber! > 0,
+          )
+          .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
+          .toSet()
+          .length;
+      return inCycle >= total;
+    }
+
+    final uniqueSeen = seen
+        .where(
+          (s) =>
+              s.seasonNumber != null &&
+              s.episodeNumber != null &&
+              s.seasonNumber! > 0,
+        )
+        .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
+        .toSet()
+        .length;
+    return uniqueSeen >= total;
+  }
+
+  /// Starts a new viewing cycle for [item]. Returns the cycle number (e.g. 2 for 2nd watch).
+  Future<int> startSeriesRewatch(MediaItem item) async {
+    final now = DateTime.now();
+    await repository.setSeriesRewatchStart(item.id, now);
+    await prefs?.setString('series_rewatch_start_${item.id}', now.toIso8601String());
+
+    final seen = await repository.getSeenStatus(item.id, MediaType.tv);
+    final completed = calculateCompletedCycles(item, seen);
+    final currentCycle = (completed > 0 ? completed : 1) + 1;
+
+    await repository.clearOptOutSeries(item.id, seasonNumber: 1, episodeNumber: 1);
+
+    DateTime? airDate;
+    int? runtime;
+    try {
+      final seasonDetails = await repository.getSeasonDetails(item.id, 1);
+      final episodes = seasonDetails['episodes'] as List?;
+      if (episodes != null && episodes.isNotEmpty) {
+        final ep1 = episodes.firstWhere(
+          (e) => e['episode_number'] == 1,
+          orElse: () => null,
+        );
+        if (ep1 != null) {
+          final airDateStr = ep1['air_date'] as String?;
+          if (airDateStr != null) airDate = DateTime.tryParse(airDateStr);
+          if (ep1['runtime'] is num) runtime = (ep1['runtime'] as num).toInt();
+        }
+      }
+    } catch (_) {}
+
+    final quickAdd = QuickAddItem(
+      tmdbId: item.id,
+      type: MediaType.tv,
+      seasonNumber: 1,
+      episodeNumber: 1,
+      insertedAt: now,
+      airDate: airDate,
+      runtime: runtime,
+      title: item.title,
+      posterPath: item.posterPath,
+    );
+    await repository.addQuickAddItem(quickAdd);
+    await loadQuickAddItems();
+    notifyListeners();
+
+    return currentCycle;
+  }
+
+  /// Cancels an active rewatch for [tmdbId], restoring the completed state.
+  Future<void> cancelSeriesRewatch(int tmdbId) async {
+    await repository.clearSeriesRewatchStart(tmdbId);
+    await prefs?.remove('series_rewatch_start_$tmdbId');
+
+    for (final queued in await repository.getQuickAddItems()) {
+      final id = queued.isarId;
+      if (id != null &&
+          queued.tmdbId == tmdbId &&
+          queued.seasonNumber == 1 &&
+          queued.episodeNumber == 1) {
+        await repository.removeQuickAddItemById(id);
+      }
+    }
+    await loadQuickAddItems();
+    notifyListeners();
   }
 
   Future<void> refreshNotifiedItems() async {

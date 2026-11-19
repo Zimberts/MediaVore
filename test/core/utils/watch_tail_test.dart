@@ -28,6 +28,24 @@ void main() {
       expect(findLatestTail(const []), isNull);
     });
 
+    test('should scope tail to seenSince when provided', () {
+      final items = [
+        seen(1, 1, date: DateTime(2024, 1, 1)),
+        seen(1, 2, date: DateTime(2024, 1, 2)),
+      ];
+      final rewatchStart = DateTime(2025, 1, 1);
+      expect(findLatestTail(items, seenSince: rewatchStart), isNull);
+
+      final rewatchedItems = [
+        ...items,
+        seen(1, 1, date: DateTime(2025, 1, 2)),
+      ];
+      final tail = findLatestTail(rewatchedItems, seenSince: rewatchStart);
+      expect(tail, isNotNull);
+      expect(tail!.seasonNumber, 1);
+      expect(tail.episodeNumber, 1);
+    });
+
     test('should ignore entries without season/episode info', () {
       final items = [
         SeenItemModel(

@@ -1950,6 +1950,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailSeriesFinished => 'Finished';
 
   @override
+  String get rewatchSeriesAction => 'Rewatch series';
+
+  @override
+  String rewatchStartedMessage(String cycle) {
+    String _temp0 = intl.Intl.selectLogic(cycle, {
+      '2': '2nd',
+      '3': '3rd',
+      'other': '${cycle}th',
+    });
+    return '$_temp0 watch started · previous viewings are preserved';
+  }
+
+  @override
+  String episodeAlreadySeenOn(String date) {
+    return 'Already seen on $date';
+  }
+
+  @override
+  String detailSeriesRewatching(String cycle, int season, int episode) {
+    String _temp0 = intl.Intl.selectLogic(cycle, {
+      '2': '2nd',
+      '3': '3rd',
+      'other': '${cycle}th',
+    });
+    return '$_temp0 watch · Next: S$season E$episode';
+  }
+
+  @override
+  String detailSeriesWatchedTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Watched $count times',
+      one: 'Watched 1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get detailMoreActions => 'More actions';
 
   @override

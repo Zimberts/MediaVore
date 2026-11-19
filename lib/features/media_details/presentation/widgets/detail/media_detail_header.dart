@@ -69,16 +69,84 @@ class MediaDetailHeader extends StatelessWidget {
     ].join(' · ');
   }
 
-  /// What the user did with the title: "Seen", "Seen 3 times", "Finished".
-  String? _personalStatus(AppLocalizations l10n) {
+  /// What the user did with the title: "Seen", "Seen 3 times", "Finished",
+  /// "Watched 2 times", or "2nd watch · Next: S1 E1".
+  String? _personalStatus(
+    BuildContext context,
+    AppLocalizations l10n,
+    SearchProvider provider,
+  ) {
     if (item.mediaType == MediaType.tv) {
       final total = item.numberOfEpisodes ?? 0;
-      final seen = seenStatus
-          .where((s) => s.seasonNumber != null && s.episodeNumber != null)
-          .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
-          .toSet()
-          .length;
-      return total > 0 && seen >= total ? l10n.detailSeriesFinished : null;
+      final episodeSeen = seenStatus
+          .where(
+            (s) =>
+                s.seasonNumber != null &&
+                s.episodeNumber != null &&
+                s.seasonNumber! > 0,
+          )
+          .toList();
+      final completedCycles = SearchProvider.calculateCompletedCycles(
+        item,
+        episodeSeen,
+      );
+      final rewatchStart = provider.getSeriesRewatchStart(item.id);
+
+      if (rewatchStart != null) {
+        final cycle = (completedCycles > 0 ? completedCycles : 1) + 1;
+        final inCycleKeys = episodeSeen
+            .where((s) => !s.seenDate.isBefore(rewatchStart))
+            .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
+            .toSet();
+        if (total > 0 && inCycleKeys.length >= total) {
+          final totalCompleted = completedCycles + 1;
+          return totalCompleted > 1
+              ? l10n.detailSeriesWatchedTimes(totalCompleted)
+              : l10n.detailSeriesFinished;
+        }
+
+        int nextS = 1;
+        int nextE = 1;
+        if (inCycleKeys.isNotEmpty) {
+          final inCycleList = episodeSeen
+              .where((s) => !s.seenDate.isBefore(rewatchStart))
+              .toList();
+          inCycleList.sort((a, b) {
+            final sc = b.seasonNumber!.compareTo(a.seasonNumber!);
+            if (sc != 0) return sc;
+            return b.episodeNumber!.compareTo(a.episodeNumber!);
+          });
+          final latest = inCycleList.first;
+          final seasons = item.seasons;
+          final currentSeason = seasons?.firstWhere(
+            (s) => s.seasonNumber == latest.seasonNumber,
+            orElse: () =>
+                const TVSeason(id: -1, seasonNumber: -1, episodeCount: 0),
+          );
+          if (currentSeason != null &&
+              currentSeason.seasonNumber != -1 &&
+              latest.episodeNumber! < currentSeason.episodeCount) {
+            nextS = latest.seasonNumber!;
+            nextE = latest.episodeNumber! + 1;
+          } else {
+            nextS = latest.seasonNumber! + 1;
+            nextE = 1;
+          }
+        }
+        return l10n.detailSeriesRewatching(cycle.toString(), nextS, nextE);
+      }
+
+      if (completedCycles > 1) {
+        return l10n.detailSeriesWatchedTimes(completedCycles);
+      } else if (total > 0 &&
+          episodeSeen
+                  .map((s) => '${s.seasonNumber}:${s.episodeNumber}')
+                  .toSet()
+                  .length >=
+              total) {
+        return l10n.detailSeriesFinished;
+      }
+      return null;
     }
     if (seenStatus.isEmpty) return null;
     return seenStatus.length > 1
@@ -95,7 +163,7 @@ class MediaDetailHeader extends StatelessWidget {
     final kind = MediaKind.fromMediaType(item.mediaType);
     final meta = metaLine(l10n, item);
     final rating = item.voteAverage;
-    final personal = _personalStatus(l10n);
+    final personal = _personalStatus(context, l10n, provider);
     final isLiked = provider.isLiked(item);
     final isNotified = provider.isNotified(item);
     final muted = textTheme.bodySmall?.copyWith(color: colors.text2);

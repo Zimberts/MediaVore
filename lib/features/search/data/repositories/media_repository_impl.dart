@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mediavore/core/cache/cache_warmup_policy.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
@@ -48,6 +49,7 @@ class MediaRepositoryImpl implements MediaRepository {
   /// TMDB credential; the automatic cache warm-up is skipped while none is
   /// set. `null` = always run.
   final TmdbCredentialStore? credentialStore;
+  final SharedPreferences? prefs;
 
   /// Max concurrent `/movie|tv/{id}` requests when enriching a result page.
   static const int enrichmentConcurrency =
@@ -70,6 +72,7 @@ class MediaRepositoryImpl implements MediaRepository {
     this.warmupPolicy,
     this.localeService,
     this.credentialStore,
+    this.prefs,
     bool autoInit = true,
   }) {
     _details = MediaDetailsService(
@@ -87,6 +90,7 @@ class MediaRepositoryImpl implements MediaRepository {
     _inProgress = InProgressService(
       localDataSource: localDataSource,
       cache: cache,
+      getRewatchStart: getSeriesRewatchStart,
     );
     _notifications = NotificationRefreshService(
       remoteDataSource: remoteDataSource,
@@ -776,5 +780,22 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<void> clearAllSwipeDecisions() async {
     await _ensureInitialized();
     return localDataSource.clearAllSwipeDecisions();
+  }
+
+  @override
+  DateTime? getSeriesRewatchStart(int tmdbId) {
+    final str = prefs?.getString('series_rewatch_start_$tmdbId');
+    if (str == null) return null;
+    return DateTime.tryParse(str);
+  }
+
+  @override
+  Future<void> setSeriesRewatchStart(int tmdbId, DateTime date) async {
+    await prefs?.setString('series_rewatch_start_$tmdbId', date.toIso8601String());
+  }
+
+  @override
+  Future<void> clearSeriesRewatchStart(int tmdbId) async {
+    await prefs?.remove('series_rewatch_start_$tmdbId');
   }
 }

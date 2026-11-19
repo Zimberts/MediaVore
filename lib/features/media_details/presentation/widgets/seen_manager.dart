@@ -136,7 +136,10 @@ class _SeenManagerState extends State<SeenManager> {
                 s.episodeNumber == widget.episodeNumber,
           )
           .toList();
-      isSeen = history.isNotEmpty;
+      final rewatchStart = provider.getSeriesRewatchStart(widget.item.id);
+      isSeen = rewatchStart != null
+          ? history.any((s) => !s.seenDate.isBefore(rewatchStart))
+          : history.isNotEmpty;
       count = history.length;
     } else {
       count = provider.getSeenCount(widget.item);

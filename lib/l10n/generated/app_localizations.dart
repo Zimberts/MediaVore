@@ -3212,6 +3212,36 @@ abstract class AppLocalizations {
   /// **'Finished'**
   String get detailSeriesFinished;
 
+  /// Button label to start a new viewing cycle for a completed series
+  ///
+  /// In en, this message translates to:
+  /// **'Rewatch series'**
+  String get rewatchSeriesAction;
+
+  /// No description provided for @rewatchStartedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle, select, 2{2nd} 3{3rd} other{{cycle}th}} watch started · previous viewings are preserved'**
+  String rewatchStartedMessage(String cycle);
+
+  /// No description provided for @episodeAlreadySeenOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Already seen on {date}'**
+  String episodeAlreadySeenOn(String date);
+
+  /// No description provided for @detailSeriesRewatching.
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle, select, 2{2nd} 3{3rd} other{{cycle}th}} watch · Next: S{season} E{episode}'**
+  String detailSeriesRewatching(String cycle, int season, int episode);
+
+  /// No description provided for @detailSeriesWatchedTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Watched 1 time} other{Watched {count} times}}'**
+  String detailSeriesWatchedTimes(int count);
+
   /// No description provided for @detailMoreActions.
   ///
   /// In en, this message translates to:
