@@ -6,6 +6,7 @@ import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
@@ -165,6 +166,12 @@ class MediaRepositoryImpl implements MediaRepository {
     final enriched = await _details.enrichItems(results);
     await _details.cacheItemsBestEffort(enriched, 'searchMedia');
     return enriched;
+  }
+
+  @override
+  Future<List<PersonSummary>> searchPeople(String query, {int page = 1}) async {
+    await _ensureInitialized();
+    return remoteDataSource.searchPeople(query, page: page);
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:mediavore/core/domain/entities/actor_details.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -23,6 +24,9 @@ abstract class MediaRepository {
     String? originalLanguage,
     MediaType? type,
   });
+
+  /// Searches for people (actors, directors, crew) via `/search/person`.
+  Future<List<PersonSummary>> searchPeople(String query, {int page = 1});
 
   /// Discovers media using TMDb's discovery endpoint.
   ///

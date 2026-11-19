@@ -1739,6 +1739,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'check your connection and try again. Your lists and your history remain available.';
 
   @override
+  String get discoverPeopleSection => 'People';
+
+  @override
   String get discoverSwipeSoonTitle => 'Swipe mode is coming soon';
 
   @override

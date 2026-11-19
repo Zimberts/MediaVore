@@ -17,6 +17,7 @@ import 'package:mediavore/features/settings/presentation/providers/settings_prov
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_people_row.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/search/presentation/widgets/active_filter_chips.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
@@ -322,6 +323,15 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
       ];
     }
 
+    final peopleSliver = provider.peopleResults.isNotEmpty
+        ? SliverPadding(
+            padding: const EdgeInsets.fromLTRB(_gutter, 8, _gutter, 0),
+            sliver: SliverToBoxAdapter(
+              child: SearchPeopleRow(people: provider.peopleResults),
+            ),
+          )
+        : null;
+
     final header = SliverPadding(
       padding: const EdgeInsets.fromLTRB(_gutter, 8, _gutter, 0),
       sliver: SliverToBoxAdapter(
@@ -335,6 +345,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     if (items.isEmpty) {
       final query = provider.currentQuery;
       return [
+        if (peopleSliver != null) peopleSliver,
         header,
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: _gutter),
@@ -371,6 +382,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     final hasFooter = provider.isLoading || provider.errorType != null;
 
     return [
+      if (peopleSliver != null) peopleSliver,
       header,
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(_gutter, 4, _gutter, 24),

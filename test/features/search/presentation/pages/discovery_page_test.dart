@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -12,6 +13,7 @@ import 'package:mediavore/features/discovery/presentation/pages/swiper_page.dart
 import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_people_row.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
@@ -646,6 +648,35 @@ void main() {
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       handle.dispose();
+    });
+
+    testWidgets('shows people row above results when people results exist', (
+      tester,
+    ) async {
+      stubSearch((query, type) => [_item(1, 'Dune')]);
+      when(() => repository.searchPeople('Villeneuve')).thenAnswer(
+        (_) async => const [
+          PersonSummary(
+            id: 100,
+            name: 'Denis Villeneuve',
+            knownForDepartment: 'Directing',
+          ),
+        ],
+      );
+
+      await pumpPage(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('discovery_search_field')),
+        'Villeneuve',
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SearchPeopleRow), findsOneWidget);
+      expect(find.text('People'), findsOneWidget);
+      expect(find.text('Denis Villeneuve'), findsOneWidget);
+      expect(find.text('Dune'), findsWidgets);
     });
   });
 
