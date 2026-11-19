@@ -500,14 +500,12 @@ void main() {
 
   group('Together tab', () {
     testWidgets('should show session setup screen', (tester) async {
-      await tester.pumpWidget(
-        createWidgetUnderTest(locale: const Locale('fr')),
-      );
+      await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
       await goTo(tester, AppTab.together);
 
       expect(find.byType(TogetherPage), findsOneWidget);
-      expect(find.text('Préparation de la séance'), findsOneWidget);
+      expect(find.text('Session Setup'), findsOneWidget);
     });
   });
 
