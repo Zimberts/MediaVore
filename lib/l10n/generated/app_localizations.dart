@@ -4249,6 +4249,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Streaming data provided by JustWatch.'**
   String get settingsAboutJustWatch;
+
+  /// No description provided for @personDirecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Directing / Creation'**
+  String get personDirecting;
+
+  /// No description provided for @personActing.
+  ///
+  /// In en, this message translates to:
+  /// **'Acting'**
+  String get personActing;
+
+  /// No description provided for @personSeenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{seen} of {total} seen'**
+  String personSeenCount(int seen, int total);
+
+  /// No description provided for @personOfflineNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No cached information for this person.'**
+  String get personOfflineNoData;
 }
 
 class _AppLocalizationsDelegate

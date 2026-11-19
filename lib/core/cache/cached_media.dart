@@ -34,12 +34,24 @@ class CachedActorProfile {
   final int actorId;
 
   final String? profilePath;
+  final String? name;
+  final String? biography;
+  final String? birthday;
+  final String? placeOfBirth;
+  final String? itemsJson;
+  final String? crewItemsJson;
 
   final DateTime updatedAt;
 
   CachedActorProfile({
     required this.actorId,
     this.profilePath,
+    this.name,
+    this.biography,
+    this.birthday,
+    this.placeOfBirth,
+    this.itemsJson,
+    this.crewItemsJson,
     required this.updatedAt,
   });
 }

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 
+typedef PersonDetails = ActorDetails;
+
 class ActorDetails extends Equatable {
   final int id;
   final String name;
@@ -8,7 +10,12 @@ class ActorDetails extends Equatable {
   final String? birthday;
   final String? placeOfBirth;
   final String? profilePath;
+
+  /// Filmography as an actor/actress (`cast` in TMDB).
   final List<MediaItem> items;
+
+  /// Filmography as a director or creator (`crew` in TMDB).
+  final List<MediaItem> crewItems;
 
   const ActorDetails({
     required this.id,
@@ -18,11 +25,13 @@ class ActorDetails extends Equatable {
     this.placeOfBirth,
     this.profilePath,
     this.items = const [],
+    this.crewItems = const [],
   });
 
   factory ActorDetails.fromJson(
     Map<String, dynamic> json, {
     List<MediaItem> items = const [],
+    List<MediaItem> crewItems = const [],
   }) {
     return ActorDetails(
       id: json['id'],
@@ -32,7 +41,21 @@ class ActorDetails extends Equatable {
       placeOfBirth: json['place_of_birth'],
       profilePath: json['profile_path'],
       items: items,
+      crewItems: crewItems,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      if (biography != null) 'biography': biography,
+      if (birthday != null) 'birthday': birthday,
+      if (placeOfBirth != null) 'place_of_birth': placeOfBirth,
+      if (profilePath != null) 'profile_path': profilePath,
+      'items': items.map((i) => i.toJson()).toList(),
+      'crew_items': crewItems.map((i) => i.toJson()).toList(),
+    };
   }
 
   @override
@@ -44,5 +67,6 @@ class ActorDetails extends Equatable {
     placeOfBirth,
     profilePath,
     items,
+    crewItems,
   ];
 }

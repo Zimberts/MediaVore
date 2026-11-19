@@ -2752,4 +2752,19 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsAboutJustWatch =>
       'Données de streaming fournies par JustWatch.';
+
+  @override
+  String get personDirecting => 'Réalisation / Création';
+
+  @override
+  String get personActing => 'Interprète';
+
+  @override
+  String personSeenCount(int seen, int total) {
+    return '$seen sur $total vus';
+  }
+
+  @override
+  String get personOfflineNoData =>
+      'Aucune information en cache pour cette personne.';
 }

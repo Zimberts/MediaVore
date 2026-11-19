@@ -1809,5 +1809,19 @@
       }
     }
   },
-  "settingsAboutJustWatch": "Streaming data provided by JustWatch."
+  "settingsAboutJustWatch": "Streaming data provided by JustWatch.",
+  "personDirecting": "Directing / Creation",
+  "personActing": "Acting",
+  "personSeenCount": "{seen} of {total} seen",
+  "@personSeenCount": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "personOfflineNoData": "No cached information for this person."
 }

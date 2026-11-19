@@ -3,11 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
+import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/media_details/presentation/pages/person_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
@@ -111,7 +113,11 @@ void main() {
     ),
   ];
 
-  const tDirector = CrewMember(name: 'Christopher Nolan', job: 'Director');
+  const tDirector = CrewMember(
+    id: 42,
+    name: 'Christopher Nolan',
+    job: 'Director',
+  );
 
   final tMediaDetails = MediaDetails(
     item: tItem,
@@ -434,6 +440,35 @@ void main() {
         );
         await expectCounters(tester, 1);
       });
+    });
+
+    testWidgets('tapping on director in infos block navigates to PersonPage', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockMediaRepository.getMediaDetails(any()),
+      ).thenAnswer((_) async => tMediaDetails);
+      when(
+        () => mockMediaRepository.getActorDetails(42),
+      ).thenAnswer(
+        (_) async => const ActorDetails(id: 42, name: 'Christopher Nolan'),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final directorFinder = find.text('Christopher Nolan');
+      await tester.scrollUntilVisible(
+        directorFinder,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(directorFinder, findsOneWidget);
+
+      await tester.tap(directorFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PersonPage), findsOneWidget);
     });
   });
 }
