@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -31,11 +32,15 @@ class ListSharePayload {
   final String name;
   final List<SharedMediaEntry> entries;
   final int version;
+  final int part;
+  final int totalParts;
 
   const ListSharePayload({
     required this.name,
     required this.entries,
     this.version = 2,
+    this.part = 1,
+    this.totalParts = 1,
   });
 }
 
@@ -161,19 +166,76 @@ class ListShareCodec {
     final versionStr = uri.queryParameters['v'];
     final v = int.tryParse(versionStr ?? '1') ?? 1;
 
+    final partStr = uri.queryParameters['part'];
+    var part = 1;
+    var totalParts = 1;
+    if (partStr != null && partStr.contains('/')) {
+      final segments = partStr.split('/');
+      part = int.tryParse(segments[0]) ?? 1;
+      totalParts = int.tryParse(segments[1]) ?? 1;
+    }
+
     final d = uri.queryParameters['d'] ?? uri.queryParameters['data'];
     if (d != null && d.isNotEmpty) {
       final entries = decodeV2(d);
-      return ListSharePayload(name: name, entries: entries, version: 2);
+      return ListSharePayload(
+        name: name,
+        entries: entries,
+        version: 2,
+        part: part,
+        totalParts: totalParts,
+      );
     }
 
     final itemsStr = uri.queryParameters['items'];
     if (itemsStr != null && itemsStr.isNotEmpty) {
       final entries = decodeV1(itemsStr);
-      return ListSharePayload(name: name, entries: entries, version: v);
+      return ListSharePayload(
+        name: name,
+        entries: entries,
+        version: v,
+        part: part,
+        totalParts: totalParts,
+      );
     }
 
     return null;
+  }
+
+  /// Parses a share link or QR payload string into a [ListSharePayload].
+  static ListSharePayload? parse(String raw) {
+    final uri = Uri.tryParse(raw.trim());
+    if (uri == null) return null;
+    return decodeUri(uri);
+  }
+
+  /// Generates one or more `mediavore://together` URLs for sharing in a Together session.
+  /// If [entries] exceeds [chunkSize], multiple chunked URLs with `&part=i/n` are produced.
+  static List<String> createTogetherUrls({
+    required String name,
+    required List<SharedMediaEntry> entries,
+    int chunkSize = 150,
+  }) {
+    if (entries.isEmpty) {
+      final base = 'mediavore://together?v=2&name=${Uri.encodeComponent(name)}';
+      return [base];
+    }
+
+    final chunks = <List<SharedMediaEntry>>[];
+    for (var i = 0; i < entries.length; i += chunkSize) {
+      chunks.add(entries.sublist(i, math.min(i + chunkSize, entries.length)));
+    }
+
+    final total = chunks.length;
+    final urls = <String>[];
+    for (var i = 0; i < total; i++) {
+      final data = encodeV2(chunks[i]);
+      final partParam = total > 1 ? '&part=${i + 1}/$total' : '';
+      urls.add(
+        'mediavore://together?v=2&name=${Uri.encodeComponent(name)}$partParam&d=$data',
+      );
+    }
+    return urls;
   }
 
   /// Generates a share URL.

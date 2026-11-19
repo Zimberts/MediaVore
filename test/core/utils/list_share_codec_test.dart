@@ -112,5 +112,42 @@ void main() {
       // v1 is typically > 1500 chars, v2 is ~150-250 chars
       expect(v2Url.length, lessThan(v1Url.length ~/ 4));
     });
+
+    test('createTogetherUrls chunks lists exceeding chunkSize', () {
+      final entries = List.generate(
+        350,
+        (i) => SharedMediaEntry(i + 1, MediaType.movie),
+      );
+
+      final urls = ListShareCodec.createTogetherUrls(
+        name: 'My Watchlist',
+        entries: entries,
+        chunkSize: 150,
+      );
+
+      // 350 / 150 -> 3 chunks
+      expect(urls.length, 3);
+      expect(urls[0], contains('part=1/3'));
+      expect(urls[1], contains('part=2/3'));
+      expect(urls[2], contains('part=3/3'));
+
+      // Parse each chunk and aggregate entries
+      final allDecoded = <SharedMediaEntry>[];
+      for (final url in urls) {
+        final payload = ListShareCodec.parse(url);
+        expect(payload, isNotNull);
+        expect(payload!.name, 'My Watchlist');
+        expect(payload.totalParts, 3);
+        allDecoded.addAll(payload.entries);
+      }
+
+      expect(allDecoded.length, 350);
+      expect(allDecoded.map((e) => e.id), List.generate(350, (i) => i + 1));
+    });
+
+    test('parse handles invalid or null safely', () {
+      expect(ListShareCodec.parse(''), isNull);
+      expect(ListShareCodec.parse('not a valid url'), isNull);
+    });
   });
 }

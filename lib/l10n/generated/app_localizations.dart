@@ -4388,6 +4388,162 @@ abstract class AppLocalizations {
   /// **'Episode {number}'**
   String detailEpisodeNumber(int number);
 
+  /// No description provided for @togetherSessionSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Setup'**
+  String get togetherSessionSetup;
+
+  /// No description provided for @togetherWeAreChoosing.
+  ///
+  /// In en, this message translates to:
+  /// **'We are choosing'**
+  String get togetherWeAreChoosing;
+
+  /// No description provided for @togetherChoiceAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Movie or Series'**
+  String get togetherChoiceAny;
+
+  /// No description provided for @togetherChoiceMovie.
+  ///
+  /// In en, this message translates to:
+  /// **'A Movie'**
+  String get togetherChoiceMovie;
+
+  /// No description provided for @togetherChoiceTv.
+  ///
+  /// In en, this message translates to:
+  /// **'A Series'**
+  String get togetherChoiceTv;
+
+  /// No description provided for @togetherMyListLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'My list:'**
+  String get togetherMyListLabel;
+
+  /// No description provided for @togetherWarningNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'The QR code contains your list: anyone scanning it can view it.'**
+  String get togetherWarningNotice;
+
+  /// No description provided for @togetherScanQrButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a friend\'s QR'**
+  String get togetherScanQrButton;
+
+  /// No description provided for @togetherParticipantsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get togetherParticipantsTitle;
+
+  /// No description provided for @togetherYouHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Me (Host)'**
+  String get togetherYouHost;
+
+  /// No description provided for @togetherItemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 titles} =1{1 title} other{{count} titles}}'**
+  String togetherItemsCount(int count);
+
+  /// No description provided for @togetherScanPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan at least one friend to continue'**
+  String get togetherScanPrompt;
+
+  /// No description provided for @togetherSeeCommonTitles.
+  ///
+  /// In en, this message translates to:
+  /// **'See common titles'**
+  String get togetherSeeCommonTitles;
+
+  /// No description provided for @togetherCommonCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No titles in common} =1{1 title in common} other{{count} in common}}'**
+  String togetherCommonCount(int count);
+
+  /// No description provided for @togetherAlmostSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost: in {k} of {n} lists'**
+  String togetherAlmostSection(int k, int n);
+
+  /// No description provided for @togetherVoteLimitNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voting includes the 6 highest rated titles (out of {count})'**
+  String togetherVoteLimitNotice(int count);
+
+  /// No description provided for @togetherEmptyCommonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No titles in common'**
+  String get togetherEmptyCommonTitle;
+
+  /// No description provided for @togetherEmptyCommonMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'None of your titles match across all lists. Check the \"Almost\" section below!'**
+  String get togetherEmptyCommonMessage;
+
+  /// No description provided for @togetherRandomPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Random pick'**
+  String get togetherRandomPick;
+
+  /// No description provided for @togetherSwipeVote.
+  ///
+  /// In en, this message translates to:
+  /// **'Vote by swiping'**
+  String get togetherSwipeVote;
+
+  /// No description provided for @togetherWatchThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s watch this!'**
+  String get togetherWatchThis;
+
+  /// No description provided for @togetherResetSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset session'**
+  String get togetherResetSession;
+
+  /// No description provided for @togetherResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset this session and clear all scanned participants?'**
+  String get togetherResetConfirm;
+
+  /// No description provided for @togetherHideSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide watched'**
+  String get togetherHideSeen;
+
+  /// No description provided for @togetherMultiQrPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Part {current} of {total}'**
+  String togetherMultiQrPart(int current, int total);
+
+  /// No description provided for @togetherScanNextPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan next QR part ({current}/{total})'**
+  String togetherScanNextPart(int current, int total);
+
   /// No description provided for @swiperTitle.
   ///
   /// In en, this message translates to:

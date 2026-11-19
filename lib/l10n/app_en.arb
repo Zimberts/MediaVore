@@ -1962,6 +1962,83 @@
       }
     }
   },
+  "togetherSessionSetup": "Session Setup",
+  "togetherWeAreChoosing": "We are choosing",
+  "togetherChoiceAny": "Movie or Series",
+  "togetherChoiceMovie": "A Movie",
+  "togetherChoiceTv": "A Series",
+  "togetherMyListLabel": "My list:",
+  "togetherWarningNotice": "The QR code contains your list: anyone scanning it can view it.",
+  "togetherScanQrButton": "Scan a friend's QR",
+  "togetherParticipantsTitle": "Participants",
+  "togetherYouHost": "Me (Host)",
+  "togetherItemsCount": "{count, plural, =0{0 titles} =1{1 title} other{{count} titles}}",
+  "@togetherItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "togetherScanPrompt": "Scan at least one friend to continue",
+  "togetherSeeCommonTitles": "See common titles",
+  "togetherCommonCount": "{count, plural, =0{No titles in common} =1{1 title in common} other{{count} in common}}",
+  "@togetherCommonCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "togetherAlmostSection": "Almost: in {k} of {n} lists",
+  "@togetherAlmostSection": {
+    "placeholders": {
+      "k": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "togetherVoteLimitNotice": "Voting includes the 6 highest rated titles (out of {count})",
+  "@togetherVoteLimitNotice": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "togetherEmptyCommonTitle": "No titles in common",
+  "togetherEmptyCommonMessage": "None of your titles match across all lists. Check the \"Almost\" section below!",
+  "togetherRandomPick": "Random pick",
+  "togetherSwipeVote": "Vote by swiping",
+  "togetherWatchThis": "Let's watch this!",
+  "togetherResetSession": "Reset session",
+  "togetherResetConfirm": "Reset this session and clear all scanned participants?",
+  "togetherHideSeen": "Hide watched",
+  "togetherMultiQrPart": "Part {current} of {total}",
+  "@togetherMultiQrPart": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "togetherScanNextPart": "Scan next QR part ({current}/{total})",
+  "@togetherScanNextPart": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "swiperTitle": "Swiper",
   "swiperAddTo": "Add to",
   "swiperPass": "Pass",

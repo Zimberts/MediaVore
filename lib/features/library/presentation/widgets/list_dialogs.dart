@@ -23,9 +23,10 @@ class SharedList {
 typedef ListScannerBuilder =
     Widget Function(BuildContext context, ValueChanged<String> onCode);
 
-/// Whether [link] looks like a MediaVore share link.
+/// Whether [link] looks like a MediaVore share or together session link.
 bool isSharedListLink(String link) =>
     link.startsWith('mediavore://share') ||
+    link.startsWith('mediavore://together') ||
     link.startsWith('https://mediavore.app/share');
 
 /// Reads the list carried by a share [link]; `null` when it has none.

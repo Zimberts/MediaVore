@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 
 void main() {
@@ -21,14 +23,22 @@ void main() {
 
     test('should replace a participant scanned twice', () {
       session.addParticipant(
-        const TogetherParticipant(name: 'Lea', entries: ['1:movie']),
+        const TogetherParticipant(
+          name: 'Lea',
+          entries: [SharedMediaEntry(1, MediaType.movie)],
+        ),
       );
       session.addParticipant(
-        const TogetherParticipant(name: 'Lea', entries: ['2:tv']),
+        const TogetherParticipant(
+          name: 'Lea',
+          entries: [SharedMediaEntry(2, MediaType.tv)],
+        ),
       );
 
       expect(session.participants, hasLength(1));
-      expect(session.participants.single.entries, ['2:tv']);
+      expect(session.participants.single.entries, [
+        const SharedMediaEntry(2, MediaType.tv),
+      ]);
     });
 
     test('should record and withdraw votes', () {
@@ -93,11 +103,57 @@ void main() {
     });
 
     test('should not notify when nothing changes', () {
-      session.reset();
       session.endVote();
       session.removeParticipant('Nobody');
 
       expect(notifications, 0);
+    });
+
+    test('should compute participant initials correctly', () {
+      expect(const TogetherParticipant(name: 'Alexis Imbert').initials, 'AI');
+      expect(const TogetherParticipant(name: 'Lea').initials, 'LE');
+      expect(const TogetherParticipant(name: 'A').initials, 'A');
+      expect(const TogetherParticipant(name: '   ').initials, '?');
+    });
+
+    test('should accumulate multi-part chunks', () {
+      session.addParticipantChunk(
+        name: 'Bob',
+        part: 1,
+        totalParts: 2,
+        entries: const [SharedMediaEntry(101, MediaType.movie)],
+      );
+
+      expect(session.participants, hasLength(1));
+      expect(session.participants.first.isComplete, isFalse);
+      expect(session.participants.first.entries, hasLength(1));
+
+      session.addParticipantChunk(
+        name: 'Bob',
+        part: 2,
+        totalParts: 2,
+        entries: const [SharedMediaEntry(102, MediaType.tv)],
+      );
+
+      expect(session.participants, hasLength(1));
+      expect(session.participants.first.isComplete, isTrue);
+      expect(session.participants.first.entries, hasLength(2));
+    });
+
+    test('should update type filter, list name and hide seen', () {
+      session.setSelectedType(MediaType.movie);
+      expect(session.selectedType, MediaType.movie);
+
+      session.setSelectedListName('favorites');
+      expect(session.selectedListName, 'favorites');
+
+      session.setHideSeen(true);
+      expect(session.hideSeen, isTrue);
+
+      session.reset();
+      expect(session.selectedType, isNull);
+      expect(session.selectedListName, 'watchlist');
+      expect(session.hideSeen, isFalse);
     });
   });
 }
