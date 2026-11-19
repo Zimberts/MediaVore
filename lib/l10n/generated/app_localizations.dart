@@ -3949,6 +3949,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unseen'**
   String get filtersChipHideSeen;
+
+  /// No description provided for @historyToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get historyToday;
+
+  /// No description provided for @historyYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get historyYesterday;
+
+  /// No description provided for @historyDayHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String historyDayHeaderSubtitle(int count);
+
+  /// No description provided for @historyModeChronologicalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronological view'**
+  String get historyModeChronologicalHint;
+
+  /// No description provided for @historyModeLibraryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One entry per title'**
+  String get historyModeLibraryHint;
+
+  /// No description provided for @historyActionOpenDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open details'**
+  String get historyActionOpenDetail;
+
+  /// No description provided for @historyActionDeleteViewing.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this viewing'**
+  String get historyActionDeleteViewing;
+
+  /// No description provided for @historyTimesSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Seen once} other{Seen {count} times}}'**
+  String historyTimesSeen(int count);
+
+  /// No description provided for @historyTvLibrarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{episodesSeen, plural, =1{1 episode seen} other{{episodesSeen} episodes seen}} · {entries, plural, =1{1 entry} other{{entries} entries}}'**
+  String historyTvLibrarySubtitle(int episodesSeen, int entries);
+
+  /// No description provided for @historyEpisodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'S{season} E{episode}'**
+  String historyEpisodeSubtitle(int season, int episode);
+
+  /// No description provided for @historySegmentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historySegmentHistory;
+
+  /// No description provided for @historySegmentLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get historySegmentLibrary;
+
+  /// No description provided for @historySortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Date (newest)'**
+  String get historySortRecent;
+
+  /// No description provided for @historySortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Date (oldest)'**
+  String get historySortOldest;
+
+  /// No description provided for @historySortTitleAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (A–Z)'**
+  String get historySortTitleAsc;
+
+  /// No description provided for @historySortTitleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (Z–A)'**
+  String get historySortTitleDesc;
 }
 
 class _AppLocalizationsDelegate

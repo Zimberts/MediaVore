@@ -685,5 +685,21 @@
       }
     }
   },
-  "filtersChipHideSeen": "Non vus"
+  "filtersChipHideSeen": "Non vus",
+  "historyToday": "Aujourd'hui",
+  "historyYesterday": "Hier",
+  "historyDayHeaderSubtitle": "{count, plural, =1{1 élément} other{{count} éléments}}",
+  "historyModeChronologicalHint": "Entrées chronologiques",
+  "historyModeLibraryHint": "Une entrée par titre",
+  "historyActionOpenDetail": "Ouvrir la fiche",
+  "historyActionDeleteViewing": "Supprimer ce visionnage",
+  "historyTimesSeen": "{count, plural, =1{Vu 1 fois} other{Vu {count} fois}}",
+  "historyTvLibrarySubtitle": "{episodesSeen, plural, =1{1 épisode vu} other{{episodesSeen} épisodes vus}} · {entries, plural, =1{1 entrée} other{{entries} entrées}}",
+  "historyEpisodeSubtitle": "S{season} É{episode}",
+  "historySegmentHistory": "Historique",
+  "historySegmentLibrary": "Bibliothèque",
+  "historySortRecent": "Date (plus récent)",
+  "historySortOldest": "Date (plus ancien)",
+  "historySortTitleAsc": "Nom (A–Z)",
+  "historySortTitleDesc": "Nom (Z–A)"
 }

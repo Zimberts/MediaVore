@@ -2502,4 +2502,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filtersChipHideSeen => 'Unseen';
+
+  @override
+  String get historyToday => 'Today';
+
+  @override
+  String get historyYesterday => 'Yesterday';
+
+  @override
+  String historyDayHeaderSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyModeChronologicalHint => 'Chronological view';
+
+  @override
+  String get historyModeLibraryHint => 'One entry per title';
+
+  @override
+  String get historyActionOpenDetail => 'Open details';
+
+  @override
+  String get historyActionDeleteViewing => 'Delete this viewing';
+
+  @override
+  String historyTimesSeen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Seen $count times',
+      one: 'Seen once',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyTvLibrarySubtitle(int episodesSeen, int entries) {
+    String _temp0 = intl.Intl.pluralLogic(
+      episodesSeen,
+      locale: localeName,
+      other: '$episodesSeen episodes seen',
+      one: '1 episode seen',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      entries,
+      locale: localeName,
+      other: '$entries entries',
+      one: '1 entry',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String historyEpisodeSubtitle(int season, int episode) {
+    return 'S$season E$episode';
+  }
+
+  @override
+  String get historySegmentHistory => 'History';
+
+  @override
+  String get historySegmentLibrary => 'Library';
+
+  @override
+  String get historySortRecent => 'Date (newest)';
+
+  @override
+  String get historySortOldest => 'Date (oldest)';
+
+  @override
+  String get historySortTitleAsc => 'Title (A–Z)';
+
+  @override
+  String get historySortTitleDesc => 'Title (Z–A)';
 }

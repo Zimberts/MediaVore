@@ -2533,4 +2533,84 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get filtersChipHideSeen => 'Non vus';
+
+  @override
+  String get historyToday => 'Aujourd\'hui';
+
+  @override
+  String get historyYesterday => 'Hier';
+
+  @override
+  String historyDayHeaderSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count éléments',
+      one: '1 élément',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyModeChronologicalHint => 'Entrées chronologiques';
+
+  @override
+  String get historyModeLibraryHint => 'Une entrée par titre';
+
+  @override
+  String get historyActionOpenDetail => 'Ouvrir la fiche';
+
+  @override
+  String get historyActionDeleteViewing => 'Supprimer ce visionnage';
+
+  @override
+  String historyTimesSeen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vu $count fois',
+      one: 'Vu 1 fois',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyTvLibrarySubtitle(int episodesSeen, int entries) {
+    String _temp0 = intl.Intl.pluralLogic(
+      episodesSeen,
+      locale: localeName,
+      other: '$episodesSeen épisodes vus',
+      one: '1 épisode vu',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      entries,
+      locale: localeName,
+      other: '$entries entrées',
+      one: '1 entrée',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String historyEpisodeSubtitle(int season, int episode) {
+    return 'S$season É$episode';
+  }
+
+  @override
+  String get historySegmentHistory => 'Historique';
+
+  @override
+  String get historySegmentLibrary => 'Bibliothèque';
+
+  @override
+  String get historySortRecent => 'Date (plus récent)';
+
+  @override
+  String get historySortOldest => 'Date (plus ancien)';
+
+  @override
+  String get historySortTitleAsc => 'Nom (A–Z)';
+
+  @override
+  String get historySortTitleDesc => 'Nom (Z–A)';
 }
