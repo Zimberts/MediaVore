@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/domain/entities/because_you_data.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
@@ -12,9 +13,11 @@ import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/utils/unseen_episodes.dart';
+import 'package:mediavore/features/discovery/presentation/services/because_you_service.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/search/presentation/providers/search_error.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:mediavore/features/search/domain/entities/search_filters.dart';
 export 'package:mediavore/features/search/presentation/providers/search_error.dart';
@@ -24,15 +27,20 @@ class SearchProvider with ChangeNotifier {
 
   /// When set, results and saved titles are reloaded on language change.
   final LocaleService? localeService;
+
+  /// Used for daily caching of Discover recommendations.
+  final SharedPreferences? prefs;
   StreamSubscription<void>? _notifiedItemsSubscription;
 
-  SearchProvider(this.repository, {this.localeService}) {
+  SearchProvider(this.repository, {this.localeService, this.prefs}) {
     localeService?.addListener(_onLanguageChanged);
     _init();
   }
 
   List<MediaItem> _searchResults = [];
   List<PersonSummary> _peopleResults = [];
+  BecauseYouData? _becauseYouData;
+  int _becauseYouRotation = 0;
   bool _isLoading = false;
   bool _isCacheLoading = false;
   bool _isDbSizeLoading = false;
@@ -76,6 +84,7 @@ class SearchProvider with ChangeNotifier {
 
   List<MediaItem> get items => _searchResults; // For SearchPage
   List<PersonSummary> get peopleResults => _peopleResults;
+  BecauseYouData? get becauseYouData => _becauseYouData;
   bool get isLoading => _isLoading;
   bool get isCacheLoading => _isCacheLoading;
   bool get isDbSizeLoading => _isDbSizeLoading;
@@ -155,6 +164,7 @@ class SearchProvider with ChangeNotifier {
     await loadNotifiedItems();
     await loadQuickAddItems();
     await _loadTonightListItems();
+    await loadBecauseYouRecommendations();
 
     _notifiedItemsSubscription = repository.watchNotifiedItems().listen((_) {
       loadNotifiedItems();
@@ -397,6 +407,96 @@ class SearchProvider with ChangeNotifier {
 
   int getSeenCount(MediaItem item) {
     return _seenCounts['${item.id}:${item.mediaType.name}'] ?? 0;
+  }
+
+  bool isItemSeenOrInAnyList(int id, MediaType type) {
+    final entry = '$id:${type.name}';
+    if ((_seenCounts[entry] ?? 0) > 0) return true;
+    for (final list in _listEntries.values) {
+      if (list.contains(entry)) return true;
+    }
+    return false;
+  }
+
+  /// Loads personalized recommendations for the "Because you..." row in Discover.
+  Future<void> loadBecauseYouRecommendations({
+    bool forceRefresh = false,
+  }) async {
+    if (_isOffline) {
+      _becauseYouData = null;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      if (!forceRefresh && prefs != null) {
+        final cached = await BecauseYouService.loadCached(
+          prefs: prefs!,
+          now: DateTime.now(),
+          isSeenOrInList: isItemSeenOrInAnyList,
+        );
+        if (cached != null) {
+          _becauseYouData = cached;
+          notifyListeners();
+          return;
+        }
+      }
+
+      final likedItems = await repository.getLikedItems();
+      final candidates = BecauseYouService.selectCandidates(
+        likedItems: likedItems,
+        seenItems: _seenItems,
+        inProgressItems: _inProgressItems,
+      );
+
+      if (candidates.isEmpty) {
+        _becauseYouData = null;
+        notifyListeners();
+        return;
+      }
+
+      final startIndex = _becauseYouRotation++;
+      BecauseYouData? result;
+
+      for (var i = 0; i < candidates.length; i++) {
+        final candidate = candidates[(startIndex + i) % candidates.length];
+        try {
+          final recs = await repository.getRecommendedMedia(
+            candidate.id,
+            candidate.type,
+          );
+          final filtered = BecauseYouService.filterRecommendations(
+            recs,
+            isSeenOrInList: isItemSeenOrInAnyList,
+          );
+          if (filtered.length >= 3) {
+            result = BecauseYouData(
+              sourceId: candidate.id,
+              sourceType: candidate.type,
+              sourceTitle: candidate.title,
+              reason: candidate.reason,
+              items: filtered,
+            );
+            break;
+          }
+        } catch (e) {
+          debugPrint('[SearchProvider] getRecommendedMedia error: $e');
+        }
+      }
+
+      _becauseYouData = result;
+      if (result != null && prefs != null) {
+        await BecauseYouService.saveCached(
+          prefs: prefs!,
+          now: DateTime.now(),
+          data: result,
+        );
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[SearchProvider] loadBecauseYouRecommendations error: $e');
+      _becauseYouData = null;
+    }
   }
 
   bool isItemInList(MediaItem item, String listName) {

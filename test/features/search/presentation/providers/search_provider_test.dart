@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/error/exceptions.dart';
+import 'package:mediavore/core/domain/entities/because_you_data.dart';
+import 'package:mediavore/core/domain/entities/liked_item_info.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
@@ -356,76 +358,124 @@ void main() {
       },
     );
 
-    test(
-      'searchPeople failure does not fail searchMedia',
-      () async {
-        when(
-          () => mockRepository.searchMedia(
-            any(),
-            page: any(named: 'page'),
-            genreIds: any(named: 'genreIds'),
-            releaseYear: any(named: 'releaseYear'),
-            minRating: any(named: 'minRating'),
-            originalLanguage: any(named: 'originalLanguage'),
-            type: MediaType.movie,
+    test('searchPeople failure does not fail searchMedia', () async {
+      when(
+        () => mockRepository.searchMedia(
+          any(),
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          originalLanguage: any(named: 'originalLanguage'),
+          type: MediaType.movie,
+        ),
+      ).thenAnswer(
+        (_) async => [
+          const MediaItem(
+            id: 1,
+            title: 'Dune',
+            overview: '',
+            releaseDate: '2021',
           ),
-        ).thenAnswer(
-          (_) async => [
-            const MediaItem(
-              id: 1,
-              title: 'Dune',
-              overview: '',
-              releaseDate: '2021',
-            ),
+        ],
+      );
+
+      when(
+        () => mockRepository.searchMedia(
+          any(),
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          originalLanguage: any(named: 'originalLanguage'),
+          type: MediaType.tv,
+        ),
+      ).thenAnswer((_) async => []);
+
+      when(
+        () => mockRepository.searchPeople(any()),
+      ).thenThrow(Exception('TMDB person endpoint timeout'));
+
+      await provider.searchMedia('Villeneuve');
+
+      expect(provider.items, hasLength(1));
+      expect(provider.items.first.title, 'Dune');
+      expect(provider.peopleResults, isEmpty);
+      expect(provider.error, isNull);
+    });
+
+    test('searchMedia with active filters does not search people', () async {
+      provider.setFilters(type: MediaType.movie);
+
+      when(
+        () => mockRepository.searchMedia(
+          any(),
+          page: any(named: 'page'),
+          genreIds: any(named: 'genreIds'),
+          releaseYear: any(named: 'releaseYear'),
+          minRating: any(named: 'minRating'),
+          originalLanguage: any(named: 'originalLanguage'),
+          type: any(named: 'type'),
+        ),
+      ).thenAnswer((_) async => []);
+
+      await provider.searchMedia('Villeneuve');
+
+      verifyNever(() => mockRepository.searchPeople(any()));
+      expect(provider.peopleResults, isEmpty);
+    });
+  });
+
+  group('SearchProvider - Because You Recommendations', () {
+    test(
+      'fetches recommendations for liked candidate and populates becauseYouData',
+      () async {
+        when(() => mockRepository.getLikedItems()).thenAnswer(
+          (_) async => const [
+            LikedItemInfo(tmdbId: 438631, type: MediaType.movie, title: 'Dune'),
           ],
         );
 
         when(
-          () => mockRepository.searchMedia(
-            any(),
-            page: any(named: 'page'),
-            genreIds: any(named: 'genreIds'),
-            releaseYear: any(named: 'releaseYear'),
-            minRating: any(named: 'minRating'),
-            originalLanguage: any(named: 'originalLanguage'),
-            type: MediaType.tv,
-          ),
-        ).thenAnswer((_) async => []);
+          () => mockRepository.getRecommendedMedia(438631, MediaType.movie),
+        ).thenAnswer(
+          (_) async => const [
+            MediaItem(id: 1, title: 'Rec 1', overview: '', releaseDate: ''),
+            MediaItem(id: 2, title: 'Rec 2', overview: '', releaseDate: ''),
+            MediaItem(id: 3, title: 'Rec 3', overview: '', releaseDate: ''),
+          ],
+        );
 
-        when(
-          () => mockRepository.searchPeople(any()),
-        ).thenThrow(Exception('TMDB person endpoint timeout'));
+        await provider.loadBecauseYouRecommendations();
 
-        await provider.searchMedia('Villeneuve');
-
-        expect(provider.items, hasLength(1));
-        expect(provider.items.first.title, 'Dune');
-        expect(provider.peopleResults, isEmpty);
-        expect(provider.error, isNull);
+        expect(provider.becauseYouData, isNotNull);
+        expect(provider.becauseYouData!.sourceTitle, 'Dune');
+        expect(provider.becauseYouData!.reason, BecauseYouReason.liked);
+        expect(provider.becauseYouData!.items.length, 3);
       },
     );
 
     test(
-      'searchMedia with active filters does not search people',
+      'leaves becauseYouData null if fewer than 3 recommendations remain',
       () async {
-        provider.setFilters(type: MediaType.movie);
+        when(() => mockRepository.getLikedItems()).thenAnswer(
+          (_) async => const [
+            LikedItemInfo(tmdbId: 438631, type: MediaType.movie, title: 'Dune'),
+          ],
+        );
 
         when(
-          () => mockRepository.searchMedia(
-            any(),
-            page: any(named: 'page'),
-            genreIds: any(named: 'genreIds'),
-            releaseYear: any(named: 'releaseYear'),
-            minRating: any(named: 'minRating'),
-            originalLanguage: any(named: 'originalLanguage'),
-            type: any(named: 'type'),
-          ),
-        ).thenAnswer((_) async => []);
+          () => mockRepository.getRecommendedMedia(438631, MediaType.movie),
+        ).thenAnswer(
+          (_) async => const [
+            MediaItem(id: 1, title: 'Rec 1', overview: '', releaseDate: ''),
+            MediaItem(id: 2, title: 'Rec 2', overview: '', releaseDate: ''),
+          ],
+        );
 
-        await provider.searchMedia('Villeneuve');
+        await provider.loadBecauseYouRecommendations();
 
-        verifyNever(() => mockRepository.searchPeople(any()));
-        expect(provider.peopleResults, isEmpty);
+        expect(provider.becauseYouData, isNull);
       },
     );
   });

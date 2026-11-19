@@ -18,6 +18,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_people_row.dart';
+import 'package:mediavore/features/discovery/presentation/widgets/because_you_row.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/search/presentation/widgets/active_filter_chips.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
@@ -86,7 +87,11 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
   void _refreshDiscovery([String? query]) {
     final provider = context.read<SearchProvider>();
-    provider.searchMedia(query ?? _controller.text);
+    final q = query ?? _controller.text;
+    provider.searchMedia(q);
+    if (q.isEmpty) {
+      provider.loadBecauseYouRecommendations(forceRefresh: true);
+    }
   }
 
   void _onSearchChanged(String value) {
@@ -332,6 +337,19 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           )
         : null;
 
+    final becauseYouSliver =
+        (provider.isTrending &&
+            !provider.isOffline &&
+            provider.becauseYouData != null &&
+            provider.becauseYouData!.items.length >= 3)
+        ? SliverPadding(
+            padding: const EdgeInsets.fromLTRB(_gutter, 8, _gutter, 0),
+            sliver: SliverToBoxAdapter(
+              child: BecauseYouRow(data: provider.becauseYouData!),
+            ),
+          )
+        : null;
+
     final header = SliverPadding(
       padding: const EdgeInsets.fromLTRB(_gutter, 8, _gutter, 0),
       sliver: SliverToBoxAdapter(
@@ -346,6 +364,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
       final query = provider.currentQuery;
       return [
         if (peopleSliver != null) peopleSliver,
+        if (becauseYouSliver != null) becauseYouSliver,
         header,
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: _gutter),
@@ -383,6 +402,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
     return [
       if (peopleSliver != null) peopleSliver,
+      if (becauseYouSliver != null) becauseYouSliver,
       header,
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(_gutter, 4, _gutter, 24),

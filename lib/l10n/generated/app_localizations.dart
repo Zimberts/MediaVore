@@ -2960,6 +2960,18 @@ abstract class AppLocalizations {
   /// **'People'**
   String get discoverPeopleSection;
 
+  /// No description provided for @discoverBecauseYouLiked.
+  ///
+  /// In en, this message translates to:
+  /// **'Because you liked {title}'**
+  String discoverBecauseYouLiked(String title);
+
+  /// No description provided for @discoverBecauseYouWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Because you watched {title}'**
+  String discoverBecauseYouWatched(String title);
+
   /// No description provided for @discoverSwipeSoonTitle.
   ///
   /// In en, this message translates to:

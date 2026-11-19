@@ -10,6 +10,7 @@ import 'package:mediavore/features/achievements/domain/repositories/achievement_
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/domain/entities/liked_item_info.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -50,10 +51,32 @@ class MockMediaRepository extends Mock implements MediaRepository {
   }
 
   @override
+  Future<List<LikedItemInfo>> getLikedItems() {
+    try {
+      return super.noSuchMethod(Invocation.method(#getLikedItems, []))
+          as Future<List<LikedItemInfo>>;
+    } catch (_) {
+      return Future.value(<LikedItemInfo>[]);
+    }
+  }
+
+  @override
   Future<List<MediaItem>> getListMediaItems(String listName) {
     try {
       return super.noSuchMethod(
             Invocation.method(#getListMediaItems, [listName]),
+          )
+          as Future<List<MediaItem>>;
+    } catch (_) {
+      return Future.value(<MediaItem>[]);
+    }
+  }
+
+  @override
+  Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#getRecommendedMedia, [id, type]),
           )
           as Future<List<MediaItem>>;
     } catch (_) {

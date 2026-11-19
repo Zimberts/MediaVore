@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/domain/entities/liked_item_info.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/error/exceptions.dart';
@@ -11,6 +12,7 @@ import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
 import 'package:mediavore/features/discovery/presentation/pages/swiper_page.dart';
 import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
+import 'package:mediavore/features/discovery/presentation/widgets/because_you_row.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_people_row.dart';
@@ -677,6 +679,36 @@ void main() {
       expect(find.text('People'), findsOneWidget);
       expect(find.text('Denis Villeneuve'), findsOneWidget);
       expect(find.text('Dune'), findsWidgets);
+    });
+
+    testWidgets('shows "Because you..." row in trending mode when available', (
+      tester,
+    ) async {
+      when(() => repository.getLikedItems()).thenAnswer(
+        (_) async => const [
+          LikedItemInfo(tmdbId: 438631, type: MediaType.movie, title: 'Dune'),
+        ],
+      );
+      when(
+        () => repository.getRecommendedMedia(438631, MediaType.movie),
+      ).thenAnswer(
+        (_) async => [
+          _item(10, 'Rec 1'),
+          _item(20, 'Rec 2'),
+          _item(30, 'Rec 3'),
+        ],
+      );
+
+      stubTrending((page) => [_item(1, 'Trending 1')]);
+
+      await pumpPage(tester);
+      await searchProvider.loadBecauseYouRecommendations();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BecauseYouRow), findsOneWidget);
+      expect(find.text('Because you liked Dune'), findsOneWidget);
+      expect(find.text('Rec 1'), findsOneWidget);
+      expect(find.text('Trending this week'), findsOneWidget);
     });
   });
 
