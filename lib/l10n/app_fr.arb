@@ -747,5 +747,8 @@
   "sagaUpcoming": "À venir",
   "sagaUpcomingWithYear": "À venir ({year})",
   "sagaAddMissing": "{count, plural, =1{Ajouter 1 film manquant à « {list} »} other{Ajouter {count} films manquants à « {list} »}}",
-  "sagaMissingAdded": "{count, plural, =1{1 film ajouté à « {list} »} other{{count} films ajoutés à « {list} »}}"
+  "sagaMissingAdded": "{count, plural, =1{1 film ajouté à « {list} »} other{{count} films ajoutés à « {list} »}}",
+  "detailSeasonEpisodes": "{count, plural, =1{1 épisode} other{{count} épisodes}}",
+  "detailSeasonSeenShort": "{seen}/{total} vus",
+  "detailEpisodeNumber": "Épisode {number}"
 }

@@ -4321,6 +4321,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 film added to \"{list}\"} other{{count} films added to \"{list}\"}}'**
   String sagaMissingAdded(int count, String list);
+
+  /// No description provided for @detailSeasonEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 episode} other{{count} episodes}}'**
+  String detailSeasonEpisodes(int count);
+
+  /// No description provided for @detailSeasonSeenShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{seen}/{total} seen'**
+  String detailSeasonSeenShort(int seen, int total);
+
+  /// No description provided for @detailEpisodeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode {number}'**
+  String detailEpisodeNumber(int number);
 }
 
 class _AppLocalizationsDelegate

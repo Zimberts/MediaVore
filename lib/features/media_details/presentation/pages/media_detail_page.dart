@@ -138,6 +138,23 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
           _isLoading = false;
           _isOffline = false;
         });
+
+        if (details.item.mediaType == MediaType.tv &&
+            details.item.seasons != null) {
+          for (final s in details.item.seasons!) {
+            if (!_episodesBySeason.containsKey(s.seasonNumber)) {
+              provider
+                  .getSeasonDetails(widget.item.id, s.seasonNumber)
+                  .then((data) {
+                if (mounted && data['episodes'] != null) {
+                  setState(() {
+                    _episodesBySeason[s.seasonNumber] = data['episodes'];
+                  });
+                }
+              }).catchError((_) {});
+            }
+          }
+        }
       }
     } catch (e) {
       if (mounted) {

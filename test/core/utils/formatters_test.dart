@@ -49,4 +49,52 @@ void main() {
       expect(Formatters.formatWatchTime(525600 * 3 ~/ 2), '1.5 years');
     });
   });
+
+  group('Formatters.formatSeasonDuration', () {
+    test('10 episodes of 50 min should format as 8,3 h in French and 8.3 h in English', () {
+      expect(Formatters.formatSeasonDuration(500, locale: 'fr'), '8,3 h');
+      expect(Formatters.formatSeasonDuration(500, locale: 'en'), '8.3 h');
+    });
+
+    test('should prefix with ~ when isApproximate is true', () {
+      expect(Formatters.formatSeasonDuration(500, isApproximate: true, locale: 'fr'), '~8,3 h');
+      expect(Formatters.formatSeasonDuration(500, isApproximate: true, locale: 'en'), '~8.3 h');
+    });
+
+    test('should format exact hours without decimal zero', () {
+      expect(Formatters.formatSeasonDuration(60, locale: 'fr'), '1 h');
+      expect(Formatters.formatSeasonDuration(120, locale: 'fr'), '2 h');
+    });
+
+    test('should format durations under 1 hour in minutes', () {
+      expect(Formatters.formatSeasonDuration(45, locale: 'fr'), '45 min');
+      expect(Formatters.formatSeasonDuration(45, isApproximate: true, locale: 'fr'), '~45 min');
+    });
+
+    test('should return empty string for zero or negative duration', () {
+      expect(Formatters.formatSeasonDuration(0), '');
+      expect(Formatters.formatSeasonDuration(-10), '');
+    });
+  });
+
+  group('Formatters.formatEpisodeDuration', () {
+    test('should return empty string for null or <= 0', () {
+      expect(Formatters.formatEpisodeDuration(null), '');
+      expect(Formatters.formatEpisodeDuration(0), '');
+      expect(Formatters.formatEpisodeDuration(-5), '');
+    });
+
+    test('should format minutes below 60', () {
+      expect(Formatters.formatEpisodeDuration(42), '42 min');
+    });
+
+    test('should format exact hours', () {
+      expect(Formatters.formatEpisodeDuration(60), '1 h');
+      expect(Formatters.formatEpisodeDuration(120), '2 h');
+    });
+
+    test('should format hours and minutes', () {
+      expect(Formatters.formatEpisodeDuration(75), '1 h 15 min');
+    });
+  });
 }

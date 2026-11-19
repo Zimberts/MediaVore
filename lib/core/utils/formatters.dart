@@ -27,6 +27,45 @@ class Formatters {
     return '${hours}h ${remainingMinutes}m';
   }
 
+  /// Formats the duration of an episode (e.g. `45 min`, `1 h`, `1 h 15 min`).
+  static String formatEpisodeDuration(int? minutes) {
+    if (minutes == null || minutes <= 0) return '';
+    if (minutes < 60) return '$minutes min';
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+    if (remainingMinutes == 0) return '$hours h';
+    return '$hours h $remainingMinutes min';
+  }
+
+  /// Formats the cumulative duration of a TV season.
+  ///
+  /// Examples:
+  /// - 500 min (fr) -> '8,3 h'
+  /// - 500 min (en) -> '8.3 h'
+  /// - 500 min approximate (fr) -> '~8,3 h'
+  /// - 45 min -> '45 min'
+  /// - 60 min -> '1 h'
+  /// - 120 min -> '2 h'
+  static String formatSeasonDuration(
+    int totalMinutes, {
+    bool isApproximate = false,
+    String? locale,
+  }) {
+    if (totalMinutes <= 0) return '';
+    final prefix = isApproximate ? '~' : '';
+    if (totalMinutes < 60) {
+      return '$prefix$totalMinutes min';
+    }
+    final hours = totalMinutes / 60.0;
+    final isFr = (locale ?? '').toLowerCase().startsWith('fr');
+    final formatted = hours.toStringAsFixed(1);
+    final trimmed = formatted.endsWith('.0')
+        ? formatted.substring(0, formatted.length - 2)
+        : formatted;
+    final localized = isFr ? trimmed.replaceAll('.', ',') : trimmed;
+    return '$prefix$localized h';
+  }
+
   /// Cumulative watch time with a unit that stays readable at any scale:
   /// `16h 40m`, `166h`, `41 days`, `1 year`, `1.5 years`.
   static String formatWatchTime(int minutes) {
