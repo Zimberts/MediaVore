@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/watch_providers.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -180,8 +181,10 @@ class _CategorySection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     child: provider.logoPath != null
                         ? CachedNetworkImage(
-                            imageUrl:
-                                'https://image.tmdb.org/t/p/w92${provider.logoPath}',
+                            imageUrl: TmdbImageUtils.buildUrl(
+                              provider.logoPath,
+                              size: TmdbImageSize.w92,
+                            )!,
                             width: 40,
                             height: 40,
                             fit: BoxFit.cover,

@@ -4,6 +4,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/list_intersection_calculator.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/widgets/prompt_field.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
@@ -340,7 +341,10 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
                 height: 64,
                 child: item.posterPath != null && item.posterPath!.isNotEmpty
                     ? Image.network(
-                        'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                        TmdbImageUtils.buildUrl(
+                          item.posterPath,
+                          size: TmdbImageSize.w185,
+                        )!,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) =>
                             Icon(Icons.movie, color: colors.placeholder),

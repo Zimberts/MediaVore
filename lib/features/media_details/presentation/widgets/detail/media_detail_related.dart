@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 
 /// Horizontal row of related titles ("Similar", "Recommendations"). Draws
@@ -50,8 +51,10 @@ class MediaDetailRelated extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         child: item.posterPath != null
                             ? CachedNetworkImage(
-                                imageUrl:
-                                    'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                                imageUrl: TmdbImageUtils.buildUrl(
+                                  item.posterPath,
+                                  size: TmdbImageSize.w185,
+                                )!,
                                 height: 120,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) =>

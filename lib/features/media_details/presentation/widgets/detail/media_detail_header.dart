@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
@@ -181,9 +182,10 @@ class MediaDetailHeader extends StatelessWidget {
             data: MediaPosterData(
               title: item.title,
               kind: kind,
-              imageUrl: item.posterPath == null
-                  ? null
-                  : 'https://image.tmdb.org/t/p/w342${item.posterPath}',
+              imageUrl: TmdbImageUtils.buildUrl(
+                item.posterPath,
+                size: TmdbImageSize.w342,
+              ),
             ),
           ),
         ),

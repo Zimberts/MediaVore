@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/media_details/presentation/pages/actor_detail_page.dart';
 
@@ -50,7 +51,10 @@ class MediaDetailCast extends StatelessWidget {
                           ? CircleAvatar(
                               radius: 40,
                               backgroundImage: NetworkImage(
-                                'https://image.tmdb.org/t/p/w185${member.profilePath}',
+                                TmdbImageUtils.buildUrl(
+                                  member.profilePath,
+                                  size: TmdbImageSize.w185,
+                                )!,
                               ),
                             )
                           : CircleAvatar(
