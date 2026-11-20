@@ -1,7 +1,7 @@
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/utils/genres.dart';
-import 'package:mediavore/features/media_details/presentation/widgets/stats/stats_types.dart';
+import 'package:mediavore/features/media_details/domain/entities/stats_types.dart';
 
 /// Month keys 1-12 matching 'Jan'..'Dec'.
 const statsMonthKeys = [
