@@ -6,6 +6,7 @@ part 'quick_add_item_model.g.dart';
 class QuickAddItemModel {
   Id? isarId;
 
+  @Index()
   final int tmdbId;
 
   final String type;

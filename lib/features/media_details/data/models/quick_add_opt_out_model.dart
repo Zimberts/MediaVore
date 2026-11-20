@@ -6,6 +6,7 @@ part 'quick_add_opt_out_model.g.dart';
 class QuickAddOptOutModel {
   Id? isarId;
 
+  @Index()
   final int tmdbId;
 
   final int? seasonNumber;
