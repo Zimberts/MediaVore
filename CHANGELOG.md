@@ -3,6 +3,48 @@
 Written by release-please from the Conventional Commits on `main` (see `DOCS/releasing.md`).
 New entries are inserted above the latest one.
 
+## [1.4.0](https://github.com/Zimberts/MediaVore/compare/v1.3.0...v1.4.0) (2026-11-19)
+
+
+### Features
+
+* **achievements:** categories and V1 presentation (tier badges, level sheet) ([#335](https://github.com/Zimberts/MediaVore/issues/335)) ([#364](https://github.com/Zimberts/MediaVore/issues/364)) ([779505e](https://github.com/Zimberts/MediaVore/commit/779505ebb0537cc91ea486ffe6cb3c6c0ade510b))
+* **achievements:** discovery and together achievements ([#336](https://github.com/Zimberts/MediaVore/issues/336)) ([#373](https://github.com/Zimberts/MediaVore/issues/373)) ([a49b3fc](https://github.com/Zimberts/MediaVore/commit/a49b3fcafffa2215cce78054b47793e18d75eb27))
+* **discovery:** because you watched personalized row in explore ([#310](https://github.com/Zimberts/MediaVore/issues/310)) ([#369](https://github.com/Zimberts/MediaVore/issues/369)) ([38ca40a](https://github.com/Zimberts/MediaVore/commit/38ca40aabbd49f06765742ca2138352ea222ab6e))
+* **discovery:** Explore mode with permanent search and trending ([#307](https://github.com/Zimberts/MediaVore/issues/307)) ([#342](https://github.com/Zimberts/MediaVore/issues/342)) ([15fddba](https://github.com/Zimberts/MediaVore/commit/15fddbafc571115e133c1933ea6dd576b355b137))
+* **front:** shared design components and unified action feedback ([#302](https://github.com/Zimberts/MediaVore/issues/302)) ([#339](https://github.com/Zimberts/MediaVore/issues/339)) ([f6e4c6d](https://github.com/Zimberts/MediaVore/commit/f6e4c6de74c45c3bc098288f2db75ea2c00b3711))
+* **history:** history V1, daily grouping, library mode, and action menu ([#313](https://github.com/Zimberts/MediaVore/issues/313)) ([#353](https://github.com/Zimberts/MediaVore/issues/353)) ([6d49e91](https://github.com/Zimberts/MediaVore/commit/6d49e9115f9b5233a6a669469a88e61a0077e3f7))
+* **home:** "In Progress" page with filters, sorting, dismissed series, and debug ([#305](https://github.com/Zimberts/MediaVore/issues/305)) ([#345](https://github.com/Zimberts/MediaVore/issues/345)) ([189909c](https://github.com/Zimberts/MediaVore/commit/189909c9b690e5d1471789f232473dbeb379b620))
+* **home:** "Upcoming" grouped by period, monthly page, and remove Alerts screen ([#306](https://github.com/Zimberts/MediaVore/issues/306)) ([#346](https://github.com/Zimberts/MediaVore/issues/346)) ([c6d5a25](https://github.com/Zimberts/MediaVore/commit/c6d5a2502f1932ce8a8479a947d07c0fadfa17b7))
+* **home:** Home "Tonight" screen ([#304](https://github.com/Zimberts/MediaVore/issues/304)) ([#341](https://github.com/Zimberts/MediaVore/issues/341)) ([1784457](https://github.com/Zimberts/MediaVore/commit/1784457efdbc20ad03a9d594e59d3cd133125d26))
+* **library:** Library tab with lists overview and media type filter ([#311](https://github.com/Zimberts/MediaVore/issues/311)) ([#343](https://github.com/Zimberts/MediaVore/issues/343)) ([bb87162](https://github.com/Zimberts/MediaVore/commit/bb87162efb408ed0f4fde479bfd723a96a16cf9d))
+* **library:** list page V1, sorting, display, selection, and sharing ([#312](https://github.com/Zimberts/MediaVore/issues/312)) ([#352](https://github.com/Zimberts/MediaVore/issues/352)) ([3d0e944](https://github.com/Zimberts/MediaVore/commit/3d0e94447c335bb6fede168c8ac5ae30edb32524))
+* **lists:** compact format and serverless list intersection ([#286](https://github.com/Zimberts/MediaVore/issues/286)) ([#366](https://github.com/Zimberts/MediaVore/issues/366)) ([e2c437c](https://github.com/Zimberts/MediaVore/commit/e2c437c312b6788bd898a15bfab36a83b1619163))
+* **media_details:** "Where to Watch" provider icons with JustWatch attribution ([#315](https://github.com/Zimberts/MediaVore/issues/315)) ([#357](https://github.com/Zimberts/MediaVore/issues/357)) ([8fc89a1](https://github.com/Zimberts/MediaVore/commit/8fc89a12d9bb79fa975d884b0b28f0399dd5bbb0))
+* **media_details:** collapsible seasons V1 (durations, progress, episode checklist) ([#318](https://github.com/Zimberts/MediaVore/issues/318)) ([#360](https://github.com/Zimberts/MediaVore/issues/360)) ([4e3e5c1](https://github.com/Zimberts/MediaVore/commit/4e3e5c153c549ac1aff9c25678c10902f6dc30fc))
+* **media_details:** full-page media detail, header, split list button, and section structure ([#314](https://github.com/Zimberts/MediaVore/issues/314)) ([#344](https://github.com/Zimberts/MediaVore/issues/344)) ([279a393](https://github.com/Zimberts/MediaVore/commit/279a393f252ebb321d48648cfa92b1563662cc74))
+* **media_details:** person pages and clickable cast ([#316](https://github.com/Zimberts/MediaVore/issues/316)) ([#358](https://github.com/Zimberts/MediaVore/issues/358)) ([06d6632](https://github.com/Zimberts/MediaVore/commit/06d6632898472061fdb7b2f40512543d41eefa4c))
+* **media_details:** previous unseen episodes prompt, "remember choice", and setting ([#320](https://github.com/Zimberts/MediaVore/issues/320)) ([#356](https://github.com/Zimberts/MediaVore/issues/356)) ([d4fec94](https://github.com/Zimberts/MediaVore/commit/d4fec94fc82b07e1d130ca51f163e817bdf6e4dd))
+* **media_details:** rewatch series full cycle ([#321](https://github.com/Zimberts/MediaVore/issues/321)) ([#370](https://github.com/Zimberts/MediaVore/issues/370)) ([774d0f3](https://github.com/Zimberts/MediaVore/commit/774d0f3bb18001ccb3ae06bd7354aaabe90ce5ff))
+* **media_details:** Saga collection section and adding missing movies ([#317](https://github.com/Zimberts/MediaVore/issues/317)) ([#359](https://github.com/Zimberts/MediaVore/issues/359)) ([1feb769](https://github.com/Zimberts/MediaVore/commit/1feb7694d0784c586087d49e062710857e924d30))
+* **media_details:** simplified "seen" marking and Advanced Mode (editable dates and watches) ([#319](https://github.com/Zimberts/MediaVore/issues/319)) ([#354](https://github.com/Zimberts/MediaVore/issues/354)) ([c648fb5](https://github.com/Zimberts/MediaVore/commit/c648fb54a732078fb2a1560db2574ff327e7ed27))
+* **navigation:** five-tab shell Home, Discover, Library, Together, Me ([#303](https://github.com/Zimberts/MediaVore/issues/303)) ([#340](https://github.com/Zimberts/MediaVore/issues/340)) ([54d4dfc](https://github.com/Zimberts/MediaVore/commit/54d4dfcdba6f06ed39dffc0756b77a625455e9fc))
+* **profile:** Me tab (summary metrics, achievements preview, settings access) ([#332](https://github.com/Zimberts/MediaVore/issues/332)) ([#362](https://github.com/Zimberts/MediaVore/issues/362)) ([8cc4d14](https://github.com/Zimberts/MediaVore/commit/8cc4d146cc5e862032693d2e36f6de7a5eb19b7f))
+* **search:** people search in discover explore mode ([#309](https://github.com/Zimberts/MediaVore/issues/309)) ([#368](https://github.com/Zimberts/MediaVore/issues/368)) ([609d3da](https://github.com/Zimberts/MediaVore/commit/609d3da2880336efa99c4c1c7d3e19cbbdb98fcd))
+* **search:** search filters V1 (sort, decade, genres, rating, runtime, already seen) ([#308](https://github.com/Zimberts/MediaVore/issues/308)) ([#361](https://github.com/Zimberts/MediaVore/issues/361)) ([2695f20](https://github.com/Zimberts/MediaVore/commit/2695f20105b935f3bae717ca1748c636c95dbae7))
+* **settings:** settings V1 with segmented controls and tracking ([#337](https://github.com/Zimberts/MediaVore/issues/337)) ([#374](https://github.com/Zimberts/MediaVore/issues/374)) ([f3ebe8e](https://github.com/Zimberts/MediaVore/commit/f3ebe8e31911a04558090cbad37eb997bab3604e))
+* **stats:** Statistics page V1 (single scrollable page, periods, decades, series progress, lists) ([#333](https://github.com/Zimberts/MediaVore/issues/333)) ([#363](https://github.com/Zimberts/MediaVore/issues/363)) ([baf2b24](https://github.com/Zimberts/MediaVore/commit/baf2b2439fd3bffb9e62625adb888b34f1e2f561))
+* **swipe:** optional swipe screen to discover and add movies to a list ([#285](https://github.com/Zimberts/MediaVore/issues/285)) ([#367](https://github.com/Zimberts/MediaVore/issues/367)) ([0380b83](https://github.com/Zimberts/MediaVore/commit/0380b8338437bc91d245808a3876c0fc041ca2d2))
+* **theme:** design tokens, 6 palettes, and embedded fonts ([#301](https://github.com/Zimberts/MediaVore/issues/301)) ([#338](https://github.com/Zimberts/MediaVore/issues/338)) ([527b1f9](https://github.com/Zimberts/MediaVore/commit/527b1f9a2f42080f86fbb8d2526280468dd57e53))
+* **together:** session setup, QR exchange and common titles ([#330](https://github.com/Zimberts/MediaVore/issues/330)) ([#371](https://github.com/Zimberts/MediaVore/issues/371)) ([20be58f](https://github.com/Zimberts/MediaVore/commit/20be58f9048551307341580fc9649da9c2498beb))
+* **together:** vote by passing phone and tonight choice ([#331](https://github.com/Zimberts/MediaVore/issues/331)) ([#372](https://github.com/Zimberts/MediaVore/issues/372)) ([00e0a67](https://github.com/Zimberts/MediaVore/commit/00e0a67aea499a79fb13fbed0b8553bf4b05131d))
+
+
+### Bug fixes
+
+* **test:** mock previous unseen episodes and fix together tab label ([#378](https://github.com/Zimberts/MediaVore/issues/378)) ([ce64818](https://github.com/Zimberts/MediaVore/commit/ce648186f24dc79f67227f200e260214d890bdd1))
+* **tmdb:** refresh incomplete cached metadata and fallback origin countries ([#287](https://github.com/Zimberts/MediaVore/issues/287), [#288](https://github.com/Zimberts/MediaVore/issues/288)) ([#365](https://github.com/Zimberts/MediaVore/issues/365)) ([b020ec8](https://github.com/Zimberts/MediaVore/commit/b020ec89e912b560fa8e392123b88e060e9b885e))
+
 ## [1.3.0](https://github.com/Zimberts/MediaVore/compare/v1.2.0...v1.3.0) (2026-11-09)
 
 
