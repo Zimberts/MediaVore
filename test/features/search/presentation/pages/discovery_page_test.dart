@@ -105,6 +105,7 @@ void main() {
     when(() => prefs.getDouble(any())).thenReturn(null);
     when(() => prefs.getBool(any())).thenReturn(null);
     when(() => prefs.getString(any())).thenReturn(null);
+    when(() => prefs.setBool(any(), any())).thenAnswer((_) async => true);
 
     when(
       () => repository.getAllListNames(),
@@ -562,6 +563,17 @@ void main() {
 
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('Trend'), findsOneWidget);
+    });
+
+    testWidgets('should hide swipe mode segment when swipeModeEnabled is false', (
+      tester,
+    ) async {
+      await settingsProvider.setSwipeModeEnabled(false);
+      stubTrending((page) => page == 1 ? [_item(1, 'Trend')] : []);
+      await pumpPage(tester);
+
+      expect(find.byType(AppSegmented<DiscoverMode>), findsNothing);
+      expect(find.text('Swipe'), findsNothing);
     });
   });
 

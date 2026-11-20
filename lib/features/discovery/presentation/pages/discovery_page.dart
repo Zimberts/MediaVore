@@ -471,9 +471,11 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final mode = context.watch<DiscoveryProvider>().mode;
+    final isSwipeEnabled = context.watch<SettingsProvider>().isSwipeModeEnabled;
+    final rawMode = context.watch<DiscoveryProvider>().mode;
+    final mode = isSwipeEnabled ? rawMode : DiscoverMode.explore;
 
-    if (mode == DiscoverMode.swipe) {
+    if (mode == DiscoverMode.swipe && isSwipeEnabled) {
       return ColoredBox(
         color: context.appColors.bg,
         child: SafeArea(
@@ -513,8 +515,10 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                 sliver: SliverList.list(
                   children: [
                     _buildTitle(l10n),
-                    const SizedBox(height: 8),
-                    _buildModeSegment(l10n, mode),
+                    if (isSwipeEnabled) ...[
+                      const SizedBox(height: 8),
+                      _buildModeSegment(l10n, mode),
+                    ],
                     if (provider.isOffline) ...[
                       const SizedBox(height: 8),
                       OfflineBanner(message: l10n.discoverOfflineMessage),

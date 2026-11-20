@@ -114,6 +114,26 @@ void main() {
     expect(find.byKey(const Key('settings_achievements_tile')), findsNothing);
   });
 
+  testWidgets('SettingsPage displays swipe mode switch and toggles setting', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    final switchFinder = find.byKey(const Key('settings_swipe_mode_switch'));
+    expect(switchFinder, findsOneWidget);
+
+    expect(settings.isSwipeModeEnabled, true);
+
+    await tester.tap(switchFinder);
+    await tester.pumpAndSettle();
+
+    expect(settings.isSwipeModeEnabled, false);
+  });
+
   testWidgets('SettingsPage displays swipe reset tile and confirms reset', (
     tester,
   ) async {
