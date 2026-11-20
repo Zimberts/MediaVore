@@ -295,14 +295,19 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                 leading: const Icon(Icons.share),
                 title: Text(context.l10n.dataShareViaSystem),
                 onTap: () async {
+                  final shareText = context.l10n.detailHistoryShareText(
+                    widget.item.title,
+                  );
                   Navigator.pop(context);
                   final tempDir = await getTemporaryDirectory();
                   final tempFile = File('${tempDir.path}/$fileName');
                   await tempFile.writeAsString(jsonString);
-                  await Share.shareXFiles(
-                    [XFile(tempFile.path, mimeType: 'application/json')],
-                    text: context.l10n.detailHistoryShareText(
-                      widget.item.title,
+                  await SharePlus.instance.share(
+                    ShareParams(
+                      files: [
+                        XFile(tempFile.path, mimeType: 'application/json'),
+                      ],
+                      text: shareText,
                     ),
                   );
                 },

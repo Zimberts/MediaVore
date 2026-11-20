@@ -409,7 +409,7 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
       entries: entries,
       version: 2,
     );
-    Share.share(link, subject: title);
+    SharePlus.instance.share(ShareParams(text: link, subject: title));
   }
 
   Future<void> _saveAsList(
