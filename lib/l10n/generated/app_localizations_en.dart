@@ -1342,7 +1342,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seenTypeDate => 'Type Date';
 
   @override
-  String get seenDateLabel => 'Date (DD/MM/YYYY)';
+  String get seenDateLabel => 'Date (MM/DD/YYYY)';
+
+  @override
+  String get seenDateHint => '12/31/2023';
 
   @override
   String seenTimeLabel(String time) {
@@ -1353,7 +1356,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seenCancelCaps => 'CANCEL';
 
   @override
-  String get seenInvalidDate => 'Please enter a valid date (DD/MM/YYYY)';
+  String get seenInvalidDate => 'Please enter a valid date (MM/DD/YYYY)';
 
   @override
   String get seenLogViewing => 'LOG VIEWING';

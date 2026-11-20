@@ -372,6 +372,7 @@
   "seenUseCalendar": "Utiliser le calendrier",
   "seenTypeDate": "Saisir la date",
   "seenDateLabel": "Date (JJ/MM/AAAA)",
+  "seenDateHint": "31/12/2023",
   "seenTimeLabel": "Heure : {time}",
   "seenCancelCaps": "ANNULER",
   "seenInvalidDate": "Saisissez une date valide (JJ/MM/AAAA)",
