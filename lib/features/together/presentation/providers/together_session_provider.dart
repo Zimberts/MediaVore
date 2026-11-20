@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mediavore/core/constants/storage_keys.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -163,7 +164,7 @@ class TogetherSessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  static const String togetherChoicesKey = 'together_choices_count';
+  static const String togetherChoicesKey = StorageKeys.togetherChoicesKey;
 
   /// Increments the local counter of choices made together.
   Future<int> incrementTogetherChoicesCount({SharedPreferences? prefs}) async {

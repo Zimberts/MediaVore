@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/features/search/presentation/providers/search_relevance.dart';
+import 'package:mediavore/features/search/domain/services/search_relevance.dart';
 
 /// Available sorting modes for search and discovery.
 enum SearchSort { relevance, rating, releaseDateDesc, releaseDateAsc }

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/domain/services/stats_calculator.dart';
-import 'package:mediavore/features/media_details/presentation/widgets/stats/stats_types.dart';
+import 'package:mediavore/features/media_details/domain/entities/stats_types.dart';
 
 void main() {
   group('StatsCalculator - Scope filtering', () {

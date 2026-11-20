@@ -7,10 +7,10 @@ import 'package:mediavore/features/achievements/data/models/achievement_model.da
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/core/constants/storage_keys.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
-import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -885,7 +885,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
           } catch (_) {}
         }
         togetherChoices =
-            p?.getInt(TogetherSessionProvider.togetherChoicesKey) ?? 0;
+            p?.getInt(StorageKeys.togetherChoicesKey) ?? 0;
       } catch (e) {
         debugPrint('Achievements: together choices unavailable: $e');
       }
