@@ -275,9 +275,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'N\'afficher que les films et épisodes déjà diffusés.';
 
   @override
-  String get settingsSectionStorage => 'Stockage et historique';
-
-  @override
   String get settingsStorage => 'Stockage et données';
 
   @override
@@ -3119,12 +3116,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String togetherWatchingToast(String title) {
     return 'Bon visionnage de $title !';
   }
-
-  @override
-  String get settingsSectionGame => 'Jeu et étapes';
-
-  @override
-  String get settingsAchievementsSubtitle => 'Voir vos badges et défis';
 
   @override
   String swiperDiscardedCount(int count) {

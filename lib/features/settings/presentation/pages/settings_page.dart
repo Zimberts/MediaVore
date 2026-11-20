@@ -6,9 +6,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/app_version.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
-import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'package:mediavore/features/settings/presentation/pages/data_cache_settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -177,24 +175,7 @@ class SettingsPage extends StatelessWidget {
           ),
           const Divider(),
 
-          // 2. Jeu et étapes
-          _SectionHeader(title: l10n.settingsSectionGame),
-          ListTile(
-            key: const Key('settings_achievements_tile'),
-            leading: const Icon(Icons.emoji_events_outlined),
-            title: Text(l10n.profileAchievements),
-            subtitle: Text(l10n.settingsAchievementsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AchievementsPage()),
-              );
-            },
-          ),
-          const Divider(),
-
-          // 3. Suivi
+          // 2. Suivi
           _SectionHeader(title: l10n.settingsSectionTracking),
           SwitchListTile(
             key: const Key('settings_advanced_tracking'),
@@ -298,25 +279,7 @@ class SettingsPage extends StatelessWidget {
           if (settings.isSwipeModeEnabled) const _SwipeResetTile(),
           const Divider(),
 
-          // 4. Stockage
-          _SectionHeader(title: l10n.settingsSectionStorage),
-          ListTile(
-            leading: const Icon(Icons.storage),
-            title: Text(l10n.settingsStorage),
-            subtitle: Text(l10n.settingsStorageSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const DataCacheSettingsPage(),
-                ),
-              );
-            },
-          ),
-          const Divider(),
-
-          // 5. À propos
+          // 3. À propos
           _SectionHeader(title: l10n.settingsSectionAbout),
           AboutListTile(
             icon: const Icon(Icons.info_outline),

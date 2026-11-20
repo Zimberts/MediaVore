@@ -578,12 +578,6 @@ abstract class AppLocalizations {
   /// **'Only show movies and episodes that have already aired.'**
   String get settingsHideNonReleasedSubtitle;
 
-  /// No description provided for @settingsSectionStorage.
-  ///
-  /// In en, this message translates to:
-  /// **'Storage & History'**
-  String get settingsSectionStorage;
-
   /// No description provided for @settingsStorage.
   ///
   /// In en, this message translates to:
@@ -4759,18 +4753,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enjoy watching {title}!'**
   String togetherWatchingToast(String title);
-
-  /// No description provided for @settingsSectionGame.
-  ///
-  /// In en, this message translates to:
-  /// **'Game & Milestones'**
-  String get settingsSectionGame;
-
-  /// No description provided for @settingsAchievementsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'View your badges and challenges'**
-  String get settingsAchievementsSubtitle;
 
   /// No description provided for @swiperDiscardedCount.
   ///
