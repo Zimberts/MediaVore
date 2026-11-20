@@ -6,6 +6,7 @@ part 'seen_item_model.g.dart';
 class SeenItemModel {
   Id? isarId;
 
+  @Index(composite: [CompositeIndex('type')])
   final int tmdbId;
 
   final String type; // 'movie' or 'tv'
@@ -14,6 +15,7 @@ class SeenItemModel {
 
   final String? posterPath;
 
+  @Index()
   final DateTime seenDate;
 
   final int? seasonNumber;
