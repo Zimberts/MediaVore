@@ -55,11 +55,17 @@ class _ListsOverviewState extends State<ListsOverview> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<SearchProvider>().loadLists();
+      if (!mounted) return;
+      final lib = context.read<LibraryProvider?>();
+      if (lib != null) {
+        lib.loadLists();
+      } else {
+        context.read<SearchProvider>().loadLists();
+      }
     });
   }
 
-  List<MediaItemPreview> _previews(SearchProvider provider, String name) {
+  List<MediaItemPreview> _previews(dynamic provider, String name) {
     final cached = provider.getPreviewsForList(name);
     final type = widget.type;
     if (type == null) return cached.take(kListRowPreviewCount).toList();
@@ -94,7 +100,10 @@ class _ListsOverviewState extends State<ListsOverview> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.appColors;
-    final provider = context.watch<SearchProvider>();
+    final libraryProvider = context.watch<LibraryProvider?>();
+    final searchProvider =
+        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final dynamic provider = libraryProvider ?? searchProvider;
     final names = [
       ...provider.listNames.where((name) => name == kWatchlistName),
       ...provider.listNames.where((name) => name != kWatchlistName),
@@ -179,7 +188,7 @@ class _ListRow extends StatelessWidget {
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
     final series = entries
-        .where((entry) => SearchProvider.listEntryType(entry) == MediaType.tv)
+        .where((entry) => LibraryProvider.listEntryType(entry) == MediaType.tv)
         .length;
     final movies = entries.length - series;
 

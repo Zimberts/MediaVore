@@ -31,7 +31,10 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<SearchProvider>();
+    final cacheProvider = context.watch<CacheAdminProvider?>();
+    final searchProvider =
+        cacheProvider == null ? context.watch<SearchProvider>() : null;
+    final dynamic provider = cacheProvider ?? searchProvider;
     final achievementProvider = context.watch<AchievementProvider>();
     final settings = context.watch<SettingsProvider>();
     final isCacheLoading = provider.isCacheLoading;
@@ -225,8 +228,9 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                   action: () async {
                     // Clear existing quick-add entries so the populate action
                     // fully reflects current seen history.
-                    await provider.clearQuickAddItems();
-                    await provider.populateQuickAddFromSeenHistory();
+                    final search = context.read<SearchProvider>();
+                    await search.clearQuickAddItems();
+                    await search.populateQuickAddFromSeenHistory();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -359,7 +363,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
 
   Future<void> _importAllDataWithPreview(
     BuildContext context,
-    SearchProvider provider,
+    CacheAdminProvider provider,
   ) async {
     final picked = await FilePicker.pickFile(
       type: FileType.any,

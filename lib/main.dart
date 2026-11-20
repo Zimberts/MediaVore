@@ -259,10 +259,34 @@ class _MediaVoreAppState extends State<MediaVoreApp>
         ChangeNotifierProvider(
           create: (context) {
             final repo = locator<MediaRepository>();
+            return LibraryProvider(repo);
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (context) {
+            final repo = locator<MediaRepository>();
+            return NotificationProvider(repo);
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (context) {
+            final repo = locator<MediaRepository>();
+            return CacheAdminProvider(
+              repo,
+              localeService: locator<LocaleService>(),
+            );
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (context) {
+            final repo = locator<MediaRepository>();
             return SearchProvider(
               repo,
               localeService: locator<LocaleService>(),
               prefs: locator<SharedPreferences>(),
+              libraryProvider: context.read<LibraryProvider>(),
+              notificationProvider: context.read<NotificationProvider>(),
+              cacheAdminProvider: context.read<CacheAdminProvider>(),
             );
           },
         ),

@@ -48,11 +48,20 @@ class UpcomingPage extends StatelessWidget {
   static const double _gutter = 16;
 
   Future<void> _refresh(BuildContext context) async {
-    final provider = context.read<SearchProvider>();
-    if (provider.isNotifiedRefreshing) return;
+    final notificationProvider = context.read<NotificationProvider?>();
+    final isRefreshing = notificationProvider != null
+        ? notificationProvider.isNotifiedRefreshing
+        : context.read<SearchProvider>().isNotifiedRefreshing;
+    if (isRefreshing) return;
     try {
-      await provider.refreshNotifiedItems();
-      await provider.loadAllSeenStatus();
+      if (notificationProvider != null) {
+        await notificationProvider.refreshNotifiedItems();
+      } else {
+        await context.read<SearchProvider>().refreshNotifiedItems();
+      }
+      if (context.mounted) {
+        await context.read<SearchProvider>().loadAllSeenStatus();
+      }
     } catch (e) {
       debugPrint('[UpcomingPage] refresh failed: $e');
     }
@@ -62,7 +71,14 @@ class UpcomingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.appColors;
-    final provider = context.watch<SearchProvider>();
+    final notificationProvider = context.watch<NotificationProvider?>();
+    final searchProvider = context.watch<SearchProvider>();
+    final notifiedItems = notificationProvider != null
+        ? notificationProvider.notifiedItems
+        : searchProvider.notifiedItems;
+    final isRefreshing = notificationProvider != null
+        ? notificationProvider.isNotifiedRefreshing
+        : searchProvider.isNotifiedRefreshing;
     final session = context.watch<HomeSessionProvider>();
     final debug = context.select<SettingsProvider, bool>(
       (settings) => settings.notificationCenterDebug,
@@ -70,8 +86,8 @@ class UpcomingPage extends StatelessWidget {
     final now = clock();
 
     final filtered = filterReleases(
-      items: provider.notifiedItems,
-      seenItems: provider.seenItems,
+      items: notifiedItems,
+      seenItems: searchProvider.seenItems,
       now: now,
     );
     final all = groupReleases(filtered.visible, now: now);
@@ -171,7 +187,7 @@ class UpcomingPage extends StatelessWidget {
               HiddenReleasesDebugSection(
                 omissions: filtered.omitted,
                 onRecompute: () => _refresh(context),
-                loading: provider.isNotifiedRefreshing,
+                loading: isRefreshing,
               ),
             ],
           ],

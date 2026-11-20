@@ -8,20 +8,24 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/core/l10n/app_language.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/utils/unseen_episodes.dart';
 import 'package:mediavore/features/discovery/presentation/services/because_you_service.dart';
+import 'package:mediavore/features/home/presentation/providers/notification_provider.dart';
+import 'package:mediavore/features/library/presentation/providers/library_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/search/presentation/providers/search_error.dart';
+import 'package:mediavore/features/settings/presentation/providers/cache_admin_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+export 'package:mediavore/features/home/presentation/providers/notification_provider.dart';
+export 'package:mediavore/features/library/presentation/providers/library_provider.dart';
 export 'package:mediavore/features/search/domain/entities/search_filters.dart';
 export 'package:mediavore/features/search/presentation/providers/search_error.dart';
+export 'package:mediavore/features/settings/presentation/providers/cache_admin_provider.dart';
 
 class SearchProvider with ChangeNotifier {
   final MediaRepository repository;
@@ -31,40 +35,54 @@ class SearchProvider with ChangeNotifier {
 
   /// Used for daily caching of Discover recommendations.
   final SharedPreferences? prefs;
-  StreamSubscription<void>? _notifiedItemsSubscription;
 
-  SearchProvider(this.repository, {this.localeService, this.prefs}) {
+  final LibraryProvider _libraryProvider;
+  final NotificationProvider _notificationProvider;
+  final CacheAdminProvider _cacheAdminProvider;
+  final bool _ownsLibraryProvider;
+  final bool _ownsNotificationProvider;
+  final bool _ownsCacheAdminProvider;
+
+  SearchProvider(
+    this.repository, {
+    this.localeService,
+    this.prefs,
+    LibraryProvider? libraryProvider,
+    NotificationProvider? notificationProvider,
+    CacheAdminProvider? cacheAdminProvider,
+  })  : _ownsLibraryProvider = libraryProvider == null,
+        _libraryProvider = libraryProvider ?? LibraryProvider(repository),
+        _ownsNotificationProvider = notificationProvider == null,
+        _notificationProvider =
+            notificationProvider ?? NotificationProvider(repository),
+        _ownsCacheAdminProvider = cacheAdminProvider == null,
+        _cacheAdminProvider = cacheAdminProvider ??
+            CacheAdminProvider(repository, localeService: localeService) {
+    _libraryProvider.addListener(notifyListeners);
+    _notificationProvider.addListener(notifyListeners);
+    _cacheAdminProvider.addListener(notifyListeners);
     localeService?.addListener(_onLanguageChanged);
     _init();
   }
+
+  LibraryProvider get libraryProvider => _libraryProvider;
+  NotificationProvider get notificationProvider => _notificationProvider;
+  CacheAdminProvider get cacheAdminProvider => _cacheAdminProvider;
 
   List<MediaItem> _searchResults = [];
   List<PersonSummary> _peopleResults = [];
   BecauseYouData? _becauseYouData;
   int _becauseYouRotation = 0;
   bool _isLoading = false;
-  bool _isCacheLoading = false;
-  bool _isDbSizeLoading = false;
-  bool _isNotifiedRefreshing = false;
   String? _error;
   SearchErrorType? _errorType;
   bool _isOffline = false;
-  List<String> _listNames = ['watchlist'];
-  final Map<String, List<String>> _listEntries = {}; // listName -> ["id:type"]
-  final Map<String, List<MediaItemPreview>> _listPreviews = {};
-  int _cacheSize = 0;
-  int _seenDbSize = 0;
   int _resetCount = 0;
   int _currentPage = 1;
   String _currentQuery = '';
   bool _hasMore = true;
   AppTab _selectedTab = AppTab.initial;
   LibrarySection _librarySection = LibrarySection.lists;
-
-  // Progress feedback for refetching/importing
-  double _importProgress = 0.0;
-  String _importStatus = '';
-  bool _isImporting = false;
 
   // Filter states
   SearchFilters _filters = const SearchFilters();
@@ -73,9 +91,6 @@ class SearchProvider with ChangeNotifier {
 
   List<SeenItem> _seenItems = [];
   Map<String, int> _seenCounts = {}; // "id:type" -> count
-  List<String> _watchlistIds = []; // Simplified IDs for quick checks
-  List<String> _likedIds = []; // "id:type"
-  List<NotifiedItem> _notifiedItems = [];
   List<QuickAddItem> _quickAddItems = [];
   List<InProgressItem> _inProgressItems = [];
   List<MediaItem> _tonightListItems = [];
@@ -87,24 +102,24 @@ class SearchProvider with ChangeNotifier {
   List<PersonSummary> get peopleResults => _peopleResults;
   BecauseYouData? get becauseYouData => _becauseYouData;
   bool get isLoading => _isLoading;
-  bool get isCacheLoading => _isCacheLoading;
-  bool get isDbSizeLoading => _isDbSizeLoading;
-  bool get isNotifiedRefreshing => _isNotifiedRefreshing;
+  bool get isCacheLoading => _cacheAdminProvider.isCacheLoading;
+  bool get isDbSizeLoading => _cacheAdminProvider.isDbSizeLoading;
+  bool get isNotifiedRefreshing => _notificationProvider.isNotifiedRefreshing;
   String? get error => _error;
 
   /// Kind of the last search/discover failure, or `null` if it succeeded.
   SearchErrorType? get errorType => _errorType;
   bool get isOffline => _isOffline;
-  List<String> get listNames => _listNames;
-  Map<String, List<String>> get listEntries => Map.unmodifiable(_listEntries);
-  int get cacheSize => _cacheSize;
-  int get seenDbSize => _seenDbSize;
+  List<String> get listNames => _libraryProvider.listNames;
+  Map<String, List<String>> get listEntries => _libraryProvider.listEntries;
+  int get cacheSize => _cacheAdminProvider.cacheSize;
+  int get seenDbSize => _cacheAdminProvider.seenDbSize;
   int get resetCount => _resetCount;
   bool get hasMore => _hasMore;
-  List<String> get watchlistIds => _watchlistIds;
+  List<String> get watchlistIds => _libraryProvider.watchlistIds;
   List<SeenItem> get seenItems => _seenItems;
-  List<String> get likedIds => _likedIds;
-  List<NotifiedItem> get notifiedItems => _notifiedItems;
+  List<String> get likedIds => _libraryProvider.likedIds;
+  List<NotifiedItem> get notifiedItems => _notificationProvider.notifiedItems;
   List<QuickAddItem> get quickAddItems => _quickAddItems;
 
   /// Series in progress, most recent activity first (Home screen).
@@ -112,11 +127,10 @@ class SearchProvider with ChangeNotifier {
 
   /// First list: the one a title is added to in one tap from its detail
   /// page.
-  String get firstListName =>
-      _listNames.isEmpty ? 'watchlist' : _listNames.first;
+  String get firstListName => _libraryProvider.firstListName;
 
   /// List the "Tonight" picks of the Home screen come from: the first one.
-  String get tonightListName => firstListName;
+  String get tonightListName => _libraryProvider.tonightListName;
 
   /// Titles of [tonightListName] that are neither seen nor started, in the
   /// order of the list.
@@ -132,9 +146,9 @@ class SearchProvider with ChangeNotifier {
   AppTab get selectedTab => _selectedTab;
   LibrarySection get librarySection => _librarySection;
 
-  double get importProgress => _importProgress;
-  String get importStatus => _importStatus;
-  bool get isImporting => _isImporting;
+  double get importProgress => _cacheAdminProvider.importProgress;
+  String get importStatus => _cacheAdminProvider.importStatus;
+  bool get isImporting => _cacheAdminProvider.isImporting;
 
   // Filter getters
   SearchFilters get filters => _filters;
@@ -155,34 +169,23 @@ class SearchProvider with ChangeNotifier {
   /// Whether the list shows the trends of the week: no query and no filter.
   bool get isTrending => _currentQuery.isEmpty && !hasActiveFilters;
   Future<void> _init() async {
-    await loadListNames();
-    await _loadAllListEntries();
-    await updateCacheSize();
-    await updateSeenDbSize();
     await loadAllSeenStatus();
-    await loadWatchlist();
-    await loadLikedStatus();
-    await loadNotifiedItems();
     await loadQuickAddItems();
     await _loadTonightListItems();
     await loadBecauseYouRecommendations();
-
-    _notifiedItemsSubscription = repository.watchNotifiedItems().listen((_) {
-      loadNotifiedItems();
-    });
   }
 
   @override
   void dispose() {
+    _libraryProvider.removeListener(notifyListeners);
+    _notificationProvider.removeListener(notifyListeners);
+    _cacheAdminProvider.removeListener(notifyListeners);
     localeService?.removeListener(_onLanguageChanged);
-    _notifiedItemsSubscription?.cancel();
+    if (_ownsLibraryProvider) _libraryProvider.dispose();
+    if (_ownsNotificationProvider) _notificationProvider.dispose();
+    if (_ownsCacheAdminProvider) _cacheAdminProvider.dispose();
     super.dispose();
   }
-
-  /// Strings for messages built outside the widget tree.
-  AppLocalizations get _l10n => lookupAppLocalizations(
-    (localeService?.current ?? fallbackAppLanguage).locale,
-  );
 
   void _onLanguageChanged() => unawaited(reloadForLanguageChange());
 
@@ -207,10 +210,11 @@ class SearchProvider with ChangeNotifier {
   }
 
   Future<void> _reloadSavedTitles() async {
-    await _loadAllListEntries();
+    await _libraryProvider.init();
     await loadAllSeenStatus();
-    await loadNotifiedItems();
+    await _notificationProvider.loadNotifiedItems();
     await loadQuickAddItems();
+    await _loadTonightListItems(notify: false);
   }
 
   void setSelectedTab(AppTab tab) {
@@ -235,49 +239,11 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateCacheSize() async {
-    _isCacheLoading = true;
-    notifyListeners();
-    _cacheSize = await repository.getCacheSize();
-    _isCacheLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> updateSeenDbSize() async {
-    _isDbSizeLoading = true;
-    notifyListeners();
-    _seenDbSize = await repository.getSeenDbSize();
-    _isDbSizeLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> clearCache({required bool complete}) async {
-    _isCacheLoading = true;
-    notifyListeners();
-    await repository.clearCache(complete: complete);
-    await updateCacheSize();
-    _isCacheLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> fillCache() async {
-    _isCacheLoading = true;
-    notifyListeners();
-    await repository.fillCache();
-    await updateCacheSize();
-    await _loadAllListEntries();
-    _isCacheLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> _loadAllListEntries() async {
-    for (final name in _listNames) {
-      _listEntries[name] = await repository.getListEntries(name);
-      _listPreviews[name] = await repository.getListPreviews(name);
-    }
-    await _loadTonightListItems(notify: false);
-    notifyListeners();
-  }
+  Future<void> updateCacheSize() => _cacheAdminProvider.updateCacheSize();
+  Future<void> updateSeenDbSize() => _cacheAdminProvider.updateSeenDbSize();
+  Future<void> clearCache({required bool complete}) =>
+      _cacheAdminProvider.clearCache(complete: complete);
+  Future<void> fillCache() => _cacheAdminProvider.fillCache();
 
   /// Reloads the titles behind [tonightCandidates]. Never throws: the Home
   /// screen then simply has no pick to offer.
@@ -291,24 +257,9 @@ class SearchProvider with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  Future<void> loadListNames() async {
-    _listNames = await repository.getAllListNames();
-    notifyListeners();
-  }
-
-  Future<void> loadWatchlist() async {
-    final entries = await repository.getWatchlistEntries();
-    _watchlistIds = entries.map((e) => e.split(':')[0]).toList();
-    _listEntries['watchlist'] = entries;
-    _listPreviews['watchlist'] = await repository.getListPreviews('watchlist');
-    await _loadTonightListItems(notify: false);
-    notifyListeners();
-  }
-
-  Future<void> loadLikedStatus() async {
-    _likedIds = await repository.getLikedEntries();
-    notifyListeners();
-  }
+  Future<void> loadListNames() => _libraryProvider.loadListNames();
+  Future<void> loadWatchlist() => _libraryProvider.loadWatchlist();
+  Future<void> loadLikedStatus() => _libraryProvider.loadLikedStatus();
 
   Future<void> loadAllSeenStatus() async {
     _seenItems = await repository.getSeenItems();
@@ -353,15 +304,16 @@ class SearchProvider with ChangeNotifier {
     return map;
   }
 
-  Future<void> loadNotifiedItems() async {
-    _notifiedItems = await repository.getNotifiedItems();
-    notifyListeners();
-  }
+  Future<void> loadNotifiedItems() => _notificationProvider.loadNotifiedItems();
 
   Future<void> loadQuickAddItems() async {
-    final repoItems = await repository.getQuickAddItems();
-    // Use repository-provided quick-add entries only (no compatibility fallback)
-    _quickAddItems = repoItems;
+    try {
+      final repoItems = await repository.getQuickAddItems();
+      _quickAddItems = repoItems;
+    } catch (e) {
+      debugPrint('[SearchProvider] getQuickAddItems error: $e');
+      _quickAddItems = [];
+    }
     try {
       _inProgressItems = await repository.getInProgressItems();
     } catch (e) {
@@ -402,9 +354,8 @@ class SearchProvider with ChangeNotifier {
     await loadQuickAddItems();
   }
 
-  List<String> getListEntriesCached(String listName) {
-    return _listEntries[listName] ?? [];
-  }
+  List<String> getListEntriesCached(String listName) =>
+      _libraryProvider.getListEntriesCached(listName);
 
   int getSeenCount(MediaItem item) {
     return _seenCounts['${item.id}:${item.mediaType.name}'] ?? 0;
@@ -413,7 +364,7 @@ class SearchProvider with ChangeNotifier {
   bool isItemSeenOrInAnyList(int id, MediaType type) {
     final entry = '$id:${type.name}';
     if ((_seenCounts[entry] ?? 0) > 0) return true;
-    for (final list in _listEntries.values) {
+    for (final list in _libraryProvider.listEntries.values) {
       if (list.contains(entry)) return true;
     }
     return false;
@@ -500,191 +451,73 @@ class SearchProvider with ChangeNotifier {
     }
   }
 
-  bool isItemInList(MediaItem item, String listName) {
-    final entry = '${item.id}:${item.mediaType.name}';
-    return _listEntries[listName]?.contains(entry) ?? false;
-  }
+  bool isItemInList(MediaItem item, String listName) =>
+      _libraryProvider.isItemInList(item, listName);
 
-  bool isLiked(MediaItem item) {
-    return _likedIds.contains('${item.id}:${item.mediaType.name}');
-  }
+  bool isLiked(MediaItem item) => _libraryProvider.isLiked(item);
 
-  bool isNotified(MediaItem item) {
-    return _notifiedItems.any(
-      (n) => n.tmdbId == item.id && n.type == item.mediaType,
-    );
-  }
+  bool isNotified(MediaItem item) => _notificationProvider.isNotified(item);
 
-  Future<void> toggleLike(MediaItem item) async {
-    await repository.toggleLike(item);
-    await loadLikedStatus();
-    await updateCacheSize();
-  }
+  Future<void> toggleLike(MediaItem item) => _libraryProvider.toggleLike(item);
 
   Future<void> toggleInList(MediaItem item, String listName) async {
-    final entry = '${item.id}:${item.mediaType.name}';
-    final currentEntries = _listEntries[listName] ?? [];
-
-    if (currentEntries.contains(entry)) {
-      await repository.removeFromList(item.id, item.mediaType, listName);
-      _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
-      if (listName == 'watchlist') {
-        _watchlistIds.remove(item.id.toString());
-      }
-    } else {
-      await repository.addToList(item, listName);
-      _listEntries[listName] = [...currentEntries, entry];
-      if (listName == 'watchlist') {
-        _watchlistIds.add(item.id.toString());
-        if (item.canBeNotified) {
-          await repository.toggleNotification(item, autoNotify: true);
-        }
-        await loadNotifiedItems();
-      }
-    }
-    _listPreviews[listName] = await repository.getListPreviews(listName);
+    await _libraryProvider.toggleInList(item, listName);
     if (listName == tonightListName) {
       await _loadTonightListItems(notify: false);
     }
-    await updateCacheSize();
-    notifyListeners();
   }
 
   /// Adds multiple [items] to [listName] in one operation, notifying listeners once.
   Future<void> addAllToList(List<MediaItem> items, String listName) async {
-    if (items.isEmpty) return;
-    await repository.addAllToList(items, listName);
-    final currentEntries = _listEntries[listName] ?? [];
-    final newEntries = items
-        .map((item) => '${item.id}:${item.mediaType.name}')
-        .toList();
-    _listEntries[listName] = [
-      ...currentEntries,
-      ...newEntries.where((e) => !currentEntries.contains(e)),
-    ];
-    if (listName == 'watchlist') {
-      for (final item in items) {
-        _watchlistIds.add(item.id.toString());
-      }
-    }
-    _listPreviews[listName] = await repository.getListPreviews(listName);
+    await _libraryProvider.addAllToList(items, listName);
     if (listName == tonightListName) {
       await _loadTonightListItems(notify: false);
     }
-    await updateCacheSize();
-    notifyListeners();
   }
 
   Future<void> removeFromList(MediaItem item, String listName) async {
-    final entry = '${item.id}:${item.mediaType.name}';
-    final currentEntries = _listEntries[listName] ?? [];
-
-    if (currentEntries.contains(entry)) {
-      await repository.removeFromList(item.id, item.mediaType, listName);
-      _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
-      if (listName == 'watchlist') {
-        _watchlistIds.remove(item.id.toString());
-      }
-      _listPreviews[listName] = await repository.getListPreviews(listName);
-      if (listName == tonightListName) {
-        await _loadTonightListItems(notify: false);
-      }
-      await updateCacheSize();
-      notifyListeners();
+    await _libraryProvider.removeFromList(item, listName);
+    if (listName == tonightListName) {
+      await _loadTonightListItems(notify: false);
     }
   }
 
-  Future<void> toggleWatchlist(MediaItem item) async {
-    await toggleInList(item, 'watchlist');
-  }
+  Future<void> toggleWatchlist(MediaItem item) =>
+      _libraryProvider.toggleWatchlist(item);
 
-  Future<void> toggleNotification(MediaItem item) async {
-    await repository.toggleNotification(item);
-    await loadNotifiedItems();
-    notifyListeners();
-  }
+  Future<void> toggleNotification(MediaItem item) =>
+      _notificationProvider.toggleNotification(item);
 
-  Future<void> createList(String name) async {
-    await repository.createList(name);
-    await loadListNames();
-    _listEntries[name] = await repository.getListEntries(name);
-    _listPreviews[name] = await repository.getListPreviews(name);
-    notifyListeners();
-  }
+  Future<void> createList(String name) => _libraryProvider.createList(name);
 
   Future<void> deleteList(String name) async {
-    await repository.deleteList(name);
-    await loadListNames();
-    _listEntries.remove(name);
-    _listPreviews.remove(name);
+    await _libraryProvider.deleteList(name);
     await _loadTonightListItems(notify: false);
-    notifyListeners();
   }
 
   Future<void> updateListOrder(
     String listName,
     List<String> orderedEntries,
   ) async {
-    await repository.updateListOrder(listName, orderedEntries);
-    _listEntries[listName] = orderedEntries;
-    _listPreviews[listName] = await repository.getListPreviews(listName);
+    await _libraryProvider.updateListOrder(listName, orderedEntries);
     if (listName == tonightListName) {
       await _loadTonightListItems(notify: false);
     }
-    notifyListeners();
   }
 
-  String getShareLinkForList(String listName) {
-    final entries = _listEntries[listName] ?? [];
-    if (entries.isEmpty) return '';
-    final sharedEntries = ListShareCodec.parseEntries(entries);
-    return ListShareCodec.createShareUrl(
-      listName: listName,
-      entries: sharedEntries,
-    );
-  }
+  String getShareLinkForList(String listName) =>
+      _libraryProvider.getShareLinkForList(listName);
 
-  String getCustomSchemeShareLinkForList(String listName) {
-    final entries = _listEntries[listName] ?? [];
-    if (entries.isEmpty) return '';
-    final sharedEntries = ListShareCodec.parseEntries(entries);
-    return ListShareCodec.createShareUrl(
-      listName: listName,
-      entries: sharedEntries,
-      customScheme: true,
-    );
-  }
+  String getCustomSchemeShareLinkForList(String listName) =>
+      _libraryProvider.getCustomSchemeShareLinkForList(listName);
 
   Future<void> importSharedEntries(
     String name,
     List<SharedMediaEntry> entries,
-  ) async {
-    final strList = entries.map((e) => '${e.id}:${e.type.name}').toList();
-    await importList(name, strList);
-  }
+  ) => _libraryProvider.importSharedEntries(name, entries);
 
-  Future<void> importList(String name, List<String> entries) async {
-    await repository.createList(name);
-    await loadListNames();
-    for (final entry in entries) {
-      final parts = entry.split(':');
-      if (parts.length != 2) continue;
-      final id = int.tryParse(parts[0]);
-      final type = parts[1] == 'tv' ? MediaType.tv : MediaType.movie;
-      if (id != null) {
-        final shell = MediaItem(
-          id: id,
-          title: 'Unknown',
-          overview: '',
-          releaseDate: '',
-          mediaType: type,
-        );
-        await repository.addToList(shell, name);
-      }
-    }
-    await _loadAllListEntries();
-    notifyListeners();
-  }
+  Future<void> importList(String name, List<String> entries) =>
+      _libraryProvider.importList(name, entries);
 
   /// Maximum number of TMDB pages to fetch in a single search/filter batch.
   static const int maxSearchPagesBatch = 5;
@@ -1173,7 +1006,7 @@ class SearchProvider with ChangeNotifier {
     // that all entry points (SeenManager, Notification center, WatchNext)
     // exhibit the same behaviour.
     try {
-      final inWatchlist = _watchlistIds.contains(item.tmdbId.toString());
+      final inWatchlist = watchlistIds.contains(item.tmdbId.toString());
 
       if (inWatchlist) {
         if (item.type == MediaType.movie) {
@@ -1368,7 +1201,7 @@ class SearchProvider with ChangeNotifier {
   ) async {
     final next = item.next;
     final seenDate = DateTime.now();
-    final wasInWatchlist = _watchlistIds.contains('${next.tmdbId}');
+    final wasInWatchlist = watchlistIds.contains('${next.tmdbId}');
 
     await markAsSeen(
       SeenItem(
@@ -1407,7 +1240,7 @@ class SearchProvider with ChangeNotifier {
       }
       await repository.addQuickAddItem(next);
 
-      if (wasInWatchlist && !_watchlistIds.contains('${next.tmdbId}')) {
+      if (wasInWatchlist && !watchlistIds.contains('${next.tmdbId}')) {
         try {
           final details = await repository.getMediaDetails(
             next.tmdbId,
@@ -1430,7 +1263,7 @@ class SearchProvider with ChangeNotifier {
   /// and the title returns to the watchlist if marking it had removed it.
   Future<Future<void> Function()> markItemSeen(SeenItem item) async {
     final seenDate = item.seenDate;
-    final wasInWatchlist = _watchlistIds.contains('${item.tmdbId}');
+    final wasInWatchlist = watchlistIds.contains('${item.tmdbId}');
     final isEpisode = item.type == MediaType.tv;
 
     await markAsSeen(item);
@@ -1459,7 +1292,7 @@ class SearchProvider with ChangeNotifier {
         await repository.populateQuickAddFromSeenHistory(tmdbId: item.tmdbId);
       }
 
-      if (wasInWatchlist && !_watchlistIds.contains('${item.tmdbId}')) {
+      if (wasInWatchlist && !watchlistIds.contains('${item.tmdbId}')) {
         try {
           final details = await repository.getMediaDetails(
             item.tmdbId,
@@ -1491,7 +1324,8 @@ class SearchProvider with ChangeNotifier {
   /// title returns to the watchlist if marking it had removed it.
   Future<Future<void> Function()> markReleaseSeen(NotifiedItem item) async {
     final seenDate = DateTime.now();
-    final wasInWatchlist = _watchlistIds.contains('${item.tmdbId}');
+    final wasInWatchlist =
+        _libraryProvider.watchlistIds.contains('${item.tmdbId}');
     final isEpisode = item.type == MediaType.tv;
 
     await markAsSeen(
@@ -1538,7 +1372,8 @@ class SearchProvider with ChangeNotifier {
         await repository.populateQuickAddFromSeenHistory(tmdbId: item.tmdbId);
       }
 
-      if (wasInWatchlist && !_watchlistIds.contains('${item.tmdbId}')) {
+      if (wasInWatchlist &&
+          !_libraryProvider.watchlistIds.contains('${item.tmdbId}')) {
         try {
           final details = await repository.getMediaDetails(
             item.tmdbId,
@@ -1556,29 +1391,10 @@ class SearchProvider with ChangeNotifier {
     };
   }
 
-  MediaItem _releaseShell(NotifiedItem item) => MediaItem(
-    id: item.tmdbId,
-    title: item.title,
-    posterPath: item.posterPath,
-    overview: '',
-    releaseDate: item.releaseDate?.toIso8601String() ?? '',
-    mediaType: item.type,
-  );
-
   /// Stops following the release [item]: it leaves "Upcoming". Returns the
   /// action that follows it again, as it was (manual or automatic).
-  Future<Future<void> Function()> disableReleaseAlert(NotifiedItem item) async {
-    final shell = _releaseShell(item);
-    await repository.toggleNotification(shell);
-    await loadNotifiedItems();
-
-    return () async {
-      if (!await repository.isNotified(item.tmdbId, item.type)) {
-        await repository.toggleNotification(shell, autoNotify: item.autoNotify);
-      }
-      await loadNotifiedItems();
-    };
-  }
+  Future<Future<void> Function()> disableReleaseAlert(NotifiedItem item) =>
+      _notificationProvider.disableReleaseAlert(item);
 
   Future<void> deleteSeenEntry(int id) async {
     await repository.deleteSeenEntry(id);
@@ -1614,33 +1430,22 @@ class SearchProvider with ChangeNotifier {
     await loadQuickAddItems();
   }
 
-  List<MediaItemPreview> getPreviewsForList(String name) {
-    return _listPreviews[name] ?? [];
-  }
+  List<MediaItemPreview> getPreviewsForList(String name) =>
+      _libraryProvider.getPreviewsForList(name);
 
-  int getListItemCount(String name) {
-    return _listEntries[name]?.length ?? 0;
-  }
+  int getListItemCount(String name) => _libraryProvider.getListItemCount(name);
 
   /// Type of a list entry written as `id:type`; a movie when unspecified.
   static MediaType listEntryType(String entry) =>
-      entry.endsWith(':tv') ? MediaType.tv : MediaType.movie;
+      LibraryProvider.listEntryType(entry);
 
   /// Entries of [listName] of the given [type]; all of them when `null`.
-  List<String> getListEntriesOfType(String listName, MediaType? type) {
-    final entries = _listEntries[listName] ?? const <String>[];
-    if (type == null) return entries;
-    return entries.where((entry) => listEntryType(entry) == type).toList();
-  }
+  List<String> getListEntriesOfType(String listName, MediaType? type) =>
+      _libraryProvider.getListEntriesOfType(listName, type);
 
   /// Number of entries of [type] across every list; all types when `null`.
-  int countListEntries(MediaType? type) {
-    var count = 0;
-    for (final name in _listNames) {
-      count += getListEntriesOfType(name, type).length;
-    }
-    return count;
-  }
+  int countListEntries(MediaType? type) =>
+      _libraryProvider.countListEntries(type);
 
   /// First [limit] previews of [listName] of the given [type], in the order
   /// of the list. Reads only as far into the list as needed.
@@ -1648,23 +1453,7 @@ class SearchProvider with ChangeNotifier {
     String listName,
     MediaType type, {
     int limit = 3,
-  }) async {
-    final entries = _listEntries[listName] ?? const <String>[];
-    var found = 0;
-    var depth = 0;
-    for (var i = 0; i < entries.length && found < limit; i++) {
-      if (listEntryType(entries[i]) == type) {
-        found++;
-        depth = i + 1;
-      }
-    }
-    if (depth == 0) return const [];
-    final previews = await repository.getListPreviews(listName, limit: depth);
-    return previews
-        .where((preview) => preview.type == type.name)
-        .take(limit)
-        .toList();
-  }
+  }) => _libraryProvider.loadListPreviewsOfType(listName, type, limit: limit);
 
   void setOffline(bool offline) {
     _isOffline = offline;
@@ -1680,136 +1469,32 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> loadLists() => loadListNames();
 
-  Future<List<int>> exportAllData() {
-    return repository.exportAllData();
-  }
+  Future<List<int>> exportAllData() => _cacheAdminProvider.exportAllData();
 
   Future<void> importAllData(
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
   }) async {
-    _isImporting = true;
-    _importProgress = 0.0;
-    _importStatus = _l10n.progressImportingAll;
-    notifyListeners();
-
+    await _cacheAdminProvider.importAllData(zipBytes, mode: mode);
+    await loadAllSeenStatus();
+    await loadNotifiedItems();
+    // If quick add was not part of import, populate from seen history
     try {
-      await repository.importAllData(
-        zipBytes,
-        mode: mode,
-        onProgress: (p, s) {
-          _importProgress = p;
-          _importStatus = s;
-          notifyListeners();
-        },
-      );
-
-      _importProgress = 1.0;
-      _importStatus = _l10n.progressDone;
-    } catch (e) {
-      _importStatus = _l10n.progressError('$e');
-    } finally {
-      await loadAllSeenStatus();
-      await loadLikedStatus();
-      await loadNotifiedItems();
-      await loadListNames();
-      await _loadAllListEntries();
-      await updateCacheSize();
-      await updateSeenDbSize();
-      // If quick add was not part of import, populate from seen history
-      try {
-        final qaItems = await repository.getQuickAddItems();
-        if (qaItems.isEmpty) {
-          await repository.populateQuickAddFromSeenHistory();
-          await loadQuickAddItems();
-        }
-      } catch (e) {
-        debugPrint(
-          '[SearchProvider] importAllData quick-add population failed: $e',
-        );
+      final qaItems = await repository.getQuickAddItems();
+      if (qaItems.isEmpty) {
+        await repository.populateQuickAddFromSeenHistory();
+        await loadQuickAddItems();
       }
-
-      _isImporting = false;
-      notifyListeners();
+    } catch (e) {
+      debugPrint(
+        '[SearchProvider] auto-populate quickadd after import failed: $e',
+      );
     }
   }
 
   Future<void> refetchMissingData() async {
-    _isImporting = true;
-    _importProgress = 0.0;
-    _importStatus = _l10n.progressRefetchingRuntimes;
-    notifyListeners();
-
-    try {
-      final seenItems = await repository.getSeenItems();
-      final itemsToUpdate = seenItems
-          .where((i) => i.id != null && (i.runtime == null || i.runtime == 0))
-          .toList();
-
-      int processed = 0;
-      for (final item in itemsToUpdate) {
-        _importProgress = processed / itemsToUpdate.length;
-        _importStatus = _l10n.progressRefetchingItem(item.title);
-        notifyListeners();
-
-        try {
-          final details = await repository.getMediaDetails(
-            item.tmdbId,
-            type: item.type,
-          );
-
-          List<String>? newGenres = item.genres;
-          if (newGenres == null || newGenres.isEmpty) {
-            newGenres = details.item.genres;
-          }
-          int? newRuntime = item.runtime;
-
-          if (item.type == MediaType.movie) {
-            newRuntime = details.item.runtime;
-          } else if (item.seasonNumber != null && item.episodeNumber != null) {
-            // For TV episodes, runtime comes from season/episode
-            final seasonDetails = await repository.getSeasonDetails(
-              item.tmdbId,
-              item.seasonNumber!,
-            );
-            final episodes = seasonDetails['episodes'] as List?;
-            final episode = episodes?.firstWhere(
-              (e) => e['episode_number'] == item.episodeNumber,
-              orElse: () => null,
-            );
-            if (episode != null && episode['runtime'] != null) {
-              newRuntime = episode['runtime'] as int;
-            } else {
-              // fallback to tv show runtime
-              newRuntime = details.item.runtime;
-            }
-          }
-
-          if ((newRuntime != null && newRuntime > 0) ||
-              (newGenres != null && newGenres.isNotEmpty)) {
-            final updatedItem = item.copyWith(
-              runtime: newRuntime,
-              genres: newGenres,
-            );
-            await repository.updateSeenEntry(updatedItem);
-          }
-        } catch (e) {
-          // Ignore individual failures to not interrupt the whole batch
-        }
-
-        processed++;
-      }
-
-      _importProgress = 1.0;
-      _importStatus = _l10n.progressRefetchDone;
-    } catch (e) {
-      _importStatus = _l10n.progressError('$e');
-    } finally {
-      await loadAllSeenStatus();
-      await updateSeenDbSize();
-      _isImporting = false;
-      notifyListeners();
-    }
+    await _cacheAdminProvider.refetchMissingData();
+    await loadAllSeenStatus();
   }
 
   Future<void> optOutSeries(
@@ -2104,20 +1789,8 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshNotifiedItems() async {
-    _isNotifiedRefreshing = true;
-    notifyListeners();
-    try {
-      // Show the locally stored data immediately, then reconcile with the
-      // network series by series (throttled to at most once a day per series).
-      await loadNotifiedItems();
-      await repository.refreshNotifiedItems();
-      await loadNotifiedItems();
-    } finally {
-      _isNotifiedRefreshing = false;
-      notifyListeners();
-    }
-  }
+  Future<void> refreshNotifiedItems() =>
+      _notificationProvider.refreshNotifiedItems();
 
   Future<void> refreshQuickAddItems() async {
     await repository.refreshQuickAddItems();
