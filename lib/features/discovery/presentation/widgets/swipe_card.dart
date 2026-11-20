@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/swiper_provider.dart';
 
@@ -247,9 +248,10 @@ class _SwipeCardState extends State<SwipeCard>
       children: [
         if (item.posterPath != null && item.posterPath!.isNotEmpty)
           CachedNetworkImage(
-            imageUrl: item.posterPath!.startsWith('http')
-                ? item.posterPath!
-                : 'https://image.tmdb.org/t/p/w780${item.posterPath}',
+            imageUrl: TmdbImageUtils.buildUrl(
+              item.posterPath,
+              size: TmdbImageSize.w780,
+            )!,
             fit: BoxFit.cover,
             placeholder: (_, _) => Container(
               color: theme.colorScheme.surfaceContainerHighest,
@@ -416,9 +418,10 @@ class _SwipeCardState extends State<SwipeCard>
                             movie.posterPath != null &&
                                 movie.posterPath!.isNotEmpty
                             ? CachedNetworkImage(
-                                imageUrl: movie.posterPath!.startsWith('http')
-                                    ? movie.posterPath!
-                                    : 'https://image.tmdb.org/t/p/w185${movie.posterPath}',
+                                imageUrl: TmdbImageUtils.buildUrl(
+                                  movie.posterPath,
+                                  size: TmdbImageSize.w185,
+                                )!,
                                 width: 36,
                                 height: 52,
                                 fit: BoxFit.cover,

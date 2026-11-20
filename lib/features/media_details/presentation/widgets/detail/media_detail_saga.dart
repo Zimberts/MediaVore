@@ -7,6 +7,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/saga_sort.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -199,8 +200,10 @@ class _SagaFilmCard extends StatelessWidget {
                       if (item.posterPath != null &&
                           !Platform.environment.containsKey('FLUTTER_TEST'))
                         CachedNetworkImage(
-                          imageUrl:
-                              'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                          imageUrl: TmdbImageUtils.buildUrl(
+                            item.posterPath,
+                            size: TmdbImageSize.w185,
+                          )!,
                           fit: BoxFit.cover,
                           placeholder: (context, url) =>
                               Container(color: colors.placeholder),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_card.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
@@ -294,9 +295,10 @@ class _MiniPosters extends StatelessWidget {
                           kind: previews[i].type == MediaType.tv.name
                               ? MediaKind.series
                               : MediaKind.movie,
-                          imageUrl: previews[i].posterPath == null
-                              ? null
-                              : 'https://image.tmdb.org/t/p/w92${previews[i].posterPath}',
+                          imageUrl: TmdbImageUtils.buildUrl(
+                            previews[i].posterPath,
+                            size: TmdbImageSize.w92,
+                          ),
                         ),
                       ),
                     ),

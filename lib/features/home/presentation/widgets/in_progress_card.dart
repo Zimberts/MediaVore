@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_card.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
@@ -12,7 +13,7 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 
 /// URL of a TMDB poster, or `null` without a path.
 String? tmdbPosterUrl(String? posterPath, {String size = 'w185'}) =>
-    posterPath == null ? null : 'https://image.tmdb.org/t/p/$size$posterPath';
+    TmdbImageUtils.buildUrlWithSizeString(posterPath, size: size);
 
 /// "Resume" card of a series: poster, next episode, progress and the button
 /// that marks this episode as seen.

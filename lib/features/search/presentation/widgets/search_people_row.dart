@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/media_details/presentation/pages/person_page.dart';
 
@@ -74,11 +75,14 @@ class SearchPeopleRow extends StatelessWidget {
                         CircleAvatar(
                           radius: 36,
                           backgroundColor: colors.surface2,
-                          backgroundImage: hasProfile
-                              ? CachedNetworkImageProvider(
-                                  'https://image.tmdb.org/t/p/w185${person.profilePath}',
-                                )
-                              : null,
+                              backgroundImage: hasProfile
+                                  ? CachedNetworkImageProvider(
+                                      TmdbImageUtils.buildUrl(
+                                        person.profilePath,
+                                        size: TmdbImageSize.w185,
+                                      )!,
+                                    )
+                                  : null,
                           child: hasProfile
                               ? null
                               : Text(

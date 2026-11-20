@@ -8,6 +8,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/history_grouping.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_dialog.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
@@ -173,7 +174,10 @@ class SeenHistoryPageState extends State<SeenHistoryPage> {
       return ClipRRect(
         borderRadius: BorderRadius.circular(6),
         child: CachedNetworkImage(
-          imageUrl: 'https://image.tmdb.org/t/p/w92${item.posterPath}',
+          imageUrl: TmdbImageUtils.buildUrl(
+            item.posterPath,
+            size: TmdbImageSize.w92,
+          )!,
           width: 44,
           height: 64,
           fit: BoxFit.cover,

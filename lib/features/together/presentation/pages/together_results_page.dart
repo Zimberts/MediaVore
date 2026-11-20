@@ -7,6 +7,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/bounded_concurrency.dart';
 import 'package:mediavore/core/utils/list_intersection_calculator.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
@@ -119,7 +120,10 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
-                  'https://image.tmdb.org/t/p/w342${item.posterPath}',
+                  TmdbImageUtils.buildUrl(
+                    item.posterPath,
+                    size: TmdbImageSize.w342,
+                  )!,
                   height: 180,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -508,7 +512,10 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
             height: 64,
             child: item.posterPath != null && item.posterPath!.isNotEmpty
                 ? Image.network(
-                    'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                    TmdbImageUtils.buildUrl(
+                      item.posterPath,
+                      size: TmdbImageSize.w185,
+                    )!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) =>
                         Icon(Icons.movie, color: colors.placeholder),

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 
@@ -40,13 +41,13 @@ MediaPosterData mediaItemPosterData(
   bool liked = false,
   String imageSize = 'w342',
 }) {
-  final poster = item.posterPath;
   return MediaPosterData(
     title: item.title,
     kind: MediaKind.fromMediaType(item.mediaType),
-    imageUrl: poster == null
-        ? null
-        : 'https://image.tmdb.org/t/p/$imageSize$poster',
+    imageUrl: TmdbImageUtils.buildUrlWithSizeString(
+      item.posterPath,
+      size: imageSize,
+    ),
     caption: mediaItemCaption(context.l10n, item),
     seen: mediaItemSeenState(item, seenCount),
     rating: item.voteAverage,

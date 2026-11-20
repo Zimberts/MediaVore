@@ -8,6 +8,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/top_scrim_gradient.dart';
@@ -145,8 +146,10 @@ class _PersonPageState extends State<PersonPage> {
                   profilePath != null &&
                           !Platform.environment.containsKey('FLUTTER_TEST')
                       ? CachedNetworkImage(
-                          imageUrl:
-                              'https://image.tmdb.org/t/p/w500$profilePath',
+                          imageUrl: TmdbImageUtils.buildUrl(
+                            profilePath,
+                            size: TmdbImageSize.w500,
+                          )!,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           errorWidget: (context, url, error) =>
@@ -362,8 +365,10 @@ class _FilmographyGrid extends StatelessWidget {
                       item.posterPath != null &&
                               !Platform.environment.containsKey('FLUTTER_TEST')
                           ? CachedNetworkImage(
-                              imageUrl:
-                                  'https://image.tmdb.org/t/p/w185${item.posterPath}',
+                              imageUrl: TmdbImageUtils.buildUrl(
+                                item.posterPath,
+                                size: TmdbImageSize.w185,
+                              )!,
                               fit: BoxFit.cover,
                               placeholder: (context, url) =>
                                   Container(color: colors.placeholder),

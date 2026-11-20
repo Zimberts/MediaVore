@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
@@ -281,7 +282,10 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
                         child: item.posterPath != null &&
                                 item.posterPath!.isNotEmpty
                             ? Image.network(
-                                'https://image.tmdb.org/t/p/w500${item.posterPath}',
+                                TmdbImageUtils.buildUrl(
+                                  item.posterPath,
+                                  size: TmdbImageSize.w500,
+                                )!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, _, _) => Container(
                                   color: colors.surface2,
@@ -442,7 +446,10 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
                 AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.network(
-                    'https://image.tmdb.org/t/p/w780${winner.candidate.item.posterPath}',
+                    TmdbImageUtils.buildUrl(
+                      winner.candidate.item.posterPath,
+                      size: TmdbImageSize.w780,
+                    )!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Container(
                       color: colors.surface2,
