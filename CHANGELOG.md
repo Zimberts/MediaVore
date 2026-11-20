@@ -3,6 +3,22 @@
 Written by release-please from the Conventional Commits on `main` (see `DOCS/releasing.md`).
 New entries are inserted above the latest one.
 
+## [1.4.1](https://github.com/Zimberts/MediaVore/compare/v1.4.0...v1.4.1) (2026-11-20)
+
+
+### Bug fixes
+
+* **i18n:** adapt viewing date input and display format to active locale ([#389](https://github.com/Zimberts/MediaVore/issues/389)) ([#401](https://github.com/Zimberts/MediaVore/issues/401)) ([0a6400f](https://github.com/Zimberts/MediaVore/commit/0a6400f1e6dc37c610809d8c64b22d7d818c9209))
+* **lint:** replace deprecated Share and onReorder APIs and guard async context ([#388](https://github.com/Zimberts/MediaVore/issues/388)) ([#400](https://github.com/Zimberts/MediaVore/issues/400)) ([5d810ce](https://github.com/Zimberts/MediaVore/commit/5d810cec16b0f5252f8c536a6847ae93eb258ba1))
+* **profile:** remove duplicate achievements and storage navigation routes from settings ([#392](https://github.com/Zimberts/MediaVore/issues/392)) ([#402](https://github.com/Zimberts/MediaVore/issues/402)) ([8d80981](https://github.com/Zimberts/MediaVore/commit/8d8098161ef0b4a463e822a5dff310e29707b613))
+* **settings:** connect swipe discovery switch to show and hide swipe mode ([#393](https://github.com/Zimberts/MediaVore/issues/393)) ([#403](https://github.com/Zimberts/MediaVore/issues/403)) ([3b664fe](https://github.com/Zimberts/MediaVore/commit/3b664fe00ee01292c50c03947666300197817a05))
+
+
+### Performance
+
+* **export:** offload zip decompression and csv parsing to background isolate ([#384](https://github.com/Zimberts/MediaVore/issues/384)) ([#404](https://github.com/Zimberts/MediaVore/issues/404)) ([901572c](https://github.com/Zimberts/MediaVore/commit/901572c880587b12d60862e4ff7dff85b29347a6))
+* **isar:** add composite and single indexes on SeenItemModel and QuickAdd models ([#383](https://github.com/Zimberts/MediaVore/issues/383)) ([#398](https://github.com/Zimberts/MediaVore/issues/398)) ([f838b80](https://github.com/Zimberts/MediaVore/commit/f838b801d6e5e04bc7c6166a20f8d9d831d54f55))
+
 ## [1.4.0](https://github.com/Zimberts/MediaVore/compare/v1.3.0...v1.4.0) (2026-11-19)
 
 
