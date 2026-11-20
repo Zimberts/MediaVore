@@ -859,9 +859,8 @@ class ListPageState extends State<ListPage> {
       itemCount: items.length,
       clipBehavior: Clip.none,
       buildDefaultDragHandles: false,
-      onReorder: (oldIndex, newIndex) async {
+      onReorderItem: (oldIndex, newIndex) async {
         setState(() {
-          if (newIndex > oldIndex) newIndex -= 1;
           final item = items.removeAt(oldIndex);
           items.insert(newIndex, item);
 

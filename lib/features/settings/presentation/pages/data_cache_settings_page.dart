@@ -156,13 +156,20 @@ class DataCacheSettingsPage extends StatelessWidget {
                               leading: const Icon(Icons.share),
                               title: Text(context.l10n.dataShareViaSystem),
                               onTap: () async {
+                                final shareText =
+                                    context.l10n.dataExportShareText;
                                 Navigator.pop(saveSheetContext);
-                                final shared = await Share.shareXFiles([
-                                  XFile(
-                                    tempFile.path,
-                                    mimeType: 'application/octet-stream',
+                                final shared = await SharePlus.instance.share(
+                                  ShareParams(
+                                    files: [
+                                      XFile(
+                                        tempFile.path,
+                                        mimeType: 'application/octet-stream',
+                                      ),
+                                    ],
+                                    text: shareText,
                                   ),
-                                ], text: context.l10n.dataExportShareText);
+                                );
                                 // `unavailable`: the platform cannot tell.
                                 if (shared.status !=
                                     ShareResultStatus.dismissed) {
