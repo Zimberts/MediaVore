@@ -2663,13 +2663,13 @@ abstract class AppLocalizations {
   /// No description provided for @swiperSettingTitle.
   ///
   /// In en, this message translates to:
-  /// **'Swipe discovery'**
+  /// **'Swipe mode in Discover'**
   String get swiperSettingTitle;
 
   /// No description provided for @swiperSettingSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Discover movies card by card and quickly add them to your lists'**
+  /// **'Show swipe mode to discover movies card by card'**
   String get swiperSettingSubtitle;
 
   /// No description provided for @swiperSagaBadge.

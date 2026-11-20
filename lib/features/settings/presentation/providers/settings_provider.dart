@@ -18,6 +18,7 @@ class SettingsProvider with ChangeNotifier {
   static const String advancedTrackingKey = 'advancedTracking';
   static const String previousEpisodesKey = 'previousEpisodes';
   static const String watchProvidersCountryKey = 'watchProvidersCountry';
+  static const String swipeModeEnabledKey = 'swipeModeEnabled';
 
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
@@ -38,7 +39,7 @@ class SettingsProvider with ChangeNotifier {
   bool _advancedTracking = false;
   PreviousEpisodesBehavior _previousEpisodes = PreviousEpisodesBehavior.ask;
   String? _watchProvidersCountry;
-  bool _swipeModeEnabled = false;
+  bool _swipeModeEnabled = true;
   String _swipeTargetList = 'watchlist';
 
   AppPalette _lightPalette = AppPalette.defaultLight;
@@ -100,7 +101,7 @@ class SettingsProvider with ChangeNotifier {
         orElse: () => PreviousEpisodesBehavior.ask,
       );
     }
-    _swipeModeEnabled = _prefs.getBool('swipeModeEnabled') ?? false;
+    _swipeModeEnabled = _prefs.getBool(swipeModeEnabledKey) ?? true;
     _swipeTargetList = _prefs.getString('swipeTargetList') ?? 'watchlist';
 
     // Palettes are stored by stable identifier. Up to v1.3.0 they were
@@ -167,7 +168,7 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> setSwipeModeEnabled(bool enabled) async {
     _swipeModeEnabled = enabled;
-    await _prefs.setBool('swipeModeEnabled', enabled);
+    await _prefs.setBool(swipeModeEnabledKey, enabled);
     notifyListeners();
   }
 

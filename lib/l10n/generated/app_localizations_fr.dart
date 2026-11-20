@@ -1567,11 +1567,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get swiperSettingTitle => 'Découverte par swipe';
+  String get swiperSettingTitle => 'Mode Swipe dans Découvrir';
 
   @override
   String get swiperSettingSubtitle =>
-      'Découvrir des films carte par carte et les ajouter rapidement à vos listes';
+      'Afficher le mode Swipe pour découvrir des films carte par carte';
 
   @override
   String swiperSagaBadge(int count) {

@@ -41,6 +41,7 @@ void main() {
         expect(provider.advancedTracking, false);
         expect(provider.previousEpisodes, PreviousEpisodesBehavior.ask);
         expect(provider.watchProvidersCountry, isNull);
+        expect(provider.isSwipeModeEnabled, true);
       },
     );
 
@@ -179,6 +180,15 @@ void main() {
     });
 
     test('setSwipeModeEnabled should update state and save to prefs', () async {
+      when(
+        () => mockPrefs.setBool('swipeModeEnabled', false),
+      ).thenAnswer((_) async => true);
+
+      await provider.setSwipeModeEnabled(false);
+
+      expect(provider.isSwipeModeEnabled, false);
+      verify(() => mockPrefs.setBool('swipeModeEnabled', false)).called(1);
+
       when(
         () => mockPrefs.setBool('swipeModeEnabled', true),
       ).thenAnswer((_) async => true);

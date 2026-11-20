@@ -1540,11 +1540,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get swiperSettingTitle => 'Swipe discovery';
+  String get swiperSettingTitle => 'Swipe mode in Discover';
 
   @override
   String get swiperSettingSubtitle =>
-      'Discover movies card by card and quickly add them to your lists';
+      'Show swipe mode to discover movies card by card';
 
   @override
   String swiperSagaBadge(int count) {
