@@ -424,6 +424,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonProcessing => 'Processing...';
 
   @override
+  String get dataExporting => 'Exporting data...';
+
+  @override
+  String get dataReadingBackup => 'Reading backup...';
+
+  @override
   String get dataSaveExportDialog => 'Save Export';
 
   @override

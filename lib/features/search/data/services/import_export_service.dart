@@ -54,7 +54,7 @@ class ImportExportService {
       lists: lists,
     );
 
-    return envelope.toZipBytes();
+    return envelope.toZipBytesAsync();
   }
 
   Future<void> importAllData(
@@ -62,7 +62,7 @@ class ImportExportService {
     ImportMode mode = ImportMode.append,
     Function(double, String)? onProgress,
   }) async {
-    final envelope = ExportEnvelope.fromZipBytes(zipBytes);
+    final envelope = await ExportEnvelope.fromZipBytesAsync(zipBytes);
 
     // Network enrichment first (no DB writes), then a single transaction for
     // every collection: a failure at any stage leaves the database unchanged.

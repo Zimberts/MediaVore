@@ -848,6 +848,18 @@ abstract class AppLocalizations {
   /// **'Processing...'**
   String get commonProcessing;
 
+  /// No description provided for @dataExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting data...'**
+  String get dataExporting;
+
+  /// No description provided for @dataReadingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading backup...'**
+  String get dataReadingBackup;
+
   /// No description provided for @dataSaveExportDialog.
   ///
   /// In en, this message translates to:

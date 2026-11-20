@@ -127,6 +127,45 @@ void main() {
     expect(find.byType(DataCacheSettingsPage), findsOneWidget);
   });
 
+  testWidgets('shows loading overlay when isImporting is true', (tester) async {
+    final provider = MockSearchProvider();
+    when(() => provider.isCacheLoading).thenReturn(false);
+    when(() => provider.isDbSizeLoading).thenReturn(false);
+    when(() => provider.isImporting).thenReturn(true);
+    when(() => provider.cacheSize).thenReturn(0);
+    when(() => provider.seenDbSize).thenReturn(0);
+    when(() => provider.importProgress).thenReturn(0.5);
+    when(() => provider.importStatus).thenReturn('Importing data...');
+
+    final mockAchievementProvider = MockAchievementProvider();
+    final settingsProvider = SettingsProvider(
+      MockSharedPreferences(),
+      FakeTmdbCredentialStore(),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: DefaultLightPalette().toThemeData(),
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SearchProvider>.value(value: provider),
+            ChangeNotifierProvider<AchievementProvider>.value(
+              value: mockAchievementProvider,
+            ),
+            ChangeNotifierProvider<SettingsProvider>.value(
+              value: settingsProvider,
+            ),
+          ],
+          child: const DataCacheSettingsPage(),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Importing data...'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
   testWidgets('Import Preview dialog -> Merge calls provider.importAllData', (
     tester,
   ) async {

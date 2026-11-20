@@ -427,6 +427,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonProcessing => 'Traitement...';
 
   @override
+  String get dataExporting => 'Exportation des données…';
+
+  @override
+  String get dataReadingBackup => 'Lecture de la sauvegarde…';
+
+  @override
   String get dataSaveExportDialog => 'Enregistrer l\'export';
 
   @override

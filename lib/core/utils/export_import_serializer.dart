@@ -55,6 +55,7 @@ class ExportEnvelope {
        lists = lists ?? {},
        warnings = warnings ?? [];
 
+  /// Serializes this envelope into a ZIP archive.
   List<int> toZipBytes() {
     final archive = Archive();
 
@@ -186,6 +187,15 @@ class ExportEnvelope {
     return ZipEncoder().encode(archive);
   }
 
+  /// Asynchronously serializes this envelope to a ZIP archive on a background isolate.
+  Future<List<int>> toZipBytesAsync() {
+    return compute(_encodeArchive, this);
+  }
+
+  static List<int> _encodeArchive(ExportEnvelope envelope) {
+    return envelope.toZipBytes();
+  }
+
   /// Adds [rows] as a UTF-8 CSV entry. The declared size must be the encoded
   /// byte count, not the string length: non-ASCII titles (é, ½, ⁴…) take
   /// several bytes, and strict extractors such as macOS Archive Utility reject
@@ -197,6 +207,16 @@ class ExportEnvelope {
   ) {
     final bytes = utf8.encode(csv.encode(rows));
     archive.addFile(ArchiveFile(name, bytes.length, bytes));
+  }
+
+  /// Asynchronously parses an archive produced by [toZipBytes] on a background isolate.
+  ///
+  /// Throws [ParsingException] when the archive cannot be read at all
+  /// (corrupted ZIP, non-UTF-8 content, oversized entries, unsupported
+  /// `version`). Individual invalid rows are skipped and reported in
+  /// [warnings] instead.
+  static Future<ExportEnvelope> fromZipBytesAsync(List<int> bytes) {
+    return compute(fromZipBytes, bytes);
   }
 
   /// Parses an archive produced by [toZipBytes].

@@ -18,8 +18,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-class DataCacheSettingsPage extends StatelessWidget {
+class DataCacheSettingsPage extends StatefulWidget {
   const DataCacheSettingsPage({super.key});
+
+  @override
+  State<DataCacheSettingsPage> createState() => _DataCacheSettingsPageState();
+}
+
+class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
+  bool _isExporting = false;
+  bool _isReadingBackup = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +37,12 @@ class DataCacheSettingsPage extends StatelessWidget {
     final isCacheLoading = provider.isCacheLoading;
     final isDbSizeLoading = provider.isDbSizeLoading;
     final isImporting = provider.isImporting;
+    final isBusy =
+        isCacheLoading ||
+        isDbSizeLoading ||
+        isImporting ||
+        _isExporting ||
+        _isReadingBackup;
     final colors = context.appColors;
 
     return Scaffold(
@@ -126,61 +140,69 @@ class DataCacheSettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.cloud_upload),
                 title: Text(context.l10n.dataExportAll),
                 subtitle: Text(context.l10n.dataExportAllSubtitle),
+                enabled: !isBusy,
                 onTap: () async {
-                  final zipBytes = await provider.exportAllData();
-                  if (!context.mounted) return;
-                  final tempDir = await getTemporaryDirectory();
-                  final fileName = exportFileName(DateTime.now());
-                  final tempFile = File('${tempDir.path}/$fileName');
-                  await tempFile.writeAsBytes(zipBytes);
-                  if (context.mounted) {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (saveSheetContext) => SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.save_alt),
-                              title: Text(context.l10n.dataSaveToDevice),
-                              onTap: () async {
-                                Navigator.pop(saveSheetContext);
-                                await _saveFileToDevice(
-                                  context,
-                                  zipBytes,
-                                  fileName,
-                                );
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.share),
-                              title: Text(context.l10n.dataShareViaSystem),
-                              onTap: () async {
-                                final shareText =
-                                    context.l10n.dataExportShareText;
-                                Navigator.pop(saveSheetContext);
-                                final shared = await SharePlus.instance.share(
-                                  ShareParams(
-                                    files: [
-                                      XFile(
-                                        tempFile.path,
-                                        mimeType: 'application/octet-stream',
-                                      ),
-                                    ],
-                                    text: shareText,
-                                  ),
-                                );
-                                // `unavailable`: the platform cannot tell.
-                                if (shared.status !=
-                                    ShareResultStatus.dismissed) {
-                                  await achievementProvider.recordExport();
-                                }
-                              },
-                            ),
-                          ],
+                  setState(() => _isExporting = true);
+                  try {
+                    final zipBytes = await provider.exportAllData();
+                    if (!context.mounted) return;
+                    final tempDir = await getTemporaryDirectory();
+                    final fileName = exportFileName(DateTime.now());
+                    final tempFile = File('${tempDir.path}/$fileName');
+                    await tempFile.writeAsBytes(zipBytes);
+                    if (context.mounted) {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (saveSheetContext) => SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.save_alt),
+                                title: Text(context.l10n.dataSaveToDevice),
+                                onTap: () async {
+                                  Navigator.pop(saveSheetContext);
+                                  await _saveFileToDevice(
+                                    context,
+                                    zipBytes,
+                                    fileName,
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.share),
+                                title: Text(context.l10n.dataShareViaSystem),
+                                onTap: () async {
+                                  final shareText =
+                                      context.l10n.dataExportShareText;
+                                  Navigator.pop(saveSheetContext);
+                                  final shared = await SharePlus.instance.share(
+                                    ShareParams(
+                                      files: [
+                                        XFile(
+                                          tempFile.path,
+                                          mimeType: 'application/octet-stream',
+                                        ),
+                                      ],
+                                      text: shareText,
+                                    ),
+                                  );
+                                  // `unavailable`: the platform cannot tell.
+                                  if (shared.status !=
+                                      ShareResultStatus.dismissed) {
+                                    await achievementProvider.recordExport();
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _isExporting = false);
+                    }
                   }
                 },
               ),
@@ -188,13 +210,14 @@ class DataCacheSettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.file_download),
                 title: Text(context.l10n.dataImportAll),
                 subtitle: Text(context.l10n.dataImportAllSubtitle),
+                enabled: !isBusy,
                 onTap: () => _importAllDataWithPreview(context, provider),
               ),
               ListTile(
                 leading: const Icon(Icons.playlist_add),
                 title: Text(context.l10n.dataPopulateQuickAdd),
                 subtitle: Text(context.l10n.dataPopulateQuickAddSubtitle),
-                enabled: !isImporting,
+                enabled: !isBusy,
                 onTap: () => _confirmAction(
                   context,
                   title: context.l10n.dataPopulateQuickAddTitle,
@@ -223,6 +246,7 @@ class DataCacheSettingsPage extends StatelessWidget {
                   style: TextStyle(color: colors.error),
                 ),
                 subtitle: Text(context.l10n.dataClearAchievementsSubtitle),
+                enabled: !isBusy,
                 onTap: () => _confirmAction(
                   context,
                   title: context.l10n.dataClearAchievementsTitle,
@@ -249,35 +273,43 @@ class DataCacheSettingsPage extends StatelessWidget {
               ),
             ],
           ),
-          if (isCacheLoading || isDbSizeLoading || isImporting)
-            Container(
-              color: colors.placeholder.withValues(alpha: 0.1),
-              child: Center(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(
-                          value: isImporting ? provider.importProgress : null,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          isImporting
-                              ? provider.importStatus
-                              : context.l10n.commonProcessing,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
-                        if (isImporting)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              '${(provider.importProgress * 100).toInt()}%',
+          if (isBusy)
+            Positioned.fill(
+              child: AbsorbPointer(
+                child: Container(
+                  color: colors.placeholder.withValues(alpha: 0.1),
+                  child: Center(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              value: isImporting ? provider.importProgress : null,
                             ),
-                          ),
-                      ],
+                            const SizedBox(height: 16),
+                            Text(
+                              isImporting
+                                  ? provider.importStatus
+                                  : _isExporting
+                                      ? context.l10n.dataExporting
+                                      : _isReadingBackup
+                                          ? context.l10n.dataReadingBackup
+                                          : context.l10n.commonProcessing,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (isImporting)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  '${(provider.importProgress * 100).toInt()}%',
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -350,24 +382,47 @@ class DataCacheSettingsPage extends StatelessWidget {
       final bytes = await picked.readAsBytes();
       if (!context.mounted) return;
 
+      final ExportEnvelope envelope;
       try {
-        // Use serializer to normalize and validate
-        final ExportEnvelope envelope = ExportEnvelope.fromZipBytes(bytes);
+        setState(() => _isReadingBackup = true);
+        // Use serializer to normalize and validate on background isolate
+        envelope = await ExportEnvelope.fromZipBytesAsync(bytes);
+      } on ParsingException catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.dataImportFailedReason(e.message)),
+            ),
+          );
+        }
+        return;
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.dataImportFailed)),
+          );
+        }
+        return;
+      } finally {
+        if (mounted) {
+          setState(() => _isReadingBackup = false);
+        }
+      }
 
-        if (!context.mounted) return;
+      if (!context.mounted) return;
 
-        final seenCount = envelope.seen.length;
-        final likesCount = envelope.likes.length;
-        final notCount = envelope.notifications.length;
-        final listsCount = envelope.lists.length;
-        final warnings = envelope.warnings;
-        final warningsText = warnings.isEmpty
-            ? ''
-            : '\n${context.l10n.dataImportSkippedRows(warnings.length)}\n'
-                  '${warnings.take(5).join('\n')}'
-                  '${warnings.length > 5 ? '\n…' : ''}\n';
+      final seenCount = envelope.seen.length;
+      final likesCount = envelope.likes.length;
+      final notCount = envelope.notifications.length;
+      final listsCount = envelope.lists.length;
+      final warnings = envelope.warnings;
+      final warningsText = warnings.isEmpty
+          ? ''
+          : '\n${context.l10n.dataImportSkippedRows(warnings.length)}\n'
+                '${warnings.take(5).join('\n')}'
+                '${warnings.length > 5 ? '\n…' : ''}\n';
 
-        showDialog(
+      showDialog(
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: Text(context.l10n.dataImportPreviewTitle),
@@ -437,21 +492,6 @@ class DataCacheSettingsPage extends StatelessWidget {
             ],
           ),
         );
-      } on ParsingException catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.dataImportFailedReason(e.message)),
-            ),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.dataImportFailed)),
-          );
-        }
-      }
     }
   }
 
