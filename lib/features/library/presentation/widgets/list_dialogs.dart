@@ -3,6 +3,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/widgets/app_dialog.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
+import 'package:mediavore/core/widgets/prompt_field.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
@@ -57,7 +58,7 @@ Future<String?> _promptText({
     context: context,
     title: title,
     message: message,
-    content: _PromptField(
+    content: PromptField(
       initialText: initialText,
       label: label,
       hint: hint,
@@ -69,48 +70,6 @@ Future<String?> _promptText({
     ],
   );
   return confirmed == true ? text.trim() : null;
-}
-
-class _PromptField extends StatefulWidget {
-  const _PromptField({
-    required this.initialText,
-    required this.onChanged,
-    this.label,
-    this.hint,
-  });
-
-  final String initialText;
-  final ValueChanged<String> onChanged;
-  final String? label;
-  final String? hint;
-
-  @override
-  State<_PromptField> createState() => _PromptFieldState();
-}
-
-class _PromptFieldState extends State<_PromptField> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.initialText,
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      autofocus: true,
-      onChanged: widget.onChanged,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        hintText: widget.hint,
-      ),
-    );
-  }
 }
 
 /// Asks for a name and creates the list. Completes with the name of the new
