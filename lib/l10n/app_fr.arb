@@ -125,6 +125,8 @@
   "dataNotificationDebug": "Débogage du centre de notifications",
   "dataNotificationDebugSubtitle": "Afficher les éléments masqués du centre de notifications et la raison de leur omission.",
   "commonProcessing": "Traitement...",
+  "dataExporting": "Exportation des données…",
+  "dataReadingBackup": "Lecture de la sauvegarde…",
   "dataSaveExportDialog": "Enregistrer l'export",
   "dataFileSaved": "Fichier enregistré",
   "dataSaveFailed": "Échec de l'enregistrement : {error}. Essayez plutôt « Partager ».",

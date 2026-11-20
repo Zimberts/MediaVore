@@ -146,6 +146,8 @@
   "dataNotificationDebug": "Notification Center Debug",
   "dataNotificationDebugSubtitle": "Show hidden Notification Center items and why they were omitted.",
   "commonProcessing": "Processing...",
+  "dataExporting": "Exporting data...",
+  "dataReadingBackup": "Reading backup...",
   "dataSaveExportDialog": "Save Export",
   "dataFileSaved": "File saved successfully",
   "dataSaveFailed": "Save failed: {error}. Try using \"Share\" instead.",
