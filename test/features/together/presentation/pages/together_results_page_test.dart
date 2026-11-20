@@ -261,5 +261,28 @@ void main() {
 
       expect(sessionProvider.isVoting, isTrue);
     });
+
+    testWidgets('handles fetch failure with Unknown fallback during parallel details fetch', (
+      tester,
+    ) async {
+      when(
+        () => repo.getMediaDetails(999, type: any(named: 'type')),
+      ).thenThrow(Exception('TMDB network error'));
+
+      sessionProvider.addParticipant(
+        const TogetherParticipant(
+          name: 'Alice',
+          entries: [
+            SharedMediaEntry(101, MediaType.movie),
+            SharedMediaEntry(999, MediaType.movie),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Movie 101'), findsWidgets);
+    });
   });
 }

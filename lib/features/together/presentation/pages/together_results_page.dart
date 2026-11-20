@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/bounded_concurrency.dart';
 import 'package:mediavore/core/utils/list_intersection_calculator.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
@@ -49,11 +50,17 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
 
     if (allEntries.isEmpty) return;
 
-    setState(() => _isLoading = true);
-    for (final entry in allEntries) {
+    final entriesToFetch = allEntries.where((entry) {
       final key = '${entry.id}:${entry.type.name}';
-      if (_mediaCache.containsKey(key)) continue;
+      return !_mediaCache.containsKey(key);
+    }).toList();
 
+    if (entriesToFetch.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    await mapWithConcurrency(entriesToFetch, 4, (entry) async {
+      final key = '${entry.id}:${entry.type.name}';
       try {
         final details = await searchProvider.getMediaDetails(
           entry.id,
@@ -69,7 +76,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
           mediaType: entry.type,
         );
       }
-    }
+    });
 
     if (mounted) {
       setState(() => _isLoading = false);
