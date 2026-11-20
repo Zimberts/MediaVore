@@ -250,4 +250,29 @@ void main() {
     expect(find.byType(EmptyState), findsOneWidget);
     expect(find.text('Plus de films'), findsOneWidget);
   });
+
+  testWidgets('SwiperPage does not dispose injected customSwiperProvider when unmounted', (
+    tester,
+  ) async {
+    when(
+      () => repo.discoverMedia(
+        type: any(named: 'type'),
+        page: any(named: 'page'),
+      ),
+    ).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(buildTestWidget());
+    await tester.pumpAndSettle();
+
+    // Unmount SwiperPage
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+    await tester.pumpAndSettle();
+
+    // Injected swiperProvider must not be disposed
+    void dummyListener() {}
+    expect(() {
+      swiperProvider.addListener(dummyListener);
+      swiperProvider.removeListener(dummyListener);
+    }, returnsNormally);
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/core/widgets/prompt_field.dart';
 import 'package:mediavore/features/search/presentation/pages/list_intersection_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -101,7 +102,7 @@ void _showImportDialog(
   ListSharePayload payload,
   VoidCallback? onImportComplete,
 ) {
-  final controller = TextEditingController(text: payload.name);
+  var listName = payload.name;
   showDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
@@ -112,12 +113,12 @@ void _showImportDialog(
         children: [
           Text(dialogContext.l10n.importListMessage(payload.entries.length)),
           const SizedBox(height: 16),
-          TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: dialogContext.l10n.importListNameLabel,
-              hintText: dialogContext.l10n.importListNameHint,
-            ),
+          PromptField(
+            initialText: payload.name,
+            autofocus: false,
+            label: dialogContext.l10n.importListNameLabel,
+            hint: dialogContext.l10n.importListNameHint,
+            onChanged: (value) => listName = value,
           ),
         ],
       ),
@@ -132,7 +133,7 @@ void _showImportDialog(
             final entries = payload.entries
                 .map((e) => '${e.id}:${e.type.name}')
                 .toList();
-            await provider.importList(controller.text, entries);
+            await provider.importList(listName, entries);
             if (dialogContext.mounted) {
               Navigator.pop(dialogContext);
             }

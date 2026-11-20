@@ -31,12 +31,14 @@ class TogetherVotePage extends StatefulWidget {
 
 class _TogetherVotePageState extends State<TogetherVotePage> {
   late final TogetherVoteEngine _engine;
+  late final bool _ownsEngine;
   double _dragDx = 0.0;
   bool _hasIncrementedChoice = false;
 
   @override
   void initState() {
     super.initState();
+    _ownsEngine = widget.engine == null;
     _engine = widget.engine ??
         TogetherVoteEngine(
           candidates: widget.candidates,
@@ -48,6 +50,9 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
   @override
   void dispose() {
     _engine.removeListener(_onEngineChanged);
+    if (_ownsEngine) {
+      _engine.dispose();
+    }
     super.dispose();
   }
 

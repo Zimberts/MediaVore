@@ -5,6 +5,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/list_intersection_calculator.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
+import 'package:mediavore/core/widgets/prompt_field.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -419,18 +420,16 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
     final defaultName = context.l10n.listsCompareDefaultIntersectionName(
       otherListName,
     );
-    final controller = TextEditingController(text: defaultName);
+    var listName = defaultName;
 
     final confirmedName = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(dialogContext.l10n.listsCreateNew),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: dialogContext.l10n.listsNameHint,
-          ),
+        content: PromptField(
+          initialText: defaultName,
+          label: dialogContext.l10n.listsNameHint,
+          onChanged: (value) => listName = value,
         ),
         actions: [
           TextButton(
@@ -439,7 +438,7 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
           ),
           FilledButton(
             onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
+                Navigator.pop(dialogContext, listName.trim()),
             child: Text(dialogContext.l10n.commonSave),
           ),
         ],

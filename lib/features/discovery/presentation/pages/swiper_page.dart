@@ -21,21 +21,34 @@ class SwiperPage extends StatefulWidget {
 
 class _SwiperPageState extends State<SwiperPage> {
   late final SwiperProvider _swiper;
+  late final bool _ownsSwiper;
 
   @override
   void initState() {
     super.initState();
     if (widget.customSwiperProvider != null) {
       _swiper = widget.customSwiperProvider!;
-    } else if (locator.isRegistered<MediaRepository>()) {
-      _swiper = SwiperProvider(locator<MediaRepository>());
+      _ownsSwiper = false;
     } else {
-      _swiper = SwiperProvider(context.read<SearchProvider>().repository);
+      _ownsSwiper = true;
+      if (locator.isRegistered<MediaRepository>()) {
+        _swiper = SwiperProvider(locator<MediaRepository>());
+      } else {
+        _swiper = SwiperProvider(context.read<SearchProvider>().repository);
+      }
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initSwiper();
     });
+  }
+
+  @override
+  void dispose() {
+    if (_ownsSwiper) {
+      _swiper.dispose();
+    }
+    super.dispose();
   }
 
   void _initSwiper() {

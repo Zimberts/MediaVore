@@ -280,5 +280,37 @@ void main() {
 
       expect(find.text('Égalité'), findsOneWidget);
     });
+
+    testWidgets('TogetherVotePage does not dispose injected engine when unmounted', (
+      tester,
+    ) async {
+      final candidates = [
+        TogetherVoteCandidate(item: createItem(1, 'Movie A', rating: 8.0)),
+      ];
+      final engine = TogetherVoteEngine(
+        candidates: candidates,
+        participants: ['Moi'],
+      );
+
+      await tester.pumpWidget(
+        buildSubject(
+          candidates: candidates,
+          participants: ['Moi'],
+          engine: engine,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Unmount page
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+      await tester.pumpAndSettle();
+
+      // Injected engine must not be disposed
+      void dummyListener() {}
+      expect(() {
+        engine.addListener(dummyListener);
+        engine.removeListener(dummyListener);
+      }, returnsNormally);
+    });
   });
 }
