@@ -12,7 +12,6 @@ TMDB search/discovery and the central `MediaRepository`. Full `data` + `domain` 
   `InProgressService`, `NotificationRefreshService`, `SeenService`, `CacheWarmupService`,
   `ImportExportService`). Lists and likes stay in the facade.
 - `lib/features/search/data/datasources/media_remote_data_source.dart`
-- `lib/features/search/data/models/movie.dart`
 - `lib/features/search/presentation/providers/search_provider.dart`
 
 ## Gotchas
