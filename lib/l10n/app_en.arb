@@ -764,7 +764,8 @@
   "seenRemoveAllHistory": "Remove All History",
   "seenUseCalendar": "Use Calendar",
   "seenTypeDate": "Type Date",
-  "seenDateLabel": "Date (DD/MM/YYYY)",
+  "seenDateLabel": "Date (MM/DD/YYYY)",
+  "seenDateHint": "12/31/2023",
   "seenTimeLabel": "Time: {time}",
   "@seenTimeLabel": {
     "placeholders": {
@@ -774,7 +775,7 @@
     }
   },
   "seenCancelCaps": "CANCEL",
-  "seenInvalidDate": "Please enter a valid date (DD/MM/YYYY)",
+  "seenInvalidDate": "Please enter a valid date (MM/DD/YYYY)",
   "seenLogViewing": "LOG VIEWING",
   "likeUnlike": "Unlike",
   "likeLike": "Like",

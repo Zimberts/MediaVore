@@ -97,4 +97,40 @@ void main() {
       expect(Formatters.formatEpisodeDuration(75), '1 h 15 min');
     });
   });
+
+  group('Formatters input date localization', () {
+    test('inputDatePattern returns localized patterns', () {
+      expect(Formatters.inputDatePattern('en'), 'MM/dd/yyyy');
+      expect(Formatters.inputDatePattern('en_US'), 'MM/dd/yyyy');
+      expect(Formatters.inputDatePattern('fr'), 'dd/MM/yyyy');
+      expect(Formatters.inputDatePattern('fr_FR'), 'dd/MM/yyyy');
+      expect(Formatters.inputDatePattern(null), 'dd/MM/yyyy');
+    });
+
+    test('formatInputDate formats date by locale', () {
+      final date = DateTime(2023, 12, 31);
+      expect(Formatters.formatInputDate(date, 'en'), '12/31/2023');
+      expect(Formatters.formatInputDate(date, 'fr'), '31/12/2023');
+    });
+
+    test('parseInputDate strictly parses based on locale and supports fallbacks', () {
+      final parsedEn = Formatters.parseInputDate('12/31/2023', 'en');
+      expect(parsedEn, equals(DateTime(2023, 12, 31)));
+
+      final parsedFr = Formatters.parseInputDate('31/12/2023', 'fr');
+      expect(parsedFr, equals(DateTime(2023, 12, 31)));
+
+      // Fallback cross-parsing
+      final fallbackFrFromEn = Formatters.parseInputDate('31/12/2023', 'en');
+      expect(fallbackFrFromEn, equals(DateTime(2023, 12, 31)));
+
+      // Fallback ISO
+      final fallbackIso = Formatters.parseInputDate('2023-12-31', 'en');
+      expect(fallbackIso, equals(DateTime(2023, 12, 31)));
+
+      // Invalid returns null
+      expect(Formatters.parseInputDate('invalid', 'en'), isNull);
+      expect(Formatters.parseInputDate('', 'en'), isNull);
+    });
+  });
 }

@@ -2333,8 +2333,14 @@ abstract class AppLocalizations {
   /// No description provided for @seenDateLabel.
   ///
   /// In en, this message translates to:
-  /// **'Date (DD/MM/YYYY)'**
+  /// **'Date (MM/DD/YYYY)'**
   String get seenDateLabel;
+
+  /// No description provided for @seenDateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'12/31/2023'**
+  String get seenDateHint;
 
   /// No description provided for @seenTimeLabel.
   ///
@@ -2351,7 +2357,7 @@ abstract class AppLocalizations {
   /// No description provided for @seenInvalidDate.
   ///
   /// In en, this message translates to:
-  /// **'Please enter a valid date (DD/MM/YYYY)'**
+  /// **'Please enter a valid date (MM/DD/YYYY)'**
   String get seenInvalidDate;
 
   /// No description provided for @seenLogViewing.

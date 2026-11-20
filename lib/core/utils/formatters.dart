@@ -18,6 +18,44 @@ class Formatters {
     }
   }
 
+  /// Returns the date input pattern for manual date entry based on [locale].
+  /// English locales use 'MM/dd/yyyy', while French and other locales default to 'dd/MM/yyyy'.
+  static String inputDatePattern(String? locale) {
+    if (locale != null && locale.toLowerCase().startsWith('en')) {
+      return 'MM/dd/yyyy';
+    }
+    return 'dd/MM/yyyy';
+  }
+
+  /// Formats [date] for manual text field entry according to [locale].
+  static String formatInputDate(DateTime date, [String? locale]) {
+    final pattern = inputDatePattern(locale);
+    return DateFormat(pattern).format(date);
+  }
+
+  /// Parses [text] entered by user according to [locale], with fallback to alternate patterns.
+  static DateTime? parseInputDate(String text, [String? locale]) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    final primaryPattern = inputDatePattern(locale);
+    try {
+      return DateFormat(primaryPattern).parseStrict(trimmed);
+    } catch (_) {}
+
+    // Fallbacks
+    final alternatePattern =
+        primaryPattern == 'MM/dd/yyyy' ? 'dd/MM/yyyy' : 'MM/dd/yyyy';
+    try {
+      return DateFormat(alternatePattern).parseStrict(trimmed);
+    } catch (_) {}
+
+    try {
+      return DateFormat('yyyy-MM-dd').parseStrict(trimmed);
+    } catch (_) {}
+
+    return null;
+  }
+
   static String formatRuntime(int? minutes) {
     if (minutes == null || minutes == 0) return '';
     final hours = minutes ~/ 60;

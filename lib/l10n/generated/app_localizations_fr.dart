@@ -1371,6 +1371,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get seenDateLabel => 'Date (JJ/MM/AAAA)';
 
   @override
+  String get seenDateHint => '31/12/2023';
+
+  @override
   String seenTimeLabel(String time) {
     return 'Heure : $time';
   }

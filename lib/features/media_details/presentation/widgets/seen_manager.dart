@@ -700,6 +700,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
   late TimeOfDay _selectedTime;
   bool _isTextEntry = false;
   late TextEditingController _dateController;
+  bool _dateControllerInitialized = false;
   bool _markPrevious = false;
 
   @override
@@ -707,10 +708,18 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
     super.initState();
     _selectedDate = widget.initialDate;
     _selectedTime = TimeOfDay.fromDateTime(widget.initialDate);
-    _dateController = TextEditingController(
-      text: DateFormat('dd/MM/yyyy').format(_selectedDate),
-    );
+    _dateController = TextEditingController();
     _markPrevious = widget.previousEpisodes.isNotEmpty;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_dateControllerInitialized) {
+      _dateControllerInitialized = true;
+      final locale = Localizations.localeOf(context).toString();
+      _dateController.text = Formatters.formatInputDate(_selectedDate, locale);
+    }
   }
 
   @override
@@ -813,9 +822,12 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     onDateChanged: (date) {
                       setState(() {
                         _selectedDate = date;
-                        _dateController.text = DateFormat(
-                          'dd/MM/yyyy',
-                        ).format(date);
+                        final locale =
+                            Localizations.localeOf(context).toString();
+                        _dateController.text = Formatters.formatInputDate(
+                          date,
+                          locale,
+                        );
                       });
                     },
                   ),
@@ -830,18 +842,17 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     prefixIcon: const Icon(Icons.event),
-                    hintText: '31/12/2023',
+                    hintText: l10n.seenDateHint,
                   ),
                   keyboardType: TextInputType.number,
                   inputFormatters: [DateTextFormatter()],
                   onChanged: (val) {
-                    try {
-                      final parsed = DateFormat('dd/MM/yyyy').parseStrict(val);
+                    final locale = Localizations.localeOf(context).toString();
+                    final parsed = Formatters.parseInputDate(val, locale);
+                    if (parsed != null) {
                       setState(() {
                         _selectedDate = parsed;
                       });
-                    } catch (_) {
-                      // Intentionally ignored: partial/invalid date while typing.
                     }
                   },
                 ),
@@ -925,9 +936,16 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     onPressed: () {
                       try {
                         if (_isTextEntry) {
-                          _selectedDate = DateFormat(
-                            'dd/MM/yyyy',
-                          ).parseStrict(_dateController.text);
+                          final locale =
+                              Localizations.localeOf(context).toString();
+                          final parsed = Formatters.parseInputDate(
+                            _dateController.text,
+                            locale,
+                          );
+                          if (parsed == null) {
+                            throw const FormatException('Invalid date');
+                          }
+                          _selectedDate = parsed;
                         }
 
                         final result = DateTime(
