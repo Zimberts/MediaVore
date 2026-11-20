@@ -56,6 +56,9 @@ void main() {
   testWidgets(
     'SettingsPage displays watch providers country dropdown and updates setting',
     (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       when(
         () => mockPrefs.setString(any(), any()),
       ).thenAnswer((_) async => true);

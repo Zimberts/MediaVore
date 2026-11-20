@@ -274,9 +274,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only show movies and episodes that have already aired.';
 
   @override
-  String get settingsSectionStorage => 'Storage & History';
-
-  @override
   String get settingsStorage => 'Storage & Data';
 
   @override
@@ -3098,12 +3095,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String togetherWatchingToast(String title) {
     return 'Enjoy watching $title!';
   }
-
-  @override
-  String get settingsSectionGame => 'Game & Milestones';
-
-  @override
-  String get settingsAchievementsSubtitle => 'View your badges and challenges';
 
   @override
   String swiperDiscardedCount(int count) {

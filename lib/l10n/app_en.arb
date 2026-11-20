@@ -101,7 +101,6 @@
   "settingsSectionListsDisplay": "Lists Display",
   "settingsHideNonReleased": "Hide Non-Released Media",
   "settingsHideNonReleasedSubtitle": "Only show movies and episodes that have already aired.",
-  "settingsSectionStorage": "Storage & History",
   "settingsStorage": "Storage & Data",
   "settingsStorageSubtitle": "Manage cache, exports, and viewing history database.",
   "settingsSectionApi": "API Configuration",
@@ -2207,8 +2206,6 @@
       }
     }
   },
-  "settingsSectionGame": "Game & Milestones",
-  "settingsAchievementsSubtitle": "View your badges and challenges",
   "swiperDiscardedCount": "{count, plural, =0{No discarded titles} =1{1 discarded title} other{{count} discarded titles}}",
   "@swiperDiscardedCount": {
     "placeholders": {

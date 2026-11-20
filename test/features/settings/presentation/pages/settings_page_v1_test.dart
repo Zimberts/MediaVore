@@ -7,7 +7,6 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement_family.dart';
-import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -103,7 +102,7 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('SettingsPage links to Achievements page in Game section', (
+  testWidgets('SettingsPage does not contain duplicate achievements tile', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(800, 1600));
@@ -112,15 +111,7 @@ void main() {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
 
-    final achievementsFinder = find.byKey(
-      const Key('settings_achievements_tile'),
-    );
-    expect(achievementsFinder, findsOneWidget);
-
-    await tester.tap(achievementsFinder);
-    await tester.pumpAndSettle();
-
-    expect(find.byType(AchievementsPage), findsOneWidget);
+    expect(find.byKey(const Key('settings_achievements_tile')), findsNothing);
   });
 
   testWidgets('SettingsPage displays swipe reset tile and confirms reset', (
