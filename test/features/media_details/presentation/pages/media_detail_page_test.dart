@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
+import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
-import 'package:mediavore/core/domain/entities/actor_details.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
@@ -16,6 +16,7 @@ import 'package:mediavore/features/search/presentation/providers/search_provider
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -92,9 +93,7 @@ void main() {
     ).thenAnswer((_) async => []);
   });
 
-  tearDown(() {
-    locator.reset();
-  });
+  tearDown(locator.reset);
 
   const tItem = MediaItem(
     id: 1,
@@ -102,7 +101,6 @@ void main() {
     posterPath: '/poster.jpg',
     releaseDate: '2010-07-16',
     overview: 'A mind-bending thriller',
-    mediaType: MediaType.movie,
   );
 
   final tCast = [
@@ -133,7 +131,7 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: const DefaultLightPalette().toThemeData(),
         home: MediaDetailPage(item: item ?? tItem),
       ),
     );
@@ -174,7 +172,7 @@ void main() {
     testWidgets(
       'counts unique episodes seen even if an episode is logged multiple times',
       (WidgetTester tester) async {
-        final tTvItem = MediaItem(
+        const tTvItem = MediaItem(
           id: 2,
           title: 'Breaking Bad',
           mediaType: MediaType.tv,
@@ -195,7 +193,7 @@ void main() {
             tmdbId: 2,
             type: MediaType.tv,
             title: 'Breaking Bad',
-            seenDate: DateTime(2023, 1, 1),
+            seenDate: DateTime(2023),
             seasonNumber: 1,
             episodeNumber: 1,
           ),
@@ -234,14 +232,14 @@ void main() {
     testWidgets('counts unique episodes for per-season progress', (
       WidgetTester tester,
     ) async {
-      final tTvItem = MediaItem(
+      const tTvItem = MediaItem(
         id: 2,
         title: 'Breaking Bad',
         mediaType: MediaType.tv,
         overview: '...',
         releaseDate: '2008-01-20',
         numberOfEpisodes: 8,
-        seasons: const [
+        seasons: [
           TVSeason(id: 1, seasonNumber: 1, episodeCount: 7, name: 'Season 1'),
         ],
       );
@@ -259,7 +257,7 @@ void main() {
           tmdbId: 2,
           type: MediaType.tv,
           title: 'Breaking Bad',
-          seenDate: DateTime(2023, 1, 1),
+          seenDate: DateTime(2023),
           seasonNumber: 1,
           episodeNumber: 1,
         ),
@@ -294,7 +292,7 @@ void main() {
     });
     group('seen counters stay in sync with the seen history (#209)', () {
       const tvId = 3;
-      final tTvItem = MediaItem(
+      const tTvItem = MediaItem(
         id: tvId,
         title: 'Dark',
         mediaType: MediaType.tv,
@@ -302,7 +300,7 @@ void main() {
         releaseDate: '2017-12-01',
         numberOfEpisodes: 3,
         status: 'Ended',
-        seasons: const [
+        seasons: [
           TVSeason(id: 1, seasonNumber: 1, episodeCount: 3, name: 'Season 1'),
         ],
       );
@@ -478,7 +476,6 @@ void main() {
         title: 'The Fellowship of the Ring',
         overview: '',
         releaseDate: '2001-12-19',
-        mediaType: MediaType.movie,
         collectionId: 119,
         collectionName: 'The Lord of the Rings Collection',
       );
@@ -487,7 +484,6 @@ void main() {
         title: 'The Two Towers',
         overview: '',
         releaseDate: '2002-12-18',
-        mediaType: MediaType.movie,
         collectionId: 119,
         collectionName: 'The Lord of the Rings Collection',
       );

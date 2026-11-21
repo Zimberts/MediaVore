@@ -47,10 +47,7 @@ void main() {
         releasePeriodOf(DateTime(2026, 11, 13, 23, 59, 59), now),
         ReleasePeriod.released,
       );
-      expect(
-        releasePeriodOf(DateTime(2025, 1, 1), now),
-        ReleasePeriod.released,
-      );
+      expect(releasePeriodOf(DateTime(2025), now), ReleasePeriod.released);
     });
 
     test('should end "this week" after 7 days, today included', () {
@@ -70,7 +67,7 @@ void main() {
         ReleasePeriod.thisMonth,
       );
       expect(releasePeriodOf(DateTime(2026, 12, 15), now), ReleasePeriod.later);
-      expect(releasePeriodOf(DateTime(2027, 6, 1), now), ReleasePeriod.later);
+      expect(releasePeriodOf(DateTime(2027, 6), now), ReleasePeriod.later);
     });
 
     test('should cross the end of the year', () {
@@ -118,7 +115,7 @@ void main() {
 
   group('groupReleases', () {
     final items = [
-      _item(1, DateTime(2027, 3, 1)),
+      _item(1, DateTime(2027, 3)),
       _item(
         2,
         DateTime(2026, 11, 14),
@@ -180,7 +177,7 @@ void main() {
     test('should split on the first day of a month, not on 30 days', () {
       final months = groupReleases([
         _item(1, DateTime(2026, 11, 30, 23, 59)),
-        _item(2, DateTime(2026, 12, 1)),
+        _item(2, DateTime(2026, 12)),
       ], now: now).upcomingByMonth;
 
       expect(months, hasLength(2));

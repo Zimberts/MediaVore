@@ -197,7 +197,7 @@ void main() {
           tmdbId: 1,
           type: MediaType.tv,
           title: 'Breaking Bad',
-          seenDate: DateTime(2023, 1, 1),
+          seenDate: DateTime(2023),
           seasonNumber: 1,
           episodeNumber: 1,
         ),

@@ -343,7 +343,6 @@ void main() {
         title: 'New',
         overview: '',
         releaseDate: '',
-        mediaType: MediaType.movie,
       );
 
       await searchProvider.toggleInList(film, 'Weekend');

@@ -96,7 +96,7 @@ void main() {
         _def('movie_runtime', 3, id: 'epic_3', params: {'minMinutes': 180}),
       ];
       final a = await evaluate(defs, [
-        _movie(1, DateTime(2024, 1, 1), 179), // too short
+        _movie(1, DateTime(2024), 179), // too short
         _movie(2, DateTime(2024, 1, 2), 180), // inclusive bound
         _movie(2, DateTime(2024, 1, 3), 180), // rewatch: counted once
         _ep(9, 1, 1, DateTime(2024, 1, 4)), // episodes never count
@@ -119,7 +119,7 @@ void main() {
         ),
       ];
       final a = await evaluate(defs, [
-        _movie(1, DateTime(2024, 1, 1), 39), // short film
+        _movie(1, DateTime(2024), 39), // short film
         _movie(2, DateTime(2024, 1, 2), 40),
         _movie(3, DateTime(2024, 1, 3), 80),
         _movie(4, DateTime(2024, 1, 4), 81),
@@ -134,10 +134,10 @@ void main() {
         _def('movie_runtime', 1, id: 'epic_1', params: {'minMinutes': 180}),
       ];
       final a = await evaluate(defs, [
-        _movie(1, DateTime(2024, 1, 1), 170),
-        _movie(1, DateTime(2024, 2, 1), 185),
+        _movie(1, DateTime(2024), 170),
+        _movie(1, DateTime(2024, 2), 185),
       ]);
-      expect(a['epic_1']!.unlockedAt, DateTime(2024, 2, 1));
+      expect(a['epic_1']!.unlockedAt, DateTime(2024, 2));
     });
   });
 
@@ -149,7 +149,7 @@ void main() {
 
     test('should count regular seasons of the same series', () async {
       final a = await evaluate(defs, [
-        _ep(1, 0, 1, DateTime(2024, 1, 1)), // special: excluded
+        _ep(1, 0, 1, DateTime(2024)), // special: excluded
         _ep(1, 1, 1, DateTime(2024, 1, 2)),
         _ep(1, 1, 2, DateTime(2024, 1, 3)), // same season
         _ep(2, 2, 1, DateTime(2024, 1, 4)), // other series
@@ -169,7 +169,7 @@ void main() {
           tmdbId: 1,
           type: 'movie',
           title: 'M',
-          seenDate: DateTime(2024, 1, 1),
+          seenDate: DateTime(2024),
           seasonNumber: 3,
         ),
       ]);

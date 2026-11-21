@@ -674,8 +674,8 @@ class QuickAddService {
             final localTailEpisode = s.episodeNumber!;
             final tailSeenDate = s.seenDate;
 
-            int startSeason = localTailSeason;
-            int startEpisode = localTailEpisode + 1;
+            final int startSeason = localTailSeason;
+            final int startEpisode = localTailEpisode + 1;
 
             DateTime? foundAirDate;
             int? foundSeason;

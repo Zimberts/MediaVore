@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
-import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mocks.dart';
 
@@ -42,7 +42,7 @@ void main() {
   });
 
   test('equal timestamps are grouped into a single tail', () async {
-    final tmdbId = 200;
+    const tmdbId = 200;
 
     final now = DateTime.now();
     // episodes 1 and 2 seen earlier, episodes 3 and 4 seen at the exact same time
@@ -51,7 +51,7 @@ void main() {
         tmdbId: tmdbId,
         type: 'tv',
         title: 'T',
-        seenDate: now.subtract(Duration(days: 3)),
+        seenDate: now.subtract(const Duration(days: 3)),
         seasonNumber: 1,
         episodeNumber: 1,
       ),
@@ -59,7 +59,7 @@ void main() {
         tmdbId: tmdbId,
         type: 'tv',
         title: 'T',
-        seenDate: now.subtract(Duration(days: 2)),
+        seenDate: now.subtract(const Duration(days: 2)),
         seasonNumber: 1,
         episodeNumber: 2,
       ),
@@ -96,7 +96,7 @@ void main() {
       () => local.getSeenStatus(tmdbId, 'tv'),
     ).thenAnswer((_) async => seenItems);
 
-    final media = MediaItem(
+    const media = MediaItem(
       id: tmdbId,
       title: 'T',
       overview: '',

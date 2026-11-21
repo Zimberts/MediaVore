@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
@@ -9,19 +11,18 @@ import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
-import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/home/presentation/pages/home_page.dart';
 import 'package:mediavore/features/library/presentation/pages/library_page.dart';
+import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/incoming_list_sheet.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/features/together/presentation/pages/together_page.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
-import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:app_links/app_links.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key, this.tabs});
@@ -66,11 +67,9 @@ class _MainPageState extends State<MainPage> {
     // Listen for achievements
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<AchievementProvider>();
-      _achievementSubscription = provider.onAchievementUnlocked.listen((
-        achievement,
-      ) {
-        _queueAchievementNotification(achievement);
-      });
+      _achievementSubscription = provider.onAchievementUnlocked.listen(
+        _queueAchievementNotification,
+      );
 
       // Check if TMDB API key is missing
       final settings = context.read<SettingsProvider>();
@@ -158,9 +157,7 @@ class _MainPageState extends State<MainPage> {
     }
 
     // Handle subsequent links
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      _handleLink(uri);
-    });
+    _linkSubscription = _appLinks.uriLinkStream.listen(_handleLink);
   }
 
   void _handleLink(Uri uri) {
@@ -280,7 +277,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
     final colors = context.appColors;
     final onToast = colors.onPrimary;
     final statusBarHeight = MediaQuery.of(context).padding.top;
-    final appBarHeight = kToolbarHeight;
+    const appBarHeight = kToolbarHeight;
 
     // Determine current route context
     final route = ModalRoute.of(widget.mainPageContext);

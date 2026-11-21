@@ -20,7 +20,7 @@ void main() {
             tmdbId: 30,
             type: MediaType.movie,
             title: 'Dune',
-            seenDate: DateTime(2026, 1, 1),
+            seenDate: DateTime(2026),
           ),
         ],
         inProgressItems: [],
@@ -44,7 +44,7 @@ void main() {
               tmdbId: 1,
               type: MediaType.movie,
               title: 'Older Movie',
-              seenDate: DateTime(2026, 1, 1),
+              seenDate: DateTime(2026),
             ),
             SeenItem(
               tmdbId: 2,
@@ -101,13 +101,7 @@ void main() {
   group('BecauseYouService - Recommendation Filtering', () {
     final raw = [
       for (var i = 1; i <= 15; i++)
-        MediaItem(
-          id: i,
-          title: 'Movie $i',
-          overview: '',
-          releaseDate: '2020',
-          mediaType: MediaType.movie,
-        ),
+        MediaItem(id: i, title: 'Movie $i', overview: '', releaseDate: '2020'),
     ];
 
     test('excludes seen and list items, caps at 10 items', () {
@@ -138,7 +132,7 @@ void main() {
     test('saves and loads daily cache on the same day', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
-      final now = DateTime(2026, 11, 18, 14, 0);
+      final now = DateTime(2026, 11, 18, 14);
 
       const sampleData = BecauseYouData(
         sourceId: 100,
@@ -167,7 +161,7 @@ void main() {
       expect(loaded, equals(sampleData));
 
       // Expired date next day
-      final tomorrow = DateTime(2026, 11, 19, 9, 0);
+      final tomorrow = DateTime(2026, 11, 19, 9);
       final expired = await BecauseYouService.loadCached(
         prefs: prefs,
         now: tomorrow,

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 void main() {
   group('Releases filtering - hide old TV episodes', () {
@@ -13,7 +13,6 @@ void main() {
         tmdbId: 100,
         type: MediaType.tv,
         title: 'Show',
-        posterPath: null,
         releaseDate: thirtyDaysAgo.subtract(const Duration(days: 1)),
         seasonNumber: 1,
         episodeNumber: 1,
@@ -38,7 +37,6 @@ void main() {
         tmdbId: 100,
         type: MediaType.tv,
         title: 'Show',
-        posterPath: null,
         releaseDate: thirtyDaysAgo.add(const Duration(days: 1)),
         seasonNumber: 1,
         episodeNumber: 1,
@@ -63,7 +61,6 @@ void main() {
         tmdbId: 100,
         type: MediaType.tv,
         title: 'Show',
-        posterPath: null,
         releaseDate: thirtyDaysAgo,
         seasonNumber: 1,
         episodeNumber: 1,
@@ -88,10 +85,7 @@ void main() {
         tmdbId: 100,
         type: MediaType.movie,
         title: 'Old Movie',
-        posterPath: null,
         releaseDate: thirtyDaysAgo.subtract(const Duration(days: 100)),
-        seasonNumber: null,
-        episodeNumber: null,
         autoNotify: true,
       );
 
@@ -113,8 +107,6 @@ void main() {
         tmdbId: 100,
         type: MediaType.tv,
         title: 'Show',
-        posterPath: null,
-        releaseDate: null,
         seasonNumber: 1,
         episodeNumber: 1,
         autoNotify: true,
@@ -138,7 +130,6 @@ void main() {
           tmdbId: 1,
           type: MediaType.tv,
           title: 'Old Show',
-          posterPath: null,
           releaseDate: thirtyDaysAgo.subtract(const Duration(days: 5)),
           seasonNumber: 1,
           episodeNumber: 1,
@@ -148,7 +139,6 @@ void main() {
           tmdbId: 2,
           type: MediaType.tv,
           title: 'Recent Show',
-          posterPath: null,
           releaseDate: thirtyDaysAgo.add(const Duration(days: 5)),
           seasonNumber: 1,
           episodeNumber: 1,
@@ -158,10 +148,7 @@ void main() {
           tmdbId: 3,
           type: MediaType.movie,
           title: 'Old Movie',
-          posterPath: null,
           releaseDate: thirtyDaysAgo.subtract(const Duration(days: 100)),
-          seasonNumber: null,
-          episodeNumber: null,
           autoNotify: true,
         ),
       ];
@@ -192,7 +179,6 @@ void main() {
           tmdbId: 100,
           type: MediaType.tv,
           title: 'Show A',
-          posterPath: null,
           releaseDate: oldDate,
           seasonNumber: 1,
           episodeNumber: 5,
@@ -202,7 +188,6 @@ void main() {
           tmdbId: 200,
           type: MediaType.tv,
           title: 'Show B',
-          posterPath: null,
           releaseDate: oldDate,
           seasonNumber: 2,
           episodeNumber: 3,
@@ -212,7 +197,6 @@ void main() {
           tmdbId: 300,
           type: MediaType.tv,
           title: 'Show C',
-          posterPath: null,
           releaseDate: now,
           seasonNumber: 1,
           episodeNumber: 1,
@@ -241,7 +225,6 @@ void main() {
         tmdbId: 100,
         type: MediaType.tv,
         title: 'Show',
-        posterPath: null,
         releaseDate: thirtyDaysAgo.subtract(const Duration(days: 5)),
         seasonNumber: 1,
         episodeNumber: 1,

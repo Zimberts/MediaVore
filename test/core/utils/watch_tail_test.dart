@@ -7,7 +7,7 @@ SeenItemModel seen(int season, int episode, {DateTime? date, int tmdbId = 1}) {
     tmdbId: tmdbId,
     type: 'tv',
     title: 'Show',
-    seenDate: date ?? DateTime(2024, 1, 1),
+    seenDate: date ?? DateTime(2024),
     seasonNumber: season,
     episodeNumber: episode,
   );
@@ -30,10 +30,10 @@ void main() {
 
     test('should scope tail to seenSince when provided', () {
       final items = [
-        seen(1, 1, date: DateTime(2024, 1, 1)),
+        seen(1, 1, date: DateTime(2024)),
         seen(1, 2, date: DateTime(2024, 1, 2)),
       ];
-      final rewatchStart = DateTime(2025, 1, 1);
+      final rewatchStart = DateTime(2025);
       expect(findLatestTail(items, seenSince: rewatchStart), isNull);
 
       final rewatchedItems = [...items, seen(1, 1, date: DateTime(2025, 1, 2))];
@@ -49,7 +49,7 @@ void main() {
           tmdbId: 1,
           type: 'tv',
           title: 'Show',
-          seenDate: DateTime(2024, 5, 1),
+          seenDate: DateTime(2024, 5),
         ),
       ];
 
@@ -58,9 +58,9 @@ void main() {
 
     test('should pick the entry with the greatest seenDate', () {
       final items = [
-        seen(1, 1, date: DateTime(2024, 1, 1)),
-        seen(3, 4, date: DateTime(2024, 6, 1)),
-        seen(2, 1, date: DateTime(2024, 3, 1)),
+        seen(1, 1, date: DateTime(2024)),
+        seen(3, 4, date: DateTime(2024, 6)),
+        seen(2, 1, date: DateTime(2024, 3)),
       ];
 
       final tail = findLatestTail(items);
@@ -87,8 +87,8 @@ void main() {
     test('should follow the furthest position, not the latest date', () {
       // Marking an older episode later (a rewatch) must not pull the tail back.
       final items = [
-        seen(1, 1, date: DateTime(2024, 6, 1)),
-        seen(2, 1, date: DateTime(2024, 1, 1)),
+        seen(1, 1, date: DateTime(2024, 6)),
+        seen(2, 1, date: DateTime(2024)),
       ];
 
       final tail = findLatestTail(items);
@@ -99,15 +99,15 @@ void main() {
 
     test('should keep the most recent rewatch for the same episode', () {
       final items = [
-        seen(2, 3, date: DateTime(2024, 1, 1)),
-        seen(2, 3, date: DateTime(2024, 5, 1)),
+        seen(2, 3, date: DateTime(2024)),
+        seen(2, 3, date: DateTime(2024, 5)),
       ];
 
       final tail = findLatestTail(items);
 
       expect(tail!.seasonNumber, 2);
       expect(tail.episodeNumber, 3);
-      expect(tail.seenDate, DateTime(2024, 5, 1));
+      expect(tail.seenDate, DateTime(2024, 5));
     });
   });
 
@@ -115,14 +115,14 @@ void main() {
     final tail = WatchTail(
       seasonNumber: 4,
       episodeNumber: 5,
-      seenDate: DateTime(2024, 6, 1),
+      seenDate: DateTime(2024, 6),
     );
 
     test('should return the next episode in the same season', () {
       final next = findNextEpisodeAfterTail(
         tail: tail,
         episodes: [
-          ep(4, 5, airDate: DateTime(2024, 5, 1)),
+          ep(4, 5, airDate: DateTime(2024, 5)),
           ep(4, 6, airDate: DateTime(2024, 6, 8), runtime: 42),
         ],
         seenEpisodeKeys: const {},
@@ -140,7 +140,7 @@ void main() {
       final next = findNextEpisodeAfterTail(
         tail: tail,
         episodes: [
-          ep(1, 1, airDate: DateTime(2015, 1, 1)),
+          ep(1, 1, airDate: DateTime(2015)),
           ep(1, 2, airDate: DateTime(2015, 1, 8)),
           ep(4, 6, airDate: DateTime(2024, 6, 8)),
         ],
@@ -155,8 +155,8 @@ void main() {
       final next = findNextEpisodeAfterTail(
         tail: tail,
         episodes: [
-          ep(4, 5, airDate: DateTime(2024, 5, 1)),
-          ep(5, 1, airDate: DateTime(2024, 9, 1)),
+          ep(4, 5, airDate: DateTime(2024, 5)),
+          ep(5, 1, airDate: DateTime(2024, 9)),
         ],
         seenEpisodeKeys: const {},
       );
@@ -208,8 +208,8 @@ void main() {
       final next = findNextEpisodeAfterTail(
         tail: tail,
         episodes: [
-          ep(4, 1, airDate: DateTime(2024, 1, 1)),
-          ep(4, 5, airDate: DateTime(2024, 5, 1)),
+          ep(4, 1, airDate: DateTime(2024)),
+          ep(4, 5, airDate: DateTime(2024, 5)),
         ],
         seenEpisodeKeys: const {},
       );
@@ -222,7 +222,7 @@ void main() {
         tail: tail,
         episodes: [
           ep(4, 6),
-          ep(4, 7, airDate: DateTime(2024, 6, 1)),
+          ep(4, 7, airDate: DateTime(2024, 6)),
         ],
         seenEpisodeKeys: const {},
         where: (e) => e.airDate != null,
@@ -236,13 +236,13 @@ void main() {
     test('should collect episode keys and ignore show-level entries', () {
       final keys = seenEpisodeKeys([
         seen(1, 1),
-        seen(1, 1, date: DateTime(2024, 2, 1)),
+        seen(1, 1, date: DateTime(2024, 2)),
         seen(2, 3),
         SeenItemModel(
           tmdbId: 1,
           type: 'tv',
           title: 'Show',
-          seenDate: DateTime(2024, 1, 1),
+          seenDate: DateTime(2024),
         ),
       ]);
 
@@ -250,7 +250,7 @@ void main() {
     });
 
     test('should keep only entries seen at or after seenSince', () {
-      final since = DateTime(2024, 3, 1);
+      final since = DateTime(2024, 3);
       final keys = seenEpisodeKeys([
         seen(1, 1, date: DateTime(2024, 2, 28)),
         seen(1, 2, date: since),
@@ -262,11 +262,11 @@ void main() {
   });
 
   group('isAired', () {
-    final now = DateTime(2024, 6, 1);
+    final now = DateTime(2024, 6);
 
     test('should be true for an air date at or before now', () {
       expect(isAired(ep(1, 1, airDate: now), now), isTrue);
-      expect(isAired(ep(1, 1, airDate: DateTime(2024, 5, 1)), now), isTrue);
+      expect(isAired(ep(1, 1, airDate: DateTime(2024, 5)), now), isTrue);
     });
 
     test('should be false for a future or unknown air date', () {
@@ -282,13 +282,13 @@ void main() {
       final tail = WatchTail(
         seasonNumber: 2,
         episodeNumber: 1,
-        seenDate: DateTime(2024, 5, 1),
+        seenDate: DateTime(2024, 5),
       );
 
       final next = findFirstAiredUnseenAfterTail(
         tail: tail,
         episodes: [
-          ep(2, 1, airDate: DateTime(2024, 5, 1)),
+          ep(2, 1, airDate: DateTime(2024, 5)),
           ep(2, 2, airDate: DateTime(2024, 5, 8)),
           ep(2, 3, airDate: DateTime(2024, 5, 15)),
         ],
@@ -305,7 +305,7 @@ void main() {
       final tail = WatchTail(
         seasonNumber: 1,
         episodeNumber: 0,
-        seenDate: DateTime(2024, 1, 1),
+        seenDate: DateTime(2024),
       );
 
       final next = findFirstAiredUnseenAfterTail(
@@ -327,15 +327,15 @@ void main() {
       final tail = WatchTail(
         seasonNumber: 1,
         episodeNumber: 1,
-        seenDate: DateTime(2024, 1, 1),
+        seenDate: DateTime(2024),
       );
 
       final next = findFirstAiredUnseenAfterTail(
         tail: tail,
         episodes: [
-          ep(0, 1, airDate: DateTime(2024, 2, 1)),
-          ep(1, 2, airDate: DateTime(2024, 2, 1)),
-          ep(1, 3, airDate: DateTime(2024, 3, 1)),
+          ep(0, 1, airDate: DateTime(2024, 2)),
+          ep(1, 2, airDate: DateTime(2024, 2)),
+          ep(1, 3, airDate: DateTime(2024, 3)),
         ],
         seenEpisodeKeys: {episodeKey(1, 2)},
         now: now,
@@ -349,14 +349,14 @@ void main() {
       final tail = WatchTail(
         seasonNumber: 1,
         episodeNumber: 1,
-        seenDate: DateTime(2024, 1, 1),
+        seenDate: DateTime(2024),
       );
 
       final next = findFirstAiredUnseenAfterTail(
         tail: tail,
         episodes: [
-          ep(1, 2, airDate: DateTime(2024, 2, 1)),
-          ep(1, 3, airDate: DateTime(2024, 7, 1)),
+          ep(1, 2, airDate: DateTime(2024, 2)),
+          ep(1, 3, airDate: DateTime(2024, 7)),
         ],
         seenEpisodeKeys: {episodeKey(1, 2)},
         now: now,
@@ -370,14 +370,14 @@ void main() {
       final tail = WatchTail(
         seasonNumber: 1,
         episodeNumber: 1,
-        seenDate: DateTime(2024, 1, 1),
+        seenDate: DateTime(2024),
       );
 
       final next = findFirstAiredUnseenAfterTail(
         tail: tail,
         episodes: [
-          ep(1, 2, airDate: DateTime(2024, 2, 1)),
-          ep(1, 3, airDate: DateTime(2024, 3, 1)),
+          ep(1, 2, airDate: DateTime(2024, 2)),
+          ep(1, 3, airDate: DateTime(2024, 3)),
         ],
         seenEpisodeKeys: const {},
         now: now,
@@ -392,7 +392,10 @@ void main() {
 
       expect(isEpisodeAfterTail(ep(1, 1), tail), isTrue);
       expect(
-        isEpisodeAfterTail(EpisodeRef(seasonNumber: 0, episodeNumber: 1), tail),
+        isEpisodeAfterTail(
+          const EpisodeRef(seasonNumber: 0, episodeNumber: 1),
+          tail,
+        ),
         isTrue,
       );
     });

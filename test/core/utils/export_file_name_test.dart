@@ -41,9 +41,9 @@ void main() {
 
     test('should sort chronologically by name', () {
       final dates = [
-        DateTime(2026, 10, 2, 9, 0, 0),
+        DateTime(2026, 10, 2, 9),
         DateTime(2025, 12, 31, 23, 59, 59),
-        DateTime(2026, 10, 2, 10, 0, 0),
+        DateTime(2026, 10, 2, 10),
         DateTime(2026, 9, 30),
       ];
       final byName = dates.map(exportFileName).toList()..sort();

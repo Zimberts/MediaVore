@@ -23,8 +23,7 @@ SeenItemModel _seen(int tmdbId, String title) => SeenItemModel(
   tmdbId: tmdbId,
   type: 'movie',
   title: title,
-  posterPath: null,
-  seenDate: DateTime.utc(2025, 1, 1),
+  seenDate: DateTime.utc(2025),
   runtime: 100,
   genres: const ['Drama'],
 );
@@ -90,7 +89,7 @@ void main() {
         // likes stage throws after the seen stage has been written.
         final zip = ExportEnvelope(
           version: 1,
-          exportedAt: DateTime.utc(2025, 1, 1),
+          exportedAt: DateTime.utc(2025),
           seen: [_seen(10, 'New seen')],
           likes: [
             LikedItem(tmdbId: 20, type: 'movie', title: 'Dup'),
@@ -98,13 +97,7 @@ void main() {
           ],
           lists: {
             'watchlist': [
-              MediaListItem(
-                id: 30,
-                type: 'movie',
-                title: 'New list item',
-                listName: 'watchlist',
-                position: 0,
-              ),
+              MediaListItem(id: 30, type: 'movie', title: 'New list item'),
             ],
           },
         ).toZipBytes();
@@ -129,7 +122,7 @@ void main() {
 
       final zip = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         seen: [_seen(10, 'New seen')],
         likes: [LikedItem(tmdbId: 20, type: 'movie', title: 'New like')],
       ).toZipBytes();

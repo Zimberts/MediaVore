@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/features/media_details/domain/services/stats_calculator.dart';
 import 'package:mediavore/features/media_details/domain/entities/stats_types.dart';
+import 'package:mediavore/features/media_details/domain/services/stats_calculator.dart';
 
 void main() {
   group('StatsCalculator - Scope filtering', () {
@@ -88,7 +88,7 @@ void main() {
         tmdbId: 1,
         type: MediaType.movie,
         title: 'M1',
-        seenDate: DateTime(2026, 1, 1),
+        seenDate: DateTime(2026),
         runtime: 120,
       ),
       SeenItem(
@@ -137,7 +137,7 @@ void main() {
         tmdbId: 1,
         type: MediaType.movie,
         title: 'M1',
-        seenDate: DateTime(2026, 1, 1),
+        seenDate: DateTime(2026),
         runtime: 120,
         genres: const ['Action', 'Sci-Fi'],
       ),
@@ -201,7 +201,7 @@ void main() {
         tmdbId: 10,
         type: MediaType.movie,
         title: 'Classic',
-        seenDate: DateTime(2026, 1, 1),
+        seenDate: DateTime(2026),
       ),
       SeenItem(
         tmdbId: 20,
@@ -235,7 +235,6 @@ void main() {
         title: 'Classic',
         overview: '',
         releaseDate: '1975-04-12',
-        mediaType: MediaType.movie,
         voteAverage: 8.4,
       ),
       20: const MediaItem(
@@ -243,7 +242,6 @@ void main() {
         title: '90s Hit',
         overview: '',
         releaseDate: '1994-10-14',
-        mediaType: MediaType.movie,
         voteAverage: 9.0,
       ),
       30: const MediaItem(
@@ -251,7 +249,6 @@ void main() {
         title: 'Modern',
         overview: '',
         releaseDate: '2015-06-20',
-        mediaType: MediaType.movie,
         voteAverage: 7.2,
       ),
       40: const MediaItem(
@@ -259,7 +256,6 @@ void main() {
         title: 'Future',
         overview: '',
         releaseDate: '2023-11-01',
-        mediaType: MediaType.movie,
         voteAverage: 6.8,
       ),
       50: const MediaItem(
@@ -267,7 +263,6 @@ void main() {
         title: 'No Date',
         overview: '',
         releaseDate: '', // Empty date
-        mediaType: MediaType.movie,
       ),
     };
 
@@ -308,7 +303,7 @@ void main() {
         title: 'Show A',
         seasonNumber: 1,
         episodeNumber: 1,
-        seenDate: DateTime(2026, 1, 1),
+        seenDate: DateTime(2026),
       ),
       SeenItem(
         tmdbId: 100,
@@ -351,7 +346,6 @@ void main() {
         overview: '',
         releaseDate: '2022-01-01',
         mediaType: MediaType.tv,
-        numberOfEpisodes: null, // Unknown total
       ),
     };
 

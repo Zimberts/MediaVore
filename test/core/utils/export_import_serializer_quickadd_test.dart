@@ -7,7 +7,7 @@ void main() {
     test('exports quickadd.csv with correct columns', () {
       final envelope = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         quickAdd: [
           QuickAddItemModel(
             tmdbId: 100,
@@ -15,19 +15,15 @@ void main() {
             seasonNumber: 2,
             episodeNumber: 5,
             insertedAt: DateTime.utc(2025, 1, 15),
-            airDate: DateTime.utc(2025, 2, 1),
+            airDate: DateTime.utc(2025, 2),
             title: 'Breaking Bad',
             posterPath: '/poster.jpg',
           ),
           QuickAddItemModel(
             tmdbId: 200,
             type: 'movie',
-            seasonNumber: null,
-            episodeNumber: null,
             insertedAt: DateTime.utc(2025, 1, 20),
-            airDate: null,
             title: 'Inception',
-            posterPath: null,
           ),
         ],
       );
@@ -39,7 +35,7 @@ void main() {
     test('parses quickadd.csv from import with all fields', () {
       final original = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         quickAdd: [
           QuickAddItemModel(
             tmdbId: 100,
@@ -47,7 +43,7 @@ void main() {
             seasonNumber: 2,
             episodeNumber: 5,
             insertedAt: DateTime.utc(2025, 1, 15),
-            airDate: DateTime.utc(2025, 2, 1),
+            airDate: DateTime.utc(2025, 2),
             title: 'Breaking Bad',
             posterPath: '/poster.jpg',
           ),
@@ -71,17 +67,12 @@ void main() {
     test('parses quickadd.csv with nullable fields', () {
       final original = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         quickAdd: [
           QuickAddItemModel(
             tmdbId: 200,
             type: 'movie',
-            seasonNumber: null,
-            episodeNumber: null,
             insertedAt: DateTime.utc(2025, 1, 20),
-            airDate: null,
-            title: null,
-            posterPath: null,
           ),
         ],
       );
@@ -100,7 +91,7 @@ void main() {
     test('handles empty quickadd gracefully', () {
       final envelope = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         quickAdd: [],
       );
 
@@ -117,7 +108,7 @@ void main() {
           type: 'tv',
           seasonNumber: 1,
           episodeNumber: 1,
-          insertedAt: DateTime.utc(2025, 1, 1),
+          insertedAt: DateTime.utc(2025),
           airDate: DateTime.utc(2025, 1, 8),
           title: 'Show A',
           posterPath: '/a.jpg',
@@ -136,7 +127,7 @@ void main() {
 
       final original = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         quickAdd: items,
       );
 
@@ -152,11 +143,11 @@ void main() {
 
     test('preserves timestamps during round-trip', () {
       final insertTime = DateTime.utc(2025, 3, 15, 14, 30, 45);
-      final airTime = DateTime.utc(2025, 3, 22, 20, 0, 0);
+      final airTime = DateTime.utc(2025, 3, 22, 20);
 
       final original = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         quickAdd: [
           QuickAddItemModel(
             tmdbId: 100,
@@ -166,7 +157,6 @@ void main() {
             insertedAt: insertTime,
             airDate: airTime,
             title: 'Test',
-            posterPath: null,
           ),
         ],
       );

@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'package:injectable/injectable.dart';
+
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/di/definitions_loader.dart';
 
 @LazySingleton(as: DefinitionsLoader)

@@ -22,7 +22,6 @@ void main() {
     title: 'Inception',
     overview: 'Dream within a dream',
     releaseDate: '2010-07-16',
-    mediaType: MediaType.movie,
   );
 
   setUpAll(() {
@@ -69,7 +68,7 @@ void main() {
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        theme: DefaultLightPalette().toThemeData(),
+        theme: const DefaultLightPalette().toThemeData(),
         builder: (context, child) => AppMessageHost(child: child!),
         home: Scaffold(
           body: WatchlistIconButton(item: tMovie, onImage: onImage),

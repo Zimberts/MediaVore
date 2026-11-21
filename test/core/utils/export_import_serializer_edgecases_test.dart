@@ -31,7 +31,7 @@ void main() {
     });
 
     test('Null values handled gracefully (Optionals missing)', () {
-      final date = DateTime.utc(2025, 1, 1);
+      final date = DateTime.utc(2025);
       final envelope = ExportEnvelope(
         version: 1,
         exportedAt: date,
@@ -40,12 +40,7 @@ void main() {
             tmdbId: 101, // Must not be null
             type: 'movie',
             title: 'null fields',
-            posterPath: null, // explicit null
             seenDate: date,
-            seasonNumber: null,
-            episodeNumber: null,
-            runtime: null,
-            genres: null,
           ),
         ],
         notifications: [
@@ -53,11 +48,6 @@ void main() {
             tmdbId: 202,
             type: 'tv',
             title: 'notif null fields',
-            posterPath: null,
-            releaseDate: null,
-            seasonNumber: null,
-            episodeNumber: null,
-            autoNotify: false,
           ),
         ],
       );
@@ -93,14 +83,14 @@ void main() {
     test('Extra long list strings or special characters', () {
       final envelope = ExportEnvelope(
         version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
+        exportedAt: DateTime.utc(2025),
         seen: [
           SeenItemModel(
             tmdbId: 101,
             type: 'movie',
             title: 'Title with, comma and "quotes" and | pipes',
             posterPath: '/path.img',
-            seenDate: DateTime.utc(2025, 1, 1),
+            seenDate: DateTime.utc(2025),
             genres: ['Action', 'Drama, Comedy', 'Weird|Genre'],
           ),
         ],
@@ -121,7 +111,7 @@ void main() {
     });
 
     test('should declare UTF-8 byte sizes for non-ASCII titles', () {
-      final date = DateTime.utc(2025, 1, 1);
+      final date = DateTime.utc(2025);
       final envelope = ExportEnvelope(
         version: 1,
         exportedAt: date,
@@ -140,8 +130,6 @@ void main() {
               id: 185341,
               type: 'movie',
               title: '[REC]⁴ Apocalypse',
-              listName: 'watchlist',
-              position: 0,
             ),
           ],
         },

@@ -1,14 +1,14 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:isar_community/isar.dart';
 import 'dart:io';
 
+import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
-import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
-import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
-import 'package:mediavore/features/media_details/data/models/user_list.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 void main() {
@@ -52,7 +52,7 @@ void main() {
           type: 'tv',
           seasonNumber: 1,
           episodeNumber: 5,
-          insertedAt: DateTime.utc(2025, 1, 1),
+          insertedAt: DateTime.utc(2025),
           airDate: DateTime.utc(2025, 1, 8),
           title: 'Show A',
           posterPath: '/a.jpg',
@@ -85,7 +85,7 @@ void main() {
         type: 'tv',
         seasonNumber: 1,
         episodeNumber: 1,
-        insertedAt: DateTime.utc(2024, 1, 1),
+        insertedAt: DateTime.utc(2024),
         title: 'Old Show',
       );
       await local.addQuickAddItem(existing);
@@ -101,7 +101,7 @@ void main() {
           type: 'tv',
           seasonNumber: 1,
           episodeNumber: 5,
-          insertedAt: DateTime.utc(2025, 1, 1),
+          insertedAt: DateTime.utc(2025),
           title: 'New Show A',
         ),
       ];
@@ -121,7 +121,7 @@ void main() {
         type: 'tv',
         seasonNumber: 1,
         episodeNumber: 5,
-        insertedAt: DateTime.utc(2025, 1, 1),
+        insertedAt: DateTime.utc(2025),
         title: 'Show A',
       );
       await local.addQuickAddItem(existing);
@@ -133,7 +133,7 @@ void main() {
           type: 'tv',
           seasonNumber: 1,
           episodeNumber: 5,
-          insertedAt: DateTime.utc(2025, 1, 1),
+          insertedAt: DateTime.utc(2025),
           title: 'Show A Duplicate',
         ),
         QuickAddItemModel(
@@ -199,7 +199,7 @@ void main() {
         seasonNumber: 2,
         episodeNumber: 10,
         insertedAt: DateTime.utc(2025, 1, 15, 14, 30, 45),
-        airDate: DateTime.utc(2025, 1, 22, 20, 0, 0),
+        airDate: DateTime.utc(2025, 1, 22, 20),
         title: 'Breaking Bad',
         posterPath: '/poster.jpg',
       );

@@ -345,9 +345,7 @@ void main() {
             olderThan: const Duration(days: 60),
           ),
         ).called(1);
-        verifyNever(
-          () => remote.getMediaDetailsBundle(42, type: MediaType.movie),
-        );
+        verifyNever(() => remote.getMediaDetailsBundle(42));
       },
     );
 
@@ -382,14 +380,12 @@ void main() {
           (_) async => MediaDetails(item: incompleteMovie, cast: const []),
         );
         when(
-          () => remote.getMediaDetailsBundle(42, type: MediaType.movie),
+          () => remote.getMediaDetailsBundle(42),
         ).thenAnswer((_) async => bundleOf(freshMovie));
         listNames.complete([]);
 
         expect(await warmup.run(), isTrue);
-        verify(
-          () => remote.getMediaDetailsBundle(42, type: MediaType.movie),
-        ).called(1);
+        verify(() => remote.getMediaDetailsBundle(42)).called(1);
         verify(() => cache.cacheDetails(any())).called(1);
       },
     );

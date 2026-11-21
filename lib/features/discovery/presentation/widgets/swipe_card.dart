@@ -420,7 +420,6 @@ class _SwipeCardState extends State<SwipeCard>
                             ? CachedNetworkImage(
                                 imageUrl: TmdbImageUtils.buildUrl(
                                   movie.posterPath,
-                                  size: TmdbImageSize.w185,
                                 )!,
                                 width: 36,
                                 height: 52,

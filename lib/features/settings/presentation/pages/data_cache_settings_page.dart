@@ -4,16 +4,15 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
-
 import 'package:mediavore/core/error/exceptions.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
-import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/core/utils/export_file_name.dart';
 import 'package:mediavore/core/utils/export_import_serializer.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -301,7 +300,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                 title: Text(context.l10n.dataNotificationDebug),
                 subtitle: Text(context.l10n.dataNotificationDebugSubtitle),
                 value: settings.notificationCenterDebug,
-                onChanged: (val) => settings.setNotificationCenterDebug(val),
+                onChanged: settings.setNotificationCenterDebug,
               ),
             ],
           ),
@@ -357,9 +356,9 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
   }
 
   String _formatBytes(int bytes) {
-    if (bytes <= 0) return "0 B";
-    const suffixes = ["B", "KB", "MB", "GB", "TB"];
-    var i = (math.log(bytes) / math.log(1024)).floor();
+    if (bytes <= 0) return '0 B';
+    const suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    final i = (math.log(bytes) / math.log(1024)).floor();
     return '${(bytes / math.pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}';
   }
 
@@ -398,7 +397,6 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
     CacheAdminProvider provider,
   ) async {
     final picked = await FilePicker.pickFile(
-      type: FileType.any,
       initialDirectory: Platform.isAndroid ? _defaultPath : null,
     );
 
@@ -479,7 +477,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(dialogContext);
-                await provider.importAllData(bytes, mode: ImportMode.append);
+                await provider.importAllData(bytes);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(context.l10n.dataImportedAppended)),

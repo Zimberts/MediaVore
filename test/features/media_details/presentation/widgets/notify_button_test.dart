@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/notify_button.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -58,7 +59,7 @@ void main() {
     return ChangeNotifierProvider<SearchProvider>.value(
       value: searchProvider,
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: const DefaultLightPalette().toThemeData(),
         home: Scaffold(body: NotifyButton(item: item)),
       ),
     );
@@ -75,7 +76,6 @@ void main() {
       final item = MediaItem(
         id: 1,
         title: 'Old Movie',
-        mediaType: MediaType.movie,
         overview: '',
         releaseDate: pastDate,
       );
@@ -96,7 +96,6 @@ void main() {
       final item = MediaItem(
         id: 1,
         title: 'Future Movie',
-        mediaType: MediaType.movie,
         overview: '',
         releaseDate: futureDate,
       );
@@ -109,7 +108,7 @@ void main() {
     });
 
     testWidgets('shows if TV show is not ended', (WidgetTester tester) async {
-      final item = const MediaItem(
+      const item = MediaItem(
         id: 2,
         title: 'Ongoing Show',
         mediaType: MediaType.tv,
@@ -127,10 +126,9 @@ void main() {
     testWidgets('shows active notification icon if item is in notifiedItems', (
       WidgetTester tester,
     ) async {
-      final item = const MediaItem(
+      const item = MediaItem(
         id: 1,
         title: 'Future Movie',
-        mediaType: MediaType.movie,
         overview: '',
         releaseDate: '2099-01-01',
       );
@@ -151,10 +149,9 @@ void main() {
     testWidgets('toggles notification when tapped', (
       WidgetTester tester,
     ) async {
-      final item = const MediaItem(
+      const item = MediaItem(
         id: 1,
         title: 'Future Movie',
-        mediaType: MediaType.movie,
         overview: '',
         releaseDate: '2099-01-01',
       );

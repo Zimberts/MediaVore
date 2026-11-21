@@ -11,13 +11,13 @@ void main() {
         tmdbId: 1,
         type: MediaType.movie,
         title: 'Early Movie',
-        releaseDate: DateTime(2026, 5, 1),
+        releaseDate: DateTime(2026, 5),
       );
       final datedLate = NotifiedItem(
         tmdbId: 2,
         type: MediaType.tv,
         title: 'Later Episode',
-        releaseDate: DateTime(2026, 6, 1),
+        releaseDate: DateTime(2026, 6),
         seasonNumber: 2,
         episodeNumber: 4,
       );

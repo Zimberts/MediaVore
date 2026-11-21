@@ -134,7 +134,6 @@ void main() {
             SharedMediaEntry(301, MediaType.movie),
           ],
           customScheme: true,
-          version: 2,
         );
 
         await tester.pumpWidget(

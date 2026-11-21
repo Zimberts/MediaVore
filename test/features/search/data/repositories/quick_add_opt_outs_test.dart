@@ -56,7 +56,7 @@ void main() {
       () async {
         when(() => local.getOptOuts()).thenAnswer(
           (_) async => [
-            optOut(10, 4, DateTime(2026, 11, 1)),
+            optOut(10, 4, DateTime(2026, 11)),
             optOut(20, 2, DateTime(2026, 11, 10)),
           ],
         );
@@ -84,7 +84,7 @@ void main() {
       () async {
         when(
           () => local.getOptOuts(),
-        ).thenAnswer((_) async => [optOut(10, 4, DateTime(2026, 11, 1))]);
+        ).thenAnswer((_) async => [optOut(10, 4, DateTime(2026, 11))]);
         when(() => cache.getItems(any())).thenAnswer((_) async => [null]);
         when(() => local.getSeenStatus(10, 'tv')).thenAnswer(
           (_) async => [
@@ -93,7 +93,7 @@ void main() {
               type: 'tv',
               title: 'Chernobyl',
               posterPath: '/seen.jpg',
-              seenDate: DateTime(2026, 10, 1),
+              seenDate: DateTime(2026, 10),
               seasonNumber: 1,
               episodeNumber: 3,
             ),
@@ -110,7 +110,7 @@ void main() {
     test('should leave the title empty when the series is unknown', () async {
       when(
         () => local.getOptOuts(),
-      ).thenAnswer((_) async => [optOut(10, 4, DateTime(2026, 11, 1))]);
+      ).thenAnswer((_) async => [optOut(10, 4, DateTime(2026, 11))]);
       when(() => cache.getItems(any())).thenAnswer((_) async => [null]);
       when(() => local.getSeenStatus(10, 'tv')).thenAnswer((_) async => []);
 

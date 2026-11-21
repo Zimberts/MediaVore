@@ -150,7 +150,7 @@ class _SwiperPageState extends State<SwiperPage> {
                       alpha: 0.4,
                     ),
                     border: Border(
-                      bottom: BorderSide(color: theme.dividerColor, width: 1),
+                      bottom: BorderSide(color: theme.dividerColor),
                     ),
                   ),
                   child: Row(

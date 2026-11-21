@@ -104,7 +104,7 @@ class SwiperProvider extends ChangeNotifier {
       _currentPage = 1;
       _hasMore = true;
 
-      await _loadCandidatesUntilThreshold(targetCount: 4);
+      await _loadCandidatesUntilThreshold();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -146,7 +146,6 @@ class SwiperProvider extends ChangeNotifier {
         decisions.add(
           SwipeDecisionModel(
             tmdbId: movie.id,
-            mediaType: 'movie',
             title: movie.title,
             posterPath: movie.posterPath,
             decision: 'added',
@@ -182,7 +181,6 @@ class SwiperProvider extends ChangeNotifier {
 
       final decision = SwipeDecisionModel(
         tmdbId: candidate.item.id,
-        mediaType: 'movie',
         title: candidate.item.title,
         posterPath: candidate.item.posterPath,
         decision: 'added',
@@ -212,7 +210,6 @@ class SwiperProvider extends ChangeNotifier {
         decisions.add(
           SwipeDecisionModel(
             tmdbId: movie.id,
-            mediaType: 'movie',
             title: movie.title,
             posterPath: movie.posterPath,
             decision: 'discarded',
@@ -231,7 +228,6 @@ class SwiperProvider extends ChangeNotifier {
       _decidedTmdbIds.add(candidate.item.id);
       final decision = SwipeDecisionModel(
         tmdbId: candidate.item.id,
-        mediaType: 'movie',
         title: candidate.item.title,
         posterPath: candidate.item.posterPath,
         decision: 'discarded',
@@ -321,7 +317,7 @@ class SwiperProvider extends ChangeNotifier {
 
   void _checkPrefetch() {
     if (_candidates.length < 3 && !_isFetchingMore && _hasMore) {
-      _loadCandidatesUntilThreshold(targetCount: 4);
+      _loadCandidatesUntilThreshold();
     }
   }
 
@@ -333,10 +329,7 @@ class SwiperProvider extends ChangeNotifier {
       while (_candidates.length < targetCount &&
           _hasMore &&
           _currentPage <= 50) {
-        final pageItems = await repository.discoverMedia(
-          type: MediaType.movie,
-          page: _currentPage,
-        );
+        final pageItems = await repository.discoverMedia(page: _currentPage);
         _currentPage++;
 
         if (pageItems.isEmpty) {
@@ -352,10 +345,7 @@ class SwiperProvider extends ChangeNotifier {
 
           // Enrich with details to detect collections/sagas
           try {
-            final details = await repository.getMediaDetails(
-              item.id,
-              type: MediaType.movie,
-            );
+            final details = await repository.getMediaDetails(item.id);
             final collId = details.item.collectionId;
             final collName = details.item.collectionName;
 

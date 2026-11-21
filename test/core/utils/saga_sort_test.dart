@@ -1,24 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/utils/saga_sort.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/utils/saga_sort.dart';
 
 void main() {
   test(
     'sortSagaByDate sorts movies by releaseDate and TV by lastEpisodeAirDate',
     () {
-      final m1 = MediaItem(
+      const m1 = MediaItem(
         id: 1,
         title: 'M1',
         overview: '',
         releaseDate: '2000-01-01',
       );
-      final m2 = MediaItem(
+      const m2 = MediaItem(
         id: 2,
         title: 'M2',
         overview: '',
         releaseDate: '2005-01-01',
       );
-      final tv3 = MediaItem(
+      const tv3 = MediaItem(
         id: 3,
         title: 'TV3',
         overview: '',
@@ -49,13 +49,13 @@ void main() {
   });
 
   test('items with null/empty dates go last', () {
-    final withDate = MediaItem(
+    const withDate = MediaItem(
       id: 1,
       title: 'D',
       overview: '',
       releaseDate: '2020-01-01',
     );
-    final noDate = MediaItem(id: 2, title: 'ND', overview: '', releaseDate: '');
+    const noDate = MediaItem(id: 2, title: 'ND', overview: '', releaseDate: '');
     final sorted = sortSagaByDate([noDate, withDate]);
     expect(sorted.map((i) => i.id).toList(), [1, 2]);
   });

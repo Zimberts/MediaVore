@@ -804,9 +804,6 @@ class ListPageState extends State<ListPage> {
                   loadSavedMedia();
                 }
               },
-              // Long-press is handled by the grid drag: holding without moving
-              // enters edit mode (see onReorder), so the tile must not also grab it.
-              onLongPress: null,
             );
           },
         );

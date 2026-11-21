@@ -4,8 +4,8 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/bounded_concurrency.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/search/data/services/media_details_service.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/data/services/notification_refresh_service.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 /// Background filling/refreshing of the TMDB cache from the saved lists, seen
 /// history and likes, followed by a cleanup of unused entries.

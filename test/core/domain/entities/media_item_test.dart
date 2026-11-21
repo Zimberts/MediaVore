@@ -252,7 +252,6 @@ void main() {
         title: 'Mad Max: Fury Road',
         overview: '',
         releaseDate: '2015-05-15',
-        mediaType: MediaType.movie,
         collectionId: 8945,
         collectionName: 'Mad Max Collection',
       );
@@ -277,7 +276,6 @@ void main() {
           title: 'Standalone Film',
           overview: '',
           releaseDate: '2020-01-01',
-          mediaType: MediaType.movie,
         );
 
         final json = item.toJson();

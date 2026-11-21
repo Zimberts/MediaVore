@@ -12,9 +12,9 @@ void main() {
   late MockMediaCache cache;
   late NextEpisodeScanner scanner;
 
-  final now = DateTime(2026, 6, 1);
-  final past = '2026-01-01';
-  final future = '2026-12-01';
+  final now = DateTime(2026, 6);
+  const past = '2026-01-01';
+  const future = '2026-12-01';
 
   MediaItem series(List<TVSeason> seasons) => MediaItem(
     id: 7,
@@ -38,7 +38,7 @@ void main() {
   WatchTail tail(int season, int episode) => WatchTail(
     seasonNumber: season,
     episodeNumber: episode,
-    seenDate: DateTime(2026, 5, 1),
+    seenDate: DateTime(2026, 5),
   );
 
   void stubCachedSeason(int number, Map<String, dynamic>? data) {

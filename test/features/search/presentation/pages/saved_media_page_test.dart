@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/di/injection.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -90,9 +91,7 @@ void main() {
     }
   });
 
-  tearDown(() {
-    locator.reset();
-  });
+  tearDown(locator.reset);
 
   Widget createWidgetUnderTest([
     GlobalKey<SavedMediaPageState>? key,
@@ -113,19 +112,18 @@ void main() {
   testWidgets('displays saved items and liked status', (
     WidgetTester tester,
   ) async {
-    final item = const MediaItem(
+    const item = MediaItem(
       id: 1,
       title: 'Inception',
       overview: 'Overview',
       releaseDate: '2010',
-      mediaType: MediaType.movie,
     );
 
     when(
       () => mockMediaRepository.getListEntries('watchlist'),
     ).thenAnswer((_) async => ['1:movie']);
     when(
-      () => mockMediaRepository.getMediaDetails(1, type: MediaType.movie),
+      () => mockMediaRepository.getMediaDetails(1),
     ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
     when(
       () => mockMediaRepository.getLikedEntries(),
@@ -204,7 +202,6 @@ void main() {
       title: 'Inception',
       overview: 'Overview',
       releaseDate: '2010',
-      mediaType: MediaType.movie,
     );
 
     // Initial state with item
@@ -212,7 +209,7 @@ void main() {
       () => mockMediaRepository.getListEntries('watchlist'),
     ).thenAnswer((_) async => ['1:movie']);
     when(
-      () => mockMediaRepository.getMediaDetails(1, type: MediaType.movie),
+      () => mockMediaRepository.getMediaDetails(1),
     ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
     when(
       () => mockMediaRepository.removeFromList(1, MediaType.movie, 'watchlist'),
@@ -258,7 +255,6 @@ void main() {
           title: 'Item $id',
           overview: '',
           releaseDate: '2010',
-          mediaType: MediaType.movie,
         ),
         cast: [],
       );
@@ -372,7 +368,7 @@ void main() {
     ).thenAnswer((_) async => List.generate(30, (i) => '${i + 101}:movie'));
 
     final key = GlobalKey<SavedMediaPageState>();
-    await tester.pumpWidget(createWidgetUnderTest(key, 'watchlist'));
+    await tester.pumpWidget(createWidgetUnderTest(key));
     await tester.pumpAndSettle();
 
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));

@@ -362,7 +362,6 @@ class _FilmographyGrid extends StatelessWidget {
                           ? CachedNetworkImage(
                               imageUrl: TmdbImageUtils.buildUrl(
                                 item.posterPath,
-                                size: TmdbImageSize.w185,
                               )!,
                               fit: BoxFit.cover,
                               placeholder: (context, url) =>

@@ -34,11 +34,10 @@ class _Series {
   _Series(
     this.id,
     this.title, {
-    this.episodes = 10,
     this.knowsEpisodeCount = true,
     this.seen = 3,
     this.lastActivityDaysAgo = 1,
-  });
+  }) : episodes = 10;
 
   final int id;
   final String title;
@@ -217,7 +216,7 @@ void main() {
     ).thenThrow(Exception('offline'));
   });
 
-  tearDown(() => appMessageController.dismiss());
+  tearDown(appMessageController.dismiss);
 
   Future<void> pumpHome(
     WidgetTester tester, {
@@ -488,7 +487,7 @@ void main() {
 
   group('HomePage mark as seen', () {
     testWidgets('should move the card on to the next episode', (tester) async {
-      repository.addSeries(_Series(1, 'Severance', seen: 3));
+      repository.addSeries(_Series(1, 'Severance'));
       await pumpHome(tester);
       expect(find.text('Next: S1 E4 · 50m'), findsOneWidget);
 
@@ -506,7 +505,7 @@ void main() {
     testWidgets('should remove the card when the series is finished', (
       tester,
     ) async {
-      repository.addSeries(_Series(1, 'Severance', seen: 9, episodes: 10));
+      repository.addSeries(_Series(1, 'Severance', seen: 9));
       repository.addSeries(_Series(2, 'The Bear', lastActivityDaysAgo: 2));
       await pumpHome(tester);
       expect(find.byType(InProgressCard), findsNWidgets(2));
@@ -521,7 +520,7 @@ void main() {
     testWidgets('should restore the episode and the card on Undo', (
       tester,
     ) async {
-      repository.addSeries(_Series(1, 'Severance', seen: 9, episodes: 10));
+      repository.addSeries(_Series(1, 'Severance', seen: 9));
       await pumpHome(tester);
 
       await tester.tap(markButton(1));
@@ -541,7 +540,7 @@ void main() {
     testWidgets(
       'should go back one episode on Undo in the middle of a series',
       (tester) async {
-        repository.addSeries(_Series(1, 'Severance', seen: 3));
+        repository.addSeries(_Series(1, 'Severance'));
         await pumpHome(tester);
 
         await tester.tap(markButton(1));
@@ -556,7 +555,7 @@ void main() {
     );
 
     testWidgets('should say it in French', (tester) async {
-      repository.addSeries(_Series(1, 'Severance', seen: 3));
+      repository.addSeries(_Series(1, 'Severance'));
       await pumpHome(tester, locale: const Locale('fr'));
 
       await tester.tap(markButton(1));

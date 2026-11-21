@@ -47,7 +47,7 @@ void main() {
           ),
         ).thenAnswer(
           (_) async => Response(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             data: tResponse,
             statusCode: 200,
           ),
@@ -89,7 +89,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: jsonDecode(fixture('trending_all_week.json')),
           statusCode: 200,
         ),
@@ -146,7 +146,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: tResponse,
           statusCode: 200,
         ),
@@ -183,7 +183,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: tMediaListResponse,
           statusCode: 200,
         ),
@@ -215,7 +215,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: tProviders,
           statusCode: 200,
         ),
@@ -240,7 +240,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: tVideos,
           statusCode: 200,
         ),
@@ -318,7 +318,7 @@ void main() {
           ),
         ).thenAnswer(
           (_) async => Response(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             data: tCredits,
             statusCode: 200,
           ),
@@ -363,13 +363,13 @@ void main() {
               invocation.namedArguments[#queryParameters] as Map?;
           if (queryParams != null && queryParams['language'] == 'en-US') {
             return Response(
-              requestOptions: RequestOptions(path: ''),
+              requestOptions: RequestOptions(),
               data: tEnPerson,
               statusCode: 200,
             );
           }
           return Response(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             data: tFrPerson,
             statusCode: 200,
           );
@@ -398,7 +398,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: {'results': []},
           statusCode: 200,
         ),
@@ -446,12 +446,12 @@ void main() {
   group('Error mapping', () {
     DioException dioError(DioExceptionType type, {int? statusCode}) =>
         DioException(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           type: type,
           response: statusCode == null
               ? null
               : Response(
-                  requestOptions: RequestOptions(path: ''),
+                  requestOptions: RequestOptions(),
                   statusCode: statusCode,
                 ),
         );
@@ -545,7 +545,7 @@ void main() {
             ),
           ).thenAnswer(
             (_) async => Response(
-              requestOptions: RequestOptions(path: ''),
+              requestOptions: RequestOptions(),
               data: 'not json',
               statusCode: 200,
             ),
@@ -589,7 +589,7 @@ void main() {
           inv.namedArguments[#queryParameters] as Map,
         );
         return Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: data(params),
           statusCode: 200,
         );
@@ -783,7 +783,7 @@ void main() {
         final params =
             invocation.namedArguments[#queryParameters] as Map<String, dynamic>;
         return Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: answer(params),
           statusCode: 200,
         );
@@ -918,7 +918,7 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           statusCode: 200,
           data: {
             'results': [
@@ -936,7 +936,7 @@ void main() {
         ),
       );
 
-      final results = await dataSource.searchPeople('Villeneuve', page: 1);
+      final results = await dataSource.searchPeople('Villeneuve');
       expect(results.length, 1);
       expect(results.first.name, 'Denis Villeneuve');
       expect(results.first.knownForDepartment, 'Directing');

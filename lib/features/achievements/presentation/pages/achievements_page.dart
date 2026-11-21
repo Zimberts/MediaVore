@@ -266,10 +266,7 @@ class _AchievementsSummary extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         border: Border(
-          bottom: BorderSide(
-            color: colors.primary.withValues(alpha: 0.1),
-            width: 1,
-          ),
+          bottom: BorderSide(color: colors.primary.withValues(alpha: 0.1)),
         ),
       ),
       child: Column(

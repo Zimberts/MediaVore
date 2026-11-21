@@ -1,14 +1,14 @@
 import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
-import 'package:mediavore/features/media_details/data/models/user_list.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_opt_out_model.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
+import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 @lazySingleton
@@ -493,10 +493,6 @@ class MediaListLocalDataSource {
           type: existing.type,
           title: existing.title,
           posterPath: existing.posterPath,
-          releaseDate: null,
-          seasonNumber: null,
-          episodeNumber: null,
-          runtime: null,
           autoNotify: existing.autoNotify,
           lastRefreshedAt: existing.lastRefreshedAt,
         );

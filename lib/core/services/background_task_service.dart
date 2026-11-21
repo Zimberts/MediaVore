@@ -1,22 +1,22 @@
 import 'package:flutter/foundation.dart';
-import 'package:workmanager/workmanager.dart';
 import 'package:mediavore/core/cache/cache_warmup_policy.dart';
+import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
-import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:workmanager/workmanager.dart';
 
-const fetchTask = "dailySync";
-const fetchTaskIdentifier = "fr.zimberts.mediavore.dailySync";
-const refreshReturningSeriesTask = "refreshReturningSeries";
-const refreshReturningSeriesPrefix = "refresh_";
+const fetchTask = 'dailySync';
+const fetchTaskIdentifier = 'fr.zimberts.mediavore.dailySync';
+const refreshReturningSeriesTask = 'refreshReturningSeries';
+const refreshReturningSeriesPrefix = 'refresh_';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
-      debugPrint("Native called background task: $task");
+      debugPrint('Native called background task: $task');
 
       // The daily sync below refreshes what it needs; skip the full cache
       // warm-up that MediaRepositoryImpl would otherwise start on creation.
@@ -38,7 +38,7 @@ void callbackDispatcher() {
       if (task == fetchTask ||
           task == fetchTaskIdentifier ||
           task == Workmanager.iOSBackgroundTask) {
-        debugPrint("Running daily background sync...");
+        debugPrint('Running daily background sync...');
         final seenItems = await repo.getSeenItems();
 
         final Map<int, List> tvWatches = {};
@@ -91,7 +91,7 @@ void callbackDispatcher() {
               final age = DateTime.now().difference(cacheDate).inDays;
 
               if (age >= 1) {
-                debugPrint("Daily sync refreshing returning series: $tmdbId");
+                debugPrint('Daily sync refreshing returning series: $tmdbId');
                 await repo.refreshReturningSeries(tmdbId);
               }
             }
@@ -116,13 +116,13 @@ void callbackDispatcher() {
           task.startsWith(refreshReturningSeriesPrefix)) {
         final int? id = inputData?['tmdbId'];
         if (id != null) {
-          debugPrint("Running 1-off refresh for series ID: $id...");
+          debugPrint('Running 1-off refresh for series ID: $id...');
           await repo.refreshReturningSeries(id);
         }
       }
       return true;
     } catch (err, stack) {
-      debugPrint("Background Task Failed: $err");
+      debugPrint('Background Task Failed: $err');
       debugPrint(stack.toString());
       return false; // return false on failure
     }
@@ -151,9 +151,9 @@ class BackgroundTaskService {
 
   static void dispatchOneOffRefresh(int tmdbId) {
     Workmanager().registerOneOffTask(
-      "refresh_${tmdbId}_${DateTime.now().millisecondsSinceEpoch}", // Unique ID
+      'refresh_${tmdbId}_${DateTime.now().millisecondsSinceEpoch}', // Unique ID
       refreshReturningSeriesTask,
-      inputData: {"tmdbId": tmdbId},
+      inputData: {'tmdbId': tmdbId},
       constraints: Constraints(networkType: NetworkType.connected),
     );
   }

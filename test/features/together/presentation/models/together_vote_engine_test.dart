@@ -9,7 +9,6 @@ void main() {
       title: title,
       overview: 'Overview $id',
       releaseDate: '2023-01-01',
-      mediaType: MediaType.movie,
       voteAverage: rating,
     );
   }
@@ -63,7 +62,7 @@ void main() {
 
     test('breaks tie by TMDB vote average', () {
       // Both candidates get 2 votes, but Movie 2 has higher TMDB rating
-      final c1 = TogetherVoteCandidate(item: item(1, 'Movie 1', rating: 7.0));
+      final c1 = TogetherVoteCandidate(item: item(1, 'Movie 1'));
       final c2 = TogetherVoteCandidate(item: item(2, 'Movie 2', rating: 8.5));
 
       final engine = TogetherVoteEngine(

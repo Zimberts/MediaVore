@@ -32,9 +32,7 @@ void main() {
     locator.registerLazySingleton<MediaRepository>(() => mockMediaRepository);
   });
 
-  tearDown(() {
-    locator.reset();
-  });
+  tearDown(locator.reset);
 
   const tActorId = 1;
   const tActorName = 'Leonardo DiCaprio';
@@ -52,7 +50,6 @@ void main() {
         overview: 'A mind-bending thriller',
         releaseDate: '2010-07-16',
         posterPath: '/poster.jpg',
-        mediaType: MediaType.movie,
       ),
     ],
   );
@@ -143,14 +140,12 @@ void main() {
           title: 'Inception',
           overview: 'Dream within a dream',
           releaseDate: '2010-07-16',
-          mediaType: MediaType.movie,
         ),
         MediaItem(
           id: 2,
           title: 'Oppenheimer',
           overview: 'Father of the atomic bomb',
           releaseDate: '2023-07-21',
-          mediaType: MediaType.movie,
         ),
       ],
       items: [
@@ -159,7 +154,6 @@ void main() {
           title: 'Cameo Role',
           overview: 'Brief appearance',
           releaseDate: '2005-01-01',
-          mediaType: MediaType.movie,
         ),
       ],
     );
@@ -202,11 +196,7 @@ void main() {
   testWidgets('shows initials placeholder when profilePath is null', (
     WidgetTester tester,
   ) async {
-    const tNoPhotoDetails = ActorDetails(
-      id: 3,
-      name: 'Jane Doe',
-      profilePath: null,
-    );
+    const tNoPhotoDetails = ActorDetails(id: 3, name: 'Jane Doe');
 
     when(
       () => mockMediaRepository.getActorDetails(3),
@@ -230,7 +220,7 @@ void main() {
         tmdbId: 1, // Inception is seen
         type: MediaType.movie,
         title: 'Inception',
-        seenDate: DateTime(2023, 1, 1),
+        seenDate: DateTime(2023),
       ),
     ]);
 
@@ -243,14 +233,12 @@ void main() {
           title: 'Inception',
           overview: 'Overview',
           releaseDate: '2010-07-16',
-          mediaType: MediaType.movie,
         ),
         MediaItem(
           id: 99,
           title: 'Titanic',
           overview: 'Overview',
           releaseDate: '1997-12-19',
-          mediaType: MediaType.movie,
         ),
       ],
     );
@@ -285,9 +273,7 @@ void main() {
         () => mockMediaRepository.getActorDetails(1),
       ).thenAnswer((_) async => tBioDetails);
 
-      await tester.pumpWidget(
-        createWidgetUnderTest(locale: const Locale('en')),
-      );
+      await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       final readMoreFinder = find.text('Read more');

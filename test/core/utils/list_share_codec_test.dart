@@ -70,7 +70,6 @@ void main() {
         listName: 'Summer Watchlist',
         entries: entries,
         customScheme: true,
-        version: 2,
       );
       expect(urlV2, startsWith('mediavore://share?v=2'));
 
@@ -106,7 +105,6 @@ void main() {
       final v2Url = ListShareCodec.createShareUrl(
         listName: 'Huge',
         entries: entries,
-        version: 2,
       );
 
       // v1 is typically > 1500 chars, v2 is ~150-250 chars
@@ -122,7 +120,6 @@ void main() {
       final urls = ListShareCodec.createTogetherUrls(
         name: 'My Watchlist',
         entries: entries,
-        chunkSize: 150,
       );
 
       // 350 / 150 -> 3 chunks

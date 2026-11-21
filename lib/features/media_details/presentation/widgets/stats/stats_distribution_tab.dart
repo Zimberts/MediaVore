@@ -1,9 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
-import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/stats/stats_card.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/stats/stats_types.dart';

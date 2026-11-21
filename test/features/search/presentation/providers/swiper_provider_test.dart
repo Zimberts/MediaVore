@@ -12,40 +12,36 @@ void main() {
   late MockMediaRepository repo;
   late SwiperProvider provider;
 
-  final movie1 = const MediaItem(
+  const movie1 = MediaItem(
     id: 101,
     title: 'Movie 101',
     overview: 'Desc',
     releaseDate: '2023-01-01',
-    mediaType: MediaType.movie,
   );
 
-  final movie2 = const MediaItem(
+  const movie2 = MediaItem(
     id: 102,
     title: 'Movie 102',
     overview: 'Desc',
     releaseDate: '2023-02-01',
-    mediaType: MediaType.movie,
   );
 
-  final movieSagaPart1 = const MediaItem(
+  const movieSagaPart1 = MediaItem(
     id: 201,
     title: 'Saga Part 1',
     overview: 'Part 1',
     releaseDate: '2010-01-01',
     collectionId: 999,
     collectionName: 'Epic Saga',
-    mediaType: MediaType.movie,
   );
 
-  final movieSagaPart2 = const MediaItem(
+  const movieSagaPart2 = MediaItem(
     id: 202,
     title: 'Saga Part 2',
     overview: 'Part 2',
     releaseDate: '2015-01-01',
     collectionId: 999,
     collectionName: 'Epic Saga',
-    mediaType: MediaType.movie,
   );
 
   setUpAll(() {

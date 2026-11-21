@@ -1,22 +1,22 @@
-import 'package:flutter/foundation.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mediavore/core/l10n/locale_service.dart';
-import 'package:mediavore/core/security/tmdb_credential_store.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
-import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
-import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
-import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/liked_item_info.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/core/cache/media_cache.dart';
+import 'package:mediavore/core/l10n/locale_service.dart';
+import 'package:mediavore/core/security/tmdb_credential_store.dart';
+import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
+import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
+import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
+import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockDio extends Mock implements Dio {}
 
@@ -301,7 +301,7 @@ class MockMediaRepository extends Mock implements MediaRepository {
       return super.noSuchMethod(Invocation.method(#undoLastSwipeDecision, []))
           as Future<SwipeDecisionModel?>;
     } catch (_) {
-      return Future.value(null);
+      return Future.value();
     }
   }
 

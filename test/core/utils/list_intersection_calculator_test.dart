@@ -113,19 +113,19 @@ void main() {
       test(
         'for 2 participants, computes exact intersection without almost',
         () {
-          final list1 = (
+          const list1 = (
             name: 'Host',
             initials: 'HO',
-            entries: const [
+            entries: [
               SharedMediaEntry(1, MediaType.movie),
               SharedMediaEntry(2, MediaType.movie),
               SharedMediaEntry(3, MediaType.tv),
             ],
           );
-          final list2 = (
+          const list2 = (
             name: 'Friend',
             initials: 'FR',
-            entries: const [
+            entries: [
               SharedMediaEntry(2, MediaType.movie),
               SharedMediaEntry(3, MediaType.tv),
               SharedMediaEntry(4, MediaType.movie),
@@ -149,28 +149,28 @@ void main() {
       test(
         'for 3 participants, separates common and almost (in 2 of 3 lists)',
         () {
-          final p1 = (
+          const p1 = (
             name: 'Alice',
             initials: 'AL',
-            entries: const [
+            entries: [
               SharedMediaEntry(1, MediaType.movie), // in all 3
               SharedMediaEntry(2, MediaType.movie), // in p1, p2
               SharedMediaEntry(3, MediaType.movie), // only in p1
             ],
           );
-          final p2 = (
+          const p2 = (
             name: 'Bob',
             initials: 'BO',
-            entries: const [
+            entries: [
               SharedMediaEntry(1, MediaType.movie), // in all 3
               SharedMediaEntry(2, MediaType.movie), // in p1, p2
               SharedMediaEntry(4, MediaType.tv), // in p2, p3
             ],
           );
-          final p3 = (
+          const p3 = (
             name: 'Charlie',
             initials: 'CH',
-            entries: const [
+            entries: [
               SharedMediaEntry(1, MediaType.movie), // in all 3
               SharedMediaEntry(4, MediaType.tv), // in p2, p3
               SharedMediaEntry(5, MediaType.movie), // only in p3
@@ -199,18 +199,18 @@ void main() {
       );
 
       test('respects typeFilter and hideSeen', () {
-        final p1 = (
+        const p1 = (
           name: 'Alice',
           initials: 'AL',
-          entries: const [
+          entries: [
             SharedMediaEntry(1, MediaType.movie),
             SharedMediaEntry(2, MediaType.tv),
           ],
         );
-        final p2 = (
+        const p2 = (
           name: 'Bob',
           initials: 'BO',
-          entries: const [
+          entries: [
             SharedMediaEntry(1, MediaType.movie),
             SharedMediaEntry(2, MediaType.tv),
           ],

@@ -109,30 +109,24 @@ void main() {
         when(
           () => mockRepo.getListEntries('watchlist'),
         ).thenAnswer((_) async => ['1:movie', '2:movie']);
-        when(
-          () => mockRepo.getMediaDetails(1, type: MediaType.movie),
-        ).thenAnswer(
+        when(() => mockRepo.getMediaDetails(1)).thenAnswer(
           (_) async => MediaDetails(
             item: const MediaItem(
               id: 1,
               title: 'Alpha',
               overview: '',
               releaseDate: '2020',
-              mediaType: MediaType.movie,
             ),
             cast: [],
           ),
         );
-        when(
-          () => mockRepo.getMediaDetails(2, type: MediaType.movie),
-        ).thenAnswer(
+        when(() => mockRepo.getMediaDetails(2)).thenAnswer(
           (_) async => MediaDetails(
             item: const MediaItem(
               id: 2,
               title: 'Beta',
               overview: '',
               releaseDate: '2022',
-              mediaType: MediaType.movie,
             ),
             cast: [],
           ),
@@ -172,16 +166,13 @@ void main() {
         when(
           () => mockRepo.getListEntries('watchlist'),
         ).thenAnswer((_) async => ['1:movie']);
-        when(
-          () => mockRepo.getMediaDetails(1, type: MediaType.movie),
-        ).thenAnswer(
+        when(() => mockRepo.getMediaDetails(1)).thenAnswer(
           (_) async => MediaDetails(
             item: const MediaItem(
               id: 1,
               title: 'Alpha',
               overview: '',
               releaseDate: '2020',
-              mediaType: MediaType.movie,
             ),
             cast: [],
           ),
@@ -227,24 +218,22 @@ void main() {
           title: 'Item 1',
           overview: '',
           releaseDate: '2020',
-          mediaType: MediaType.movie,
         ),
         const MediaItem(
           id: 2,
           title: 'Item 2',
           overview: '',
           releaseDate: '2021',
-          mediaType: MediaType.movie,
         ),
       ];
       when(
         () => mockRepo.getListEntries('watchlist'),
       ).thenAnswer((_) async => ['1:movie', '2:movie']);
       when(
-        () => mockRepo.getMediaDetails(1, type: MediaType.movie),
+        () => mockRepo.getMediaDetails(1),
       ).thenAnswer((_) async => MediaDetails(item: items[0], cast: []));
       when(
-        () => mockRepo.getMediaDetails(2, type: MediaType.movie),
+        () => mockRepo.getMediaDetails(2),
       ).thenAnswer((_) async => MediaDetails(item: items[1], cast: []));
 
       await tester.pumpWidget(buildTestWidget());
@@ -286,14 +275,12 @@ void main() {
           title: 'Item 1',
           overview: '',
           releaseDate: '2020',
-          mediaType: MediaType.movie,
         ),
         const MediaItem(
           id: 2,
           title: 'Item 2',
           overview: '',
           releaseDate: '2021',
-          mediaType: MediaType.movie,
         ),
       ];
       when(
@@ -303,10 +290,10 @@ void main() {
         () => mockRepo.getWatchlistEntries(),
       ).thenAnswer((_) async => ['1:movie', '2:movie']);
       when(
-        () => mockRepo.getMediaDetails(1, type: MediaType.movie),
+        () => mockRepo.getMediaDetails(1),
       ).thenAnswer((_) async => MediaDetails(item: items[0], cast: []));
       when(
-        () => mockRepo.getMediaDetails(2, type: MediaType.movie),
+        () => mockRepo.getMediaDetails(2),
       ).thenAnswer((_) async => MediaDetails(item: items[1], cast: []));
       when(
         () => mockRepo.removeFromList(any(), any(), any()),

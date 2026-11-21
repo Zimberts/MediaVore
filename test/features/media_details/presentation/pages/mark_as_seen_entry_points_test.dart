@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/home/presentation/pages/in_progress_page.dart';
 import 'package:mediavore/features/home/presentation/pages/upcoming_page.dart';
 import 'package:mediavore/features/home/presentation/providers/home_session_provider.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watch_next_button.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'package:mediavore/core/domain/entities/media_details.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -87,16 +88,13 @@ void main() {
     when(
       () => mockRepository.getWatchlistEntries(),
     ).thenAnswer((_) async => ['10:movie']);
-    when(
-      () => mockRepository.getMediaDetails(10, type: MediaType.movie),
-    ).thenAnswer(
+    when(() => mockRepository.getMediaDetails(10)).thenAnswer(
       (_) async => MediaDetails(
-        item: MediaItem(
+        item: const MediaItem(
           id: 10,
           title: 'Movie10',
           overview: '',
           releaseDate: '',
-          mediaType: MediaType.movie,
         ),
         cast: [],
       ),
@@ -166,7 +164,7 @@ void main() {
         () => mockRepository.getMediaDetails(20, type: MediaType.tv),
       ).thenAnswer(
         (_) async => MediaDetails(
-          item: MediaItem(
+          item: const MediaItem(
             id: 20,
             title: 'Series20',
             overview: '',
@@ -205,7 +203,7 @@ void main() {
           value: provider,
           child: MaterialApp(
             theme: AppPalette.paper.toThemeData(),
-            home: Scaffold(
+            home: const Scaffold(
               body: WatchNextButton(
                 item: MediaItem(
                   id: 20,
@@ -274,7 +272,7 @@ void main() {
         () => mockRepository.getMediaDetails(30, type: MediaType.tv),
       ).thenAnswer(
         (_) async => MediaDetails(
-          item: MediaItem(
+          item: const MediaItem(
             id: 30,
             title: 'Series30',
             overview: '',
@@ -308,7 +306,6 @@ void main() {
 
       // The series is in progress: its next episode waits in Quick Add.
       final next = QuickAddItem(
-        isarId: null,
         tmdbId: 30,
         type: MediaType.tv,
         seasonNumber: 1,
@@ -316,7 +313,6 @@ void main() {
         insertedAt: DateTime.now(),
         airDate: DateTime.now().subtract(const Duration(days: 1)),
         title: 'Series30',
-        posterPath: null,
       );
       when(
         () => mockRepository.getQuickAddItems(),

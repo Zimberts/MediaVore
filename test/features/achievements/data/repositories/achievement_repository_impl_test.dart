@@ -1,12 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/di/definitions_loader.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/features/achievements/data/repositories/achievement_repository_impl.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mocktail/mocktail.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'package:mediavore/core/di/definitions_loader.dart';
+
 import '../../../../helpers/mocks.dart';
 
 // Simple test helper that implements the runtime `DefinitionsLoader`.
@@ -68,7 +70,7 @@ void main() {
           tmdbId: 1,
           type: 'movie',
           title: 'M1',
-          seenDate: DateTime(2023, 1, 1),
+          seenDate: DateTime(2023),
         ),
       ];
       when(
@@ -114,7 +116,7 @@ void main() {
             tmdbId: index,
             type: 'movie',
             title: 'M',
-            seenDate: DateTime(2023, 1, 1),
+            seenDate: DateTime(2023),
           ),
         ),
         SeenItemModel(
@@ -136,7 +138,7 @@ void main() {
     });
 
     test('unlockAchievement should persist to DB', () async {
-      final date = DateTime(2023, 1, 1);
+      final date = DateTime(2023);
       await repository.unlockAchievement('test_id', date);
 
       final persisted = await isar.achievementModels.where().findAll();

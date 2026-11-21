@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart'
     as repo_types;
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mocktail/mocktail.dart';
 
 typedef ImportProgress = void Function(double progress, String status);
 
@@ -83,7 +83,7 @@ void main() {
 
     final envelope = <int>[1, 2, 3];
 
-    await provider.importAllData(envelope, mode: ImportMode.append);
+    await provider.importAllData(envelope);
 
     expect(provider.importStatus.startsWith('Error'), true);
   });

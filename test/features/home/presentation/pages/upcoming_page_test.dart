@@ -169,7 +169,7 @@ void main() {
     ).thenThrow(Exception('offline'));
   });
 
-  tearDown(() => appMessageController.dismiss());
+  tearDown(appMessageController.dismiss);
 
   Future<void> pump(
     WidgetTester tester, {
@@ -234,7 +234,7 @@ void main() {
       _episode(5, 'Andor', _day(25), season: 1, episode: 1),
       _film(6, 'Tenet', DateTime(2027, 2, 3)),
       _film(7, 'Zodiac', DateTime(2027, 2, 20)),
-      _episode(8, 'Dark', DateTime(2027, 5, 1)),
+      _episode(8, 'Dark', DateTime(2027, 5)),
       _episode(9, 'The Bear', null, season: null, episode: null),
       _film(10, 'Avatar 4', null),
       _episode(11, 'Arcane', null, season: 3, episode: 1),

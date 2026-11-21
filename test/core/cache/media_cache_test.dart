@@ -36,7 +36,6 @@ void main() {
     posterPath: '/path.jpg',
     overview: 'Overview...',
     releaseDate: '2010-07-16',
-    mediaType: MediaType.movie,
   );
 
   final tMediaDetails = MediaDetails(

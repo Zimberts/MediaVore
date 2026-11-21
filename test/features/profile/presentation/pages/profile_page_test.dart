@@ -22,7 +22,7 @@ import '../../../../helpers/mocks.dart';
 void main() {
   group('ProfilePage pure helpers', () {
     test('countActiveDaysInLast30Days counts distinct days within 30 days', () {
-      final now = DateTime(2026, 11, 16, 12, 0);
+      final now = DateTime(2026, 11, 16, 12);
 
       // Items: 2 on today, 1 on 10 days ago, 1 on 29 days ago, 1 on 35 days ago (excluded)
       final items = [
@@ -30,31 +30,31 @@ void main() {
           tmdbId: 1,
           type: MediaType.movie,
           title: 'A',
-          seenDate: DateTime(2026, 11, 16, 9, 0),
+          seenDate: DateTime(2026, 11, 16, 9),
         ),
         SeenItem(
           tmdbId: 2,
           type: MediaType.movie,
           title: 'B',
-          seenDate: DateTime(2026, 11, 16, 20, 0),
+          seenDate: DateTime(2026, 11, 16, 20),
         ),
         SeenItem(
           tmdbId: 3,
           type: MediaType.tv,
           title: 'C',
-          seenDate: DateTime(2026, 11, 6, 15, 0),
+          seenDate: DateTime(2026, 11, 6, 15),
         ),
         SeenItem(
           tmdbId: 4,
           type: MediaType.movie,
           title: 'D',
-          seenDate: DateTime(2026, 10, 18, 12, 0),
+          seenDate: DateTime(2026, 10, 18, 12),
         ),
         SeenItem(
           tmdbId: 5,
           type: MediaType.movie,
           title: 'Old',
-          seenDate: DateTime(2026, 10, 5, 12, 0), // 42 days ago
+          seenDate: DateTime(2026, 10, 5, 12), // 42 days ago
         ),
       ];
 
@@ -98,7 +98,6 @@ void main() {
           title: 'L1',
           description: 'D',
           iconPath: '',
-          isUnlocked: false,
           progress: 0.2,
         );
         const lHigh = Achievement(
@@ -106,7 +105,6 @@ void main() {
           title: 'L2',
           description: 'D',
           iconPath: '',
-          isUnlocked: false,
           progress: 0.85,
         );
 
@@ -142,7 +140,6 @@ void main() {
           title: 'L1',
           description: 'D',
           iconPath: '',
-          isUnlocked: false,
           progress: 0.9,
         );
         const l2 = Achievement(
@@ -150,7 +147,6 @@ void main() {
           title: 'L2',
           description: 'D',
           iconPath: '',
-          isUnlocked: false,
           progress: 0.7,
         );
         const l3 = Achievement(
@@ -158,7 +154,6 @@ void main() {
           title: 'L3',
           description: 'D',
           iconPath: '',
-          isUnlocked: false,
           progress: 0.5,
         );
 
@@ -277,7 +272,6 @@ void main() {
           title: 'Marathon',
           description: 'Watch 5 in a day',
           iconPath: '',
-          isUnlocked: false,
           progress: 0.6,
           progressLabel: '3/5',
         ),
@@ -309,7 +303,7 @@ void main() {
           locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          theme: DefaultLightPalette().toThemeData(),
+          theme: const DefaultLightPalette().toThemeData(),
           home: const ProfilePage(),
         ),
       );
@@ -385,7 +379,7 @@ void main() {
 
       final settings = SettingsProvider(
         mockSharedPreferences,
-        FakeTmdbCredentialStore(''),
+        FakeTmdbCredentialStore(),
       );
 
       await tester.pumpWidget(

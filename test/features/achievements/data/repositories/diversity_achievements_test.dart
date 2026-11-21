@@ -177,7 +177,7 @@ void main() {
       titleData: {
         (1, 'movie'): _info(release: '1999-12-31'),
         (2, 'movie'): _info(release: '1990-01-01'), // same decade
-        (3, 'tv'): _info(release: '2000-01-01'),
+        (3, 'tv'): _info(),
         (4, 'movie'): _info(release: ''), // unknown
       },
     );
@@ -233,7 +233,7 @@ void main() {
       titleData: {
         (1, 'movie'): _info(rating: 7.5, votes: 20), // both bounds hit
         (2, 'movie'): _info(rating: 9.0, votes: 501), // too many votes
-        (3, 'movie'): _info(rating: 7.4, votes: 100), // rating too low
+        (3, 'movie'): _info(rating: 7.4), // rating too low
         (4, 'movie'): _info(rating: 9.0, votes: 19), // too few votes
         (5, 'tv'): _info(rating: 8.0, votes: 500),
         (6, 'movie'): _info(rating: null, votes: null),
@@ -311,7 +311,7 @@ void main() {
   });
 
   test('cache-based unlocks should be sticky, genres not', () async {
-    final unlockedAt = DateTime(2023, 5, 1);
+    final unlockedAt = DateTime(2023, 5);
     await isar.writeTxn(() async {
       await isar.achievementModels.putAll([
         AchievementModel(

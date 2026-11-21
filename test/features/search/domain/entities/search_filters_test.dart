@@ -162,7 +162,6 @@ void main() {
       title: 'Action SciFi',
       overview: '',
       releaseDate: '1995-06-15',
-      mediaType: MediaType.movie,
       genres: ['Action', 'Science Fiction'],
       genreIds: [28, 878],
       voteAverage: 7.8,
@@ -218,7 +217,7 @@ void main() {
       expect(
         matchesSearchFilters(
           movie,
-          const SearchFilters(hideSeen: false),
+          const SearchFilters(),
           isSeen: (item) => true,
         ),
         isTrue,
@@ -343,7 +342,7 @@ void main() {
   });
 
   group('SearchFilters - sortMediaItems', () {
-    final itemA = const MediaItem(
+    const itemA = MediaItem(
       id: 1,
       title: 'Alpha',
       overview: '',
@@ -351,7 +350,7 @@ void main() {
       voteAverage: 7.0,
       voteCount: 100,
     );
-    final itemB = const MediaItem(
+    const itemB = MediaItem(
       id: 2,
       title: 'Beta',
       overview: '',
@@ -359,7 +358,7 @@ void main() {
       voteAverage: 8.5,
       voteCount: 200,
     );
-    final itemC = const MediaItem(
+    const itemC = MediaItem(
       id: 3,
       title: 'Gamma',
       overview: '',

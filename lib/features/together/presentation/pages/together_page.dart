@@ -102,7 +102,6 @@ class _TogetherPageState extends State<TogetherPage> {
     final hostUrls = ListShareCodec.createTogetherUrls(
       name: l10n.togetherYouHost,
       entries: hostListEntries,
-      chunkSize: 150,
     );
 
     if (_currentQrIndex >= hostUrls.length) {
@@ -221,7 +220,6 @@ class _TogetherPageState extends State<TogetherPage> {
                   QrImageView(
                     key: const Key('together_qr_image'),
                     data: hostUrls[_currentQrIndex],
-                    version: QrVersions.auto,
                     size: 200.0,
                     backgroundColor: Colors.white,
                   ),

@@ -341,7 +341,6 @@ void main() {
       expect(resultsTitle(tester), 'Results');
       verify(
         () => repository.discoverMedia(
-          page: 1,
           type: MediaType.tv,
           filters: any(named: 'filters'),
           genreIds: any(named: 'genreIds'),

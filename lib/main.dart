@@ -1,27 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
-import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
-import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/di/injection.config.dart';
+import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
-import 'package:mediavore/core/di/injection.dart';
-import 'package:mediavore/core/di/injection.config.dart';
+import 'package:mediavore/core/security/tmdb_credential_store.dart';
+import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/theme/font_licenses.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
+import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
+import 'package:mediavore/features/home/presentation/providers/home_session_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
-import 'package:mediavore/features/home/presentation/providers/home_session_provider.dart';
+import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'features/search/presentation/pages/main_page.dart';
 
 const _localizationsDelegates = <LocalizationsDelegate<dynamic>>[

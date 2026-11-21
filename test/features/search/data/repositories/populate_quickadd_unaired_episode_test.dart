@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
-import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mocks.dart';
 
@@ -45,7 +45,7 @@ void main() {
   test(
     'future and unaired episodes are skipped in quick add population',
     () async {
-      final tmdbId = 300;
+      const tmdbId = 300;
 
       final now = DateTime.now();
       // Watch up to episode 16
@@ -76,7 +76,7 @@ void main() {
         () => local.getSeenStatus(tmdbId, 'tv'),
       ).thenAnswer((_) async => seenItems);
 
-      final media = MediaItem(
+      const media = MediaItem(
         id: tmdbId,
         title: 'T',
         overview: '',
@@ -113,7 +113,7 @@ void main() {
             } else if (epNum == 17) {
               // Future episode
               airDate = now
-                  .add(Duration(days: 7))
+                  .add(const Duration(days: 7))
                   .toIso8601String()
                   .substring(0, 10);
             } else if (epNum == 18) {
@@ -140,7 +140,7 @@ void main() {
         added.isEmpty,
         isTrue,
         reason:
-            "Expected 0 quick-adds because ep 17 is future and ep 18 is unaired",
+            'Expected 0 quick-adds because ep 17 is future and ep 18 is unaired',
       );
     },
   );
@@ -148,7 +148,7 @@ void main() {
   test(
     'markAsSeen also skips future and unaired episodes when computing next quick add',
     () async {
-      final tmdbId = 300;
+      const tmdbId = 300;
       final now = DateTime.now();
 
       // Simulate marking episode 16 as seen
@@ -163,7 +163,7 @@ void main() {
       );
 
       // We need to return MediaItem for the series so the repository can inspect it
-      final detailsItem = MediaItem(
+      const detailsItem = MediaItem(
         id: tmdbId,
         title: 'T',
         overview: '',
@@ -236,7 +236,7 @@ void main() {
                   .substring(0, 10);
             } else if (epNum == 17) {
               airDate = now
-                  .add(Duration(days: 7))
+                  .add(const Duration(days: 7))
                   .toIso8601String()
                   .substring(0, 10); // future
             } else {

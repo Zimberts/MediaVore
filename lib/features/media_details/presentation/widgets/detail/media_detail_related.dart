@@ -53,7 +53,6 @@ class MediaDetailRelated extends StatelessWidget {
                             ? CachedNetworkImage(
                                 imageUrl: TmdbImageUtils.buildUrl(
                                   item.posterPath,
-                                  size: TmdbImageSize.w185,
                                 )!,
                                 height: 120,
                                 fit: BoxFit.cover,

@@ -317,11 +317,11 @@ void main() {
       () async {
         when(() => local.getSwipeDecisions()).thenAnswer((_) async => []);
         final r = repo([_def('swipe_decisions', 10)]);
-        await r.unlockAchievement('swipe_decisions_10', DateTime(2024, 2, 1));
+        await r.unlockAchievement('swipe_decisions_10', DateTime(2024, 2));
 
         final a = await evaluate(r);
         expect(a['swipe_decisions_10']!.isUnlocked, isTrue);
-        expect(a['swipe_decisions_10']!.unlockedAt, DateTime(2024, 2, 1));
+        expect(a['swipe_decisions_10']!.unlockedAt, DateTime(2024, 2));
       },
     );
 
@@ -371,11 +371,11 @@ void main() {
         ).thenReturn(0);
 
         final r = repo([_def('together_choices', 10)], prefs: prefs);
-        await r.unlockAchievement('together_choices_10', DateTime(2024, 3, 1));
+        await r.unlockAchievement('together_choices_10', DateTime(2024, 3));
 
         final a = await evaluate(r);
         expect(a['together_choices_10']!.isUnlocked, isTrue);
-        expect(a['together_choices_10']!.unlockedAt, DateTime(2024, 3, 1));
+        expect(a['together_choices_10']!.unlockedAt, DateTime(2024, 3));
       },
     );
 

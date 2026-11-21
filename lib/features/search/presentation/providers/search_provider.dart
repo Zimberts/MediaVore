@@ -2,21 +2,21 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/domain/entities/because_you_data.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/utils/unseen_episodes.dart';
 import 'package:mediavore/features/discovery/presentation/services/because_you_service.dart';
 import 'package:mediavore/features/home/presentation/providers/notification_provider.dart';
 import 'package:mediavore/features/library/presentation/providers/library_provider.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/domain/entities/search_filters.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_error.dart';
 import 'package:mediavore/features/settings/presentation/providers/cache_admin_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -617,11 +617,7 @@ class SearchProvider with ChangeNotifier {
           final movies = _filters.isEmpty
               ? await repository.discoverMedia(
                   page: _currentPage,
-                  genreIds: null,
-                  releaseYear: null,
-                  minRating: null,
                   originalLanguage: _originalLanguage,
-                  type: MediaType.movie,
                 )
               : await repository.discoverMedia(
                   page: _currentPage,
@@ -632,14 +628,10 @@ class SearchProvider with ChangeNotifier {
                   releaseYear: _filters.exactYear,
                   minRating: _filters.minRating,
                   originalLanguage: _originalLanguage,
-                  type: MediaType.movie,
                 );
           final tv = _filters.isEmpty
               ? await repository.discoverMedia(
                   page: _currentPage,
-                  genreIds: null,
-                  releaseYear: null,
-                  minRating: null,
                   originalLanguage: _originalLanguage,
                   type: MediaType.tv,
                 )
@@ -659,9 +651,6 @@ class SearchProvider with ChangeNotifier {
           rawResults = _filters.isEmpty
               ? await repository.discoverMedia(
                   page: _currentPage,
-                  genreIds: null,
-                  releaseYear: null,
-                  minRating: null,
                   originalLanguage: _originalLanguage,
                   type: _filters.type!,
                 )
@@ -678,7 +667,7 @@ class SearchProvider with ChangeNotifier {
                 );
         }
 
-        var results = _filters.hideSeen
+        final results = _filters.hideSeen
             ? rawResults.where((item) => getSeenCount(item) == 0).toList()
             : rawResults;
 
@@ -812,11 +801,7 @@ class SearchProvider with ChangeNotifier {
           final movies = _filters.isEmpty
               ? await repository.discoverMedia(
                   page: _currentPage,
-                  genreIds: null,
-                  releaseYear: null,
-                  minRating: null,
                   originalLanguage: _originalLanguage,
-                  type: MediaType.movie,
                 )
               : await repository.discoverMedia(
                   page: _currentPage,
@@ -827,14 +812,10 @@ class SearchProvider with ChangeNotifier {
                   releaseYear: _filters.exactYear,
                   minRating: _filters.minRating,
                   originalLanguage: _originalLanguage,
-                  type: MediaType.movie,
                 );
           final tv = _filters.isEmpty
               ? await repository.discoverMedia(
                   page: _currentPage,
-                  genreIds: null,
-                  releaseYear: null,
-                  minRating: null,
                   originalLanguage: _originalLanguage,
                   type: MediaType.tv,
                 )
@@ -854,9 +835,6 @@ class SearchProvider with ChangeNotifier {
           rawResults = _filters.isEmpty
               ? await repository.discoverMedia(
                   page: _currentPage,
-                  genreIds: null,
-                  releaseYear: null,
-                  minRating: null,
                   originalLanguage: _originalLanguage,
                   type: _filters.type!,
                 )
@@ -1158,7 +1136,6 @@ class SearchProvider with ChangeNotifier {
             title: item.title,
             overview: '',
             releaseDate: '',
-            mediaType: MediaType.movie,
           );
           await toggleInList(mediaShell, 'watchlist');
         } else if (item.type == MediaType.tv) {

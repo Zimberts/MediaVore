@@ -1,16 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/domain/entities/because_you_data.dart';
 import 'package:mediavore/core/domain/entities/liked_item_info.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -89,7 +90,7 @@ void main() {
 
         await provider.searchMedia('');
 
-        verify(() => mockRepository.getTrendingMedia(page: 1)).called(1);
+        verify(() => mockRepository.getTrendingMedia()).called(1);
         expect(provider.isTrending, isTrue);
         expect(provider.items, hasLength(1));
 
@@ -120,15 +121,12 @@ void main() {
 
         verify(
           () => mockRepository.discoverMedia(
-            page: 1,
             filters: any(named: 'filters'),
             minRating: 7,
-            type: MediaType.movie,
           ),
         ).called(1);
         verify(
           () => mockRepository.discoverMedia(
-            page: 1,
             filters: any(named: 'filters'),
             minRating: 7,
             type: MediaType.tv,
@@ -162,7 +160,6 @@ void main() {
         verify(
           () => mockRepository.searchMedia(
             'Inception',
-            page: 1,
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
@@ -172,7 +169,6 @@ void main() {
         verify(
           () => mockRepository.searchMedia(
             'Inception',
-            page: 1,
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
@@ -208,7 +204,6 @@ void main() {
       verify(
         () => mockRepository.searchMedia(
           'Batman',
-          page: 1,
           genreIds: [28],
           releaseYear: 2022,
           minRating: 7.0,
@@ -486,7 +481,7 @@ void main() {
     test(
       'getMediaDetails should fetch extra data (similar, recommended, providers, videos)',
       () async {
-        final tItem = const MediaItem(
+        const tItem = MediaItem(
           id: 1,
           title: 'T',
           overview: 'O',
@@ -590,11 +585,7 @@ void main() {
 
     test('should not re-fetch next page while it is failing', () async {
       when(
-        () => mockRepository.searchMedia(
-          any(),
-          page: 1,
-          type: any(named: 'type'),
-        ),
+        () => mockRepository.searchMedia(any(), type: any(named: 'type')),
       ).thenAnswer(
         (_) async => const [
           MediaItem(id: 1, title: 'A', overview: '', releaseDate: ''),
@@ -646,7 +637,7 @@ void main() {
             tmdbId: 1,
             type: MediaType.movie,
             title: 'M',
-            seenDate: DateTime(2023, 1, 1),
+            seenDate: DateTime(2023),
           ),
           SeenItem(
             tmdbId: 1,
@@ -683,7 +674,6 @@ void main() {
           title: 'M',
           overview: '',
           releaseDate: '',
-          mediaType: MediaType.movie,
         );
         const tvItem = MediaItem(
           id: 2,
@@ -736,7 +726,6 @@ void main() {
       title: 'Optimistic Movie',
       overview: '',
       releaseDate: '',
-      mediaType: MediaType.movie,
     );
     final seenMovie = SeenItem(
       tmdbId: 555,
