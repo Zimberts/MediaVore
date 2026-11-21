@@ -6,6 +6,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/release_status.dart';
 import 'package:mediavore/core/utils/saga_sort.dart';
 import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
@@ -164,10 +165,7 @@ class _SagaFilmCard extends StatelessWidget {
     final colors = context.appColors;
     final theme = Theme.of(context);
 
-    final releaseDate = DateTime.tryParse(item.releaseDate);
-    final isUpcoming =
-        item.releaseDate.isEmpty ||
-        (releaseDate != null && releaseDate.isAfter(DateTime.now()));
+    final isUpcoming = !isReleased(item, DateTime.now());
 
     final year = item.releaseDate.length >= 4
         ? item.releaseDate.substring(0, 4)

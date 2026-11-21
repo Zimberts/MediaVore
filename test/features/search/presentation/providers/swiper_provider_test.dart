@@ -313,7 +313,7 @@ void main() {
         await Future<void>.delayed(Duration.zero);
 
         expect(
-          searchProvider.tonightCandidates.map((m) => m.id),
+          searchProvider.tonightCandidates().map((m) => m.id),
           contains(101),
         );
       },

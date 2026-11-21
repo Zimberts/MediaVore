@@ -9,6 +9,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/release_status.dart';
 import 'package:mediavore/core/widgets/app_dialog.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
@@ -234,11 +235,7 @@ class ListPageState extends State<ListPage> {
 
     if (settings.hideNonReleased) {
       final now = DateTime.now();
-      result = result.where((item) {
-        if (item.releaseDate.isEmpty) return false;
-        final rel = DateTime.tryParse(item.releaseDate);
-        return rel != null && rel.isBefore(now);
-      }).toList();
+      result = result.where((item) => isReleased(item, now)).toList();
     }
 
     switch (_sortMethod) {
