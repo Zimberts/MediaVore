@@ -475,7 +475,7 @@ void main() {
 
     test('getWatchProviders should return map from remote', () async {
       final tProviders = {
-        'US': {'flatrate': []},
+        'US': {'flatrate': <dynamic>[]},
       };
       when(
         () => mockRemoteDataSource.getWatchProviders(1, MediaType.movie),
@@ -1665,7 +1665,7 @@ void main() {
               overview: '',
               releaseDate: '1980',
             ),
-            credits: const {'cast': [], 'crew': []},
+            credits: const {'cast': <dynamic>[], 'crew': <dynamic>[]},
             similar: const [],
             recommendations: const [],
             watchProviders: const {},

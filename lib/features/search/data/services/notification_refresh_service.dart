@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/utils/json_maps.dart';
 import 'package:mediavore/core/utils/watch_tail.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
@@ -164,28 +165,24 @@ class NotificationRefreshService {
 
       final item = await itemFuture;
 
-      Map<String, dynamic> credits = {'cast': [], 'crew': []};
+      Map<String, dynamic> credits = {'cast': <dynamic>[], 'crew': <dynamic>[]};
       try {
         credits = await creditsFuture;
       } catch (e) {
         debugPrint('[Repo] refreshReturningSeries credits failed: $e');
       }
 
-      final List castResults = credits['cast'] ?? [];
-      final List crewResults = credits['crew'] ?? [];
+      final castResults = (credits['cast'] as List<dynamic>?) ?? const [];
+      final crewResults = (credits['crew'] as List<dynamic>?) ?? const [];
       final List<CastMember> cast = castResults
-          .map((c) => CastMember.fromJson(c))
+          .map((c) => CastMember.fromJson(c as Map<String, dynamic>))
           .toList();
-      final CrewMember? director =
-          crewResults.firstWhere(
-                (c) => c['job'] == 'Director',
-                orElse: () => null,
-              ) !=
-              null
-          ? CrewMember.fromJson(
-              crewResults.firstWhere((c) => c['job'] == 'Director'),
-            )
-          : null;
+      final directorJson = jsonObjectList(
+        crewResults,
+      ).where((c) => c['job'] == 'Director').firstOrNull;
+      final CrewMember? director = directorJson == null
+          ? null
+          : CrewMember.fromJson(directorJson);
 
       final similar = await similarFuture;
       final recommendations = await recommendationsFuture;

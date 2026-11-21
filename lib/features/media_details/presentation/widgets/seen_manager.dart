@@ -483,7 +483,7 @@ class _SeenManagerState extends State<SeenManager> {
   }
 
   void _showSeenHistory(BuildContext context, SearchProvider provider) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => _EpisodeSeenHistorySheet(

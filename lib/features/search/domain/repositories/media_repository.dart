@@ -174,7 +174,7 @@ abstract class MediaRepository {
   Future<void> importAllData(
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   });
 
   /// Likes a media item.

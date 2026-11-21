@@ -34,12 +34,12 @@ class ActorDetails extends Equatable {
     List<MediaItem> crewItems = const [],
   }) {
     return ActorDetails(
-      id: json['id'],
-      name: json['name'],
-      biography: json['biography'],
-      birthday: json['birthday'],
-      placeOfBirth: json['place_of_birth'],
-      profilePath: json['profile_path'],
+      id: json['id'] as int,
+      name: json['name'] as String,
+      biography: json['biography'] as String?,
+      birthday: json['birthday'] as String?,
+      placeOfBirth: json['place_of_birth'] as String?,
+      profilePath: json['profile_path'] as String?,
       items: items,
       crewItems: crewItems,
     );

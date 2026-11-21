@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/utils/json_maps.dart';
 import 'package:mediavore/core/utils/watch_tail.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
@@ -206,14 +207,11 @@ class QuickAddService {
           item.tmdbId,
           seasonNumber,
         );
-        final episodes = seasonDetails['episodes'] as List?;
         int? runtime;
-        if (episodes != null) {
-          for (final ep in episodes) {
-            if (ep['episode_number'] == episodeNumber) {
-              runtime = ep['runtime'] as int?;
-              break;
-            }
+        for (final ep in jsonObjectList(seasonDetails['episodes'])) {
+          if (ep['episode_number'] == episodeNumber) {
+            runtime = ep['runtime'] as int?;
+            break;
           }
         }
         if (runtime != null) {
@@ -349,7 +347,7 @@ class QuickAddService {
 
         final existingForTv = existingKeysByTv[tmdbId] ?? const <String>{};
 
-        final seenSorted = List.from(seen)
+        final seenSorted = [...seen]
           ..sort((a, b) {
             final dateCmp = b.seenDate.compareTo(a.seenDate);
             if (dateCmp != 0) return dateCmp;
@@ -389,19 +387,19 @@ class QuickAddService {
               break;
             }
 
-            final episodes = seasonData['episodes'] as List?;
+            final episodes = jsonObjectList(seasonData['episodes']);
             // Ignore seasons with no dated episodes at all (e.g. an announced but
             // unscheduled next season): they are not actionable in Quick Add and
             // must not surface as "no air date".
-            final hasDatedEpisode = (episodes ?? const []).any((ep) {
-              final airDate = (ep is Map) ? ep['air_date'] as String? : null;
+            final hasDatedEpisode = episodes.any((ep) {
+              final airDate = ep['air_date'] as String?;
               return airDate != null &&
                   airDate.isNotEmpty &&
                   DateTime.tryParse(airDate) != null;
             });
             if (!hasDatedEpisode) continue;
 
-            for (final ep in episodes ?? []) {
+            for (final ep in episodes) {
               final epNum = ep['episode_number'] as int?;
               if (epNum == null) continue;
               if (season.seasonNumber == tailSeason && epNum < startEpisode) {
@@ -647,7 +645,7 @@ class QuickAddService {
           // still counts as unseen for this tail.
           final Set<String> addedKeysForId = {};
           // iterate seen in reverse chronological order so most recent tails win for insertedAt
-          final seenSorted = List.from(seen)
+          final seenSorted = [...seen]
             ..sort((a, b) {
               final dateCmp = b.seenDate.compareTo(a.seenDate);
               if (dateCmp != 0) return dateCmp;
@@ -695,8 +693,8 @@ class QuickAddService {
                   detailsItem.id,
                   season.seasonNumber,
                 );
-                final episodes = seasonDetails['episodes'] as List?;
-                for (final ep in episodes ?? []) {
+                final episodes = jsonObjectList(seasonDetails['episodes']);
+                for (final ep in episodes) {
                   final epNum = ep['episode_number'] as int;
 
                   if (season.seasonNumber == startSeason &&

@@ -174,11 +174,11 @@ class MediaRemoteDataSource {
         queryParameters: params,
       );
 
-      final List results = response.data['results'];
+      final results = (response.data as Map)['results'] as List<dynamic>;
       // Not enriched here: MediaRepositoryImpl enriches cache-first with
       // bounded concurrency.
       return results
-          .map((m) => Map<String, dynamic>.from(m))
+          .map((m) => Map<String, dynamic>.from(m as Map))
           // /search has no `with_original_language`; filter client-side.
           .where(
             (data) =>
@@ -201,9 +201,12 @@ class MediaRemoteDataSource {
         queryParameters: {'query': query, 'page': page},
       );
 
-      final List results = response.data['results'] ?? [];
+      final results =
+          ((response.data as Map)['results'] as List<dynamic>?) ?? const [];
       return results
-          .map((m) => PersonSummary.fromJson(Map<String, dynamic>.from(m)))
+          .map(
+            (m) => PersonSummary.fromJson(Map<String, dynamic>.from(m as Map)),
+          )
           .toList();
     });
   }
@@ -214,7 +217,7 @@ class MediaRemoteDataSource {
     return _guard('fetching details', () async {
       final url = 'https://api.themoviedb.org/3/$path/$id';
       final response = await _tmdbGet(url);
-      final data = Map<String, dynamic>.from(response.data);
+      final data = Map<String, dynamic>.from(response.data as Map);
       data['media_type'] = path;
       await _fillMissingOverview(url, data);
       return MediaItem.fromJson(data);
@@ -253,7 +256,7 @@ class MediaRemoteDataSource {
           'append_to_response': detailsAppendedResources.join(','),
         },
       );
-      final data = Map<String, dynamic>.from(response.data);
+      final data = Map<String, dynamic>.from(response.data as Map);
       final appended = {
         for (final key in detailsAppendedResources) key: data.remove(key),
       };
@@ -277,7 +280,9 @@ class MediaRemoteDataSource {
           final map = Map<String, dynamic>.from(raw as Map);
           if (data['created_by'] is List &&
               (data['created_by'] as List).isNotEmpty) {
-            final existingCrew = List.from(map['crew'] as List? ?? const []);
+            final existingCrew = List<dynamic>.of(
+              map['crew'] as List<dynamic>? ?? const [],
+            );
             for (final creator in (data['created_by'] as List)) {
               if (creator is Map) {
                 existingCrew.insert(0, {
@@ -291,25 +296,27 @@ class MediaRemoteDataSource {
             map['crew'] = existingCrew;
           }
           return map;
-        }, {'cast': [], 'crew': []}),
+        }, {'cast': <dynamic>[], 'crew': <dynamic>[]}),
         similar: part(
           'similar',
-          (raw) => _parseResults(raw['results'] as List, path),
+          (raw) =>
+              _parseResults((raw as Map)['results'] as List<dynamic>, path),
           [],
         ),
         recommendations: part(
           'recommendations',
-          (raw) => _parseResults(raw['results'] as List, path),
+          (raw) =>
+              _parseResults((raw as Map)['results'] as List<dynamic>, path),
           [],
         ),
         watchProviders: part(
           'watch/providers',
-          (raw) => Map<String, dynamic>.from(raw['results'] as Map),
+          (raw) => Map<String, dynamic>.from((raw as Map)['results'] as Map),
           {},
         ),
         videos: part(
           'videos',
-          (raw) => (raw['results'] as List)
+          (raw) => ((raw as Map)['results'] as List<dynamic>)
               .map((v) => Map<String, dynamic>.from(v as Map))
               .toList(),
           [],
@@ -346,7 +353,7 @@ class MediaRemoteDataSource {
   }
 
   /// Parses a TMDB result list, defaulting `media_type` to [path].
-  static List<MediaItem> _parseResults(List results, String path) {
+  static List<MediaItem> _parseResults(List<dynamic> results, String path) {
     return results.map((m) {
       final data = Map<String, dynamic>.from(m as Map);
       if (data['media_type'] == null) data['media_type'] = path;
@@ -368,7 +375,7 @@ class MediaRemoteDataSource {
         url,
         queryParameters: {'language': fallbackAppLanguage.tmdbTag},
       );
-      final fallbackOverview = fallback.data['overview'] as String?;
+      final fallbackOverview = (fallback.data as Map)['overview'] as String?;
       if (fallbackOverview != null && fallbackOverview.isNotEmpty) {
         data['overview'] = fallbackOverview;
       }
@@ -389,7 +396,7 @@ class MediaRemoteDataSource {
         url,
         queryParameters: {'language': fallbackAppLanguage.tmdbTag},
       );
-      final fallbackBio = fallback.data['biography'] as String?;
+      final fallbackBio = (fallback.data as Map)['biography'] as String?;
       if (fallbackBio != null && fallbackBio.isNotEmpty) {
         data['biography'] = fallbackBio;
       }
@@ -466,12 +473,12 @@ class MediaRemoteDataSource {
         queryParameters: params,
       );
 
-      final List results = response.data['results'];
+      final results = (response.data as Map)['results'] as List<dynamic>;
       // Not enriched here: MediaRepositoryImpl enriches cache-first with
       // bounded concurrency.
       return results
           .map((m) {
-            final data = Map<String, dynamic>.from(m);
+            final data = Map<String, dynamic>.from(m as Map);
             if (data['media_type'] == null) data['media_type'] = path;
             return MediaItem.fromJson(data);
           })
@@ -493,7 +500,8 @@ class MediaRemoteDataSource {
         'https://api.themoviedb.org/3/trending/all/week',
         queryParameters: {'page': page},
       );
-      final List results = response.data['results'] ?? [];
+      final results =
+          ((response.data as Map)['results'] as List<dynamic>?) ?? const [];
       return results
           .map((m) => MediaItem.fromJson(Map<String, dynamic>.from(m as Map)))
           .where(
@@ -579,10 +587,10 @@ class MediaRemoteDataSource {
           'https://api.themoviedb.org/3/discover/$mediaType',
           queryParameters: params,
         );
-        final List results = response.data['results'];
+        final results = (response.data as Map)['results'] as List<dynamic>;
         return results
             .map((m) {
-              final data = Map<String, dynamic>.from(m);
+              final data = Map<String, dynamic>.from(m as Map);
               if (data['media_type'] == null) data['media_type'] = mediaType;
               return MediaItem.fromJson(data);
             })
@@ -613,7 +621,7 @@ class MediaRemoteDataSource {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/similar',
       );
-      return _parseResults(response.data['results'] as List, path);
+      return _parseResults((response.data as Map)['results'] as List, path);
     });
   }
 
@@ -623,9 +631,10 @@ class MediaRemoteDataSource {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/collection/$collectionId',
       );
-      final List results = response.data['parts'] ?? [];
+      final results =
+          ((response.data as Map)['parts'] as List<dynamic>?) ?? const [];
       return results.map((m) {
-        final data = Map<String, dynamic>.from(m);
+        final data = Map<String, dynamic>.from(m as Map);
         if (data['media_type'] == null) data['media_type'] = 'movie';
         return MediaItem.fromJson(data);
       }).toList();
@@ -638,7 +647,7 @@ class MediaRemoteDataSource {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/recommendations',
       );
-      return _parseResults(response.data['results'] as List, path);
+      return _parseResults((response.data as Map)['results'] as List, path);
     });
   }
 
@@ -648,7 +657,7 @@ class MediaRemoteDataSource {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/watch/providers',
       );
-      return response.data['results'] as Map<String, dynamic>;
+      return (response.data as Map)['results'] as Map<String, dynamic>;
     });
   }
 
@@ -658,7 +667,7 @@ class MediaRemoteDataSource {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/$path/$id/videos',
       );
-      final List results = response.data['results'];
+      final results = (response.data as Map)['results'] as List<dynamic>;
       return results.cast<Map<String, dynamic>>();
     });
   }

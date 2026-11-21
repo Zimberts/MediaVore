@@ -6,8 +6,30 @@ import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/l10n/generated/app_localizations.dart';
 
+/// Cache and storage actions of the data settings page, offered by
+/// [CacheAdminProvider] and, as a facade over it, by `SearchProvider`.
+abstract interface class CacheAdminActions {
+  int get cacheSize;
+  int get seenDbSize;
+  bool get isCacheLoading;
+  bool get isDbSizeLoading;
+  bool get isImporting;
+  double get importProgress;
+  String get importStatus;
+  ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress;
+
+  Future<void> updateCacheSize();
+  Future<void> updateSeenDbSize();
+  Future<void> clearCache({required bool complete});
+  Future<void> fillCache();
+  void cancelCacheFill();
+  Future<void> refetchMissingData();
+  Future<List<int>> exportAllData();
+  Future<void> importAllData(List<int> zipBytes, {ImportMode mode});
+}
+
 /// Provider dedicated to local TMDB cache and database storage administration.
-class CacheAdminProvider with ChangeNotifier {
+class CacheAdminProvider with ChangeNotifier implements CacheAdminActions {
   CacheAdminProvider(this.repository, {this.localeService}) {
     unawaited(init());
   }
@@ -23,16 +45,25 @@ class CacheAdminProvider with ChangeNotifier {
   double _importProgress = 0.0;
   String _importStatus = '';
 
+  @override
   int get cacheSize => _cacheSize;
+  @override
   int get seenDbSize => _seenDbSize;
+  @override
   bool get isCacheLoading => _isCacheLoading;
+  @override
   bool get isDbSizeLoading => _isDbSizeLoading;
+  @override
   bool get isImporting => _isImporting;
+  @override
   double get importProgress => _importProgress;
+  @override
   String get importStatus => _importStatus;
+  @override
   ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress =>
       repository.cacheWarmupProgress;
 
+  @override
   void cancelCacheFill() => repository.cancelCacheWarmup();
 
   AppLocalizations get _l10n => lookupAppLocalizations(
@@ -44,6 +75,7 @@ class CacheAdminProvider with ChangeNotifier {
     await updateSeenDbSize();
   }
 
+  @override
   Future<void> updateCacheSize() async {
     _isCacheLoading = true;
     notifyListeners();
@@ -52,6 +84,7 @@ class CacheAdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   Future<void> updateSeenDbSize() async {
     _isDbSizeLoading = true;
     notifyListeners();
@@ -60,6 +93,7 @@ class CacheAdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   Future<void> clearCache({required bool complete}) async {
     _isCacheLoading = true;
     notifyListeners();
@@ -69,6 +103,7 @@ class CacheAdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   Future<void> fillCache() async {
     _isCacheLoading = true;
     notifyListeners();
@@ -78,6 +113,7 @@ class CacheAdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   Future<List<int>> exportAllData() {
     return repository.exportAllData();
   }
@@ -90,6 +126,7 @@ class CacheAdminProvider with ChangeNotifier {
     await repository.populateQuickAddFromSeenHistory();
   }
 
+  @override
   Future<void> importAllData(
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
@@ -122,6 +159,7 @@ class CacheAdminProvider with ChangeNotifier {
     }
   }
 
+  @override
   Future<void> refetchMissingData() async {
     _isImporting = true;
     _importProgress = 0.0;

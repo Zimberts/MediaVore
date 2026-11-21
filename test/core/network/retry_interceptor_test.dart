@@ -61,7 +61,7 @@ void main() {
   group('RetryInterceptor', () {
     test('should retry 429 then return the successful response', () async {
       final adapter = _ScriptedAdapter([429, 429, 200]);
-      final response = await buildDio(adapter).get('https://x.test/a');
+      final response = await buildDio(adapter).get<dynamic>('https://x.test/a');
 
       expect(response.statusCode, 200);
       expect(adapter.calls, 3);
@@ -78,7 +78,7 @@ void main() {
           'retry-after': ['2'],
         },
       );
-      await buildDio(adapter).get('https://x.test/a');
+      await buildDio(adapter).get<dynamic>('https://x.test/a');
       expect(sleeps, [const Duration(seconds: 2)]);
 
       sleeps.clear();
@@ -88,14 +88,14 @@ void main() {
           'retry-after': ['120'],
         },
       );
-      await buildDio(capped).get('https://x.test/a');
+      await buildDio(capped).get<dynamic>('https://x.test/a');
       expect(sleeps, [const Duration(seconds: 10)]);
     });
 
     test('should give up after maxRetries and surface the error', () async {
       final adapter = _ScriptedAdapter([503]);
       await expectLater(
-        buildDio(adapter).get('https://x.test/a'),
+        buildDio(adapter).get<dynamic>('https://x.test/a'),
         throwsA(
           isA<DioException>().having(
             (e) => e.response?.statusCode,
@@ -110,7 +110,7 @@ void main() {
 
     test('should retry connection errors', () async {
       final adapter = _ScriptedAdapter([DioExceptionType.connectionError, 200]);
-      final response = await buildDio(adapter).get('https://x.test/a');
+      final response = await buildDio(adapter).get<dynamic>('https://x.test/a');
       expect(response.statusCode, 200);
       expect(adapter.calls, 2);
     });
@@ -118,7 +118,7 @@ void main() {
     test('should not retry non-transient statuses', () async {
       final adapter = _ScriptedAdapter([404]);
       await expectLater(
-        buildDio(adapter).get('https://x.test/a'),
+        buildDio(adapter).get<dynamic>('https://x.test/a'),
         throwsA(isA<DioException>()),
       );
       expect(adapter.calls, 1);
@@ -128,7 +128,7 @@ void main() {
     test('should not retry non-idempotent methods', () async {
       final adapter = _ScriptedAdapter([503]);
       await expectLater(
-        buildDio(adapter).post('https://x.test/a'),
+        buildDio(adapter).post<dynamic>('https://x.test/a'),
         throwsA(isA<DioException>()),
       );
       expect(adapter.calls, 1);

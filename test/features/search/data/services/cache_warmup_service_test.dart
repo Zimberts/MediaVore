@@ -300,7 +300,7 @@ void main() {
       ).thenAnswer((_) async => MediaDetails(item: show, cast: const []));
       when(
         () => cache.getSeason(5, 1),
-      ).thenAnswer((_) async => {'episodes': []});
+      ).thenAnswer((_) async => {'episodes': <dynamic>[]});
       listNames.complete(['watchlist']);
 
       expect(await warmup.run(), isTrue);

@@ -105,7 +105,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildHeader(ThemeData theme, dynamic l10n) {
+  Widget _buildHeader(ThemeData theme, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
       child: Column(
@@ -141,7 +141,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildTypeSection(ThemeData theme, dynamic l10n) {
+  Widget _buildTypeSection(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -199,7 +199,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildSortSection(ThemeData theme, dynamic l10n) {
+  Widget _buildSortSection(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -272,7 +272,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildPeriodSection(ThemeData theme, dynamic l10n) {
+  Widget _buildPeriodSection(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -387,7 +387,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildGenresSection(ThemeData theme, dynamic l10n) {
+  Widget _buildGenresSection(ThemeData theme, AppLocalizations l10n) {
     Map<int, String> availableGenres;
     if (_currentFilters.type == MediaType.movie) {
       availableGenres = GenreUtils.movieGenres;
@@ -441,7 +441,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildRatingSection(ThemeData theme, dynamic l10n) {
+  Widget _buildRatingSection(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -507,7 +507,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildDurationSection(ThemeData theme, dynamic l10n) {
+  Widget _buildDurationSection(ThemeData theme, AppLocalizations l10n) {
     final isTv = _currentFilters.type == MediaType.tv;
 
     return Column(
@@ -606,7 +606,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildHideSeenSection(ThemeData theme, dynamic l10n) {
+  Widget _buildHideSeenSection(ThemeData theme, AppLocalizations l10n) {
     return SwitchListTile.adaptive(
       contentPadding: EdgeInsets.zero,
       title: Text(
@@ -624,7 +624,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildBottomBar(ThemeData theme, dynamic l10n) {
+  Widget _buildBottomBar(ThemeData theme, AppLocalizations l10n) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

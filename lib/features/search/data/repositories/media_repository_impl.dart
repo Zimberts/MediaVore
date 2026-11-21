@@ -553,7 +553,7 @@ class MediaRepositoryImpl implements MediaRepository {
   Future<void> importAllData(
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
-    Function(double, String)? onProgress,
+    void Function(double, String)? onProgress,
   }) async {
     await _ensureInitialized();
     return _importExport.importAllData(
