@@ -6,13 +6,15 @@ import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/utils/release_sort.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/widgets/type_chip.dart';
 import 'package:mediavore/features/home/presentation/home_formatters.dart';
+import 'package:mediavore/features/home/presentation/widgets/in_progress_card.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
-/// Row of a release in "Upcoming": date badge (a clock without a date),
-/// title, what is released, the button that marks a release already out as
-/// seen and the menu.
+/// Row of a release in "Upcoming": poster (or, without one, a date badge
+/// showing a clock when the date is unknown), title, what is released and
+/// when, the button that marks a release already out as seen and the menu.
 class UpcomingRow extends StatelessWidget {
   const UpcomingRow({
     super.key,
@@ -36,6 +38,9 @@ class UpcomingRow extends StatelessWidget {
   /// Opens the menu of the release.
   final VoidCallback onMenu;
 
+  /// Width of the poster, as in the rows of "In progress".
+  static const double posterWidth = 40;
+
   /// Out today or earlier: it can be marked as seen.
   static bool isReleased(NotifiedItem item, DateTime now) {
     final date = item.releaseDate;
@@ -53,6 +58,7 @@ class UpcomingRow extends StatelessWidget {
     final season = item.seasonNumber;
     final episode = item.episodeNumber;
     final runtime = Formatters.formatRuntime(item.runtime);
+    final posterUrl = tmdbPosterUrl(item.posterPath, size: 'w92');
     final subtitle = [
       if (item.type == MediaType.tv && season != null && episode != null)
         l10n.homeEpisodeCode(season, episode),
@@ -83,13 +89,26 @@ class UpcomingRow extends StatelessWidget {
                     child: Row(
                       children: [
                         ExcludeSemantics(
-                          child: _DateBadge(
-                            date: date,
-                            kind: kind,
-                            month: date == null
-                                ? null
-                                : formatShortMonth(l10n, date),
-                          ),
+                          child: posterUrl != null
+                              ? SizedBox(
+                                  key: const Key('upcoming_row_poster'),
+                                  width: posterWidth,
+                                  child: MediaPosterCard(
+                                    compact: true,
+                                    data: MediaPosterData(
+                                      title: item.title,
+                                      kind: kind,
+                                      imageUrl: posterUrl,
+                                    ),
+                                  ),
+                                )
+                              : _DateBadge(
+                                  date: date,
+                                  kind: kind,
+                                  month: date == null
+                                      ? null
+                                      : formatShortMonth(l10n, date),
+                                ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
