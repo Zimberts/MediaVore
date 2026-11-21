@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -193,6 +195,33 @@ void main() {
       verify(() => mockRepository.markAsSeen(any())).called(1);
       expect(find.text('Undo'), findsOneWidget);
     });
+
+    testWidgets(
+      'tapping check_circle_outline optimistically updates icon to check_circle immediately before repository completes (#355)',
+      (WidgetTester tester) async {
+        final completer = Completer<void>();
+        when(
+          () => mockRepository.markAsSeen(any()),
+        ).thenAnswer((_) => completer.future);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
+
+        expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+        expect(find.byIcon(Icons.check_circle), findsNothing);
+
+        await tester.tap(find.byIcon(Icons.check_circle_outline));
+        // Single frame pump: repository operation is still in flight
+        await tester.pump();
+
+        // The icon MUST be optimistically flipped to check_circle immediately (< 100 ms)
+        expect(find.byIcon(Icons.check_circle), findsOneWidget);
+        expect(find.byIcon(Icons.check_circle_outline), findsNothing);
+
+        completer.complete();
+        await tester.pumpAndSettle();
+      },
+    );
 
     testWidgets('tapping check_circle icon (when seen) adds viewing immediately without dialog', (
       WidgetTester tester,

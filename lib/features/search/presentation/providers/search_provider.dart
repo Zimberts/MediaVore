@@ -997,11 +997,131 @@ class SearchProvider with ChangeNotifier {
       repository.getMediaDetails(id, type: type);
   Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) =>
       repository.getSeasonDetails(tvId, seasonNumber);
-  Future<List<SeenItem>> loadSeenStatusForItem(int tmdbId, MediaType type) =>
-      repository.getSeenStatus(tmdbId, type);
-  Future<void> markAsSeen(SeenItem item) async {
-    await repository.markAsSeen(item);
+  Future<List<SeenItem>> loadSeenStatusForItem(int tmdbId, MediaType type) async {
+    final status = await repository.getSeenStatus(tmdbId, type);
+    final inMemory = _seenItems
+        .where((s) => s.tmdbId == tmdbId && s.type == type)
+        .toList();
+    if (inMemory.length > status.length) {
+      return inMemory;
+    }
+    return status;
+  }
 
+  void _recordSeenItemInMemory(SeenItem item) {
+    _seenItems = [item, ..._seenItems];
+    final key = '${item.tmdbId}:${item.type.name}';
+    if (item.type == MediaType.movie) {
+      _seenCounts = Map.of(_seenCounts)..[key] = (_seenCounts[key] ?? 0) + 1;
+    } else {
+      final existingEpisodes = _seenItems
+          .where((i) =>
+              i.tmdbId == item.tmdbId &&
+              i.type == MediaType.tv &&
+              i.seasonNumber != null &&
+              i.episodeNumber != null)
+          .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
+          .toSet();
+      _seenCounts = Map.of(_seenCounts)..[key] = existingEpisodes.length;
+    }
+  }
+
+  void _revertSeenItemInMemory(SeenItem item) {
+    _seenItems = _seenItems.where((i) => !identical(i, item)).toList();
+    final key = '${item.tmdbId}:${item.type.name}';
+    if (item.type == MediaType.movie) {
+      final count = _seenItems
+          .where((i) => i.tmdbId == item.tmdbId && i.type == MediaType.movie)
+          .length;
+      _seenCounts = Map.of(_seenCounts)..[key] = count;
+    } else {
+      final existingEpisodes = _seenItems
+          .where((i) =>
+              i.tmdbId == item.tmdbId &&
+              i.type == MediaType.tv &&
+              i.seasonNumber != null &&
+              i.episodeNumber != null)
+          .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
+          .toSet();
+      _seenCounts = Map.of(_seenCounts)..[key] = existingEpisodes.length;
+    }
+  }
+
+  void _recordManySeenItemsInMemory(List<SeenItem> items) {
+    if (items.isEmpty) return;
+    _seenItems = [...items.reversed, ..._seenItems];
+    final newCounts = Map<String, int>.of(_seenCounts);
+    final touchedKeys = items.map((i) => '${i.tmdbId}:${i.type.name}').toSet();
+    for (final key in touchedKeys) {
+      final parts = key.split(':');
+      final tmdbId = int.parse(parts[0]);
+      final typeName = parts[1];
+      if (typeName == MediaType.movie.name) {
+        newCounts[key] = _seenItems
+            .where((i) => i.tmdbId == tmdbId && i.type == MediaType.movie)
+            .length;
+      } else {
+        newCounts[key] = _seenItems
+            .where((i) =>
+                i.tmdbId == tmdbId &&
+                i.type == MediaType.tv &&
+                i.seasonNumber != null &&
+                i.episodeNumber != null)
+            .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
+            .toSet()
+            .length;
+      }
+    }
+    _seenCounts = newCounts;
+  }
+
+  void _revertManySeenItemsInMemory(List<SeenItem> items) {
+    if (items.isEmpty) return;
+    final itemSet = items.toSet();
+    _seenItems = _seenItems.where((i) => !itemSet.contains(i)).toList();
+    final newCounts = Map<String, int>.of(_seenCounts);
+    final touchedKeys = items.map((i) => '${i.tmdbId}:${i.type.name}').toSet();
+    for (final key in touchedKeys) {
+      final parts = key.split(':');
+      final tmdbId = int.parse(parts[0]);
+      final typeName = parts[1];
+      if (typeName == MediaType.movie.name) {
+        newCounts[key] = _seenItems
+            .where((i) => i.tmdbId == tmdbId && i.type == MediaType.movie)
+            .length;
+      } else {
+        newCounts[key] = _seenItems
+            .where((i) =>
+                i.tmdbId == tmdbId &&
+                i.type == MediaType.tv &&
+                i.seasonNumber != null &&
+                i.episodeNumber != null)
+            .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
+            .toSet()
+            .length;
+      }
+    }
+    _seenCounts = newCounts;
+  }
+
+  Future<void> markAsSeen(SeenItem item) async {
+    // Immediate optimistic update (< 100 ms) so the UI icon and counters flip
+    // instantly without waiting for network or disk operations.
+    _recordSeenItemInMemory(item);
+    notifyListeners();
+
+    try {
+      await repository.markAsSeen(item);
+    } catch (e) {
+      _revertSeenItemInMemory(item);
+      notifyListeners();
+      rethrow;
+    }
+
+    await _postMarkAsSeen(item);
+  }
+
+  Future<void> _postMarkAsSeen(SeenItem item) async {
     // After marking as seen, remove from watchlist when appropriate so
     // that all entry points (SeenManager, Notification center, WatchNext)
     // exhibit the same behaviour.
@@ -1058,13 +1178,15 @@ class SearchProvider with ChangeNotifier {
             }
 
             bool noNext = false;
-            try {
-              final next = await getNextEpisode(item.tmdbId);
-              if (next == null) noNext = true;
-            } catch (e) {
-              debugPrint(
-                '[SearchProvider] markAsSeen getNextEpisode failed: $e',
-              );
+            if (discontinued && !isLastEpisode) {
+              try {
+                final next = await getNextEpisode(item.tmdbId);
+                if (next == null) noNext = true;
+              } catch (e) {
+                debugPrint(
+                  '[SearchProvider] markAsSeen getNextEpisode failed: $e',
+                );
+              }
             }
 
             if ((isLastEpisode || noNext) && discontinued) {
@@ -1111,15 +1233,24 @@ class SearchProvider with ChangeNotifier {
       debugPrint('[SearchProvider] markAsSeen post-processing failed: $e');
     }
 
-    await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
+    await loadQuickAddItems();
   }
 
   Future<void> markManyAsSeen(List<SeenItem> items) async {
     if (items.isEmpty) return;
-    await repository.markManyAsSeen(items);
-    await loadAllSeenStatus();
+    _recordManySeenItemsInMemory(items);
+    notifyListeners();
+
+    try {
+      await repository.markManyAsSeen(items);
+    } catch (e) {
+      _revertManySeenItemsInMemory(items);
+      notifyListeners();
+      rethrow;
+    }
+
     await loadNotifiedItems();
     await updateSeenDbSize();
     await loadQuickAddItems();
