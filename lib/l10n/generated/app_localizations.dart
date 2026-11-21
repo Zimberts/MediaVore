@@ -146,41 +146,17 @@ abstract class AppLocalizations {
   /// **'Import'**
   String get commonImport;
 
-  /// No description provided for @commonOpenSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Settings'**
-  String get commonOpenSettings;
-
-  /// No description provided for @navSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get navSearch;
-
   /// No description provided for @navDiscover.
   ///
   /// In en, this message translates to:
   /// **'Discover'**
   String get navDiscover;
 
-  /// No description provided for @navMyLists.
-  ///
-  /// In en, this message translates to:
-  /// **'My Lists'**
-  String get navMyLists;
-
   /// No description provided for @navHistory.
   ///
   /// In en, this message translates to:
   /// **'History'**
   String get navHistory;
-
-  /// No description provided for @navAlerts.
-  ///
-  /// In en, this message translates to:
-  /// **'Alerts'**
-  String get navAlerts;
 
   /// No description provided for @emptyStateSearchAction.
   ///
@@ -512,41 +488,17 @@ abstract class AppLocalizations {
   /// **'Espresso'**
   String get paletteNameEspresso;
 
-  /// No description provided for @navProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'Me'**
-  String get navProfile;
-
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
   /// **'Me'**
   String get profileTitle;
 
-  /// No description provided for @profileStats.
-  ///
-  /// In en, this message translates to:
-  /// **'Statistics'**
-  String get profileStats;
-
-  /// No description provided for @profileStatsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Watch time, top genres and activity.'**
-  String get profileStatsSubtitle;
-
   /// No description provided for @profileAchievements.
   ///
   /// In en, this message translates to:
   /// **'Achievements'**
   String get profileAchievements;
-
-  /// No description provided for @profileAchievementsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'View your collection of badges and progress.'**
-  String get profileAchievementsSubtitle;
 
   /// No description provided for @profileSettings.
   ///
@@ -559,12 +511,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Appearance, display and preferences.'**
   String get profileSettingsSubtitle;
-
-  /// No description provided for @settingsSectionListsDisplay.
-  ///
-  /// In en, this message translates to:
-  /// **'Lists Display'**
-  String get settingsSectionListsDisplay;
 
   /// No description provided for @settingsHideNonReleased.
   ///
@@ -589,12 +535,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage cache, exports, and viewing history database.'**
   String get settingsStorageSubtitle;
-
-  /// No description provided for @settingsSectionApi.
-  ///
-  /// In en, this message translates to:
-  /// **'API Configuration'**
-  String get settingsSectionApi;
 
   /// No description provided for @settingsTmdbCredential.
   ///
@@ -992,12 +932,6 @@ abstract class AppLocalizations {
   /// **'Display Options'**
   String get listsDisplayOptions;
 
-  /// No description provided for @listsGridSize.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid Size'**
-  String get listsGridSize;
-
   /// No description provided for @listsSharingImporting.
   ///
   /// In en, this message translates to:
@@ -1027,12 +961,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check out my {list} on MediaVore: {link}'**
   String listsShareLinkMessage(String list, String link);
-
-  /// No description provided for @listsShowQr.
-  ///
-  /// In en, this message translates to:
-  /// **'Show QR Code'**
-  String get listsShowQr;
 
   /// No description provided for @listsQrShareMessage.
   ///
@@ -1105,12 +1033,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid link format'**
   String get listsInvalidLink;
-
-  /// No description provided for @listsCouldNotParseLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not parse link'**
-  String get listsCouldNotParseLink;
 
   /// No description provided for @listsConfirmImport.
   ///
@@ -1190,41 +1112,11 @@ abstract class AppLocalizations {
   /// **'Watchlist'**
   String get listsWatchlist;
 
-  /// No description provided for @listsRemoveSelected.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove selected'**
-  String get listsRemoveSelected;
-
-  /// No description provided for @listsDisplayMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Display Mode'**
-  String get listsDisplayMode;
-
   /// No description provided for @listsEmpty.
   ///
   /// In en, this message translates to:
   /// **'No items in this list.'**
   String get listsEmpty;
-
-  /// No description provided for @listsEmptyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Search for a movie or a series, then add it to this list.'**
-  String get listsEmptyHint;
-
-  /// No description provided for @listsSwitchList.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch List'**
-  String get listsSwitchList;
-
-  /// No description provided for @listsItemCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 item} other{{count} items}}'**
-  String listsItemCount(int count);
 
   /// No description provided for @listsCreateNew.
   ///
@@ -1280,12 +1172,6 @@ abstract class AppLocalizations {
   /// **'{minutes} min'**
   String mediaRuntimeMinutes(int minutes);
 
-  /// No description provided for @mediaSeasonShort.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} S'**
-  String mediaSeasonShort(String count);
-
   /// No description provided for @seenRemoveLogTitle.
   ///
   /// In en, this message translates to:
@@ -1304,71 +1190,17 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get commonRemove;
 
-  /// No description provided for @seenFilterSort.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter & Sort'**
-  String get seenFilterSort;
-
-  /// No description provided for @seenViewMode.
-  ///
-  /// In en, this message translates to:
-  /// **'View Mode'**
-  String get seenViewMode;
-
-  /// No description provided for @seenViewHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'History (All episodes)'**
-  String get seenViewHistory;
-
-  /// No description provided for @seenViewLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Library (Unique titles)'**
-  String get seenViewLibrary;
-
   /// No description provided for @seenSortBy.
   ///
   /// In en, this message translates to:
   /// **'Sort by'**
   String get seenSortBy;
 
-  /// No description provided for @seenSortDateNewest.
-  ///
-  /// In en, this message translates to:
-  /// **'Date (Newest)'**
-  String get seenSortDateNewest;
-
-  /// No description provided for @seenSortDateOldest.
-  ///
-  /// In en, this message translates to:
-  /// **'Date (Oldest)'**
-  String get seenSortDateOldest;
-
-  /// No description provided for @seenSortNameAsc.
-  ///
-  /// In en, this message translates to:
-  /// **'Name (A-Z)'**
-  String get seenSortNameAsc;
-
-  /// No description provided for @seenSortNameDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Name (Z-A)'**
-  String get seenSortNameDesc;
-
   /// No description provided for @seenMediaType.
   ///
   /// In en, this message translates to:
   /// **'Media Type'**
   String get seenMediaType;
-
-  /// No description provided for @commonAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get commonAll;
 
   /// No description provided for @commonMovies.
   ///
@@ -1418,18 +1250,6 @@ abstract class AppLocalizations {
   /// **'No matches found.'**
   String get seenNoMatches;
 
-  /// No description provided for @seenEpisodesSeen.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 episode seen} other{{count} episodes seen}}'**
-  String seenEpisodesSeen(int count);
-
-  /// No description provided for @seenCannotDeleteLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Cannot delete from Library mode. Switch to History to remove entries.'**
-  String get seenCannotDeleteLibrary;
-
   /// No description provided for @statsTitle.
   ///
   /// In en, this message translates to:
@@ -1466,18 +1286,6 @@ abstract class AppLocalizations {
   /// **'Month'**
   String get statsMonth;
 
-  /// No description provided for @statsOverview.
-  ///
-  /// In en, this message translates to:
-  /// **'Overview'**
-  String get statsOverview;
-
-  /// No description provided for @statsDistribution.
-  ///
-  /// In en, this message translates to:
-  /// **'Distribution'**
-  String get statsDistribution;
-
   /// No description provided for @statsSelectYear.
   ///
   /// In en, this message translates to:
@@ -1513,12 +1321,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days}d {hours}h {minutes}m'**
   String statsDuration(int days, int hours, int minutes);
-
-  /// No description provided for @statsEpisodes.
-  ///
-  /// In en, this message translates to:
-  /// **'Episodes'**
-  String get statsEpisodes;
 
   /// No description provided for @statsHallOfFame.
   ///
@@ -1585,12 +1387,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Media Split ({metric})'**
   String statsMediaSplit(String metric);
-
-  /// No description provided for @statsPieLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'{type}\n{percent}%'**
-  String statsPieLabel(String type, String percent);
 
   /// No description provided for @statsTopGenres.
   ///
@@ -1874,41 +1670,11 @@ abstract class AppLocalizations {
   /// **'Both'**
   String get discoveryBoth;
 
-  /// No description provided for @discoveryReleaseYear.
-  ///
-  /// In en, this message translates to:
-  /// **'Release Year'**
-  String get discoveryReleaseYear;
-
-  /// No description provided for @discoveryAnyYear.
-  ///
-  /// In en, this message translates to:
-  /// **'Any'**
-  String get discoveryAnyYear;
-
-  /// No description provided for @discoveryMinRating.
-  ///
-  /// In en, this message translates to:
-  /// **'Min Rating: {rating}'**
-  String discoveryMinRating(String rating);
-
   /// No description provided for @discoveryGenres.
   ///
   /// In en, this message translates to:
   /// **'Genres'**
   String get discoveryGenres;
-
-  /// No description provided for @discoveryReset.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset'**
-  String get discoveryReset;
-
-  /// No description provided for @discoveryApply.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply'**
-  String get discoveryApply;
 
   /// No description provided for @commonRetry.
   ///
@@ -1916,29 +1682,11 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get commonRetry;
 
-  /// No description provided for @discoverySearchHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Search within Discovery...'**
-  String get discoverySearchHint;
-
-  /// No description provided for @discoverySearchToggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Search Discovery'**
-  String get discoverySearchToggle;
-
   /// No description provided for @discoveryTitle.
   ///
   /// In en, this message translates to:
   /// **'Discover'**
   String get discoveryTitle;
-
-  /// No description provided for @discoveryNoResults.
-  ///
-  /// In en, this message translates to:
-  /// **'No results found'**
-  String get discoveryNoResults;
 
   /// No description provided for @discoveryClearFilters.
   ///
@@ -1964,30 +1712,6 @@ abstract class AppLocalizations {
   /// **'Planned — no release date'**
   String get releasePlanned;
 
-  /// No description provided for @notifTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Alerts'**
-  String get notifTitle;
-
-  /// No description provided for @notifTabReleases.
-  ///
-  /// In en, this message translates to:
-  /// **'Releases'**
-  String get notifTabReleases;
-
-  /// No description provided for @notifTabQuickAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick Add'**
-  String get notifTabQuickAdd;
-
-  /// No description provided for @notifSyncing.
-  ///
-  /// In en, this message translates to:
-  /// **'Syncing releases...'**
-  String get notifSyncing;
-
   /// No description provided for @notifNoReleases.
   ///
   /// In en, this message translates to:
@@ -2012,12 +1736,6 @@ abstract class AppLocalizations {
   /// **'Mark as seen'**
   String get commonMarkAsSeen;
 
-  /// No description provided for @notifMarkedAsSeen.
-  ///
-  /// In en, this message translates to:
-  /// **'Marked {title} as seen'**
-  String notifMarkedAsSeen(String title);
-
   /// No description provided for @notifNoNextEpisodes.
   ///
   /// In en, this message translates to:
@@ -2030,29 +1748,11 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get commonUnknown;
 
-  /// No description provided for @notifNextEpisode.
-  ///
-  /// In en, this message translates to:
-  /// **'Next: Season {season}, Episode {episode}'**
-  String notifNextEpisode(int season, int episode);
-
-  /// No description provided for @notifStreakOptedOut.
-  ///
-  /// In en, this message translates to:
-  /// **'Streak opted out of Quick Add'**
-  String get notifStreakOptedOut;
-
   /// No description provided for @commonUndo.
   ///
   /// In en, this message translates to:
   /// **'Undo'**
   String get commonUndo;
-
-  /// No description provided for @notifEpisode.
-  ///
-  /// In en, this message translates to:
-  /// **'episode'**
-  String get notifEpisode;
 
   /// No description provided for @detailOfflineSeason.
   ///
@@ -2083,18 +1783,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save failed: {error}'**
   String detailSaveFailed(String error);
-
-  /// No description provided for @detailCreator.
-  ///
-  /// In en, this message translates to:
-  /// **'Creator'**
-  String get detailCreator;
-
-  /// No description provided for @detailDirector.
-  ///
-  /// In en, this message translates to:
-  /// **'Director'**
-  String get detailDirector;
 
   /// No description provided for @detailExportHistory.
   ///
@@ -2138,12 +1826,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 Episode} other{{count} Episodes}}'**
   String detailEpisodeCount(int count);
 
-  /// No description provided for @detailCreditLine.
-  ///
-  /// In en, this message translates to:
-  /// **'{role}: {name}'**
-  String detailCreditLine(String role, String name);
-
   /// No description provided for @detailOverview.
   ///
   /// In en, this message translates to:
@@ -2185,12 +1867,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recommendations'**
   String get detailRecommendations;
-
-  /// No description provided for @detailWatchOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Watch on:'**
-  String get detailWatchOn;
 
   /// No description provided for @detailTrailers.
   ///
@@ -2252,12 +1928,6 @@ abstract class AppLocalizations {
   /// **'Pilot'**
   String get statusPilot;
 
-  /// No description provided for @seenOpenHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'View History'**
-  String get seenOpenHistory;
-
   /// No description provided for @seenEpisodesSeenTitle.
   ///
   /// In en, this message translates to:
@@ -2305,12 +1975,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear All'**
   String get seenClearAll;
-
-  /// No description provided for @seenViewingHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'Viewing History'**
-  String get seenViewingHistory;
 
   /// No description provided for @seenAddViewing.
   ///
@@ -2558,12 +2222,6 @@ abstract class AppLocalizations {
   /// **'Refetching {title}...'**
   String progressRefetchingItem(String title);
 
-  /// No description provided for @progressRefetchDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Done refetching data!'**
-  String get progressRefetchDone;
-
   /// No description provided for @progressProcessingItem.
   ///
   /// In en, this message translates to:
@@ -2612,12 +2270,6 @@ abstract class AppLocalizations {
   /// **'Add to'**
   String get swiperAddTo;
 
-  /// No description provided for @swiperPass.
-  ///
-  /// In en, this message translates to:
-  /// **'Pass'**
-  String get swiperPass;
-
   /// No description provided for @swiperDiscard.
   ///
   /// In en, this message translates to:
@@ -2635,30 +2287,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undo'**
   String get swiperUndo;
-
-  /// No description provided for @swiperAddedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'{title} added to {list}'**
-  String swiperAddedMessage(String title, String list);
-
-  /// No description provided for @swiperDiscardedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Discarded'**
-  String get swiperDiscardedMessage;
-
-  /// No description provided for @swiperSagaAddedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Saga {title} added ({count} movies)'**
-  String swiperSagaAddedMessage(String title, int count);
-
-  /// No description provided for @swiperSagaDiscardedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Saga discarded'**
-  String get swiperSagaDiscardedMessage;
 
   /// No description provided for @swiperEmptyTitle.
   ///
@@ -2756,29 +2384,11 @@ abstract class AppLocalizations {
   /// **'Lists'**
   String get librarySectionLists;
 
-  /// No description provided for @togetherSoonTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choosing together is coming soon'**
-  String get togetherSoonTitle;
-
-  /// No description provided for @togetherSoonMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Compare your lists with friends and vote for what to watch.'**
-  String get togetherSoonMessage;
-
   /// No description provided for @homeTitle.
   ///
   /// In en, this message translates to:
   /// **'Tonight'**
   String get homeTitle;
-
-  /// No description provided for @homeRefreshReleases.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh releases'**
-  String get homeRefreshReleases;
 
   /// No description provided for @homeOfflineMessage.
   ///
@@ -2966,24 +2576,6 @@ abstract class AppLocalizations {
   /// **'Connect to TMDB'**
   String get homeConnectTmdbAction;
 
-  /// No description provided for @homeUpcomingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Upcoming'**
-  String get homeUpcomingTitle;
-
-  /// No description provided for @homeUpcomingRow.
-  ///
-  /// In en, this message translates to:
-  /// **'Releases and alerts'**
-  String get homeUpcomingRow;
-
-  /// No description provided for @homeUpcomingSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No title followed} =1{1 title followed} other{{count} titles followed}}'**
-  String homeUpcomingSubtitle(int count);
-
   /// No description provided for @discoverModeExplore.
   ///
   /// In en, this message translates to:
@@ -3098,18 +2690,6 @@ abstract class AppLocalizations {
   /// **'Because you watched {title}'**
   String discoverBecauseYouWatched(String title);
 
-  /// No description provided for @discoverSwipeSoonTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Swipe mode is coming soon'**
-  String get discoverSwipeSoonTitle;
-
-  /// No description provided for @discoverSwipeSoonMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Go through suggestions one by one to fill your lists.'**
-  String get discoverSwipeSoonMessage;
-
   /// No description provided for @discoverConnectTmdb.
   ///
   /// In en, this message translates to:
@@ -3145,18 +2725,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A list named “{name}” already exists'**
   String libraryListNameTaken(String name);
-
-  /// No description provided for @libraryListEmptyForType.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing of this type in this list'**
-  String get libraryListEmptyForType;
-
-  /// No description provided for @libraryListScope.
-  ///
-  /// In en, this message translates to:
-  /// **'{title} · {type}'**
-  String libraryListScope(String title, String type);
 
   /// No description provided for @profileActiveDays.
   ///
@@ -3218,41 +2786,17 @@ abstract class AppLocalizations {
   /// **'Compare with one of my lists'**
   String get listsCompareWithMine;
 
-  /// No description provided for @listsCompareWithMineSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Find movies and series in common without importing'**
-  String get listsCompareWithMineSubtitle;
-
   /// No description provided for @listsImportOptionTitle.
   ///
   /// In en, this message translates to:
   /// **'Import into library'**
   String get listsImportOptionTitle;
 
-  /// No description provided for @listsImportOptionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Save this list to your personal lists'**
-  String get listsImportOptionSubtitle;
-
   /// No description provided for @listsCompareTitle.
   ///
   /// In en, this message translates to:
   /// **'List Intersection'**
   String get listsCompareTitle;
-
-  /// No description provided for @listsCompareSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{otherList} ∩ {myList}'**
-  String listsCompareSubtitle(String otherList, String myList);
-
-  /// No description provided for @listsCompareMyListLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Compare with:'**
-  String get listsCompareMyListLabel;
 
   /// No description provided for @listsCompareCommonCount.
   ///
@@ -3265,12 +2809,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide watched'**
   String get listsCompareHideSeen;
-
-  /// No description provided for @listsCompareSeenBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'({count} watched)'**
-  String listsCompareSeenBadge(int count);
 
   /// No description provided for @listsCompareEmptyTitle.
   ///
@@ -4244,12 +3782,6 @@ abstract class AppLocalizations {
   /// **'Mark as seen…'**
   String get commonMarkAsSeenWithDots;
 
-  /// No description provided for @seenSeenWithDots.
-  ///
-  /// In en, this message translates to:
-  /// **'Seen…'**
-  String get seenSeenWithDots;
-
   /// No description provided for @seenRewatchAction.
   ///
   /// In en, this message translates to:
@@ -4508,12 +4040,6 @@ abstract class AppLocalizations {
   /// **'{seen}/{total} seen'**
   String detailSeasonSeenShort(int seen, int total);
 
-  /// No description provided for @detailEpisodeNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Episode {number}'**
-  String detailEpisodeNumber(int number);
-
   /// No description provided for @togetherSessionSetup.
   ///
   /// In en, this message translates to:
@@ -4717,12 +4243,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Title {current} of {total}'**
   String togetherVoteProgress(int current, int total);
-
-  /// No description provided for @togetherVoterTurn.
-  ///
-  /// In en, this message translates to:
-  /// **'{name}\'s turn'**
-  String togetherVoterTurn(String name);
 
   /// No description provided for @togetherVoteYes.
   ///

@@ -34,22 +34,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonImport => 'Import';
 
   @override
-  String get commonOpenSettings => 'Open Settings';
-
-  @override
-  String get navSearch => 'Search';
-
-  @override
   String get navDiscover => 'Discover';
 
   @override
-  String get navMyLists => 'My Lists';
-
-  @override
   String get navHistory => 'History';
-
-  @override
-  String get navAlerts => 'Alerts';
 
   @override
   String get emptyStateSearchAction => 'Search a movie or series';
@@ -239,32 +227,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paletteNameEspresso => 'Espresso';
 
   @override
-  String get navProfile => 'Me';
-
-  @override
   String get profileTitle => 'Me';
 
   @override
-  String get profileStats => 'Statistics';
-
-  @override
-  String get profileStatsSubtitle => 'Watch time, top genres and activity.';
-
-  @override
   String get profileAchievements => 'Achievements';
-
-  @override
-  String get profileAchievementsSubtitle =>
-      'View your collection of badges and progress.';
 
   @override
   String get profileSettings => 'Settings';
 
   @override
   String get profileSettingsSubtitle => 'Appearance, display and preferences.';
-
-  @override
-  String get settingsSectionListsDisplay => 'Lists Display';
 
   @override
   String get settingsHideNonReleased => 'Hide Non-Released Media';
@@ -279,9 +251,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsStorageSubtitle =>
       'Manage cache, exports, and viewing history database.';
-
-  @override
-  String get settingsSectionApi => 'API Configuration';
 
   @override
   String get settingsTmdbCredential => 'TMDB API Credential';
@@ -511,9 +480,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listsDisplayOptions => 'Display Options';
 
   @override
-  String get listsGridSize => 'Grid Size';
-
-  @override
   String get listsSharingImporting => 'Sharing & Importing';
 
   @override
@@ -529,9 +495,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String listsShareLinkMessage(String list, String link) {
     return 'Check out my $list on MediaVore: $link';
   }
-
-  @override
-  String get listsShowQr => 'Show QR Code';
 
   @override
   String listsQrShareMessage(String list) {
@@ -576,9 +539,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listsInvalidLink => 'Invalid link format';
 
   @override
-  String get listsCouldNotParseLink => 'Could not parse link';
-
-  @override
   String get listsConfirmImport => 'Confirm Import';
 
   @override
@@ -620,31 +580,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listsWatchlist => 'Watchlist';
 
   @override
-  String get listsRemoveSelected => 'Remove selected';
-
-  @override
-  String get listsDisplayMode => 'Display Mode';
-
-  @override
   String get listsEmpty => 'No items in this list.';
-
-  @override
-  String get listsEmptyHint =>
-      'Search for a movie or a series, then add it to this list.';
-
-  @override
-  String get listsSwitchList => 'Switch List';
-
-  @override
-  String listsItemCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count items',
-      one: '1 item',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get listsCreateNew => 'Create New List';
@@ -686,11 +622,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String mediaSeasonShort(String count) {
-    return '$count S';
-  }
-
-  @override
   String get seenRemoveLogTitle => 'Remove log?';
 
   @override
@@ -701,37 +632,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonRemove => 'Remove';
 
   @override
-  String get seenFilterSort => 'Filter & Sort';
-
-  @override
-  String get seenViewMode => 'View Mode';
-
-  @override
-  String get seenViewHistory => 'History (All episodes)';
-
-  @override
-  String get seenViewLibrary => 'Library (Unique titles)';
-
-  @override
   String get seenSortBy => 'Sort by';
 
   @override
-  String get seenSortDateNewest => 'Date (Newest)';
-
-  @override
-  String get seenSortDateOldest => 'Date (Oldest)';
-
-  @override
-  String get seenSortNameAsc => 'Name (A-Z)';
-
-  @override
-  String get seenSortNameDesc => 'Name (Z-A)';
-
-  @override
   String get seenMediaType => 'Media Type';
-
-  @override
-  String get commonAll => 'All';
 
   @override
   String get commonMovies => 'Movies';
@@ -759,21 +663,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seenNoMatches => 'No matches found.';
 
   @override
-  String seenEpisodesSeen(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count episodes seen',
-      one: '1 episode seen',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get seenCannotDeleteLibrary =>
-      'Cannot delete from Library mode. Switch to History to remove entries.';
-
-  @override
   String get statsTitle => 'Media Stats';
 
   @override
@@ -790,12 +679,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsMonth => 'Month';
-
-  @override
-  String get statsOverview => 'Overview';
-
-  @override
-  String get statsDistribution => 'Distribution';
 
   @override
   String get statsSelectYear => 'Select Year';
@@ -816,9 +699,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String statsDuration(int days, int hours, int minutes) {
     return '${days}d ${hours}h ${minutes}m';
   }
-
-  @override
-  String get statsEpisodes => 'Episodes';
 
   @override
   String statsHallOfFame(String metric) {
@@ -867,11 +747,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String statsMediaSplit(String metric) {
     return 'Media Split ($metric)';
-  }
-
-  @override
-  String statsPieLabel(String type, String percent) {
-    return '$type\n$percent%';
   }
 
   @override
@@ -1064,39 +939,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoveryBoth => 'Both';
 
   @override
-  String get discoveryReleaseYear => 'Release Year';
-
-  @override
-  String get discoveryAnyYear => 'Any';
-
-  @override
-  String discoveryMinRating(String rating) {
-    return 'Min Rating: $rating';
-  }
-
-  @override
   String get discoveryGenres => 'Genres';
-
-  @override
-  String get discoveryReset => 'Reset';
-
-  @override
-  String get discoveryApply => 'Apply';
 
   @override
   String get commonRetry => 'Retry';
 
   @override
-  String get discoverySearchHint => 'Search within Discovery...';
-
-  @override
-  String get discoverySearchToggle => 'Search Discovery';
-
-  @override
   String get discoveryTitle => 'Discover';
-
-  @override
-  String get discoveryNoResults => 'No results found';
 
   @override
   String get discoveryClearFilters => 'Clear Filters';
@@ -1109,18 +958,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get releasePlanned => 'Planned — no release date';
-
-  @override
-  String get notifTitle => 'Alerts';
-
-  @override
-  String get notifTabReleases => 'Releases';
-
-  @override
-  String get notifTabQuickAdd => 'Quick Add';
-
-  @override
-  String get notifSyncing => 'Syncing releases...';
 
   @override
   String get notifNoReleases => 'No upcoming or recent releases.';
@@ -1142,29 +979,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonMarkAsSeen => 'Mark as seen';
 
   @override
-  String notifMarkedAsSeen(String title) {
-    return 'Marked $title as seen';
-  }
-
-  @override
   String get notifNoNextEpisodes => 'No next episodes to track.';
 
   @override
   String get commonUnknown => 'Unknown';
 
   @override
-  String notifNextEpisode(int season, int episode) {
-    return 'Next: Season $season, Episode $episode';
-  }
-
-  @override
-  String get notifStreakOptedOut => 'Streak opted out of Quick Add';
-
-  @override
   String get commonUndo => 'Undo';
-
-  @override
-  String get notifEpisode => 'episode';
 
   @override
   String get detailOfflineSeason => 'Cannot load season details while offline.';
@@ -1184,12 +1005,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String detailSaveFailed(String error) {
     return 'Save failed: $error';
   }
-
-  @override
-  String get detailCreator => 'Creator';
-
-  @override
-  String get detailDirector => 'Director';
 
   @override
   String get detailExportHistory => 'Export history for this item';
@@ -1232,11 +1047,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String detailCreditLine(String role, String name) {
-    return '$role: $name';
-  }
-
-  @override
   String get detailOverview => 'Overview';
 
   @override
@@ -1260,9 +1070,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get detailRecommendations => 'Recommendations';
-
-  @override
-  String get detailWatchOn => 'Watch on:';
 
   @override
   String get detailTrailers => 'Trailers';
@@ -1293,9 +1100,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusPilot => 'Pilot';
-
-  @override
-  String get seenOpenHistory => 'View History';
 
   @override
   String get seenEpisodesSeenTitle => 'Episodes Seen';
@@ -1330,9 +1134,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenClearAll => 'Clear All';
-
-  @override
-  String get seenViewingHistory => 'Viewing History';
 
   @override
   String get seenAddViewing => 'Add New Viewing';
@@ -1482,9 +1283,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get progressRefetchDone => 'Done refetching data!';
-
-  @override
   String progressProcessingItem(String title) {
     return 'Processing $title...';
   }
@@ -1511,9 +1309,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swiperAddTo => 'Add to';
 
   @override
-  String get swiperPass => 'Pass';
-
-  @override
   String get swiperDiscard => 'Discard';
 
   @override
@@ -1521,22 +1316,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get swiperUndo => 'Undo';
-
-  @override
-  String swiperAddedMessage(String title, String list) {
-    return '$title added to $list';
-  }
-
-  @override
-  String get swiperDiscardedMessage => 'Discarded';
-
-  @override
-  String swiperSagaAddedMessage(String title, int count) {
-    return 'Saga $title added ($count movies)';
-  }
-
-  @override
-  String get swiperSagaDiscardedMessage => 'Saga discarded';
 
   @override
   String get swiperEmptyTitle => 'No more movies';
@@ -1595,17 +1374,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get librarySectionLists => 'Lists';
 
   @override
-  String get togetherSoonTitle => 'Choosing together is coming soon';
-
-  @override
-  String get togetherSoonMessage =>
-      'Compare your lists with friends and vote for what to watch.';
-
-  @override
   String get homeTitle => 'Tonight';
-
-  @override
-  String get homeRefreshReleases => 'Refresh releases';
 
   @override
   String get homeOfflineMessage =>
@@ -1743,24 +1512,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeConnectTmdbAction => 'Connect to TMDB';
 
   @override
-  String get homeUpcomingTitle => 'Upcoming';
-
-  @override
-  String get homeUpcomingRow => 'Releases and alerts';
-
-  @override
-  String homeUpcomingSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count titles followed',
-      one: '1 title followed',
-      zero: 'No title followed',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get discoverModeExplore => 'Explore';
 
   @override
@@ -1827,13 +1578,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get discoverSwipeSoonTitle => 'Swipe mode is coming soon';
-
-  @override
-  String get discoverSwipeSoonMessage =>
-      'Go through suggestions one by one to fill your lists.';
-
-  @override
   String get discoverConnectTmdb => 'Connect to TMDB';
 
   @override
@@ -1878,14 +1622,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String libraryListNameTaken(String name) {
     return 'A list named “$name” already exists';
-  }
-
-  @override
-  String get libraryListEmptyForType => 'Nothing of this type in this list';
-
-  @override
-  String libraryListScope(String title, String type) {
-    return '$title · $type';
   }
 
   @override
@@ -1940,26 +1676,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listsCompareWithMine => 'Compare with one of my lists';
 
   @override
-  String get listsCompareWithMineSubtitle =>
-      'Find movies and series in common without importing';
-
-  @override
   String get listsImportOptionTitle => 'Import into library';
 
   @override
-  String get listsImportOptionSubtitle =>
-      'Save this list to your personal lists';
-
-  @override
   String get listsCompareTitle => 'List Intersection';
-
-  @override
-  String listsCompareSubtitle(String otherList, String myList) {
-    return '$otherList ∩ $myList';
-  }
-
-  @override
-  String get listsCompareMyListLabel => 'Compare with:';
 
   @override
   String listsCompareCommonCount(int count) {
@@ -1975,11 +1695,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listsCompareHideSeen => 'Hide watched';
-
-  @override
-  String listsCompareSeenBadge(int count) {
-    return '($count watched)';
-  }
 
   @override
   String get listsCompareEmptyTitle => 'No common titles';
@@ -2724,9 +2439,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonMarkAsSeenWithDots => 'Mark as seen…';
 
   @override
-  String get seenSeenWithDots => 'Seen…';
-
-  @override
   String get seenRewatchAction => 'Rewatch';
 
   @override
@@ -2931,11 +2643,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String detailEpisodeNumber(int number) {
-    return 'Episode $number';
-  }
-
-  @override
   String get togetherSessionSetup => 'Session Setup';
 
   @override
@@ -3069,11 +2776,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String togetherVoteProgress(int current, int total) {
     return 'Title $current of $total';
-  }
-
-  @override
-  String togetherVoterTurn(String name) {
-    return '$name\'s turn';
   }
 
   @override

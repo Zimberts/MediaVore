@@ -37,6 +37,9 @@ Key wiring:
   tab lives in `SearchProvider.selectedTab`; the shell is `MainPage` + `AppTabBar`.
 - **Errors** — `AppException` hierarchy in `lib/core/error/exceptions.dart`.
 
+`test/architecture/layer_dependencies_test.dart` enforces that `domain` imports neither `data` nor
+`presentation`, and `data` does not import `presentation` (pre-existing exceptions are listed there).
+
 `search` owns `MediaRepository`. For deeper context see `DOCS/ai-guidelines.md`.
 
 ## Build and Test
@@ -97,7 +100,7 @@ flutter test                                              # tests
 Write Conventional Commit messages and PR titles per the rules above. Install the local
 hook once: `pip install pre-commit && pre-commit install --hook-type commit-msg`.
 Verify with `flutter analyze` and `flutter test` before considering a change done.
-CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `dart format --set-exit-if-changed lib test` (non-blocking for now), `flutter test --coverage`. `pr-title.yml` checks the PR title and every commit subject
+CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `tool/check_unused_l10n.dart` (fails on ARB keys no Dart file reads: delete a string with the code that used it), `dart format --set-exit-if-changed lib test` (non-blocking for now), `flutter test --coverage`. `pr-title.yml` checks the PR title and every commit subject
 against Conventional Commits. `release.yml` runs on every push to `main`: `ci.yml` analyze/test, then release-please (release PR `chore(release): vX.Y.Z`; merging it tags and builds the APK + AAB, checked for 16 KB page alignment by `tool/check_16kb_alignment.sh`). Never bump `version:` or push tags by hand; see `DOCS/releasing.md`.
 
 ### Stacked PRs & Restacking After Squash Merge
