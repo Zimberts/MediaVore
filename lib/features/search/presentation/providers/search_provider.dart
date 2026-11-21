@@ -58,7 +58,7 @@ class SearchProvider with ChangeNotifier {
         _ownsCacheAdminProvider = cacheAdminProvider == null,
         _cacheAdminProvider = cacheAdminProvider ??
             CacheAdminProvider(repository, localeService: localeService) {
-    _libraryProvider.addListener(notifyListeners);
+    _libraryProvider.addListener(_onLibraryChanged);
     _notificationProvider.addListener(notifyListeners);
     _cacheAdminProvider.addListener(notifyListeners);
     localeService?.addListener(_onLanguageChanged);
@@ -177,7 +177,7 @@ class SearchProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    _libraryProvider.removeListener(notifyListeners);
+    _libraryProvider.removeListener(_onLibraryChanged);
     _notificationProvider.removeListener(notifyListeners);
     _cacheAdminProvider.removeListener(notifyListeners);
     localeService?.removeListener(_onLanguageChanged);
@@ -185,6 +185,11 @@ class SearchProvider with ChangeNotifier {
     if (_ownsNotificationProvider) _notificationProvider.dispose();
     if (_ownsCacheAdminProvider) _cacheAdminProvider.dispose();
     super.dispose();
+  }
+
+  void _onLibraryChanged() {
+    notifyListeners();
+    unawaited(_loadTonightListItems());
   }
 
   void _onLanguageChanged() => unawaited(reloadForLanguageChange());

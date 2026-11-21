@@ -29,13 +29,16 @@ class _SwiperPageState extends State<SwiperPage> {
     if (widget.customSwiperProvider != null) {
       _swiper = widget.customSwiperProvider!;
       _ownsSwiper = false;
+      _swiper.libraryProvider ??= context.read<LibraryProvider?>() ??
+          context.read<SearchProvider?>()?.libraryProvider;
     } else {
       _ownsSwiper = true;
-      if (locator.isRegistered<MediaRepository>()) {
-        _swiper = SwiperProvider(locator<MediaRepository>());
-      } else {
-        _swiper = SwiperProvider(context.read<SearchProvider>().repository);
-      }
+      final repo = locator.isRegistered<MediaRepository>()
+          ? locator<MediaRepository>()
+          : context.read<SearchProvider>().repository;
+      final library = context.read<LibraryProvider?>() ??
+          context.read<SearchProvider>().libraryProvider;
+      _swiper = SwiperProvider(repo, libraryProvider: library);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
