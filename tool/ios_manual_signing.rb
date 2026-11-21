@@ -5,8 +5,12 @@
 #   ruby tool/ios_manual_signing.rb ios/Runner.xcodeproj TEAM_ID PROFILE_NAME IDENTITY
 #
 # Only the Runner target is changed: build settings passed on the xcodebuild command line
-# would also apply to the CocoaPods targets, which reject a provisioning profile.
-require 'xcodeproj' # dependency of CocoaPods
+# would also apply to the Swift package targets of the plugins, which reject a provisioning
+# profile.
+#
+# Needs the `xcodeproj` gem, which no longer comes with CocoaPods since the project uses
+# Swift Package Manager: `gem install xcodeproj` (release.yml installs it when missing).
+require 'xcodeproj'
 
 project_path, team, profile, identity = ARGV
 abort "usage: #{$PROGRAM_NAME} PROJECT TEAM_ID PROFILE_NAME IDENTITY" unless identity

@@ -36,8 +36,11 @@ Done in the Apple web consoles, not in this repo. Needs the *Account Holder* or 
 
 ## Local build
 
-Requires macOS, Xcode signed in (*Settings → Accounts*) with an Apple ID of team
-`E5L7NC8M9T`, and CocoaPods.
+Requires macOS and Xcode signed in (*Settings → Accounts*) with an Apple ID of team
+`E5L7NC8M9T`. CocoaPods is not needed: every iOS plugin is resolved through Swift Package
+Manager (enabled by default since the pinned Flutter 3.47.6), and `ios/` has no `Podfile`.
+Do not run `pod install`; if a leftover `ios/Pods/` directory exists from an older
+checkout, delete it.
 
 ```bash
 flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
