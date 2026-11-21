@@ -8,12 +8,8 @@
   "commonCancel": "Cancel",
   "commonSave": "Save",
   "commonImport": "Import",
-  "commonOpenSettings": "Open Settings",
-  "navSearch": "Search",
   "navDiscover": "Discover",
-  "navMyLists": "My Lists",
   "navHistory": "History",
-  "navAlerts": "Alerts",
   "emptyStateSearchAction": "Search a movie or series",
   "importListTitle": "Import List",
   "importListMessage": "{count, plural, =1{You are about to import a list with 1 item.} other{You are about to import a list with {count} items.}}",
@@ -90,20 +86,14 @@
   "paletteNameSlate": "Slate",
   "paletteNameMidnight": "Midnight",
   "paletteNameEspresso": "Espresso",
-  "navProfile": "Me",
   "profileTitle": "Me",
-  "profileStats": "Statistics",
-  "profileStatsSubtitle": "Watch time, top genres and activity.",
   "profileAchievements": "Achievements",
-  "profileAchievementsSubtitle": "View your collection of badges and progress.",
   "profileSettings": "Settings",
   "profileSettingsSubtitle": "Appearance, display and preferences.",
-  "settingsSectionListsDisplay": "Lists Display",
   "settingsHideNonReleased": "Hide Non-Released Media",
   "settingsHideNonReleasedSubtitle": "Only show movies and episodes that have already aired.",
   "settingsStorage": "Storage & Data",
   "settingsStorageSubtitle": "Manage cache, exports, and viewing history database.",
-  "settingsSectionApi": "API Configuration",
   "settingsTmdbCredential": "TMDB API Credential",
   "settingsNotSet": "Not set",
   "settingsSectionAbout": "About",
@@ -215,7 +205,6 @@
   "dataReplaceConfirm": "Yes, Replace Everything",
   "commonProceed": "Proceed",
   "listsDisplayOptions": "Display Options",
-  "listsGridSize": "Grid Size",
   "listsSharingImporting": "Sharing & Importing",
   "listsScanQr": "Scan QR Code",
   "listsImportViaLink": "Import via Link",
@@ -231,7 +220,6 @@
       }
     }
   },
-  "listsShowQr": "Show QR Code",
   "listsQrShareMessage": "Scan this QR code to import my {list} on MediaVore",
   "@listsQrShareMessage": {
     "placeholders": {
@@ -265,7 +253,6 @@
   "listsPasteLinkHint": "Paste the shared link here",
   "listsShareLinkLabel": "Share Link",
   "listsInvalidLink": "Invalid link format",
-  "listsCouldNotParseLink": "Could not parse link",
   "listsConfirmImport": "Confirm Import",
   "commonConfirm": "Confirm",
   "listsSortOptions": "Sort Options",
@@ -286,19 +273,7 @@
     }
   },
   "listsWatchlist": "Watchlist",
-  "listsRemoveSelected": "Remove selected",
-  "listsDisplayMode": "Display Mode",
   "listsEmpty": "No items in this list.",
-  "listsEmptyHint": "Search for a movie or a series, then add it to this list.",
-  "listsSwitchList": "Switch List",
-  "listsItemCount": "{count, plural, =1{1 item} other{{count} items}}",
-  "@listsItemCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "listsCreateNew": "Create New List",
   "listsNewList": "New List",
   "listsNameHint": "List name",
@@ -329,28 +304,11 @@
       }
     }
   },
-  "mediaSeasonShort": "{count} S",
-  "@mediaSeasonShort": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
   "seenRemoveLogTitle": "Remove log?",
   "seenRemoveLogMessage": "Are you sure you want to remove this viewing entry from your history?",
   "commonRemove": "Remove",
-  "seenFilterSort": "Filter & Sort",
-  "seenViewMode": "View Mode",
-  "seenViewHistory": "History (All episodes)",
-  "seenViewLibrary": "Library (Unique titles)",
   "seenSortBy": "Sort by",
-  "seenSortDateNewest": "Date (Newest)",
-  "seenSortDateOldest": "Date (Oldest)",
-  "seenSortNameAsc": "Name (A-Z)",
-  "seenSortNameDesc": "Name (Z-A)",
   "seenMediaType": "Media Type",
-  "commonAll": "All",
   "commonMovies": "Movies",
   "commonTvShows": "TV Shows",
   "seenTitle": "History",
@@ -359,23 +317,12 @@
   "seenEmpty": "No items seen yet.",
   "seenEmptyHint": "Mark a movie or an episode as seen to start your history.",
   "seenNoMatches": "No matches found.",
-  "seenEpisodesSeen": "{count, plural, =1{1 episode seen} other{{count} episodes seen}}",
-  "@seenEpisodesSeen": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "seenCannotDeleteLibrary": "Cannot delete from Library mode. Switch to History to remove entries.",
   "statsTitle": "Media Stats",
   "statsEmpty": "No data yet. Start watching!",
   "statsToggleMetric": "Toggle Metric (Logs/Time)",
   "statsAllTime": "All Time",
   "statsYear": "Year",
   "statsMonth": "Month",
-  "statsOverview": "Overview",
-  "statsDistribution": "Distribution",
   "statsSelectYear": "Select Year",
   "statsSelectPeriod": "Select Period",
   "statsPreviousPeriod": "Previous period",
@@ -395,7 +342,6 @@
       }
     }
   },
-  "statsEpisodes": "Episodes",
   "statsHallOfFame": "Hall of Fame ({metric})",
   "@statsHallOfFame": {
     "placeholders": {
@@ -444,17 +390,6 @@
   "@statsMediaSplit": {
     "placeholders": {
       "metric": {
-        "type": "String"
-      }
-    }
-  },
-  "statsPieLabel": "{type}\n{percent}%",
-  "@statsPieLabel": {
-    "placeholders": {
-      "type": {
-        "type": "String"
-      },
-      "percent": {
         "type": "String"
       }
     }
@@ -581,32 +516,13 @@
   "genreWarPolitics": "War & Politics",
   "discoveryFiltersTitle": "Discovery Filters",
   "discoveryBoth": "Both",
-  "discoveryReleaseYear": "Release Year",
-  "discoveryAnyYear": "Any",
-  "discoveryMinRating": "Min Rating: {rating}",
-  "@discoveryMinRating": {
-    "placeholders": {
-      "rating": {
-        "type": "String"
-      }
-    }
-  },
   "discoveryGenres": "Genres",
-  "discoveryReset": "Reset",
-  "discoveryApply": "Apply",
   "commonRetry": "Retry",
-  "discoverySearchHint": "Search within Discovery...",
-  "discoverySearchToggle": "Search Discovery",
   "discoveryTitle": "Discover",
-  "discoveryNoResults": "No results found",
   "discoveryClearFilters": "Clear Filters",
   "releaseEpisodeTba": "Episode — date TBA",
   "releaseReturning": "Returning — new season planned",
   "releasePlanned": "Planned — no release date",
-  "notifTitle": "Alerts",
-  "notifTabReleases": "Releases",
-  "notifTabQuickAdd": "Quick Add",
-  "notifSyncing": "Syncing releases...",
   "notifNoReleases": "No upcoming or recent releases.",
   "notifNoReleasesHint": "Movies and series on your watchlist or with alerts on show their releases here.",
   "notifReleaseDate": "{released, select, true{Released} other{Releases}}: {date}",
@@ -621,30 +537,9 @@
     }
   },
   "commonMarkAsSeen": "Mark as seen",
-  "notifMarkedAsSeen": "Marked {title} as seen",
-  "@notifMarkedAsSeen": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "notifNoNextEpisodes": "No next episodes to track.",
   "commonUnknown": "Unknown",
-  "notifNextEpisode": "Next: Season {season}, Episode {episode}",
-  "@notifNextEpisode": {
-    "placeholders": {
-      "season": {
-        "type": "int"
-      },
-      "episode": {
-        "type": "int"
-      }
-    }
-  },
-  "notifStreakOptedOut": "Streak opted out of Quick Add",
   "commonUndo": "Undo",
-  "notifEpisode": "episode",
   "detailOfflineSeason": "Cannot load season details while offline.",
   "detailNoHistoryToExport": "No history to export for this item.",
   "detailHistoryShareText": "Seen history for {title}",
@@ -664,8 +559,6 @@
       }
     }
   },
-  "detailCreator": "Creator",
-  "detailDirector": "Director",
   "detailExportHistory": "Export history for this item",
   "detailProgress": "Progress: {seen} / {total} episodes seen",
   "@detailProgress": {
@@ -697,17 +590,6 @@
       }
     }
   },
-  "detailCreditLine": "{role}: {name}",
-  "@detailCreditLine": {
-    "placeholders": {
-      "role": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "detailOverview": "Overview",
   "detailSeasons": "Seasons",
   "detailSeasonName": "Season {number}",
@@ -732,7 +614,6 @@
   "detailCast": "Cast",
   "detailSimilar": "Similar",
   "detailRecommendations": "Recommendations",
-  "detailWatchOn": "Watch on:",
   "detailTrailers": "Trailers",
   "statusReleased": "Released",
   "statusReturning": "Returning Series",
@@ -743,7 +624,6 @@
   "statusPlanned": "Planned",
   "statusRumored": "Rumored",
   "statusPilot": "Pilot",
-  "seenOpenHistory": "View History",
   "seenEpisodesSeenTitle": "Episodes Seen",
   "seenSeen": "Seen",
   "seenEpisodeCount": "{count, plural, =1{1 episode} other{{count} episodes}}",
@@ -766,7 +646,6 @@
     }
   },
   "seenClearAll": "Clear All",
-  "seenViewingHistory": "Viewing History",
   "seenAddViewing": "Add New Viewing",
   "seenNoHistory": "No viewing history found for this item.",
   "seenRemoveAllHistory": "Remove All History",
@@ -910,7 +789,6 @@
       }
     }
   },
-  "progressRefetchDone": "Done refetching data!",
   "progressProcessingItem": "Processing {title}...",
   "@progressProcessingItem": {
     "placeholders": {
@@ -926,34 +804,9 @@
   "mediaKindBook": "Book",
   "swiperTitle": "Swiper",
   "swiperAddTo": "Add to",
-  "swiperPass": "Pass",
   "swiperDiscard": "Discard",
   "swiperAdd": "Add",
   "swiperUndo": "Undo",
-  "swiperAddedMessage": "{title} added to {list}",
-  "@swiperAddedMessage": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "list": {
-        "type": "String"
-      }
-    }
-  },
-  "swiperDiscardedMessage": "Discarded",
-  "swiperSagaAddedMessage": "Saga {title} added ({count} movies)",
-  "@swiperSagaAddedMessage": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "swiperSagaDiscardedMessage": "Saga discarded",
   "swiperEmptyTitle": "No more movies",
   "swiperEmptyMessage": "You've gone through all available movies for now.",
   "swiperSessionStats": "{added} added · {discarded} discarded",
@@ -994,10 +847,7 @@
   "navTogether": "Together",
   "navMe": "Me",
   "librarySectionLists": "Lists",
-  "togetherSoonTitle": "Choosing together is coming soon",
-  "togetherSoonMessage": "Compare your lists with friends and vote for what to watch.",
   "homeTitle": "Tonight",
-  "homeRefreshReleases": "Refresh releases",
   "homeOfflineMessage": "releases will be refreshed when the network is back.",
   "homeResume": "Resume",
   "homeEpisodeCode": "S{season} E{episode}",
@@ -1160,16 +1010,6 @@
   "homeConnectTmdbTitle": "Connect TMDB",
   "homeConnectTmdbMessage": "MediaVore gets posters, release dates and new episodes from TMDB. You need a free personal key.",
   "homeConnectTmdbAction": "Connect to TMDB",
-  "homeUpcomingTitle": "Upcoming",
-  "homeUpcomingRow": "Releases and alerts",
-  "homeUpcomingSubtitle": "{count, plural, =0{No title followed} =1{1 title followed} other{{count} titles followed}}",
-  "@homeUpcomingSubtitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "discoverModeExplore": "Explore",
   "discoverModeSwipe": "Swipe",
   "discoverSearchHint": "Films, series",
@@ -1217,8 +1057,6 @@
       }
     }
   },
-  "discoverSwipeSoonTitle": "Swipe mode is coming soon",
-  "discoverSwipeSoonMessage": "Go through suggestions one by one to fill your lists.",
   "discoverConnectTmdb": "Connect to TMDB",
   "libraryTypeAll": "All",
   "libraryTypeChip": "{label} · {count}",
@@ -1261,18 +1099,6 @@
   "@libraryListNameTaken": {
     "placeholders": {
       "name": {
-        "type": "String"
-      }
-    }
-  },
-  "libraryListEmptyForType": "Nothing of this type in this list",
-  "libraryListScope": "{title} · {type}",
-  "@libraryListScope": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "type": {
         "type": "String"
       }
     }
@@ -1321,22 +1147,8 @@
     }
   },
   "listsCompareWithMine": "Compare with one of my lists",
-  "listsCompareWithMineSubtitle": "Find movies and series in common without importing",
   "listsImportOptionTitle": "Import into library",
-  "listsImportOptionSubtitle": "Save this list to your personal lists",
   "listsCompareTitle": "List Intersection",
-  "listsCompareSubtitle": "{otherList} ∩ {myList}",
-  "@listsCompareSubtitle": {
-    "placeholders": {
-      "otherList": {
-        "type": "String"
-      },
-      "myList": {
-        "type": "String"
-      }
-    }
-  },
-  "listsCompareMyListLabel": "Compare with:",
   "listsCompareCommonCount": "{count, plural, =0{No titles in common} =1{1 title in common} other{{count} titles in common}}",
   "@listsCompareCommonCount": {
     "placeholders": {
@@ -1346,14 +1158,6 @@
     }
   },
   "listsCompareHideSeen": "Hide watched",
-  "listsCompareSeenBadge": "({count} watched)",
-  "@listsCompareSeenBadge": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "listsCompareEmptyTitle": "No common titles",
   "listsCompareEmptyMessage": "No movies or TV shows appear in both \"{otherList}\" and \"{myList}\".",
   "@listsCompareEmptyMessage": {
@@ -1878,7 +1682,6 @@
   "settingsAdvancedTracking": "Advanced tracking",
   "settingsAdvancedTrackingSubtitle": "Choose viewing date and time, edit past viewing logs",
   "commonMarkAsSeenWithDots": "Mark as seen…",
-  "seenSeenWithDots": "Seen…",
   "seenRewatchAction": "Rewatch",
   "seenRewatchActionWithDots": "Rewatch…",
   "seenSummaryOnce": "Seen once · on {date}",
@@ -2018,14 +1821,6 @@
       }
     }
   },
-  "detailEpisodeNumber": "Episode {number}",
-  "@detailEpisodeNumber": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "togetherSessionSetup": "Session Setup",
   "togetherWeAreChoosing": "We are choosing",
   "togetherChoiceAny": "Movie or Series",
@@ -2125,14 +1920,6 @@
       },
       "total": {
         "type": "int"
-      }
-    }
-  },
-  "togetherVoterTurn": "{name}'s turn",
-  "@togetherVoterTurn": {
-    "placeholders": {
-      "name": {
-        "type": "String"
       }
     }
   },
