@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/swiper_provider.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -218,4 +219,108 @@ void main() {
       expect(provider.currentCandidate?.item.id, 101);
     },
   );
+
+  group('with LibraryProvider', () {
+    late LibraryProvider libraryProvider;
+
+    setUp(() {
+      when(
+        () => repo.getAllListNames(),
+      ).thenAnswer((_) async => ['watchlist', 'Favorites']);
+      when(() => repo.getListEntries(any())).thenAnswer((_) async => []);
+      when(() => repo.getListPreviews(any())).thenAnswer((_) async => []);
+      when(() => repo.getWatchlistEntries()).thenAnswer((_) async => []);
+      when(() => repo.getLikedEntries()).thenAnswer((_) async => []);
+      when(() => repo.getListMediaItems(any())).thenAnswer((_) async => []);
+      when(() => repo.addAllToList(any(), any())).thenAnswer((_) async {});
+      when(() => repo.getNotifiedItems()).thenAnswer((_) async => []);
+      when(
+        () => repo.watchNotifiedItems(),
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => repo.getCacheSize()).thenAnswer((_) async => 0);
+      when(() => repo.getSeenDbSize()).thenAnswer((_) async => 0);
+
+      libraryProvider = LibraryProvider(repo);
+      provider = SwiperProvider(repo, libraryProvider: libraryProvider);
+    });
+
+    test('swipeRight updates LibraryProvider entries immediately', () async {
+      await provider.init();
+      await provider.swipeRight('watchlist');
+
+      expect(libraryProvider.isItemInList(movie1, 'watchlist'), isTrue);
+      expect(
+        libraryProvider.getListEntriesCached('watchlist'),
+        contains('101:movie'),
+      );
+    });
+
+    test(
+      'swipeRight with saga updates LibraryProvider entries for all parts',
+      () async {
+        when(
+          () => repo.getDecidedTmdbIds(),
+        ).thenAnswer((_) async => {101, 102});
+        await provider.init();
+        await provider.swipeRight('watchlist');
+
+        expect(
+          libraryProvider.isItemInList(movieSagaPart1, 'watchlist'),
+          isTrue,
+        );
+        expect(
+          libraryProvider.isItemInList(movieSagaPart2, 'watchlist'),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'undoLastDecision removes movie from LibraryProvider entries',
+      () async {
+        await provider.init();
+        await provider.swipeRight('watchlist');
+        expect(libraryProvider.isItemInList(movie1, 'watchlist'), isTrue);
+
+        when(() => repo.undoLastSwipeDecision()).thenAnswer(
+          (_) async => SwipeDecisionModel(
+            isarId: 1,
+            tmdbId: 101,
+            title: 'Movie 101',
+            decision: 'added',
+            decidedAt: DateTime.now(),
+            targetList: 'watchlist',
+          ),
+        );
+
+        await provider.undoLastDecision();
+        expect(libraryProvider.isItemInList(movie1, 'watchlist'), isFalse);
+      },
+    );
+
+    test(
+      'Swiping right updates SearchProvider tonightCandidates via LibraryProvider',
+      () async {
+        when(
+          () => repo.getListMediaItems('watchlist'),
+        ).thenAnswer((_) async => [movie1]);
+        when(() => repo.getSeenItems()).thenAnswer((_) async => []);
+
+        final searchProvider = SearchProvider(
+          repo,
+          libraryProvider: libraryProvider,
+        );
+        await provider.init();
+        await provider.swipeRight('watchlist');
+
+        // Wait a tick for _onLibraryChanged unawaited task
+        await Future<void>.delayed(Duration.zero);
+
+        expect(
+          searchProvider.tonightCandidates.map((m) => m.id),
+          contains(101),
+        );
+      },
+    );
+  });
 }

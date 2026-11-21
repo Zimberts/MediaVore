@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/saga_sort.dart';
+import 'package:mediavore/features/library/presentation/providers/library_provider.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
@@ -39,8 +40,9 @@ class UndoResult {
 
 class SwiperProvider extends ChangeNotifier {
   final MediaRepository repository;
+  LibraryProvider? libraryProvider;
 
-  SwiperProvider(this.repository);
+  SwiperProvider(this.repository, {this.libraryProvider});
 
   final List<SwipeCardCandidate> _candidates = [];
   final List<SwipeCardCandidate> _historyStack = [];
@@ -134,10 +136,11 @@ class SwiperProvider extends ChangeNotifier {
 
     if (candidate.isSaga) {
       final decisions = <SwipeDecisionModel>[];
+      final toAdd = <MediaItem>[];
       for (final movie in candidate.sagaItems) {
         // Add all movies from the saga not already in list
         if (!_existingListIds.contains(movie.id)) {
-          await repository.addToList(movie, targetList);
+          toAdd.add(movie);
           _existingListIds.add(movie.id);
         }
         decisions.add(
@@ -155,12 +158,25 @@ class SwiperProvider extends ChangeNotifier {
         );
         _decidedTmdbIds.add(movie.id);
       }
+      if (toAdd.isNotEmpty) {
+        if (libraryProvider != null) {
+          await libraryProvider!.addAllToList(toAdd, targetList);
+        } else {
+          for (final movie in toAdd) {
+            await repository.addToList(movie, targetList);
+          }
+        }
+      }
       if (candidate.collectionId != null) {
         _seenSagaCollectionIds.add(candidate.collectionId!);
       }
       await repository.recordSwipeDecisions(decisions);
     } else {
-      await repository.addToList(candidate.item, targetList);
+      if (libraryProvider != null) {
+        await libraryProvider!.addToList(candidate.item, targetList);
+      } else {
+        await repository.addToList(candidate.item, targetList);
+      }
       _existingListIds.add(candidate.item.id);
       _decidedTmdbIds.add(candidate.item.id);
 
@@ -243,20 +259,34 @@ class SwiperProvider extends ChangeNotifier {
         if (undone.targetList != null) {
           if (lastCandidate.isSaga) {
             for (final movie in lastCandidate.sagaItems) {
-              await repository.removeFromList(
-                movie.id,
-                MediaType.movie,
-                undone.targetList!,
-              );
+              if (libraryProvider != null) {
+                await libraryProvider!.removeFromList(
+                  movie,
+                  undone.targetList!,
+                );
+              } else {
+                await repository.removeFromList(
+                  movie.id,
+                  MediaType.movie,
+                  undone.targetList!,
+                );
+              }
               _existingListIds.remove(movie.id);
               _decidedTmdbIds.remove(movie.id);
             }
           } else {
-            await repository.removeFromList(
-              undone.tmdbId,
-              MediaType.movie,
-              undone.targetList!,
-            );
+            if (libraryProvider != null) {
+              await libraryProvider!.removeFromList(
+                lastCandidate.item,
+                undone.targetList!,
+              );
+            } else {
+              await repository.removeFromList(
+                undone.tmdbId,
+                MediaType.movie,
+                undone.targetList!,
+              );
+            }
             _existingListIds.remove(undone.tmdbId);
             _decidedTmdbIds.remove(undone.tmdbId);
           }

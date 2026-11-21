@@ -32,7 +32,7 @@ class LibraryProvider with ChangeNotifier {
 
   Future<void> init() async {
     await loadListNames();
-    await _loadAllListEntries();
+    await loadAllListEntries();
     await loadWatchlist();
     await loadLikedStatus();
   }
@@ -42,9 +42,12 @@ class LibraryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadLists() => loadListNames();
+  Future<void> loadLists() async {
+    await loadListNames();
+    await loadAllListEntries();
+  }
 
-  Future<void> _loadAllListEntries() async {
+  Future<void> loadAllListEntries() async {
     for (final name in _listNames) {
       _listEntries[name] = await repository.getListEntries(name);
       _listPreviews[name] = await repository.getListPreviews(name);
@@ -112,10 +115,29 @@ class LibraryProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> addToList(MediaItem item, String listName) async {
+    await repository.addToList(item, listName);
+    final currentEntries =
+        _listEntries[listName] ?? await repository.getListEntries(listName);
+    final entry = '${item.id}:${item.mediaType.name}';
+    if (!currentEntries.contains(entry)) {
+      _listEntries[listName] = [...currentEntries, entry];
+    }
+    if (listName == 'watchlist') {
+      _watchlistIds.add(item.id.toString());
+      if (item.canBeNotified) {
+        await repository.toggleNotification(item, autoNotify: true);
+      }
+    }
+    _listPreviews[listName] = await repository.getListPreviews(listName);
+    notifyListeners();
+  }
+
   Future<void> addAllToList(List<MediaItem> items, String listName) async {
     if (items.isEmpty) return;
     await repository.addAllToList(items, listName);
-    final currentEntries = _listEntries[listName] ?? [];
+    final currentEntries =
+        _listEntries[listName] ?? await repository.getListEntries(listName);
     final newEntries = items
         .map((item) => '${item.id}:${item.mediaType.name}')
         .toList();
@@ -126,6 +148,9 @@ class LibraryProvider with ChangeNotifier {
     if (listName == 'watchlist') {
       for (final item in items) {
         _watchlistIds.add(item.id.toString());
+        if (item.canBeNotified) {
+          await repository.toggleNotification(item, autoNotify: true);
+        }
       }
     }
     _listPreviews[listName] = await repository.getListPreviews(listName);
@@ -134,17 +159,16 @@ class LibraryProvider with ChangeNotifier {
 
   Future<void> removeFromList(MediaItem item, String listName) async {
     final entry = '${item.id}:${item.mediaType.name}';
-    final currentEntries = _listEntries[listName] ?? [];
+    final currentEntries =
+        _listEntries[listName] ?? await repository.getListEntries(listName);
 
-    if (currentEntries.contains(entry)) {
-      await repository.removeFromList(item.id, item.mediaType, listName);
-      _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
-      if (listName == 'watchlist') {
-        _watchlistIds.remove(item.id.toString());
-      }
-      _listPreviews[listName] = await repository.getListPreviews(listName);
-      notifyListeners();
+    await repository.removeFromList(item.id, item.mediaType, listName);
+    _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
+    if (listName == 'watchlist') {
+      _watchlistIds.remove(item.id.toString());
     }
+    _listPreviews[listName] = await repository.getListPreviews(listName);
+    notifyListeners();
   }
 
   Future<void> createList(String name) async {
@@ -221,7 +245,7 @@ class LibraryProvider with ChangeNotifier {
         await repository.addToList(shell, name);
       }
     }
-    await _loadAllListEntries();
+    await loadAllListEntries();
     notifyListeners();
   }
 
