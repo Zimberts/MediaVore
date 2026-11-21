@@ -22,7 +22,10 @@ void main() {
     });
 
     test('should handle an empty list', () async {
-      expect(await mapWithConcurrency<int, int>([], 4, (i) async => i), []);
+      expect(
+        await mapWithConcurrency<int, int>([], 4, (i) async => i),
+        <int>[],
+      );
     });
 
     test('should reject a non-positive limit', () {

@@ -71,7 +71,7 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
 
   void _confirmLeaveVote() {
     final l10n = context.l10n;
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.togetherLeaveVoteTitle),
@@ -106,7 +106,7 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
 
     session.reset();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => MediaDetailPage(item: item)),
+      MaterialPageRoute<void>(builder: (_) => MediaDetailPage(item: item)),
     );
   }
 

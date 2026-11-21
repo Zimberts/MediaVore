@@ -10,7 +10,7 @@ class AchievementProvider with ChangeNotifier {
   final AchievementRepository _repository;
   List<Achievement> _achievements = [];
   List<AchievementFamily> _families = [];
-  StreamSubscription? _subscription;
+  StreamSubscription<void>? _subscription;
 
   // Track IDs we've already sent a notification for in this session
   // to avoid redundant triggers while persistence is in progress.

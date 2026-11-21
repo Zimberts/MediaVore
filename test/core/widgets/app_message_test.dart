@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -144,10 +145,12 @@ void main() {
 
     testWidgets('should stay visible above an open sheet', (tester) async {
       await tester.pumpWidget(app());
-      showAppSheet<void>(
-        context: tester.element(find.text('Home body')),
-        builder: (context) =>
-            const SizedBox(height: 500, child: Text('Sheet content')),
+      unawaited(
+        showAppSheet<void>(
+          context: tester.element(find.text('Home body')),
+          builder: (context) =>
+              const SizedBox(height: 500, child: Text('Sheet content')),
+        ),
       );
       await tester.pumpAndSettle();
 

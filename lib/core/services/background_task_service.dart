@@ -3,6 +3,7 @@ import 'package:mediavore/core/cache/cache_warmup_policy.dart';
 import 'package:mediavore/core/di/injection.config.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:workmanager/workmanager.dart';
@@ -41,7 +42,7 @@ void callbackDispatcher() {
         debugPrint('Running daily background sync...');
         final seenItems = await repo.getSeenItems();
 
-        final Map<int, List> tvWatches = {};
+        final Map<int, List<SeenItem>> tvWatches = {};
         for (var item in seenItems) {
           if (item.type.name == 'tv') {
             // MediaType.tv
@@ -114,7 +115,7 @@ void callbackDispatcher() {
         }
       } else if (task == refreshReturningSeriesTask ||
           task.startsWith(refreshReturningSeriesPrefix)) {
-        final int? id = inputData?['tmdbId'];
+        final id = inputData?['tmdbId'] as int?;
         if (id != null) {
           debugPrint('Running 1-off refresh for series ID: $id...');
           await repo.refreshReturningSeries(id);

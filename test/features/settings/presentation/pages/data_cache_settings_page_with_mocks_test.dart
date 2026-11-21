@@ -201,7 +201,7 @@ void main() {
                   child: ElevatedButton(
                     onPressed: () {
                       final decodedBytes = <int>[1, 2, 3];
-                      showDialog(
+                      showDialog<void>(
                         context: context,
                         builder: (dialogContext) => AlertDialog(
                           title: const Text('Import Preview'),

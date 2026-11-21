@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/widgets/app_card.dart';
@@ -178,14 +179,16 @@ void main() {
       await tester.pumpWidget(components(onTap: () {}));
       final context = tester.element(find.text('Section'));
 
-      showAppDialog<bool>(
-        context: context,
-        title: 'Title',
-        message: 'Message',
-        actions: const [
-          AppDialogAction(label: 'No', value: false),
-          AppDialogAction(label: 'OK', value: true),
-        ],
+      unawaited(
+        showAppDialog<bool>(
+          context: context,
+          title: 'Title',
+          message: 'Message',
+          actions: const [
+            AppDialogAction(label: 'No', value: false),
+            AppDialogAction(label: 'OK', value: true),
+          ],
+        ),
       );
       await tester.pumpAndSettle();
       for (final label in ['No', 'OK']) {
@@ -195,13 +198,15 @@ void main() {
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
 
-      showAppMenu<int>(
-        context: context,
-        title: 'Menu',
-        items: const [
-          AppMenuItem(value: 1, label: 'A'),
-          AppMenuItem(value: 2, label: 'B', icon: Icons.sort),
-        ],
+      unawaited(
+        showAppMenu<int>(
+          context: context,
+          title: 'Menu',
+          items: const [
+            AppMenuItem(value: 1, label: 'A'),
+            AppMenuItem(value: 2, label: 'B', icon: Icons.sort),
+          ],
+        ),
       );
       await tester.pumpAndSettle();
       expectTarget(

@@ -88,7 +88,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
     final session = context.read<TogetherSessionProvider>();
     session.reset();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => MediaDetailPage(item: item)),
+      MaterialPageRoute<void>(builder: (_) => MediaDetailPage(item: item)),
     );
   }
 
@@ -110,7 +110,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
     final l10n = context.l10n;
     final colors = context.appColors;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.togetherRandomPick),
@@ -232,7 +232,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
             icon: const Icon(Icons.refresh),
             tooltip: l10n.togetherResetSession,
             onPressed: () {
-              showDialog(
+              showDialog<void>(
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: Text(l10n.togetherResetSession),
@@ -456,7 +456,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
 
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
+                            MaterialPageRoute<void>(
                               builder: (_) => TogetherVotePage(
                                 candidates: candidates,
                                 participants: participantNames,

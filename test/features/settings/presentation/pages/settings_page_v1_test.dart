@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -141,7 +142,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    settings.setSwipeModeEnabled(true);
+    unawaited(settings.setSwipeModeEnabled(true));
     when(() => repository.getSwipeDecisions()).thenAnswer(
       (_) async => [
         SwipeDecisionModel(

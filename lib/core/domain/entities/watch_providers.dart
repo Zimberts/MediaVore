@@ -78,7 +78,7 @@ class WatchProviderCountryInfo {
     List<WatchProviderItem> parseList(dynamic list) {
       if (list is! List) return const [];
       return list
-          .whereType<Map>()
+          .whereType<Map<dynamic, dynamic>>()
           .map(
             (item) =>
                 WatchProviderItem.fromJson(Map<String, dynamic>.from(item)),

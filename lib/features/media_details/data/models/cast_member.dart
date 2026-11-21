@@ -13,10 +13,10 @@ class CastMember {
 
   factory CastMember.fromJson(Map<String, dynamic> json) {
     return CastMember(
-      id: json['id'],
-      name: json['name'],
-      character: json['character'],
-      profilePath: json['profile_path'],
+      id: json['id'] as int,
+      name: json['name'] as String,
+      character: json['character'] as String,
+      profilePath: json['profile_path'] as String?,
     );
   }
 }

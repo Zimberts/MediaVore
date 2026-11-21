@@ -64,7 +64,7 @@ class _TogetherPageState extends State<TogetherPage> {
     final l10n = context.l10n;
     final session = context.read<TogetherSessionProvider>();
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.togetherResetSession),
@@ -393,7 +393,7 @@ class _TogetherPageState extends State<TogetherPage> {
                 : () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      MaterialPageRoute<void>(
                         builder: (_) => const TogetherResultsPage(),
                       ),
                     );

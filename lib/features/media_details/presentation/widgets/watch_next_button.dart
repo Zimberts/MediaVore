@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -63,7 +64,7 @@ class _WatchNextButtonState extends State<WatchNextButton> {
     );
 
     widget.onSeenChanged?.call();
-    _loadNextEpisode();
+    unawaited(_loadNextEpisode());
   }
 
   Future<void> _startRewatch() async {
@@ -77,12 +78,12 @@ class _WatchNextButtonState extends State<WatchNextButton> {
       onAction: () async {
         await provider.cancelSeriesRewatch(widget.item.id);
         widget.onSeenChanged?.call();
-        _loadNextEpisode();
+        unawaited(_loadNextEpisode());
       },
     );
 
     widget.onSeenChanged?.call();
-    _loadNextEpisode();
+    unawaited(_loadNextEpisode());
   }
 
   @override
