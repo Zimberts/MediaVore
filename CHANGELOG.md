@@ -3,6 +3,15 @@
 Written by release-please from the Conventional Commits on `main` (see `DOCS/releasing.md`).
 New entries are inserted above the latest one.
 
+## [1.4.4](https://github.com/Zimberts/MediaVore/compare/v1.4.3...v1.4.4) (2026-11-21)
+
+
+### Bug fixes
+
+* **home:** hide unreleased titles from "To watch tonight" ([#445](https://github.com/Zimberts/MediaVore/issues/445)) ([8f58b7e](https://github.com/Zimberts/MediaVore/commit/8f58b7e02689c28ced4f26c150e81af5a63f2fd9))
+* **home:** show the poster of upcoming releases ([#446](https://github.com/Zimberts/MediaVore/issues/446)) ([6690432](https://github.com/Zimberts/MediaVore/commit/669043207dad07690c1ccaefdd4cb902838da429))
+* **settings:** offer every theme palette in the settings ([#447](https://github.com/Zimberts/MediaVore/issues/447)) ([8a62d62](https://github.com/Zimberts/MediaVore/commit/8a62d625de6e867d635d40570f8792aaa0854718))
+
 ## [1.4.3](https://github.com/Zimberts/MediaVore/compare/v1.4.2...v1.4.3) (2026-11-21)
 
 
