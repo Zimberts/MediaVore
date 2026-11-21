@@ -4,6 +4,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/json_maps.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/seen_manager.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -284,7 +285,7 @@ class MediaDetailSeasons extends StatelessWidget {
     final theme = Theme.of(context);
     final now = DateTime.now();
 
-    final filtered = episodes.where((ep) {
+    final filtered = jsonObjectList(episodes).where((ep) {
       if (!hideNonReleased) return true;
       final airDateStr = ep['air_date'] as String?;
       if (airDateStr == null || airDateStr.isEmpty) return true;

@@ -137,7 +137,11 @@ void main() {
         ]) {
           expect(def[field], isA<String>(), reason: '${def['id']}.$field');
         }
-        expect(def['params'], isA<Map>(), reason: '${def['id']}.params');
+        expect(
+          def['params'],
+          isA<Map<dynamic, dynamic>>(),
+          reason: '${def['id']}.params',
+        );
       }
     });
 

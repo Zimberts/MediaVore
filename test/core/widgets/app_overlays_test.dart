@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -63,10 +64,12 @@ void main() {
         tester,
       ) async {
         final context = await pumpHost(tester, palette);
-        showAppSheet<void>(
-          context: context,
-          builder: (context) =>
-              Column(children: [for (var i = 0; i < 60; i++) Text('Row $i')]),
+        unawaited(
+          showAppSheet<void>(
+            context: context,
+            builder: (context) =>
+                Column(children: [for (var i = 0; i < 60; i++) Text('Row $i')]),
+          ),
         );
         await tester.pumpAndSettle();
 

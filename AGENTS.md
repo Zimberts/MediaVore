@@ -10,7 +10,10 @@ Flutter/Dart app to track media seen. See `README.md` for the product overview,
 - Naming suffixes: `Provider`, `Repository` / `RepositoryImpl`, `DataSource`.
 - Lint is enforced by `analysis_options.yaml` (`package:flutter_lints/flutter.yaml` plus the
   extra rules listed there). Rules live only in that file, never here; rely on `flutter analyze`,
-  and run `dart fix --apply` for the auto-fixable ones.
+  and run `dart fix --apply` for the auto-fixable ones. The analyzer runs with `strict-casts`,
+  `strict-inference` and `strict-raw-types`: no implicit `dynamic` calls or casts. Read decoded
+  JSON through `jsonObjectList` / `jsonObject` (`lib/core/utils/json_maps.dart`) or explicit
+  `as` casts, and mark fire-and-forget futures with `unawaited(...)`.
 
 ## Architecture
 

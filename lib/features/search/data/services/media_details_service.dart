@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
@@ -6,6 +7,7 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/bounded_concurrency.dart';
+import 'package:mediavore/core/utils/json_maps.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 
 /// Cache-first loading of TMDB data: media details, seasons, actors and the
@@ -94,7 +96,8 @@ class MediaDetailsService {
     try {
       return await future;
     } finally {
-      _inFlightDetails.remove(key);
+      // The removed entry is the future awaited just above.
+      unawaited(_inFlightDetails.remove(key));
     }
   }
 
@@ -105,15 +108,15 @@ class MediaDetailsService {
     final item = bundle.item;
     final credits = bundle.credits;
 
-    final List castResults = credits['cast'] ?? [];
-    final List crewResults = credits['crew'] ?? [];
+    final castResults = (credits['cast'] as List<dynamic>?) ?? const [];
+    final crewResults = (credits['crew'] as List<dynamic>?) ?? const [];
 
     final List<CastMember> cast = castResults
-        .map((c) => CastMember.fromJson(c))
+        .map((c) => CastMember.fromJson(c as Map<String, dynamic>))
         .toList();
 
     final CrewMember director = crewResults
-        .whereType<Map>()
+        .whereType<Map<dynamic, dynamic>>()
         .map((c) => CrewMember.fromJson(Map<String, dynamic>.from(c)))
         .firstWhere(
           (member) =>
@@ -143,7 +146,8 @@ class MediaDetailsService {
         try {
           collectionParts = await future;
         } finally {
-          _inFlightCollections.remove(collectionId);
+          // The removed entry is the future awaited just above.
+          unawaited(_inFlightCollections.remove(collectionId));
         }
       }
     }
@@ -293,11 +297,9 @@ class MediaDetailsService {
         final seasonDetails = fetchSeason != null
             ? await fetchSeason(tmdbId, seasonNumber)
             : await getSeasonDetails(tmdbId, seasonNumber);
-        final episodes = seasonDetails?['episodes'] as List?;
-        final episode = episodes?.firstWhere(
-          (e) => e['episode_number'] == episodeNumber,
-          orElse: () => null,
-        );
+        final episode = jsonObjectList(
+          seasonDetails?['episodes'],
+        ).where((e) => e['episode_number'] == episodeNumber).firstOrNull;
         if (episode != null) {
           runtime = episode['runtime'] as int?;
         }

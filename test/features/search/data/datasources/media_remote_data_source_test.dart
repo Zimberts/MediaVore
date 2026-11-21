@@ -40,7 +40,7 @@ void main() {
       'should not include ignored filter parameters in search query',
       () async {
         when(
-          () => mockDio.get(
+          () => mockDio.get<dynamic>(
             any(),
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
@@ -63,7 +63,7 @@ void main() {
 
         final captured =
             verify(
-                  () => mockDio.get(
+                  () => mockDio.get<dynamic>(
                     'https://api.themoviedb.org/3/search/movie',
                     queryParameters: captureAny(named: 'queryParameters'),
                     options: any(named: 'options'),
@@ -82,7 +82,7 @@ void main() {
   group('getTrendingMedia', () {
     void stubTrending() {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -102,7 +102,7 @@ void main() {
       await dataSource.getTrendingMedia(page: 2);
 
       verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           'https://api.themoviedb.org/3/trending/all/week',
           queryParameters: any(
             named: 'queryParameters',
@@ -139,7 +139,7 @@ void main() {
 
     test('should call correct discover endpoint based on type', () async {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -155,7 +155,7 @@ void main() {
       await dataSource.discoverMedia(type: MediaType.tv, genreIds: [18]);
 
       verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           'https://api.themoviedb.org/3/discover/tv',
           queryParameters: any(
             named: 'queryParameters',
@@ -176,7 +176,7 @@ void main() {
 
     test('getSimilarMedia should return List<MediaItem>', () async {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -193,7 +193,7 @@ void main() {
 
       expect(result, isA<List<MediaItem>>());
       verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           'https://api.themoviedb.org/3/movie/1/similar',
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -204,11 +204,11 @@ void main() {
     test('getWatchProviders should return results map', () async {
       final tProviders = {
         'results': {
-          'US': {'flatrate': []},
+          'US': {'flatrate': <dynamic>[]},
         },
       };
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -233,7 +233,7 @@ void main() {
         ],
       };
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -311,7 +311,7 @@ void main() {
         };
 
         when(
-          () => mockDio.get(
+          () => mockDio.get<dynamic>(
             'https://api.themoviedb.org/3/person/123/combined_credits',
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
@@ -353,7 +353,7 @@ void main() {
         };
 
         when(
-          () => mockDio.get(
+          () => mockDio.get<dynamic>(
             'https://api.themoviedb.org/3/person/50',
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
@@ -391,7 +391,7 @@ void main() {
         locale: FakeLocaleService(),
       );
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -399,13 +399,13 @@ void main() {
       ).thenAnswer(
         (_) async => Response(
           requestOptions: RequestOptions(),
-          data: {'results': []},
+          data: {'results': <dynamic>[]},
           statusCode: 200,
         ),
       );
       await ds.getSimilarMedia(1, MediaType.movie);
       final captured = verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: captureAny(named: 'queryParameters'),
           options: captureAny(named: 'options'),
@@ -458,7 +458,7 @@ void main() {
 
     void stubGetError(Object error) {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -538,7 +538,7 @@ void main() {
 
         test('should throw ParsingException on malformed payload', () async {
           when(
-            () => mockDio.get(
+            () => mockDio.get<dynamic>(
               any(),
               queryParameters: any(named: 'queryParameters'),
               options: any(named: 'options'),
@@ -579,7 +579,7 @@ void main() {
 
     void stubGet(Map<String, dynamic> Function(Map<String, dynamic>) data) {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -597,7 +597,7 @@ void main() {
     }
 
     List<Map<String, dynamic>> capturedParams() => verify(
-      () => mockDio.get(
+      () => mockDio.get<dynamic>(
         any(),
         queryParameters: captureAny(named: 'queryParameters'),
         options: any(named: 'options'),
@@ -626,7 +626,7 @@ void main() {
     });
 
     test('should map the original-language filter for discover', () async {
-      stubGet((_) => {'results': []});
+      stubGet((_) => {'results': <dynamic>[]});
 
       await frenchDataSource.discoverMedia(originalLanguage: 'ja');
 
@@ -686,7 +686,7 @@ void main() {
 
     void stubAuth(Future<Response<dynamic>> Function() answer) {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -706,7 +706,7 @@ void main() {
       await dataSource.validateCredential(' $v3 ');
 
       final captured = verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           authUrl,
           queryParameters: captureAny(named: 'queryParameters'),
           options: captureAny(named: 'options'),
@@ -722,7 +722,7 @@ void main() {
       await dataSource.validateCredential('Bearer eyJ.token.sig');
 
       final captured = verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           authUrl,
           queryParameters: captureAny(named: 'queryParameters'),
           options: captureAny(named: 'options'),
@@ -762,7 +762,7 @@ void main() {
         throwsA(isA<ConfigurationException>()),
       );
       verifyNever(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -774,7 +774,7 @@ void main() {
   group('append_to_response (#212)', () {
     void stubGet(Map<String, dynamic> Function(Map<String, dynamic>) answer) {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           any(),
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -800,16 +800,16 @@ void main() {
             'cast': [
               {'id': 1, 'name': 'A'},
             ],
-            'crew': [],
+            'crew': <dynamic>[],
           },
           'similar': {
             'results': [
               {'id': 6, 'title': 'S'},
             ],
           },
-          'recommendations': {'results': []},
+          'recommendations': {'results': <dynamic>[]},
           'watch/providers': {
-            'results': {'FR': {}},
+            'results': {'FR': <String, dynamic>{}},
           },
           'videos': {
             'results': [
@@ -823,7 +823,7 @@ void main() {
 
       final params =
           verify(
-                () => mockDio.get(
+                () => mockDio.get<dynamic>(
                   'https://api.themoviedb.org/3/movie/5',
                   queryParameters: captureAny(named: 'queryParameters'),
                   options: any(named: 'options'),
@@ -863,7 +863,7 @@ void main() {
         );
 
         expect(bundle.item.mediaType, MediaType.tv);
-        expect(bundle.credits, {'cast': [], 'crew': []});
+        expect(bundle.credits, {'cast': <dynamic>[], 'crew': <dynamic>[]});
         expect(bundle.similar, isEmpty);
         expect(bundle.recommendations, isEmpty);
         expect(bundle.watchProviders, isEmpty);
@@ -888,7 +888,7 @@ void main() {
       );
 
       final calls = verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           'https://api.themoviedb.org/3/tv/9',
           queryParameters: captureAny(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -911,7 +911,7 @@ void main() {
   group('searchPeople', () {
     test('calls /search/person and parses results', () async {
       when(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           'https://api.themoviedb.org/3/search/person',
           queryParameters: any(named: 'queryParameters'),
           options: any(named: 'options'),
@@ -943,7 +943,7 @@ void main() {
       expect(results.first.knownForTitles, ['Dune']);
 
       verify(
-        () => mockDio.get(
+        () => mockDio.get<dynamic>(
           'https://api.themoviedb.org/3/search/person',
           queryParameters: {
             'query': 'Villeneuve',

@@ -131,9 +131,9 @@ class ProfilePage extends StatelessWidget {
           // "Toutes les statistiques" button
           OutlinedButton.icon(
             key: const Key('profile_stats'),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const MediaStatsPage())),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const MediaStatsPage()),
+            ),
             icon: const Icon(Icons.bar_chart),
             label: Text(l10n.profileAllStats),
             style: OutlinedButton.styleFrom(
@@ -191,9 +191,9 @@ class ProfilePage extends StatelessWidget {
             title: Text(l10n.profileSettings),
             subtitle: Text(l10n.profileSettingsSubtitle),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsPage())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SettingsPage()),
+            ),
           ),
           ListTile(
             key: const Key('profile_tmdb_credential'),
@@ -206,7 +206,9 @@ class ProfilePage extends StatelessWidget {
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const TmdbCredentialPage()),
+              MaterialPageRoute<void>(
+                builder: (_) => const TmdbCredentialPage(),
+              ),
             ),
           ),
           ListTile(
@@ -216,7 +218,9 @@ class ProfilePage extends StatelessWidget {
             subtitle: Text(l10n.settingsStorageSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DataCacheSettingsPage()),
+              MaterialPageRoute<void>(
+                builder: (_) => const DataCacheSettingsPage(),
+              ),
             ),
           ),
         ],

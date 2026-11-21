@@ -384,7 +384,7 @@ class FakeLocaleService extends Fake implements LocaleService {
 /// returned by `MediaRemoteDataSource.getMediaDetailsBundle`.
 MediaDetailsBundle bundleOf(MediaItem item) => MediaDetailsBundle(
   item: item,
-  credits: const {'cast': [], 'crew': []},
+  credits: const {'cast': <dynamic>[], 'crew': <dynamic>[]},
   similar: const [],
   recommendations: const [],
   watchProviders: const {},

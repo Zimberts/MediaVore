@@ -382,7 +382,7 @@ class _SwipeResetTileState extends State<_SwipeResetTile> {
 
   void _confirmReset(BuildContext context) {
     final l10n = context.l10n;
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.swiperResetConfirmTitle),

@@ -711,7 +711,7 @@ class MediaListLocalDataSource {
   Future<void> importLikedItems(
     List<LikedItem> items, {
     required ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   }) async {
     await _isar.writeTxn(() => _importLikedInTxn(items, mode, onProgress));
   }
@@ -720,7 +720,7 @@ class MediaListLocalDataSource {
   Future<void> _importLikedInTxn(
     List<LikedItem> items,
     ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   ) => _importItemsInTxn(
     _isar.likedItems,
     items,
@@ -739,7 +739,7 @@ class MediaListLocalDataSource {
   Future<void> importNotifiedItems(
     List<NotifiedItemModel> items, {
     required ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   }) async {
     await _isar.writeTxn(() => _importNotifiedInTxn(items, mode, onProgress));
   }
@@ -748,7 +748,7 @@ class MediaListLocalDataSource {
   Future<void> _importNotifiedInTxn(
     List<NotifiedItemModel> items,
     ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   ) => _importItemsInTxn(
     _isar.notifiedItemModels,
     items,
@@ -767,7 +767,7 @@ class MediaListLocalDataSource {
   Future<void> importListsData(
     Map<String, List<MediaListItem>> lists, {
     required ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   }) async {
     await _isar.writeTxn(() => _importListsInTxn(lists, mode, onProgress));
   }
@@ -776,7 +776,7 @@ class MediaListLocalDataSource {
   Future<void> _importListsInTxn(
     Map<String, List<MediaListItem>> lists,
     ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   ) async {
     if (mode == ImportMode.replace) {
       await _isar.mediaListItems.where().deleteAll();
@@ -803,7 +803,7 @@ class MediaListLocalDataSource {
   Future<void> importQuickAddItems(
     List<QuickAddItemModel> items, {
     required ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   }) async {
     await _isar.writeTxn(() => _importQuickAddInTxn(items, mode, onProgress));
   }
@@ -812,7 +812,7 @@ class MediaListLocalDataSource {
   Future<void> _importQuickAddInTxn(
     List<QuickAddItemModel> items,
     ImportMode mode,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   ) => _importItemsInTxn(
     _isar.quickAddItemModels,
     items,
@@ -844,7 +844,7 @@ class MediaListLocalDataSource {
     List<T> items, {
     required ImportMode mode,
     required Future<bool> Function(T item) exists,
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
     String writeStatus = 'Importing...',
     String Function(int index)? mergeStatus,
   }) async {

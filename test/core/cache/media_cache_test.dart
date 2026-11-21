@@ -292,7 +292,7 @@ void main() {
 
       expect(await cache.getItem(1, MediaType.movie), equals(tMediaItem));
       expect((await cache.getDetails(1, MediaType.movie))?.cast.first.id, 10);
-      expect(await cache.getSeason(5, 2), equals({'episodes': []}));
+      expect(await cache.getSeason(5, 2), equals({'episodes': <dynamic>[]}));
       expect(await cache.getItem(1, MediaType.tv), isNull);
       await isar.close(deleteFromDisk: true);
     });

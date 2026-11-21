@@ -42,28 +42,32 @@ class MediaDetails {
 
   factory MediaDetails.fromJson(Map<String, dynamic> json) {
     return MediaDetails(
-      item: MediaItem.fromJson(json['item']),
-      cast: (json['cast'] as List).map((c) => CastMember.fromJson(c)).toList(),
+      item: MediaItem.fromJson(json['item'] as Map<String, dynamic>),
+      cast: (json['cast'] as List)
+          .map((c) => CastMember.fromJson(c as Map<String, dynamic>))
+          .toList(),
       director: json['director'] != null
-          ? CrewMember.fromJson(json['director'])
+          ? CrewMember.fromJson(json['director'] as Map<String, dynamic>)
           : null,
       similar: json['similar'] != null
-          ? (json['similar'] as List).map((i) => MediaItem.fromJson(i)).toList()
+          ? (json['similar'] as List)
+                .map((i) => MediaItem.fromJson(i as Map<String, dynamic>))
+                .toList()
           : null,
       recommendations: json['recommendations'] != null
           ? (json['recommendations'] as List)
-                .map((i) => MediaItem.fromJson(i))
+                .map((i) => MediaItem.fromJson(i as Map<String, dynamic>))
                 .toList()
           : null,
       collection: json['collection'] != null
           ? (json['collection'] as List)
-                .map((i) => MediaItem.fromJson(i))
+                .map((i) => MediaItem.fromJson(i as Map<String, dynamic>))
                 .toList()
           : null,
-      watchProviders: json['watch_providers'],
+      watchProviders: json['watch_providers'] as Map<String, dynamic>?,
       videos: json['videos'] != null
           ? (json['videos'] as List)
-                .map((v) => Map<String, dynamic>.from(v))
+                .map((v) => Map<String, dynamic>.from(v as Map))
                 .toList()
           : null,
     );

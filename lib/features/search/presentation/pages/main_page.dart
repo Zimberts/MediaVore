@@ -37,7 +37,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
-  StreamSubscription? _achievementSubscription;
+  StreamSubscription<void>? _achievementSubscription;
 
   // Achievement queue logic
   final Queue<Achievement> _achievementQueue = Queue<Achievement>();
@@ -106,8 +106,8 @@ class _MainPageState extends State<MainPage> {
     await _showTopNotification(achievement);
 
     if (mounted) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      _processAchievementQueue();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      unawaited(_processAchievementQueue());
     }
   }
 

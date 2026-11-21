@@ -188,7 +188,7 @@ class MediaCache {
 
     final details = await _decodeOrPurge(
       row,
-      () => MediaDetails.fromJson(jsonDecode(json)),
+      () => MediaDetails.fromJson(jsonDecode(json) as Map<String, dynamic>),
     );
     if (details == null) return null;
     if (details.item.collectionId != null && details.collection != null) {
@@ -312,7 +312,7 @@ class MediaCache {
         final list = jsonDecode(jsonStr);
         if (list is! List) return const [];
         return list
-            .whereType<Map>()
+            .whereType<Map<dynamic, dynamic>>()
             .map((item) => MediaItem.fromJson(Map<String, dynamic>.from(item)))
             .toList();
       } catch (e) {
@@ -431,7 +431,7 @@ class MediaCache {
     if (json == null) return null;
     final item = await _decodeOrPurge(
       row,
-      () => MediaItem.fromJson(jsonDecode(json)),
+      () => MediaItem.fromJson(jsonDecode(json) as Map<String, dynamic>),
     );
     if (item == null) return null;
     return _itemCache.remember(key, item);

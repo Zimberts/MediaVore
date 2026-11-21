@@ -446,7 +446,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
   }
 
   void _pickYear(List<String> availableYears) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
@@ -495,7 +495,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
       initialPage: initialPage >= 0 ? initialPage : 0,
     );
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => SafeArea(

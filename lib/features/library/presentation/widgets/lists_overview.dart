@@ -66,7 +66,7 @@ class _ListsOverviewState extends State<ListsOverview> {
     });
   }
 
-  List<MediaItemPreview> _previews(dynamic provider, String name) {
+  List<MediaItemPreview> _previews(ListPreviewSource provider, String name) {
     final cached = provider.getPreviewsForList(name);
     final type = widget.type;
     if (type == null) return cached.take(kListRowPreviewCount).toList();
@@ -105,7 +105,7 @@ class _ListsOverviewState extends State<ListsOverview> {
     final searchProvider = libraryProvider == null
         ? context.watch<SearchProvider>()
         : null;
-    final dynamic provider = libraryProvider ?? searchProvider;
+    final ListPreviewSource provider = libraryProvider ?? searchProvider!;
     final names = [
       ...provider.listNames.where((name) => name == kWatchlistName),
       ...provider.listNames.where((name) => name != kWatchlistName),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -143,16 +144,19 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             details.item.seasons != null) {
           for (final s in details.item.seasons!) {
             if (!_episodesBySeason.containsKey(s.seasonNumber)) {
-              provider
-                  .getSeasonDetails(widget.item.id, s.seasonNumber)
-                  .then((data) {
-                    if (mounted && data['episodes'] != null) {
-                      setState(() {
-                        _episodesBySeason[s.seasonNumber] = data['episodes'];
-                      });
-                    }
-                  })
-                  .catchError((_) {});
+              unawaited(
+                provider
+                    .getSeasonDetails(widget.item.id, s.seasonNumber)
+                    .then((data) {
+                      if (mounted && data['episodes'] != null) {
+                        setState(() {
+                          _episodesBySeason[s.seasonNumber] =
+                              (data['episodes'] as List<dynamic>?) ?? const [];
+                        });
+                      }
+                    })
+                    .catchError((_) {}),
+              );
             }
           }
         }
@@ -223,7 +227,8 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
       );
       if (mounted) {
         setState(() {
-          _episodesBySeason[seasonNumber] = data['episodes'] ?? [];
+          _episodesBySeason[seasonNumber] =
+              (data['episodes'] as List<dynamic>?) ?? const [];
           _loadingSeasons[seasonNumber] = false;
         });
       }
@@ -278,42 +283,44 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
         'mediavore_${widget.item.title.replaceAll(' ', '_')}_history.json';
 
     if (mounted) {
-      showModalBottomSheet(
-        context: context,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.save_alt),
-                title: Text(context.l10n.dataSaveToDevice),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _saveFileToDevice(context, jsonString, fileName);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.share),
-                title: Text(context.l10n.dataShareViaSystem),
-                onTap: () async {
-                  final shareText = context.l10n.detailHistoryShareText(
-                    widget.item.title,
-                  );
-                  Navigator.pop(context);
-                  final tempDir = await getTemporaryDirectory();
-                  final tempFile = File('${tempDir.path}/$fileName');
-                  await tempFile.writeAsString(jsonString);
-                  await SharePlus.instance.share(
-                    ShareParams(
-                      files: [
-                        XFile(tempFile.path, mimeType: 'application/json'),
-                      ],
-                      text: shareText,
-                    ),
-                  );
-                },
-              ),
-            ],
+      unawaited(
+        showModalBottomSheet<void>(
+          context: context,
+          builder: (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.save_alt),
+                  title: Text(context.l10n.dataSaveToDevice),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _saveFileToDevice(context, jsonString, fileName);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.share),
+                  title: Text(context.l10n.dataShareViaSystem),
+                  onTap: () async {
+                    final shareText = context.l10n.detailHistoryShareText(
+                      widget.item.title,
+                    );
+                    Navigator.pop(context);
+                    final tempDir = await getTemporaryDirectory();
+                    final tempFile = File('${tempDir.path}/$fileName');
+                    await tempFile.writeAsString(jsonString);
+                    await SharePlus.instance.share(
+                      ShareParams(
+                        files: [
+                          XFile(tempFile.path, mimeType: 'application/json'),
+                        ],
+                        text: shareText,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       );

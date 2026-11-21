@@ -5,8 +5,21 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
+/// List names, entries and poster previews read by the lists overview,
+/// offered by [LibraryProvider] and, as a facade over it, by `SearchProvider`.
+abstract interface class ListPreviewSource {
+  List<String> get listNames;
+  List<MediaItemPreview> getPreviewsForList(String name);
+  List<String> getListEntriesOfType(String listName, MediaType? type);
+  Future<List<MediaItemPreview>> loadListPreviewsOfType(
+    String listName,
+    MediaType type, {
+    int limit,
+  });
+}
+
 /// Provider dedicated to custom lists, likes and watchlist management.
-class LibraryProvider with ChangeNotifier {
+class LibraryProvider with ChangeNotifier implements ListPreviewSource {
   LibraryProvider(this.repository) {
     unawaited(init());
   }
@@ -20,6 +33,7 @@ class LibraryProvider with ChangeNotifier {
   List<String> _likedIds = [];
   final bool _isLoading = false;
 
+  @override
   List<String> get listNames => _listNames;
   Map<String, List<String>> get listEntries => Map.unmodifiable(_listEntries);
   List<String> get watchlistIds => _watchlistIds;
@@ -322,6 +336,7 @@ class LibraryProvider with ChangeNotifier {
     return _listEntries[listName] ?? [];
   }
 
+  @override
   List<MediaItemPreview> getPreviewsForList(String name) {
     return _listPreviews[name] ?? [];
   }
@@ -333,6 +348,7 @@ class LibraryProvider with ChangeNotifier {
   static MediaType listEntryType(String entry) =>
       entry.endsWith(':tv') ? MediaType.tv : MediaType.movie;
 
+  @override
   List<String> getListEntriesOfType(String listName, MediaType? type) {
     final entries = _listEntries[listName] ?? const <String>[];
     if (type == null) return entries;
@@ -347,6 +363,7 @@ class LibraryProvider with ChangeNotifier {
     return count;
   }
 
+  @override
   Future<List<MediaItemPreview>> loadListPreviewsOfType(
     String listName,
     MediaType type, {

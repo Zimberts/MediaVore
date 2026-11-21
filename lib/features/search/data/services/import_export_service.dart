@@ -60,7 +60,7 @@ class ImportExportService {
   Future<void> importAllData(
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
-    Function(double, String)? onProgress,
+    void Function(double, String)? onProgress,
   }) async {
     final envelope = await ExportEnvelope.fromZipBytesAsync(zipBytes);
 
@@ -87,7 +87,7 @@ class ImportExportService {
   /// it can run before the import transaction.
   Future<List<SeenItemModel>> _enrichSeenData(
     List<SeenItemModel> data, {
-    Function(double progress, String status)? onProgress,
+    void Function(double progress, String status)? onProgress,
   }) async {
     final List<SeenItemModel> items = [];
     final total = data.length;

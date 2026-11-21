@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:mediavore/core/utils/genres.dart';
+import 'package:mediavore/core/utils/json_maps.dart';
 
 enum MediaType { movie, tv, person, unknown }
 
@@ -18,9 +19,9 @@ class TVSeason extends Equatable {
 
   factory TVSeason.fromJson(Map<String, dynamic> json) {
     return TVSeason(
-      id: json['id'] ?? 0,
-      seasonNumber: json['season_number'] ?? 0,
-      episodeCount: json['episode_count'] ?? 0,
+      id: (json['id'] ?? 0) as int,
+      seasonNumber: (json['season_number'] ?? 0) as int,
+      episodeCount: (json['episode_count'] ?? 0) as int,
       name: json['name'] as String?,
     );
   }
@@ -149,31 +150,32 @@ class MediaItem extends Equatable {
     String? nextAirDate;
     int? nextEpNum;
     int? nextSeasNum;
-    if (json['next_episode_to_air'] != null &&
-        json['next_episode_to_air'] is Map) {
-      nextAirDate = json['next_episode_to_air']['air_date'] as String?;
-      nextEpNum = json['next_episode_to_air']['episode_number'] as int?;
-      nextSeasNum = json['next_episode_to_air']['season_number'] as int?;
+    final nextEpisode = jsonObject(json['next_episode_to_air']);
+    if (nextEpisode != null) {
+      nextAirDate = nextEpisode['air_date'] as String?;
+      nextEpNum = nextEpisode['episode_number'] as int?;
+      nextSeasNum = nextEpisode['season_number'] as int?;
     }
 
     String? lastAirDate;
     int? lastEpNum;
     int? lastSeasNum;
-    if (json['last_episode_to_air'] != null &&
-        json['last_episode_to_air'] is Map) {
-      lastAirDate = json['last_episode_to_air']['air_date'] as String?;
-      lastEpNum = json['last_episode_to_air']['episode_number'] as int?;
-      lastSeasNum = json['last_episode_to_air']['season_number'] as int?;
+    final lastEpisode = jsonObject(json['last_episode_to_air']);
+    if (lastEpisode != null) {
+      lastAirDate = lastEpisode['air_date'] as String?;
+      lastEpNum = lastEpisode['episode_number'] as int?;
+      lastSeasNum = lastEpisode['season_number'] as int?;
     }
 
     return MediaItem(
-      id: json['id'] ?? 0,
-      title: json['title'] ?? json['name'] ?? '',
+      id: (json['id'] ?? 0) as int,
+      title: (json['title'] ?? json['name'] ?? '') as String,
       originalTitle:
           (json['original_title'] ?? json['original_name']) as String?,
       posterPath: json['poster_path'] as String?,
-      overview: json['overview'] ?? '',
-      releaseDate: json['release_date'] ?? json['first_air_date'] ?? '',
+      overview: (json['overview'] ?? '') as String,
+      releaseDate:
+          (json['release_date'] ?? json['first_air_date'] ?? '') as String,
       mediaType: mediaType,
       numberOfSeasons: json['number_of_seasons'] as int?,
       numberOfEpisodes: json['number_of_episodes'] as int?,
@@ -192,12 +194,9 @@ class MediaItem extends Equatable {
       lastEpisodeAirDate: lastAirDate,
       lastEpisodeNumber: lastEpNum,
       lastSeasonNumber: lastSeasNum,
-      collectionId: json['belongs_to_collection'] is Map
-          ? (json['belongs_to_collection']['id'] as int?)
-          : null,
-      collectionName: json['belongs_to_collection'] is Map
-          ? (json['belongs_to_collection']['name'] as String?)
-          : null,
+      collectionId: jsonObject(json['belongs_to_collection'])?['id'] as int?,
+      collectionName:
+          jsonObject(json['belongs_to_collection'])?['name'] as String?,
     );
   }
 

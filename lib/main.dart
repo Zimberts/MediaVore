@@ -109,7 +109,7 @@ class _BootstrapperAppState extends State<BootstrapperApp> {
     if (_error != null) setState(() => _error = null);
     try {
       // Yield slightly time for the UI thread to push the frame
-      await Future.delayed(const Duration(milliseconds: 250));
+      await Future<void>.delayed(const Duration(milliseconds: 250));
 
       await widget.initializer();
 

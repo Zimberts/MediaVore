@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -34,7 +35,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
     final searchProvider = cacheProvider == null
         ? context.watch<SearchProvider>()
         : null;
-    final dynamic provider = cacheProvider ?? searchProvider;
+    final CacheAdminActions provider = cacheProvider ?? searchProvider!;
     final achievementProvider = context.watch<AchievementProvider>();
     final settings = context.watch<SettingsProvider>();
     final isCacheLoading = provider.isCacheLoading;
@@ -67,7 +68,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                     : IconButton(
                         icon: const Icon(Icons.refresh),
                         tooltip: context.l10n.commonRefresh,
-                        onPressed: () => provider.updateCacheSize(),
+                        onPressed: provider.updateCacheSize,
                       ),
               ),
               const Divider(),
@@ -151,7 +152,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                     : IconButton(
                         icon: const Icon(Icons.refresh),
                         tooltip: context.l10n.commonRefresh,
-                        onPressed: () => provider.updateSeenDbSize(),
+                        onPressed: provider.updateSeenDbSize,
                       ),
               ),
               ListTile(
@@ -163,7 +164,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                   context,
                   title: context.l10n.dataRefetchTitle,
                   message: context.l10n.dataRefetchMessage,
-                  action: () => provider.refetchMissingData(),
+                  action: provider.refetchMissingData,
                 ),
               ),
               ListTile(
@@ -181,50 +182,54 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                     final tempFile = File('${tempDir.path}/$fileName');
                     await tempFile.writeAsBytes(zipBytes);
                     if (context.mounted) {
-                      showModalBottomSheet(
-                        context: context,
-                        builder: (saveSheetContext) => SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.save_alt),
-                                title: Text(context.l10n.dataSaveToDevice),
-                                onTap: () async {
-                                  Navigator.pop(saveSheetContext);
-                                  await _saveFileToDevice(
-                                    context,
-                                    zipBytes,
-                                    fileName,
-                                  );
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.share),
-                                title: Text(context.l10n.dataShareViaSystem),
-                                onTap: () async {
-                                  final shareText =
-                                      context.l10n.dataExportShareText;
-                                  Navigator.pop(saveSheetContext);
-                                  final shared = await SharePlus.instance.share(
-                                    ShareParams(
-                                      files: [
-                                        XFile(
-                                          tempFile.path,
-                                          mimeType: 'application/octet-stream',
-                                        ),
-                                      ],
-                                      text: shareText,
-                                    ),
-                                  );
-                                  // `unavailable`: the platform cannot tell.
-                                  if (shared.status !=
-                                      ShareResultStatus.dismissed) {
-                                    await achievementProvider.recordExport();
-                                  }
-                                },
-                              ),
-                            ],
+                      unawaited(
+                        showModalBottomSheet<void>(
+                          context: context,
+                          builder: (saveSheetContext) => SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.save_alt),
+                                  title: Text(context.l10n.dataSaveToDevice),
+                                  onTap: () async {
+                                    Navigator.pop(saveSheetContext);
+                                    await _saveFileToDevice(
+                                      context,
+                                      zipBytes,
+                                      fileName,
+                                    );
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.share),
+                                  title: Text(context.l10n.dataShareViaSystem),
+                                  onTap: () async {
+                                    final shareText =
+                                        context.l10n.dataExportShareText;
+                                    Navigator.pop(saveSheetContext);
+                                    final shared = await SharePlus.instance
+                                        .share(
+                                          ShareParams(
+                                            files: [
+                                              XFile(
+                                                tempFile.path,
+                                                mimeType:
+                                                    'application/octet-stream',
+                                              ),
+                                            ],
+                                            text: shareText,
+                                          ),
+                                        );
+                                    // `unavailable`: the platform cannot tell.
+                                    if (shared.status !=
+                                        ShareResultStatus.dismissed) {
+                                      await achievementProvider.recordExport();
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -394,7 +399,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
 
   Future<void> _importAllDataWithPreview(
     BuildContext context,
-    CacheAdminProvider provider,
+    CacheAdminActions provider,
   ) async {
     final picked = await FilePicker.pickFile(
       initialDirectory: Platform.isAndroid ? _defaultPath : null,
@@ -456,69 +461,76 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                 '${warnings.take(5).join('\n')}'
                 '${warnings.length > 5 ? '\n…' : ''}\n';
 
-      showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(context.l10n.dataImportPreviewTitle),
-          content: Text(
-            context.l10n.dataImportPreviewMessage(
-              seenCount,
-              likesCount,
-              notCount,
-              listsCount,
-              warningsText,
+      unawaited(
+        showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(context.l10n.dataImportPreviewTitle),
+            content: Text(
+              context.l10n.dataImportPreviewMessage(
+                seenCount,
+                likesCount,
+                notCount,
+                listsCount,
+                warningsText,
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(context.l10n.commonCancel),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await provider.importAllData(bytes);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.l10n.dataImportedAppended)),
-                  );
-                }
-              },
-              child: Text(context.l10n.dataAppend),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await provider.importAllData(bytes, mode: ImportMode.merge);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.l10n.dataImportedMerged)),
-                  );
-                }
-              },
-              child: Text(context.l10n.dataMerge),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                final confirmed = await _confirmReplace(context);
-                if (confirmed && context.mounted) {
-                  await provider.importAllData(bytes, mode: ImportMode.replace);
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(context.l10n.commonCancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  await provider.importAllData(bytes);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(context.l10n.dataImportedReplaced),
+                        content: Text(context.l10n.dataImportedAppended),
                       ),
                     );
                   }
-                }
-              },
-              child: Text(
-                context.l10n.dataReplace,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                },
+                child: Text(context.l10n.dataAppend),
               ),
-            ),
-          ],
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  await provider.importAllData(bytes, mode: ImportMode.merge);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(context.l10n.dataImportedMerged)),
+                    );
+                  }
+                },
+                child: Text(context.l10n.dataMerge),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  final confirmed = await _confirmReplace(context);
+                  if (confirmed && context.mounted) {
+                    await provider.importAllData(
+                      bytes,
+                      mode: ImportMode.replace,
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context.l10n.dataImportedReplaced),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(
+                  context.l10n.dataReplace,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -555,7 +567,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
     required String message,
     required Future<void> Function() action,
   }) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(title),

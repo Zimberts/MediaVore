@@ -10,6 +10,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
+import 'package:mediavore/core/utils/json_maps.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/utils/unseen_episodes.dart';
 import 'package:mediavore/features/discovery/presentation/services/because_you_service.dart';
@@ -27,7 +28,9 @@ export 'package:mediavore/features/search/domain/entities/search_filters.dart';
 export 'package:mediavore/features/search/presentation/providers/search_error.dart';
 export 'package:mediavore/features/settings/presentation/providers/cache_admin_provider.dart';
 
-class SearchProvider with ChangeNotifier {
+class SearchProvider
+    with ChangeNotifier
+    implements CacheAdminActions, ListPreviewSource {
   final MediaRepository repository;
 
   /// When set, results and saved titles are reloaded on language change.
@@ -103,7 +106,9 @@ class SearchProvider with ChangeNotifier {
   List<PersonSummary> get peopleResults => _peopleResults;
   BecauseYouData? get becauseYouData => _becauseYouData;
   bool get isLoading => _isLoading;
+  @override
   bool get isCacheLoading => _cacheAdminProvider.isCacheLoading;
+  @override
   bool get isDbSizeLoading => _cacheAdminProvider.isDbSizeLoading;
   bool get isNotifiedRefreshing => _notificationProvider.isNotifiedRefreshing;
   String? get error => _error;
@@ -111,9 +116,12 @@ class SearchProvider with ChangeNotifier {
   /// Kind of the last search/discover failure, or `null` if it succeeded.
   SearchErrorType? get errorType => _errorType;
   bool get isOffline => _isOffline;
+  @override
   List<String> get listNames => _libraryProvider.listNames;
   Map<String, List<String>> get listEntries => _libraryProvider.listEntries;
+  @override
   int get cacheSize => _cacheAdminProvider.cacheSize;
+  @override
   int get seenDbSize => _cacheAdminProvider.seenDbSize;
   int get resetCount => _resetCount;
   bool get hasMore => _hasMore;
@@ -147,8 +155,11 @@ class SearchProvider with ChangeNotifier {
   AppTab get selectedTab => _selectedTab;
   LibrarySection get librarySection => _librarySection;
 
+  @override
   double get importProgress => _cacheAdminProvider.importProgress;
+  @override
   String get importStatus => _cacheAdminProvider.importStatus;
+  @override
   bool get isImporting => _cacheAdminProvider.isImporting;
 
   // Filter getters
@@ -247,13 +258,19 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   Future<void> updateCacheSize() => _cacheAdminProvider.updateCacheSize();
+  @override
   Future<void> updateSeenDbSize() => _cacheAdminProvider.updateSeenDbSize();
+  @override
   Future<void> clearCache({required bool complete}) =>
       _cacheAdminProvider.clearCache(complete: complete);
+  @override
   Future<void> fillCache() => _cacheAdminProvider.fillCache();
+  @override
   ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress =>
       _cacheAdminProvider.cacheWarmupProgress;
+  @override
   void cancelCacheFill() => _cacheAdminProvider.cancelCacheFill();
 
   /// Reloads the titles behind [tonightCandidates]. Never throws: the Home
@@ -679,7 +696,7 @@ class SearchProvider with ChangeNotifier {
             (!_filters.hasActiveFilters &&
                 _currentQuery.isNotEmpty &&
                 _filters.type == null)
-            ? repository.searchPeople(_currentQuery).catchError((e) {
+            ? repository.searchPeople(_currentQuery).catchError((Object e) {
                 debugPrint('[SearchProvider] searchPeople error: $e');
                 return <PersonSummary>[];
               })
@@ -1572,6 +1589,7 @@ class SearchProvider with ChangeNotifier {
     await loadQuickAddItems();
   }
 
+  @override
   List<MediaItemPreview> getPreviewsForList(String name) =>
       _libraryProvider.getPreviewsForList(name);
 
@@ -1582,6 +1600,7 @@ class SearchProvider with ChangeNotifier {
       LibraryProvider.listEntryType(entry);
 
   /// Entries of [listName] of the given [type]; all of them when `null`.
+  @override
   List<String> getListEntriesOfType(String listName, MediaType? type) =>
       _libraryProvider.getListEntriesOfType(listName, type);
 
@@ -1591,6 +1610,7 @@ class SearchProvider with ChangeNotifier {
 
   /// First [limit] previews of [listName] of the given [type], in the order
   /// of the list. Reads only as far into the list as needed.
+  @override
   Future<List<MediaItemPreview>> loadListPreviewsOfType(
     String listName,
     MediaType type, {
@@ -1611,8 +1631,10 @@ class SearchProvider with ChangeNotifier {
 
   Future<void> loadLists() => loadListNames();
 
+  @override
   Future<List<int>> exportAllData() => _cacheAdminProvider.exportAllData();
 
+  @override
   Future<void> importAllData(
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
@@ -1634,6 +1656,7 @@ class SearchProvider with ChangeNotifier {
     }
   }
 
+  @override
   Future<void> refetchMissingData() async {
     await _cacheAdminProvider.refetchMissingData();
     await loadAllSeenStatus();
@@ -1757,15 +1780,12 @@ class SearchProvider with ChangeNotifier {
       }
 
       final seasonDetails = await repository.getSeasonDetails(tmdbId, nextS);
-      final episodes = seasonDetails['episodes'] as List?;
+      final episodes = seasonDetails['episodes'] as List<dynamic>?;
       if (episodes == null) return null;
 
-      dynamic epData;
-      try {
-        epData = episodes.firstWhere((e) => e['episode_number'] == nextE);
-      } catch (_) {
-        epData = null;
-      }
+      final epData = jsonObjectList(
+        episodes,
+      ).where((e) => e['episode_number'] == nextE).firstOrNull;
 
       if (epData != null) {
         final airDateStr = epData['air_date'] as String?;
@@ -1887,17 +1907,13 @@ class SearchProvider with ChangeNotifier {
     int? runtime;
     try {
       final seasonDetails = await repository.getSeasonDetails(item.id, 1);
-      final episodes = seasonDetails['episodes'] as List?;
-      if (episodes != null && episodes.isNotEmpty) {
-        final ep1 = episodes.firstWhere(
-          (e) => e['episode_number'] == 1,
-          orElse: () => null,
-        );
-        if (ep1 != null) {
-          final airDateStr = ep1['air_date'] as String?;
-          if (airDateStr != null) airDate = DateTime.tryParse(airDateStr);
-          if (ep1['runtime'] is num) runtime = (ep1['runtime'] as num).toInt();
-        }
+      final ep1 = jsonObjectList(
+        seasonDetails['episodes'],
+      ).where((e) => e['episode_number'] == 1).firstOrNull;
+      if (ep1 != null) {
+        final airDateStr = ep1['air_date'] as String?;
+        if (airDateStr != null) airDate = DateTime.tryParse(airDateStr);
+        if (ep1['runtime'] is num) runtime = (ep1['runtime'] as num).toInt();
       }
     } catch (_) {}
 

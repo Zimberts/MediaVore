@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
@@ -210,7 +211,7 @@ class ListPageState extends State<ListPage> {
     }
 
     if (mounted) {
-      provider.loadAllSeenStatus();
+      unawaited(provider.loadAllSeenStatus());
     }
 
     if (requestedList == _selectedList) {
@@ -290,7 +291,7 @@ class ListPageState extends State<ListPage> {
       await provider.removeFromList(item, _selectedList);
     }
 
-    loadSavedMedia();
+    unawaited(loadSavedMedia());
 
     // Unified action feedback with Undo (#302 / #312 amendment)
     showAppMessage(
@@ -308,7 +309,7 @@ class ListPageState extends State<ListPage> {
             .toList();
         await provider.updateListOrder(_selectedList, ordered);
         if (mounted) {
-          loadSavedMedia();
+          unawaited(loadSavedMedia());
         }
       },
     );
@@ -705,7 +706,7 @@ class ListPageState extends State<ListPage> {
                     _toggleItemSelection(item);
                   } else {
                     await MediaDetailPage.show(context, item);
-                    loadSavedMedia();
+                    unawaited(loadSavedMedia());
                   }
                 },
                 onLongPress: _isEditMode
@@ -801,7 +802,7 @@ class ListPageState extends State<ListPage> {
                   _toggleItemSelection(item);
                 } else {
                   await MediaDetailPage.show(context, item);
-                  loadSavedMedia();
+                  unawaited(loadSavedMedia());
                 }
               },
             );
@@ -835,7 +836,7 @@ class ListPageState extends State<ListPage> {
                 _toggleItemSelection(item);
               } else {
                 await MediaDetailPage.show(context, item);
-                loadSavedMedia();
+                unawaited(loadSavedMedia());
               }
             },
             onLongPress: () {
@@ -917,7 +918,7 @@ class ListPageState extends State<ListPage> {
               _toggleItemSelection(item);
             } else {
               await MediaDetailPage.show(context, item);
-              loadSavedMedia();
+              unawaited(loadSavedMedia());
             }
           },
           onLongPress: () {
