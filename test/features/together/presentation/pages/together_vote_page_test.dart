@@ -110,7 +110,6 @@ void main() {
       title: title,
       overview: 'Overview of $title',
       releaseDate: '2023-05-15',
-      mediaType: MediaType.movie,
       voteAverage: rating,
     );
   }
@@ -269,8 +268,8 @@ void main() {
       'shows tie badge when winners have identical approvals and rating',
       (tester) async {
         final candidates = [
-          TogetherVoteCandidate(item: createItem(1, 'Movie A', rating: 8.0)),
-          TogetherVoteCandidate(item: createItem(2, 'Movie B', rating: 8.0)),
+          TogetherVoteCandidate(item: createItem(1, 'Movie A')),
+          TogetherVoteCandidate(item: createItem(2, 'Movie B')),
         ];
         final participants = ['Moi'];
 
@@ -300,7 +299,7 @@ void main() {
       'TogetherVotePage does not dispose injected engine when unmounted',
       (tester) async {
         final candidates = [
-          TogetherVoteCandidate(item: createItem(1, 'Movie A', rating: 8.0)),
+          TogetherVoteCandidate(item: createItem(1, 'Movie A')),
         ];
         final engine = TogetherVoteEngine(
           candidates: candidates,

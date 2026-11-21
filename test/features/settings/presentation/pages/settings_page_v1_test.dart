@@ -42,7 +42,7 @@ void main() {
     settings = SettingsProvider(mockPrefs, FakeTmdbCredentialStore('key'));
 
     achievementProvider = MockAchievementProvider();
-    final dummyAchievement = Achievement(
+    const dummyAchievement = Achievement(
       id: 'first_movie',
       title: 'First Movie',
       description: 'Logged 1 movie',
@@ -68,15 +68,15 @@ void main() {
         value: achievementProvider,
       ),
     ],
-    child: MaterialApp(
-      localizationsDelegates: const [
+    child: const MaterialApp(
+      localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const SettingsPage(),
+      home: SettingsPage(),
     ),
   );
 

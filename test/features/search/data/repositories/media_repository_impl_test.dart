@@ -1,18 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mediavore/core/error/exceptions.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
+import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -138,7 +139,6 @@ void main() {
     posterPath: '/path.jpg',
     overview: 'Overview...',
     releaseDate: '2010-07-16',
-    mediaType: MediaType.movie,
   );
 
   group('searchMedia with Filters', () {
@@ -151,7 +151,6 @@ void main() {
         when(
           () => mockRemoteDataSource.searchMedia(
             tQuery,
-            page: 1,
             genreIds: [28],
             releaseYear: 2022,
             minRating: 7.0,
@@ -171,7 +170,6 @@ void main() {
         verify(
           () => mockRemoteDataSource.searchMedia(
             tQuery,
-            page: 1,
             genreIds: [28],
             releaseYear: 2022,
             minRating: 7.0,
@@ -187,25 +185,14 @@ void main() {
 
     test('should return list of media items from discovery endpoint', () async {
       when(
-        () => mockRemoteDataSource.discoverMedia(
-          page: 1,
-          type: MediaType.movie,
-          genreIds: [28],
-        ),
+        () => mockRemoteDataSource.discoverMedia(genreIds: [28]),
       ).thenAnswer((_) async => tMediaItems);
 
-      final result = await repository.discoverMedia(
-        genreIds: [28],
-        type: MediaType.movie,
-      );
+      final result = await repository.discoverMedia(genreIds: [28]);
 
       expect(result, equals(tMediaItems));
       verify(
-        () => mockRemoteDataSource.discoverMedia(
-          page: 1,
-          type: MediaType.movie,
-          genreIds: [28],
-        ),
+        () => mockRemoteDataSource.discoverMedia(genreIds: [28]),
       ).called(1);
     });
   });
@@ -225,7 +212,7 @@ void main() {
 
     test('should propagate a network failure', () async {
       when(
-        () => mockRemoteDataSource.getTrendingMedia(page: 1),
+        () => mockRemoteDataSource.getTrendingMedia(),
       ).thenThrow(const NetworkException('offline'));
 
       expect(
@@ -301,9 +288,9 @@ void main() {
             type: any(named: 'type'),
           ),
         ).thenAnswer(
-          (_) async => MediaDetailsBundle(
+          (_) async => const MediaDetailsBundle(
             item: tMediaItem,
-            credits: const {
+            credits: {
               'cast': [
                 {
                   'id': 1,
@@ -316,10 +303,10 @@ void main() {
                 {'name': 'Christopher Nolan', 'job': 'Director'},
               ],
             },
-            similar: const [],
-            recommendations: const [],
-            watchProviders: const {'FR': <String, dynamic>{}},
-            videos: const [],
+            similar: [],
+            recommendations: [],
+            watchProviders: {'FR': <String, dynamic>{}},
+            videos: [],
           ),
         );
 
@@ -551,7 +538,7 @@ void main() {
           tmdbId: 1,
           type: 'tv',
           title: 'Show',
-          releaseDate: DateTime(2024, 1, 1),
+          releaseDate: DateTime(2024),
           seasonNumber: 4,
           episodeNumber: 5,
           lastRefreshedAt: lastRefreshedAt,
@@ -596,7 +583,7 @@ void main() {
       ).thenAnswer((_) async => null);
       when(
         () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5))]);
       when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
         (_) async => season([
           ep(5, airDate: '2024-05-01'),
@@ -643,7 +630,7 @@ void main() {
       ).thenAnswer((_) async => null);
       when(
         () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5))]);
       when(
         () => mockRemoteDataSource.getSeasonDetails(1, 4),
       ).thenAnswer((_) async => season([ep(6, airDate: '2024-06-08')]));
@@ -662,14 +649,14 @@ void main() {
       'should anchor a series without watch history to its first aired unseen episode',
       () async {
         stubNotified();
-        final media = MediaItem(
+        const media = MediaItem(
           id: 1,
           title: 'Show',
           overview: '',
           releaseDate: '2020-01-01',
           mediaType: MediaType.tv,
           status: 'Returning Series',
-          seasons: const [TVSeason(id: 2, seasonNumber: 2, episodeCount: 4)],
+          seasons: [TVSeason(id: 2, seasonNumber: 2, episodeCount: 4)],
           lastSeasonNumber: 2,
           lastEpisodeNumber: 3,
           lastEpisodeAirDate: '2024-05-15',
@@ -713,7 +700,7 @@ void main() {
         ).captured;
         expect(captured[0], 2);
         expect(captured[1], 1);
-        expect(captured[2], DateTime(2024, 5, 1));
+        expect(captured[2], DateTime(2024, 5));
       },
     );
 
@@ -734,7 +721,7 @@ void main() {
         ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5))]);
         when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
           (_) async => season([
             ep(6, airDate: '2024-06-08'),
@@ -770,14 +757,14 @@ void main() {
         when(
           () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
         ).thenAnswer(
-          (_) async => MediaItem(
+          (_) async => const MediaItem(
             id: 1,
             title: 'Show',
             overview: '',
             releaseDate: '2020-01-01',
             mediaType: MediaType.tv,
             status: 'Returning Series',
-            seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
+            seasons: [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
             nextSeasonNumber: 4,
             nextEpisodeNumber: 6,
             nextEpisodeAirDate: '2999-01-01',
@@ -788,7 +775,7 @@ void main() {
         ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5))]);
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 4),
         ).thenAnswer((_) async => season([ep(5, airDate: '2024-05-01')]));
@@ -810,7 +797,7 @@ void main() {
           ),
         ).captured;
         expect(captured[1], 6);
-        expect(captured[2], DateTime(2999, 1, 1));
+        expect(captured[2], DateTime(2999));
       },
     );
 
@@ -821,14 +808,14 @@ void main() {
         when(
           () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
         ).thenAnswer(
-          (_) async => MediaItem(
+          (_) async => const MediaItem(
             id: 1,
             title: 'Show',
             overview: '',
             releaseDate: '2020-01-01',
             mediaType: MediaType.tv,
             status: 'Returning Series',
-            seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
+            seasons: [TVSeason(id: 4, seasonNumber: 4, episodeCount: 6)],
             lastSeasonNumber: 4,
             lastEpisodeNumber: 6,
             lastEpisodeAirDate: '2024-05-01',
@@ -842,7 +829,7 @@ void main() {
         ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 4, 1))]);
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 4))]);
         final staleSeason = season([ep(5, airDate: '2024-04-01')]);
         // The cache still holds the payload from before episode 6 aired.
         when(
@@ -869,7 +856,7 @@ void main() {
           ),
         ).captured;
         expect(captured[1], 6);
-        expect(captured[2], DateTime(2024, 5, 1));
+        expect(captured[2], DateTime(2024, 5));
       },
     );
 
@@ -880,14 +867,14 @@ void main() {
         when(
           () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
         ).thenAnswer(
-          (_) async => MediaItem(
+          (_) async => const MediaItem(
             id: 1,
             title: 'Show',
             overview: '',
             releaseDate: '2020-01-01',
             mediaType: MediaType.tv,
             status: 'Returning Series',
-            seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 7)],
+            seasons: [TVSeason(id: 4, seasonNumber: 4, episodeCount: 7)],
             lastSeasonNumber: 4,
             lastEpisodeNumber: 6,
             lastEpisodeAirDate: '2024-05-01',
@@ -898,10 +885,9 @@ void main() {
         ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(4, 6, DateTime(2024, 5, 1))]);
+        ).thenAnswer((_) async => [seen(4, 6, DateTime(2024, 5))]);
         when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
-          (_) async =>
-              season([ep(6, airDate: '2024-05-01'), ep(7, airDate: null)]),
+          (_) async => season([ep(6, airDate: '2024-05-01'), ep(7)]),
         );
 
         await repository.refreshNotificationForSeries(
@@ -917,7 +903,6 @@ void main() {
             seasonNumber: 4,
             episodeNumber: 7,
             releaseDate: null,
-            runtime: null,
           ),
         ).called(1);
       },
@@ -935,20 +920,20 @@ void main() {
             tmdbId: 1,
             type: 'tv',
             title: 'Show',
-            releaseDate: DateTime(2999, 1, 1),
+            releaseDate: DateTime(2999),
             seasonNumber: 4,
             episodeNumber: 7,
             lastRefreshedAt: DateTime.now().subtract(const Duration(days: 2)),
           ),
         );
-        final media = MediaItem(
+        const media = MediaItem(
           id: 1,
           title: 'Show',
           overview: '',
           releaseDate: '2020-01-01',
           mediaType: MediaType.tv,
           status: 'Returning Series',
-          seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 7)],
+          seasons: [TVSeason(id: 4, seasonNumber: 4, episodeCount: 7)],
           lastSeasonNumber: 4,
           lastEpisodeNumber: 6,
           lastEpisodeAirDate: '2024-05-01',
@@ -962,7 +947,7 @@ void main() {
               tmdbId: 1,
               type: 'tv',
               title: 'Show',
-              releaseDate: DateTime(2999, 1, 1),
+              releaseDate: DateTime(2999),
               seasonNumber: 4,
               episodeNumber: 7,
               lastRefreshedAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -977,7 +962,7 @@ void main() {
         ).thenAnswer((_) async => media);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 4, 1))]);
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 4))]);
         when(() => mockRemoteDataSource.getSeasonDetails(1, 4)).thenAnswer(
           (_) async => season([
             ep(5, airDate: '2024-04-01'),
@@ -999,7 +984,7 @@ void main() {
           ),
         ).captured;
         expect(captured[1], 6);
-        expect(captured[2], DateTime(2024, 5, 1));
+        expect(captured[2], DateTime(2024, 5));
       },
     );
 
@@ -1014,7 +999,7 @@ void main() {
             tmdbId: 1,
             type: 'tv',
             title: 'Show',
-            releaseDate: DateTime(2999, 1, 1),
+            releaseDate: DateTime(2999),
             seasonNumber: 4,
             episodeNumber: 7,
             lastRefreshedAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -1026,7 +1011,7 @@ void main() {
               tmdbId: 1,
               type: 'tv',
               title: 'Show',
-              releaseDate: DateTime(2999, 1, 1),
+              releaseDate: DateTime(2999),
               seasonNumber: 4,
               episodeNumber: 7,
               lastRefreshedAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -1034,14 +1019,14 @@ void main() {
           ],
         );
         when(() => mockCache.getItem(1, MediaType.tv)).thenAnswer(
-          (_) async => MediaItem(
+          (_) async => const MediaItem(
             id: 1,
             title: 'Show',
             overview: '',
             releaseDate: '2020-01-01',
             mediaType: MediaType.tv,
             status: 'Returning Series',
-            seasons: const [TVSeason(id: 4, seasonNumber: 4, episodeCount: 7)],
+            seasons: [TVSeason(id: 4, seasonNumber: 4, episodeCount: 7)],
             lastSeasonNumber: 4,
             lastEpisodeNumber: 6,
             lastEpisodeAirDate: '2024-05-01',
@@ -1049,7 +1034,7 @@ void main() {
         );
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(4, 6, DateTime(2024, 5, 1))]);
+        ).thenAnswer((_) async => [seen(4, 6, DateTime(2024, 5))]);
 
         await repository.refreshNotifiedItems();
 
@@ -1077,7 +1062,7 @@ void main() {
       ).thenAnswer((_) async => null);
       when(() => mockLocalDataSource.getSeenStatus(1, 'tv')).thenAnswer(
         (_) async => [
-          seen(1, 1, DateTime(2024, 1, 1)),
+          seen(1, 1, DateTime(2024)),
           seen(1, 2, DateTime(2024, 1, 8)),
         ],
       );
@@ -1154,10 +1139,10 @@ void main() {
       ).thenAnswer((_) async => null);
       when(
         () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+      ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5))]);
       when(
         () => mockRemoteDataSource.getSeasonDetails(1, 4),
-      ).thenAnswer((_) async => season([ep(6, airDate: null)]));
+      ).thenAnswer((_) async => season([ep(6)]));
 
       await repository.refreshNotificationForSeries(
         1,
@@ -1172,7 +1157,6 @@ void main() {
           seasonNumber: 4,
           episodeNumber: 6,
           releaseDate: null,
-          runtime: null,
         ),
       ).called(1);
     });
@@ -1238,7 +1222,7 @@ void main() {
         ).thenAnswer((_) async => media);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5, 1))]);
+        ).thenAnswer((_) async => [seen(4, 5, DateTime(2024, 5))]);
         // The cache only knows episode 5; episode 6 was published since.
         when(
           () => mockCache.getSeason(1, 4),
@@ -1280,7 +1264,7 @@ void main() {
         () => mockCache.getItem(1, MediaType.tv),
       ).thenAnswer((_) async => media);
 
-      final seenItems = [seen(1, 1, DateTime(2024, 1, 1))];
+      final seenItems = [seen(1, 1, DateTime(2024))];
       when(
         () => mockLocalDataSource.getSeenStatus(1, 'tv'),
       ).thenAnswer((_) async => seenItems);
@@ -1345,7 +1329,7 @@ void main() {
         ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
+        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024))]);
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 1),
         ).thenAnswer((_) async => season([ep(1, airDate: '2024-01-01')]));
@@ -1375,7 +1359,7 @@ void main() {
             tmdbId: 1,
             type: 'tv',
             title: 'Show',
-            releaseDate: DateTime(2024, 1, 1),
+            releaseDate: DateTime(2024),
             seasonNumber: 1,
             episodeNumber: 1,
           ),
@@ -1393,7 +1377,7 @@ void main() {
         ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
+        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024))]);
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 1),
         ).thenThrow(Exception('network'));
@@ -1419,7 +1403,7 @@ void main() {
             tmdbId: 1,
             type: 'tv',
             title: 'Show',
-            releaseDate: DateTime(2024, 1, 1),
+            releaseDate: DateTime(2024),
             seasonNumber: 1,
             episodeNumber: 2, // not seen
           ),
@@ -1437,7 +1421,7 @@ void main() {
         ).thenAnswer((_) async => null);
         when(
           () => mockLocalDataSource.getSeenStatus(1, 'tv'),
-        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024, 1, 1))]);
+        ).thenAnswer((_) async => [seen(1, 1, DateTime(2024))]);
         when(
           () => mockRemoteDataSource.getSeasonDetails(1, 1),
         ).thenThrow(Exception('network'));
@@ -1555,7 +1539,7 @@ void main() {
             // Seen after the mark: part of this streak, so skipped.
             seen(1, 2, markedAt.add(const Duration(hours: 1))),
             // Seen before the mark (older viewing): still proposed.
-            seen(1, 3, DateTime(2024, 1, 1)),
+            seen(1, 3, DateTime(2024)),
           ],
           seasons: {
             1: [
@@ -1651,14 +1635,12 @@ void main() {
             title: 'Mad Max',
             overview: '',
             releaseDate: '1979-04-12',
-            mediaType: MediaType.movie,
           ),
           const MediaItem(
             id: 11,
             title: 'Mad Max 2',
             overview: '',
             releaseDate: '1981-12-24',
-            mediaType: MediaType.movie,
           ),
         ];
 
@@ -1682,7 +1664,6 @@ void main() {
               title: 'Film $id',
               overview: '',
               releaseDate: '1980',
-              mediaType: MediaType.movie,
             ),
             credits: const {'cast': [], 'crew': []},
             similar: const [],
@@ -1721,14 +1702,12 @@ void main() {
     test('delegates to remoteDataSource after initialization', () async {
       const tResults = [PersonSummary(id: 1, name: 'Denis Villeneuve')];
       when(
-        () => mockRemoteDataSource.searchPeople('Villeneuve', page: 1),
+        () => mockRemoteDataSource.searchPeople('Villeneuve'),
       ).thenAnswer((_) async => tResults);
 
-      final result = await repository.searchPeople('Villeneuve', page: 1);
+      final result = await repository.searchPeople('Villeneuve');
       expect(result, tResults);
-      verify(
-        () => mockRemoteDataSource.searchPeople('Villeneuve', page: 1),
-      ).called(1);
+      verify(() => mockRemoteDataSource.searchPeople('Villeneuve')).called(1);
     });
   });
 }

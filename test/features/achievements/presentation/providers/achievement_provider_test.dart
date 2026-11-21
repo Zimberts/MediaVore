@@ -37,7 +37,7 @@ void main() {
     test(
       'should auto-unlock achievements that meet criteria but are not persisted',
       () async {
-        final unlockedAt = DateTime(2023, 1, 1);
+        final unlockedAt = DateTime(2023);
         final achievements = [
           Achievement(
             id: 'unlocked_but_not_saved',
@@ -45,7 +45,6 @@ void main() {
             description: 'D',
             iconPath: 'I',
             isUnlocked: true,
-            isPersisted: false,
             unlockedAt: unlockedAt,
             progress: 1.0,
           ),
@@ -70,14 +69,13 @@ void main() {
     );
 
     test('should not double-notify for already notified achievements', () async {
-      final unlockedAt = DateTime(2023, 1, 1);
+      final unlockedAt = DateTime(2023);
       final achievement = Achievement(
         id: '1',
         title: 'T',
         description: 'D',
         iconPath: 'I',
         isUnlocked: true,
-        isPersisted: false,
         unlockedAt: unlockedAt,
         progress: 1.0,
       );
@@ -101,7 +99,7 @@ void main() {
     test(
       'should persist every new tier but notify only the highest per family',
       () async {
-        final unlockedAt = DateTime(2023, 1, 1);
+        final unlockedAt = DateTime(2023);
         Achievement tier(String id, String group, int tier) => Achievement(
           id: id,
           title: id,

@@ -143,7 +143,7 @@ class NotificationRefreshService {
   /// cache, then resyncs its Quick Add and Releases entries.
   Future<void> refreshReturningSeries(int tmdbId) async {
     try {
-      final type = MediaType.tv;
+      const type = MediaType.tv;
 
       // 1. Fetch TV details
       final itemFuture = remoteDataSource.getMediaItem(tmdbId, type: type);
@@ -227,7 +227,7 @@ class NotificationRefreshService {
         DateTime.now(),
       );
     } catch (e) {
-      debugPrint("Failed to refresh returning series $tmdbId: $e");
+      debugPrint('Failed to refresh returning series $tmdbId: $e');
     }
   }
 

@@ -7,16 +7,17 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
-import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
+import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../helpers/mocks.dart';
 
 /// Accessibility guideline checks (#208) on every tab, with one item
@@ -33,7 +34,6 @@ void main() {
     title: 'Inception',
     overview: 'Overview',
     releaseDate: '2010-07-16',
-    mediaType: MediaType.movie,
   );
 
   setUpAll(() {
@@ -74,7 +74,7 @@ void main() {
           tmdbId: 1,
           type: MediaType.movie,
           title: 'Inception',
-          seenDate: DateTime(2024, 1, 1),
+          seenDate: DateTime(2024),
         ),
       ],
     );
@@ -126,9 +126,7 @@ void main() {
     );
   });
 
-  tearDown(() {
-    locator.reset();
-  });
+  tearDown(locator.reset);
 
   Widget createWidgetUnderTest() {
     return MultiProvider(
@@ -142,7 +140,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => TogetherSessionProvider()),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: const DefaultLightPalette().toThemeData(),
         home: const MainPage(),
       ),
     );

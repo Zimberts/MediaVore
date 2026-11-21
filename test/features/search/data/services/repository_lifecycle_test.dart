@@ -81,7 +81,7 @@ void main() {
 
     test('should skip the warm-up when the policy throttles it', () async {
       final policy = MockCacheWarmupPolicy();
-      when(() => policy.shouldRunAutomatically()).thenReturn(false);
+      when(policy.shouldRunAutomatically).thenReturn(false);
 
       await build(policy: policy).init();
 
@@ -90,24 +90,24 @@ void main() {
 
     test('should record a completed warm-up in the policy', () async {
       final policy = MockCacheWarmupPolicy();
-      when(() => policy.shouldRunAutomatically()).thenReturn(true);
-      when(() => policy.markCompleted()).thenAnswer((_) async {});
+      when(policy.shouldRunAutomatically).thenReturn(true);
+      when(policy.markCompleted).thenAnswer((_) async {});
 
       await build(policy: policy).init();
       await pumpEventQueue();
 
-      verify(() => policy.markCompleted()).called(1);
+      verify(policy.markCompleted).called(1);
     });
 
     test('should not record a cancelled warm-up', () async {
       final policy = MockCacheWarmupPolicy();
-      when(() => policy.shouldRunAutomatically()).thenReturn(true);
+      when(policy.shouldRunAutomatically).thenReturn(true);
       when(() => warmup.run()).thenAnswer((_) async => false);
 
       await build(policy: policy).init();
       await pumpEventQueue();
 
-      verifyNever(() => policy.markCompleted());
+      verifyNever(policy.markCompleted);
     });
   });
 

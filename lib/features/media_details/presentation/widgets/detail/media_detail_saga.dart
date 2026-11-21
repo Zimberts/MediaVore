@@ -199,10 +199,7 @@ class _SagaFilmCard extends StatelessWidget {
                       if (item.posterPath != null &&
                           !Platform.environment.containsKey('FLUTTER_TEST'))
                         CachedNetworkImage(
-                          imageUrl: TmdbImageUtils.buildUrl(
-                            item.posterPath,
-                            size: TmdbImageSize.w185,
-                          )!,
+                          imageUrl: TmdbImageUtils.buildUrl(item.posterPath)!,
                           fit: BoxFit.cover,
                           placeholder: (context, url) =>
                               Container(color: colors.placeholder),

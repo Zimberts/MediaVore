@@ -7,16 +7,14 @@ import 'package:mediavore/features/search/presentation/widgets/search_filter_she
 import 'package:mediavore/l10n/generated/app_localizations.dart';
 
 void main() {
-  setUp(() {
-    TestWidgetsFlutterBinding.ensureInitialized();
-  });
+  setUp(TestWidgetsFlutterBinding.ensureInitialized);
   Widget createWidget({
     required SearchFilters initialFilters,
     required ValueChanged<SearchFilters> onApply,
     int? resultCount,
   }) {
     return MaterialApp(
-      theme: DefaultLightPalette().toThemeData(),
+      theme: const DefaultLightPalette().toThemeData(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(

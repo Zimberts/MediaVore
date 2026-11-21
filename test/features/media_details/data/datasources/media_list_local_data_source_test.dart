@@ -1,15 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
-import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
-import 'package:mediavore/features/media_details/data/models/user_list.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'dart:io';
 
 void main() {
   late MediaListLocalDataSource dataSource;
@@ -51,7 +52,7 @@ void main() {
       tmdbId: 1,
       type: 'movie',
       title: 'Dune',
-      seenDate: DateTime(2023, 10, 1),
+      seenDate: DateTime(2023, 10),
     );
 
     test('should mark an item as seen and retrieve it', () async {
@@ -65,7 +66,7 @@ void main() {
     test(
       'should allow multiple seen entries for the same item (Multi-viewing)',
       () async {
-        final firstDate = DateTime(2023, 10, 1);
+        final firstDate = DateTime(2023, 10);
         final secondDate = DateTime(2023, 10, 2);
 
         await dataSource.markAsSeen(
@@ -253,21 +254,18 @@ void main() {
             title: 'Film 1',
             overview: '',
             releaseDate: '2010-01-01',
-            mediaType: MediaType.movie,
           ),
           const MediaItem(
             id: 2,
             title: 'Film 2',
             overview: '',
             releaseDate: '2012-01-01',
-            mediaType: MediaType.movie,
           ),
           const MediaItem(
             id: 3,
             title: 'Film 3',
             overview: '',
             releaseDate: '2015-01-01',
-            mediaType: MediaType.movie,
           ),
         ];
 
@@ -317,7 +315,7 @@ void main() {
     });
 
     test('should update notification date', () async {
-      final initialDate = DateTime(2023, 10, 1);
+      final initialDate = DateTime(2023, 10);
       final newDate = DateTime(2023, 10, 2);
 
       await dataSource.toggleNotification(
@@ -335,7 +333,7 @@ void main() {
     test(
       'autoNotify should update release date if item already exists',
       () async {
-        final initialDate = DateTime(2023, 10, 1);
+        final initialDate = DateTime(2023, 10);
         final newDate = DateTime(2023, 10, 2);
 
         await dataSource.toggleNotification(
@@ -407,10 +405,10 @@ void main() {
         tmdbId: 1,
         type: 'tv',
         title: 'Show',
-        releaseDate: DateTime(2024, 1, 1),
+        releaseDate: DateTime(2024),
       );
 
-      final stamp = DateTime(2024, 6, 1);
+      final stamp = DateTime(2024, 6);
       await dataSource.markNotifiedRefreshed(1, 'tv', stamp);
 
       await dataSource.updateNotificationDate(1, 'tv', DateTime(2024, 2, 2));
@@ -427,7 +425,7 @@ void main() {
         type: 'tv',
         title: 'Show',
         posterPath: '/p.jpg',
-        releaseDate: DateTime(2024, 1, 1),
+        releaseDate: DateTime(2024),
         seasonNumber: 2,
         episodeNumber: 3,
         runtime: 40,
@@ -453,7 +451,7 @@ void main() {
           tmdbId: 1,
           type: 'tv',
           title: 'Show',
-          releaseDate: DateTime(2024, 1, 1),
+          releaseDate: DateTime(2024),
           seasonNumber: 1,
           episodeNumber: 1,
         );

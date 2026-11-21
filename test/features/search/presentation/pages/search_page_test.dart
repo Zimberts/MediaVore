@@ -23,14 +23,7 @@ void main() {
     registerFallbackValue(MediaType.movie);
     registerFallbackValue(const SearchFilters());
     registerFallbackValue(
-      const MediaItem(
-        id: 0,
-        title: '',
-        overview: '',
-        posterPath: null,
-        releaseDate: '',
-        mediaType: MediaType.movie,
-      ),
+      const MediaItem(id: 0, title: '', overview: '', releaseDate: ''),
     );
   });
 
@@ -127,7 +120,6 @@ void main() {
           title: 'Trending Movie',
           overview: 'O',
           releaseDate: '2023',
-          mediaType: MediaType.movie,
         ),
       ];
       final tvItems = [
@@ -163,7 +155,6 @@ void main() {
           title: 'Search Movie',
           overview: 'O',
           releaseDate: '2023',
-          mediaType: MediaType.movie,
         ),
       ];
       final tvItems = [
@@ -244,7 +235,6 @@ void main() {
 
       verify(
         () => mockMediaRepository.discoverMedia(
-          page: 1,
           type: MediaType.tv,
           genreIds: any(named: 'genreIds'),
           releaseYear: any(named: 'releaseYear'),

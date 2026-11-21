@@ -5,32 +5,33 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
-import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
-import 'package:mediavore/features/library/presentation/pages/library_page.dart';
-import 'package:mediavore/features/home/presentation/pages/home_page.dart';
-import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
-import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
-import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
-import 'package:mediavore/features/search/presentation/pages/search_page.dart';
-import 'package:mediavore/features/together/presentation/pages/together_page.dart';
-import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
+import 'package:mediavore/features/home/presentation/pages/home_page.dart';
+import 'package:mediavore/features/library/presentation/pages/library_page.dart';
+import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
+import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
+import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
+import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/together/presentation/pages/together_page.dart';
+import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -137,7 +138,7 @@ void main() {
         ),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: const DefaultLightPalette().toThemeData(),
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

@@ -13,7 +13,7 @@ void main() {
     required VoidCallback onClearAll,
   }) {
     return MaterialApp(
-      theme: DefaultLightPalette().toThemeData(),
+      theme: const DefaultLightPalette().toThemeData(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
@@ -45,7 +45,7 @@ void main() {
     SearchFilters? updatedFilters;
     bool clearAllCalled = false;
 
-    final filters = const SearchFilters(
+    const filters = SearchFilters(
       type: MediaType.movie,
       sort: SearchSort.rating,
       period: SearchReleasePeriod.d1990s,

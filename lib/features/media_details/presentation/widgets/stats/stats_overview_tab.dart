@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/stats/stats_activity_chart.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/stats/stats_card.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/stats/stats_hall_of_fame_item.dart';

@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mocks.dart';
 
@@ -53,7 +53,7 @@ void main() {
     episodeNumber: 1,
   );
 
-  MediaItem showItem() => MediaItem(
+  MediaItem showItem() => const MediaItem(
     id: tmdbId,
     title: 'Show',
     overview: '',
@@ -244,7 +244,7 @@ void main() {
     when(() => local.getSeenStatus(tmdbId, 'tv')).thenAnswer((_) async => seen);
     when(() => local.getQuickAddItems()).thenAnswer((_) async => []);
     when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer(
-      (_) async => MediaItem(
+      (_) async => const MediaItem(
         id: tmdbId,
         title: 'Show',
         overview: '',

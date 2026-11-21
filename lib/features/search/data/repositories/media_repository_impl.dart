@@ -1,13 +1,13 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mediavore/core/cache/cache_warmup_policy.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/liked_item_info.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
@@ -27,6 +27,7 @@ import 'package:mediavore/features/search/data/services/repository_lifecycle.dar
 import 'package:mediavore/features/search/data/services/seen_service.dart';
 import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Implementation of the [MediaRepository] that uses a remote and a local data source.
 ///

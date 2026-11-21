@@ -139,14 +139,14 @@ class DateTextFormatter extends TextInputFormatter {
         if (characterToDelete == '/') {
           // User hit backspace on a slash.
           // We want to delete the digit BEFORE the slash.
-          String digits = oldText.replaceAll('/', '');
-          int digitsBeforeCaret = oldText
+          final String digits = oldText.replaceAll('/', '');
+          final int digitsBeforeCaret = oldText
               .substring(0, selectionEnd - 1)
               .replaceAll('/', '')
               .length;
 
           if (digitsBeforeCaret > 0) {
-            String updatedDigits =
+            final String updatedDigits =
                 digits.substring(0, digitsBeforeCaret - 1) +
                 digits.substring(digitsBeforeCaret);
             return _rebuildValue(updatedDigits, digitsBeforeCaret - 1);
@@ -162,7 +162,7 @@ class DateTextFormatter extends TextInputFormatter {
     String digits = newText.replaceAll(RegExp(r'[^0-9]'), '');
     if (digits.length > 8) digits = digits.substring(0, 8);
 
-    int caretPositionInDigits = _calculateDigitsBefore(
+    final int caretPositionInDigits = _calculateDigitsBefore(
       newText,
       newValue.selection.end,
     );

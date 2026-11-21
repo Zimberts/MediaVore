@@ -35,7 +35,7 @@ void main() {
     final items = [
       _item(1, 'severance', progress: 0.2, daysAgo: 3),
       _item(2, 'Andor', progress: 0.9, daysAgo: 40),
-      _item(3, 'The Bear', daysAgo: 1),
+      _item(3, 'The Bear'),
       _item(4, 'Dark', progress: 0.9, daysAgo: 2),
     ];
 
@@ -65,7 +65,7 @@ void main() {
       final untitled = [
         _item(9, null, daysAgo: 5),
         _item(7, null, daysAgo: 5),
-        _item(8, null, daysAgo: 1),
+        _item(8, null),
       ];
       expect(_ids(sortInProgress(untitled, InProgressSort.alphabetical)), [
         8,

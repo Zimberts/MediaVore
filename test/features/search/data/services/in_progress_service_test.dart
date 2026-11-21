@@ -203,7 +203,7 @@ void main() {
 
     test('should never report more than 100 %', () async {
       stub(
-        queue: [next(1, season: 1, episode: 1)],
+        queue: [next(1, episode: 1)],
         history: [
           for (var episode = 1; episode <= 5; episode++)
             seen(1, 1, episode, daysAgo(1)),
@@ -220,7 +220,7 @@ void main() {
     test('should keep one entry per series, the streak watched last', () async {
       stub(
         queue: [
-          next(1, season: 1, episode: 3, insertedAt: daysAgo(20)),
+          next(1, episode: 3, insertedAt: daysAgo(20)),
           next(1, season: 4, episode: 6, insertedAt: daysAgo(2)),
         ],
         history: [seen(1, 1, 2, daysAgo(20)), seen(1, 4, 5, daysAgo(2))],
@@ -270,7 +270,7 @@ void main() {
         );
 
         stub(
-          queue: [next(1, season: 1, episode: 1, insertedAt: rewatchStart)],
+          queue: [next(1, episode: 1, insertedAt: rewatchStart)],
           history: [seen(1, 1, 1, daysAgo(30)), seen(1, 1, 2, daysAgo(29))],
           cached: {1: series(1, episodes: 10)},
         );

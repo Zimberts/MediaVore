@@ -8,11 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final GetIt locator = GetIt.instance;
 
-@InjectableInit(
-  initializerName: 'init',
-  preferRelativeImports: true,
-  asExtension: false,
-)
+@InjectableInit(preferRelativeImports: true, asExtension: false)
 void configureDependencies() {}
 
 @module

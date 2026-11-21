@@ -8,8 +8,9 @@ Flutter/Dart app to track media seen. See `README.md` for the product overview,
 - Files/dirs `snake_case`; classes `PascalCase`; members `camelCase`; private with `_`.
 - Use `debugPrint`, never `print`.
 - Naming suffixes: `Provider`, `Repository` / `RepositoryImpl`, `DataSource`.
-- Lint is enforced by `analysis_options.yaml` (stock `package:flutter_lints/flutter.yaml`,
-  no custom rules). Don't add linter config here; rely on `flutter analyze`.
+- Lint is enforced by `analysis_options.yaml` (`package:flutter_lints/flutter.yaml` plus the
+  extra rules listed there). Rules live only in that file, never here; rely on `flutter analyze`,
+  and run `dart fix --apply` for the auto-fixable ones.
 
 ## Architecture
 

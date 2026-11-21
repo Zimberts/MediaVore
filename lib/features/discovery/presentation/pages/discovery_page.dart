@@ -1,27 +1,28 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
-import 'package:provider/provider.dart';
-import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
-import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
-import 'package:mediavore/features/discovery/presentation/pages/swiper_page.dart';
-import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/filter_chip_row.dart';
+import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/core/widgets/section_header.dart';
-import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
-import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:mediavore/core/widgets/media_poster_card.dart';
-import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
-import 'package:mediavore/features/search/presentation/widgets/search_people_row.dart';
+import 'package:mediavore/features/discovery/presentation/pages/swiper_page.dart';
+import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
 import 'package:mediavore/features/discovery/presentation/widgets/because_you_row.dart';
+import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/active_filter_chips.dart';
+import 'package:mediavore/features/search/presentation/widgets/media_item_poster.dart';
 import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_people_row.dart';
+import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
+import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:provider/provider.dart';
 
 /// Discover tab: Explore (permanent search, type chips, trends of the week or
 /// results in a 3-column grid) or Swipe.
@@ -168,7 +169,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
               key: const Key('discovery_retry'),
               icon: const Icon(Icons.refresh),
               label: Text(context.l10n.commonRetry),
-              onPressed: () => _refreshDiscovery(),
+              onPressed: _refreshDiscovery,
             ),
         ],
       ),

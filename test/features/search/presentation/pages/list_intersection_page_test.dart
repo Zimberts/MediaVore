@@ -50,7 +50,7 @@ void main() {
           tmdbId: 101,
           type: MediaType.movie,
           title: 'Movie 101',
-          seenDate: DateTime(2025, 1, 1),
+          seenDate: DateTime(2025),
         ),
       ],
     );

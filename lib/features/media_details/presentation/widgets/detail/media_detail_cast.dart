@@ -51,10 +51,7 @@ class MediaDetailCast extends StatelessWidget {
                           ? CircleAvatar(
                               radius: 40,
                               backgroundImage: NetworkImage(
-                                TmdbImageUtils.buildUrl(
-                                  member.profilePath,
-                                  size: TmdbImageSize.w185,
-                                )!,
+                                TmdbImageUtils.buildUrl(member.profilePath)!,
                               ),
                             )
                           : CircleAvatar(

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
-import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mocks.dart';
 
@@ -44,7 +44,7 @@ void main() {
   test(
     'populateQuickAddFromSeenHistory adds one quick-add per streak tail',
     () async {
-      final tmdbId = 100;
+      const tmdbId = 100;
 
       // Create seen entries representing two separate streaks:
       // - Season 1 episodes 1,2,3 (tail: s1e3)
@@ -55,7 +55,7 @@ void main() {
           tmdbId: tmdbId,
           type: 'tv',
           title: 'T',
-          seenDate: now.subtract(Duration(days: 10)),
+          seenDate: now.subtract(const Duration(days: 10)),
           seasonNumber: 1,
           episodeNumber: 1,
         ),
@@ -63,7 +63,7 @@ void main() {
           tmdbId: tmdbId,
           type: 'tv',
           title: 'T',
-          seenDate: now.subtract(Duration(days: 9)),
+          seenDate: now.subtract(const Duration(days: 9)),
           seasonNumber: 1,
           episodeNumber: 2,
         ),
@@ -71,7 +71,7 @@ void main() {
           tmdbId: tmdbId,
           type: 'tv',
           title: 'T',
-          seenDate: now.subtract(Duration(days: 8)),
+          seenDate: now.subtract(const Duration(days: 8)),
           seasonNumber: 1,
           episodeNumber: 3,
         ),
@@ -79,7 +79,7 @@ void main() {
           tmdbId: tmdbId,
           type: 'tv',
           title: 'T',
-          seenDate: now.subtract(Duration(days: 7)),
+          seenDate: now.subtract(const Duration(days: 7)),
           seasonNumber: 2,
           episodeNumber: 1,
         ),
@@ -87,7 +87,7 @@ void main() {
           tmdbId: tmdbId,
           type: 'tv',
           title: 'T',
-          seenDate: now.subtract(Duration(days: 6)),
+          seenDate: now.subtract(const Duration(days: 6)),
           seasonNumber: 2,
           episodeNumber: 2,
         ),
@@ -109,7 +109,7 @@ void main() {
       ).thenAnswer((_) async => seenItems);
 
       // Remote: return a MediaItem with two seasons
-      final media = MediaItem(
+      const media = MediaItem(
         id: tmdbId,
         title: 'T',
         overview: '',
@@ -166,7 +166,7 @@ void main() {
   );
 
   test('populateQuickAddFromSeenHistory captures episode runtime', () async {
-    final tmdbId = 400;
+    const tmdbId = 400;
     final now = DateTime.now();
     final seenItems = [
       SeenItemModel(
@@ -194,7 +194,7 @@ void main() {
       () => local.getSeenStatus(tmdbId, 'tv'),
     ).thenAnswer((_) async => seenItems);
 
-    final media = MediaItem(
+    const media = MediaItem(
       id: tmdbId,
       title: 'T',
       overview: '',
@@ -241,7 +241,7 @@ void main() {
   test(
     'refreshQuickAddItems backfills missing runtime for existing entries',
     () async {
-      final tmdbId = 500;
+      const tmdbId = 500;
       final model = QuickAddItemModel(
         tmdbId: tmdbId,
         type: 'tv',
@@ -274,7 +274,7 @@ void main() {
   test(
     'refreshQuickAddItems skips entries that already have runtime',
     () async {
-      final tmdbId = 600;
+      const tmdbId = 600;
       final model = QuickAddItemModel(
         tmdbId: tmdbId,
         type: 'tv',
@@ -297,7 +297,7 @@ void main() {
   test(
     'populateQuickAddFromSeenHistory adds nothing when fully caught up',
     () async {
-      final tmdbId = 700;
+      const tmdbId = 700;
       final now = DateTime.now();
       final seenItems = [
         SeenItemModel(
@@ -329,7 +329,7 @@ void main() {
         () => cache.getItem(tmdbId, MediaType.tv),
       ).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
-        (_) async => MediaItem(
+        (_) async => const MediaItem(
           id: tmdbId,
           title: 'T',
           overview: '',
@@ -365,7 +365,7 @@ void main() {
   test(
     'populateQuickAddFromSeenHistory honours an opt-out on the found episode',
     () async {
-      final tmdbId = 900;
+      const tmdbId = 900;
       final now = DateTime.now();
       final seenItems = [
         SeenItemModel(
@@ -402,7 +402,7 @@ void main() {
         () => cache.getItem(tmdbId, MediaType.tv),
       ).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
-        (_) async => MediaItem(
+        (_) async => const MediaItem(
           id: tmdbId,
           title: 'T',
           overview: '',
@@ -441,7 +441,7 @@ void main() {
       // Watched S1E1 (day -10) and S1E2 (day -9), then re-watched S1E1 (day -1).
       // The re-watch forms a new tail, so S1E2 is offered again even though it
       // was already seen during the first pass.
-      final tmdbId = 800;
+      const tmdbId = 800;
       final now = DateTime.now();
       final seenItems = [
         SeenItemModel(
@@ -489,7 +489,7 @@ void main() {
         () => cache.getItem(tmdbId, MediaType.tv),
       ).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
-        (_) async => MediaItem(
+        (_) async => const MediaItem(
           id: tmdbId,
           title: 'T',
           overview: '',

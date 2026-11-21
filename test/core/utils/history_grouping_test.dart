@@ -6,7 +6,7 @@ import 'package:mediavore/core/utils/history_grouping.dart';
 
 void main() {
   setUpAll(() async {
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('fr');
   });
   group('formatHistoryDuration', () {
     test('returns empty string for null or zero or negative', () {
@@ -66,7 +66,7 @@ void main() {
     });
 
     test('returns localized long date when older than yesterday', () {
-      final olderDate = DateTime(2026, 11, 14, 12, 0);
+      final olderDate = DateTime(2026, 11, 14, 12);
       final formatted = formatHistoryDayTitle(
         olderDate,
         now,
@@ -89,7 +89,7 @@ void main() {
           tmdbId: 101,
           title: 'Movie 1',
           type: MediaType.movie,
-          seenDate: DateTime(2026, 11, 16, 21, 0),
+          seenDate: DateTime(2026, 11, 16, 21),
           runtime: 115, // 1h 55
         ),
         SeenItem(
@@ -97,7 +97,7 @@ void main() {
           tmdbId: 201,
           title: 'Series S1 E1',
           type: MediaType.tv,
-          seenDate: DateTime(2026, 11, 16, 20, 0),
+          seenDate: DateTime(2026, 11, 16, 20),
           seasonNumber: 1,
           episodeNumber: 1,
           runtime: 50,
@@ -107,7 +107,7 @@ void main() {
           tmdbId: 201,
           title: 'Series S1 E2',
           type: MediaType.tv,
-          seenDate: DateTime(2026, 11, 16, 19, 0),
+          seenDate: DateTime(2026, 11, 16, 19),
           seasonNumber: 1,
           episodeNumber: 2,
           runtime: 50,
@@ -149,7 +149,7 @@ void main() {
       final groups = groupSeenItemsByDay(items);
       expect(groups.length, 2);
 
-      expect(groups[0].date, DateTime(2026, 1, 1));
+      expect(groups[0].date, DateTime(2026));
       expect(groups[0].itemCount, 1);
       expect(groups[0].totalRuntimeMinutes, 120);
 
@@ -165,15 +165,14 @@ void main() {
           tmdbId: 101,
           title: 'Unknown duration',
           type: MediaType.movie,
-          seenDate: DateTime(2026, 11, 16, 14, 0),
-          runtime: null,
+          seenDate: DateTime(2026, 11, 16, 14),
         ),
         SeenItem(
           id: 2,
           tmdbId: 102,
           title: 'Zero duration',
           type: MediaType.movie,
-          seenDate: DateTime(2026, 11, 16, 15, 0),
+          seenDate: DateTime(2026, 11, 16, 15),
           runtime: 0,
         ),
       ];
@@ -198,7 +197,7 @@ void main() {
             tmdbId: 100,
             title: 'My Show',
             type: MediaType.tv,
-            seenDate: DateTime(2026, 11, 16, 20, 0),
+            seenDate: DateTime(2026, 11, 16, 20),
             seasonNumber: 1,
             episodeNumber: 2,
           ),
@@ -207,7 +206,7 @@ void main() {
             tmdbId: 100,
             title: 'My Show',
             type: MediaType.tv,
-            seenDate: DateTime(2026, 11, 15, 20, 0),
+            seenDate: DateTime(2026, 11, 15, 20),
             seasonNumber: 1,
             episodeNumber: 1,
           ),
@@ -216,7 +215,7 @@ void main() {
             tmdbId: 100,
             title: 'My Show',
             type: MediaType.tv,
-            seenDate: DateTime(2026, 11, 14, 20, 0),
+            seenDate: DateTime(2026, 11, 14, 20),
             seasonNumber: 1,
             episodeNumber: 1,
           ),
@@ -226,14 +225,14 @@ void main() {
             tmdbId: 200,
             title: 'My Movie',
             type: MediaType.movie,
-            seenDate: DateTime(2026, 11, 16, 22, 0),
+            seenDate: DateTime(2026, 11, 16, 22),
           ),
           SeenItem(
             id: 5,
             tmdbId: 200,
             title: 'My Movie',
             type: MediaType.movie,
-            seenDate: DateTime(2026, 10, 10, 20, 0),
+            seenDate: DateTime(2026, 10, 10, 20),
           ),
         ];
 

@@ -55,7 +55,6 @@ void main() {
               id: 101,
               title: 'Inception',
               overview: 'Dreams within dreams',
-              mediaType: MediaType.movie,
               releaseDate: '2010-07-16',
               voteAverage: 8.8,
             );
@@ -64,7 +63,6 @@ void main() {
               id: 102,
               title: 'The Matrix',
               overview: 'Red pill or blue pill',
-              mediaType: MediaType.movie,
               releaseDate: '1999-03-31',
               voteAverage: 8.7,
             );
@@ -91,7 +89,7 @@ void main() {
           locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          theme: DefaultLightPalette().toThemeData(),
+          theme: const DefaultLightPalette().toThemeData(),
           home: const MediaStatsPage(),
         ),
       );
@@ -146,7 +144,7 @@ void main() {
             episodeNumber: 1,
             runtime: 58,
             genres: const ['Drama', 'Crime'],
-            seenDate: DateTime(2026, 6, 1),
+            seenDate: DateTime(2026, 6),
           ),
         ];
 
@@ -301,7 +299,7 @@ void main() {
           type: MediaType.movie,
           title: 'Movie One',
           runtime: 120, // 2h
-          seenDate: DateTime(2026, 1, 1),
+          seenDate: DateTime(2026),
         ),
         SeenItem(
           tmdbId: 102,

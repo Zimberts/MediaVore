@@ -181,7 +181,6 @@ class ListShareCodec {
       return ListSharePayload(
         name: name,
         entries: entries,
-        version: 2,
         part: part,
         totalParts: totalParts,
       );

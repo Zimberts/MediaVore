@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
-import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart'
     as repo_types;
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mocktail/mocktail.dart';
 
 typedef ImportProgress = void Function(double progress, String status);
 
@@ -91,7 +91,7 @@ void main() {
             type: MediaType.tv,
             seasonNumber: 1,
             episodeNumber: 5,
-            insertedAt: DateTime.utc(2025, 1, 1),
+            insertedAt: DateTime.utc(2025),
             airDate: DateTime.utc(2025, 1, 8),
             title: 'Show',
             posterPath: '/show.jpg',

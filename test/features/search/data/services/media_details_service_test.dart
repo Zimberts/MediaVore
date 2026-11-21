@@ -54,7 +54,7 @@ void main() {
     test('should share one fetch between concurrent callers', () async {
       final item = Completer<MediaDetailsBundle>();
       when(
-        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        () => remote.getMediaDetailsBundle(1),
       ).thenAnswer((_) => item.future);
 
       final first = service.getMediaDetails(1);
@@ -63,23 +63,19 @@ void main() {
 
       expect((await first).item, movie);
       expect((await second).item, movie);
-      verify(
-        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
-      ).called(1);
+      verify(() => remote.getMediaDetailsBundle(1)).called(1);
       verify(() => cache.cacheDetails(any())).called(1);
     });
 
     test('should fetch again once the previous request settled', () async {
       when(
-        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        () => remote.getMediaDetailsBundle(1),
       ).thenAnswer((_) async => bundleOf(movie));
 
       await service.getMediaDetails(1);
       await service.getMediaDetails(1);
 
-      verify(
-        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
-      ).called(2);
+      verify(() => remote.getMediaDetailsBundle(1)).called(2);
     });
 
     test(
@@ -102,10 +98,10 @@ void main() {
         when(() => cache.getCachedCollection(999)).thenReturn(null);
         when(() => cache.cacheCollectionParts(999, any())).thenAnswer((_) {});
         when(
-          () => remote.getMediaDetailsBundle(10, type: MediaType.movie),
+          () => remote.getMediaDetailsBundle(10),
         ).thenAnswer((_) async => bundleOf(movie1));
         when(
-          () => remote.getMediaDetailsBundle(11, type: MediaType.movie),
+          () => remote.getMediaDetailsBundle(11),
         ).thenAnswer((_) async => bundleOf(movie2));
 
         final collectionCompleter = Completer<List<MediaItem>>();
@@ -175,15 +171,13 @@ void main() {
           (_) async => MediaDetails(item: incompleteMovie, cast: const []),
         );
         when(
-          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+          () => remote.getMediaDetailsBundle(1),
         ).thenAnswer((_) async => bundleOf(freshMovie));
 
         final result = await service.getMediaDetails(1);
 
         expect(result.item, freshMovie);
-        verify(
-          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
-        ).called(1);
+        verify(() => remote.getMediaDetailsBundle(1)).called(1);
         verify(() => cache.cacheDetails(any())).called(1);
       },
     );
@@ -202,15 +196,13 @@ void main() {
           (_) async => MediaDetails(item: incompleteMovie, cast: const []),
         );
         when(
-          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+          () => remote.getMediaDetailsBundle(1),
         ).thenThrow(Exception('Network failure'));
 
         final result = await service.getMediaDetails(1);
 
         expect(result.item, incompleteMovie);
-        verify(
-          () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
-        ).called(1);
+        verify(() => remote.getMediaDetailsBundle(1)).called(1);
       },
     );
   });
@@ -441,7 +433,7 @@ void main() {
 
     test('should take runtime and genres from the movie details', () async {
       when(
-        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        () => remote.getMediaDetailsBundle(1),
       ).thenAnswer((_) async => bundleOf(movie));
 
       final result = await service.resolveRuntimeAndGenres(
@@ -479,7 +471,7 @@ void main() {
 
     test('should keep the given values when the lookup fails', () async {
       when(
-        () => remote.getMediaDetailsBundle(1, type: MediaType.movie),
+        () => remote.getMediaDetailsBundle(1),
       ).thenThrow(Exception('offline'));
 
       final result = await service.resolveRuntimeAndGenres(

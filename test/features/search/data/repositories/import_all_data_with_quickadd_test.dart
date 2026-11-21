@@ -1,19 +1,19 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
-
-import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
-import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
-import 'package:mediavore/features/media_details/data/models/liked_item.dart';
-import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
-import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
-import 'package:mediavore/features/media_details/data/models/user_list.dart';
-import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
+import 'package:mediavore/core/utils/export_import_serializer.dart';
+import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
+import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/search/data/repositories/media_repository_impl.dart';
-import 'package:mediavore/core/utils/export_import_serializer.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 import '../../../../helpers/mocks.dart';
@@ -75,8 +75,7 @@ void main() {
           tmdbId: 100,
           type: 'movie',
           title: 'Imported Movie',
-          posterPath: null,
-          seenDate: DateTime.utc(2025, 1, 1),
+          seenDate: DateTime.utc(2025),
           runtime: 110,
           genres: ['Drama'],
         ),
@@ -87,8 +86,7 @@ void main() {
           tmdbId: 300,
           type: 'tv',
           title: 'Notify Show',
-          posterPath: null,
-          releaseDate: DateTime.utc(2026, 1, 1),
+          releaseDate: DateTime.utc(2026),
           seasonNumber: 1,
           episodeNumber: 1,
           autoNotify: true,
@@ -101,7 +99,7 @@ void main() {
           seasonNumber: 2,
           episodeNumber: 5,
           insertedAt: DateTime.utc(2025, 1, 15),
-          airDate: DateTime.utc(2025, 2, 1),
+          airDate: DateTime.utc(2025, 2),
           title: 'Show Next Episode',
           posterPath: '/show.jpg',
         ),
@@ -113,7 +111,6 @@ void main() {
             type: 'movie',
             title: 'ListItem',
             listName: 'Imported',
-            position: 0,
           ),
         ],
       },
@@ -175,7 +172,7 @@ void main() {
       type: 'tv',
       seasonNumber: 1,
       episodeNumber: 1,
-      insertedAt: DateTime.utc(2024, 1, 1),
+      insertedAt: DateTime.utc(2024),
       title: 'Old Show',
     );
     await local.addQuickAddItem(oldItem);
@@ -261,7 +258,7 @@ void main() {
       type: 'tv',
       seasonNumber: 3,
       episodeNumber: 7,
-      insertedAt: DateTime.utc(2025, 2, 1),
+      insertedAt: DateTime.utc(2025, 2),
       airDate: DateTime.utc(2025, 2, 8),
       title: 'The Crown',
       posterPath: '/crown.jpg',
@@ -273,11 +270,11 @@ void main() {
 
     // Clear db
     await local.clearQuickAddItems();
-    var cleared = await local.getQuickAddItems();
+    final cleared = await local.getQuickAddItems();
     expect(cleared.length, 0);
 
     // Import
-    await repo.importAllData(exported, mode: ImportMode.append);
+    await repo.importAllData(exported);
 
     // Verify
     final imported = await local.getQuickAddItems();

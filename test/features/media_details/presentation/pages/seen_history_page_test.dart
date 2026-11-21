@@ -24,8 +24,8 @@ void main() {
 
   setUpAll(() async {
     registerFallbackValue(MediaType.movie);
-    await initializeDateFormatting('en', null);
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('en');
+    await initializeDateFormatting('fr');
   });
 
   setUp(() {
@@ -77,9 +77,7 @@ void main() {
     ).thenAnswer((_) async => []);
   });
 
-  tearDown(() {
-    locator.reset();
-  });
+  tearDown(locator.reset);
 
   Widget createWidgetUnderTest({Locale locale = const Locale('en')}) {
     return MultiProvider(
@@ -122,7 +120,7 @@ void main() {
   testWidgets(
     'displays grouped list of seen items, duration and liked status',
     (tester) async {
-      final seenDate = DateTime(2023, 10, 1);
+      final seenDate = DateTime(2023, 10);
       final seenItems = [
         SeenItem(
           id: 1,
@@ -218,7 +216,7 @@ void main() {
   testWidgets(
     'design v1.5: swiping does NOT delete; two voluntary gestures required (menu then dialog)',
     (tester) async {
-      final seenDate = DateTime(2023, 10, 1);
+      final seenDate = DateTime(2023, 10);
       final seenItems = [
         SeenItem(
           id: 1,

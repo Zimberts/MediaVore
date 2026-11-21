@@ -337,10 +337,7 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
                 height: 64,
                 child: item.posterPath != null && item.posterPath!.isNotEmpty
                     ? Image.network(
-                        TmdbImageUtils.buildUrl(
-                          item.posterPath,
-                          size: TmdbImageSize.w185,
-                        )!,
+                        TmdbImageUtils.buildUrl(item.posterPath)!,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) =>
                             Icon(Icons.movie, color: colors.placeholder),
@@ -408,7 +405,6 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
     final link = ListShareCodec.createShareUrl(
       listName: title,
       entries: entries,
-      version: 2,
     );
     SharePlus.instance.share(ShareParams(text: link, subject: title));
   }

@@ -498,10 +498,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
             height: 64,
             child: item.posterPath != null && item.posterPath!.isNotEmpty
                 ? Image.network(
-                    TmdbImageUtils.buildUrl(
-                      item.posterPath,
-                      size: TmdbImageSize.w185,
-                    )!,
+                    TmdbImageUtils.buildUrl(item.posterPath)!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) =>
                         Icon(Icons.movie, color: colors.placeholder),

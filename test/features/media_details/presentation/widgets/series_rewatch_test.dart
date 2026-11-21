@@ -85,7 +85,7 @@ void main() {
           tmdbId: 1,
           type: MediaType.tv,
           title: 'Breaking Bad',
-          seenDate: DateTime(2024, 1, 1),
+          seenDate: DateTime(2024),
           seasonNumber: 1,
           episodeNumber: 1,
         ),
@@ -419,9 +419,7 @@ void main() {
     testWidgets('displays 2nd watch · Next: S1 E1 during active rewatch', (
       tester,
     ) async {
-      when(
-        () => mockRepo.getSeriesRewatchStart(1),
-      ).thenReturn(DateTime(2026, 1, 1));
+      when(() => mockRepo.getSeriesRewatchStart(1)).thenReturn(DateTime(2026));
       final provider = SearchProvider(mockRepo);
 
       final seen = [
@@ -477,7 +475,7 @@ void main() {
       (tester) async {
         when(
           () => mockRepo.getSeriesRewatchStart(1),
-        ).thenReturn(DateTime(2026, 1, 1));
+        ).thenReturn(DateTime(2026));
         final provider = SearchProvider(mockRepo);
 
         final seen = [

@@ -52,7 +52,6 @@ void main() {
     () async {
       final decision = SwipeDecisionModel(
         tmdbId: 101,
-        mediaType: 'movie',
         title: 'Inception',
         decision: 'added',
         decidedAt: DateTime.now(),
@@ -77,7 +76,6 @@ void main() {
       final now = DateTime.now();
       final d1 = SwipeDecisionModel(
         tmdbId: 201,
-        mediaType: 'movie',
         title: 'Saga Part 1',
         decision: 'added',
         decidedAt: now,
@@ -87,7 +85,6 @@ void main() {
       );
       final d2 = SwipeDecisionModel(
         tmdbId: 202,
-        mediaType: 'movie',
         title: 'Saga Part 2',
         decision: 'added',
         decidedAt: now,

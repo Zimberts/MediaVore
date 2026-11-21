@@ -16,7 +16,6 @@ void main() {
     title: 'Inception',
     overview: 'Dream within a dream',
     releaseDate: '2010-07-16',
-    mediaType: MediaType.movie,
   );
 
   setUpAll(() {

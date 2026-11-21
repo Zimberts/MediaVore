@@ -1,5 +1,12 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/constants/storage_keys.dart';
+import 'package:mediavore/core/di/definitions_loader.dart';
+import 'package:mediavore/core/utils/formatters.dart';
 import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/features/achievements/data/datasources/achievement_media_source.dart';
 import 'package:mediavore/features/achievements/data/datasources/export_log.dart';
@@ -7,18 +14,11 @@ import 'package:mediavore/features/achievements/data/models/achievement_model.da
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/domain/repositories/achievement_repository.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
-import 'package:mediavore/core/constants/storage_keys.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart' show debugPrint;
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:mediavore/core/utils/formatters.dart';
-import 'package:mediavore/core/di/definitions_loader.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 @LazySingleton(as: AchievementRepository)
 class AchievementRepositoryImpl implements AchievementRepository {

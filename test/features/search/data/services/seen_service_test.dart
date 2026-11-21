@@ -43,7 +43,7 @@ void main() {
     cast: const [],
   );
 
-  final tDate = DateTime(2026, 1, 1);
+  final tDate = DateTime(2026);
 
   setUpAll(() {
     registerFallbackValue(MediaType.tv);
@@ -52,7 +52,7 @@ void main() {
         tmdbId: 42,
         type: MediaType.tv,
         title: 'Breaking Bad',
-        seenDate: DateTime(2026, 1, 1),
+        seenDate: DateTime(2026),
       ),
     );
     registerFallbackValue(<SeenItemModel>[]);

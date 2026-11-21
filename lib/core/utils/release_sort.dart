@@ -1,5 +1,5 @@
-import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 int releaseGroupPriority(NotifiedItem item) {

@@ -77,7 +77,6 @@ class _ListShareSheetContent extends StatelessWidget {
                     children: [
                       QrImageView(
                         data: shareLink,
-                        version: QrVersions.auto,
                         size: 200.0,
                         backgroundColor: Colors.white,
                         embeddedImage: const AssetImage('assets/icon/icon.png'),

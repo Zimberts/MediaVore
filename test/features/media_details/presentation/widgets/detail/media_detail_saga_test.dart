@@ -20,7 +20,6 @@ void main() {
     title: 'The Fellowship of the Ring',
     overview: 'First adventure',
     releaseDate: '2001-12-19',
-    mediaType: MediaType.movie,
     collectionId: 119,
     collectionName: 'The Lord of the Rings Collection',
   );
@@ -30,7 +29,6 @@ void main() {
     title: 'The Two Towers',
     overview: 'Second adventure',
     releaseDate: '2002-12-18',
-    mediaType: MediaType.movie,
     collectionId: 119,
     collectionName: 'The Lord of the Rings Collection',
   );
@@ -40,7 +38,6 @@ void main() {
     title: 'The Return of the King',
     overview: 'Final adventure',
     releaseDate: '2003-12-17',
-    mediaType: MediaType.movie,
     collectionId: 119,
     collectionName: 'The Lord of the Rings Collection',
   );
@@ -50,7 +47,6 @@ void main() {
     title: 'The Hunt for Gollum',
     overview: 'Upcoming film',
     releaseDate: '2026-12-18',
-    mediaType: MediaType.movie,
     collectionId: 119,
     collectionName: 'The Lord of the Rings Collection',
   );
@@ -108,7 +104,7 @@ void main() {
   testWidgets('renders SizedBox.shrink when collection is null or empty', (
     tester,
   ) async {
-    await tester.pumpWidget(buildWidget(currentItem: tFilm1, collection: null));
+    await tester.pumpWidget(buildWidget(currentItem: tFilm1));
     expect(find.byType(MediaDetailSaga), findsOneWidget);
     expect(find.textContaining('Saga'), findsNothing);
 

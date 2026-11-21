@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/di/injection.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../helpers/mocks.dart';
 
 void main() {
@@ -63,16 +64,15 @@ void main() {
       () => mockMediaRepository.getSeenStatus(any(), any()),
     ).thenAnswer((_) async => <SeenItem>[]);
 
-    final item = const MediaItem(
+    const item = MediaItem(
       id: 1,
       title: 'Inception',
       overview: 'Overview',
       releaseDate: '2010',
-      mediaType: MediaType.movie,
     );
 
     when(
-      () => mockMediaRepository.getMediaDetails(1, type: MediaType.movie),
+      () => mockMediaRepository.getMediaDetails(1),
     ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
 
     searchProvider = SearchProvider(mockMediaRepository);
@@ -89,9 +89,7 @@ void main() {
     }
   });
 
-  tearDown(() {
-    locator.reset();
-  });
+  tearDown(locator.reset);
 
   Widget createWidgetUnderTest() {
     return MultiProvider(
@@ -100,7 +98,7 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
       ],
       child: MaterialApp(
-        theme: DefaultLightPalette().toThemeData(),
+        theme: const DefaultLightPalette().toThemeData(),
         home: const SavedMediaPage(),
       ),
     );

@@ -4,7 +4,7 @@ import 'package:mediavore/features/achievements/domain/entities/achievement.dart
 void main() {
   group('Achievement Entity', () {
     test('should support value equality', () {
-      final unlockedAt = DateTime(2023, 1, 1);
+      final unlockedAt = DateTime(2023);
       final a1 = Achievement(
         id: '1',
         title: 'Title',

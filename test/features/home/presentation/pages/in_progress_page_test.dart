@@ -236,7 +236,7 @@ void main() {
     ).thenThrow(Exception('offline'));
   });
 
-  tearDown(() => appMessageController.dismiss());
+  tearDown(appMessageController.dismiss);
 
   Future<void> pumpPage(
     WidgetTester tester, {
@@ -290,9 +290,7 @@ void main() {
   void addFour() {
     repository.addSeries(_Series(1, 'Severance', seen: 2, daysAgo: 3));
     repository.addSeries(_Series(2, 'Andor', seen: 9, daysAgo: 40));
-    repository.addSeries(
-      _Series(3, 'The Bear', knowsEpisodeCount: false, daysAgo: 1),
-    );
+    repository.addSeries(_Series(3, 'The Bear', knowsEpisodeCount: false));
     repository.addSeries(_Series(4, 'Dark', seen: 5, daysAgo: 35));
   }
 
@@ -410,7 +408,7 @@ void main() {
     testWidgets('should mark the next episode as seen, with Undo', (
       tester,
     ) async {
-      repository.addSeries(_Series(1, 'Severance', seen: 3));
+      repository.addSeries(_Series(1, 'Severance'));
       await pumpPage(tester);
 
       await tester.tap(find.byTooltip('Mark S1 E4 of Severance as seen'));
@@ -429,7 +427,7 @@ void main() {
     testWidgets('should drop the row when the last episode is marked', (
       tester,
     ) async {
-      repository.addSeries(_Series(1, 'Severance', seen: 3, episodes: 4));
+      repository.addSeries(_Series(1, 'Severance', episodes: 4));
       await pumpPage(tester);
 
       await tester.tap(find.byTooltip('Mark S1 E4 of Severance as seen'));
@@ -470,7 +468,7 @@ void main() {
     testWidgets('should put the same episode back with Undo after a removal', (
       tester,
     ) async {
-      repository.addSeries(_Series(1, 'Severance', seen: 3));
+      repository.addSeries(_Series(1, 'Severance'));
       await pumpPage(tester);
       final entry = repository.queue[1];
 

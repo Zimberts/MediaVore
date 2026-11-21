@@ -15,7 +15,7 @@ void main() {
   );
 
   setUp(() {
-    now = DateTime(2026, 1, 1);
+    now = DateTime(2026);
     sleeps = [];
   });
 

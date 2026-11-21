@@ -56,7 +56,7 @@ class SettingsPage extends StatelessWidget {
               label: l10n.settingsLanguage,
               key: const Key('settings_language_dropdown'),
               selected: settings.appLanguageOverride,
-              onChanged: (lang) => settings.setAppLanguage(lang),
+              onChanged: settings.setAppLanguage,
               segments: [
                 AppSegment(value: null, label: l10n.settingsLanguageSystem),
                 for (final language in supportedAppLanguages)
@@ -81,7 +81,6 @@ class SettingsPage extends StatelessWidget {
                   icon: const Icon(Icons.keyboard_arrow_down, size: 16),
                   items: [
                     DropdownMenuItem<AppLanguage?>(
-                      value: null,
                       child: Text(l10n.settingsLanguageSystem),
                     ),
                     for (final language in supportedAppLanguages)
@@ -100,7 +99,7 @@ class SettingsPage extends StatelessWidget {
             label: l10n.settingsThemeMode,
             key: const Key('settings_theme_mode_segmented'),
             selected: settings.themeMode,
-            onChanged: (mode) => settings.setThemeMode(mode),
+            onChanged: settings.setThemeMode,
             segments: [
               AppSegment(
                 value: ThemeMode.system,
@@ -127,7 +126,7 @@ class SettingsPage extends StatelessWidget {
             key: const Key('settings_light_palette_dropdown'),
             selected: settings.lightPalette.id,
             enabled: settings.themeMode != ThemeMode.dark,
-            onChanged: (id) => settings.setLightPalette(id),
+            onChanged: settings.setLightPalette,
             segments: [
               AppSegment(
                 value: AppPaletteId.paper,
@@ -151,7 +150,7 @@ class SettingsPage extends StatelessWidget {
             key: const Key('settings_dark_palette_dropdown'),
             selected: settings.darkPalette.id,
             enabled: settings.themeMode != ThemeMode.light,
-            onChanged: (id) => settings.setDarkPalette(id),
+            onChanged: settings.setDarkPalette,
             segments: [
               AppSegment(
                 value: AppPaletteId.ink,
@@ -176,7 +175,7 @@ class SettingsPage extends StatelessWidget {
             title: Text(l10n.settingsAdvancedTracking),
             subtitle: Text(l10n.settingsAdvancedTrackingSubtitle),
             value: settings.advancedTracking,
-            onChanged: (val) => settings.setAdvancedTracking(val),
+            onChanged: settings.setAdvancedTracking,
           ),
           ListTile(
             key: const Key('settings_previous_episodes'),
@@ -217,7 +216,7 @@ class SettingsPage extends StatelessWidget {
             title: Text(l10n.settingsHideNonReleased),
             subtitle: Text(l10n.settingsHideNonReleasedSubtitle),
             value: settings.hideNonReleased,
-            onChanged: (val) => settings.setHideNonReleased(val),
+            onChanged: settings.setHideNonReleased,
           ),
           ListTile(
             key: const Key('settings_watch_providers_country_tile'),
@@ -238,7 +237,6 @@ class SettingsPage extends StatelessWidget {
                 icon: const Icon(Icons.keyboard_arrow_down, size: 16),
                 items: [
                   DropdownMenuItem<String?>(
-                    value: null,
                     child: Text(
                       l10n.settingsWatchProvidersCountrySystem(
                         l10n.detailCountryName(
@@ -268,7 +266,7 @@ class SettingsPage extends StatelessWidget {
             title: Text(l10n.swiperSettingTitle),
             subtitle: Text(l10n.swiperSettingSubtitle),
             value: settings.isSwipeModeEnabled,
-            onChanged: (val) => settings.setSwipeModeEnabled(val),
+            onChanged: settings.setSwipeModeEnabled,
           ),
           if (settings.isSwipeModeEnabled) const _SwipeResetTile(),
           const Divider(),

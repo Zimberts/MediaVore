@@ -306,18 +306,16 @@ void main() {
     );
     final local = MockMediaListLocalDataSource();
     final items = library(n);
-    when(() => local.getAllListNames()).thenAnswer((_) async => ['watchlist']);
+    when(local.getAllListNames).thenAnswer((_) async => ['watchlist']);
     when(() => local.getListItems('watchlist')).thenAnswer((_) async => items);
-    when(
-      () => local.getAllSeenItems(),
-    ).thenAnswer((_) async => seenHistory(items));
-    when(() => local.getLikedItems()).thenAnswer(
+    when(local.getAllSeenItems).thenAnswer((_) async => seenHistory(items));
+    when(local.getLikedItems).thenAnswer(
       (_) async => [
         for (final item in items.where((i) => i.position % 5 == 0))
           LikedItem(tmdbId: item.id, type: item.type, title: item.title),
       ],
     );
-    when(() => local.getNotifiedItems()).thenAnswer((_) async => []);
+    when(local.getNotifiedItems).thenAnswer((_) async => []);
 
     final cache = MediaCache(isar);
     final details = MediaDetailsService(remoteDataSource: remote, cache: cache);

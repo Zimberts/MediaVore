@@ -74,7 +74,7 @@ void main() {
   group('search/discover enrichment', () {
     test('should use cached details and bound concurrent fetches', () async {
       final repo = build(autoInit: false);
-      final raw = List.generate(10, (i) => _item(i));
+      final raw = List.generate(10, _item);
       when(
         () => remote.searchMedia(
           any(),
@@ -122,32 +122,32 @@ void main() {
   group('cache warm-up', () {
     test('should skip the automatic warm-up when the policy says so', () async {
       final policy = MockCacheWarmupPolicy();
-      when(() => policy.shouldRunAutomatically()).thenReturn(false);
+      when(policy.shouldRunAutomatically).thenReturn(false);
 
       build(policy: policy);
       await pumpEventQueue();
 
       verifyNever(() => local.getAllListNames());
-      verifyNever(() => policy.markCompleted());
+      verifyNever(policy.markCompleted);
     });
 
     test('should run and record completion when allowed', () async {
       final policy = MockCacheWarmupPolicy();
-      when(() => policy.shouldRunAutomatically()).thenReturn(true);
-      when(() => policy.markCompleted()).thenAnswer((_) async {});
+      when(policy.shouldRunAutomatically).thenReturn(true);
+      when(policy.markCompleted).thenAnswer((_) async {});
 
       build(policy: policy);
       await pumpEventQueue();
 
       verify(() => local.getAllListNames()).called(1);
-      verify(() => policy.markCompleted()).called(1);
+      verify(policy.markCompleted).called(1);
     });
 
     test('should stop and not record completion when cleared', () async {
       final policy = MockCacheWarmupPolicy();
-      when(() => policy.shouldRunAutomatically()).thenReturn(true);
-      when(() => policy.markCompleted()).thenAnswer((_) async {});
-      when(() => policy.reset()).thenAnswer((_) async {});
+      when(policy.shouldRunAutomatically).thenReturn(true);
+      when(policy.markCompleted).thenAnswer((_) async {});
+      when(policy.reset).thenAnswer((_) async {});
       final names = Completer<List<String>>();
       when(() => local.getAllListNames()).thenAnswer((_) => names.future);
       when(() => local.getListItems(any())).thenAnswer(
@@ -163,9 +163,9 @@ void main() {
       verifyNever(
         () => remote.getMediaDetailsBundle(any(), type: any(named: 'type')),
       );
-      verifyNever(() => policy.markCompleted());
+      verifyNever(policy.markCompleted);
       // The next start refills the wiped cache without waiting 24 h.
-      verify(() => policy.reset()).called(1);
+      verify(policy.reset).called(1);
     });
 
     test(
@@ -226,9 +226,7 @@ void main() {
 
       await repo.importAllData(zip);
 
-      verify(
-        () => remote.getMediaDetailsBundle(7, type: MediaType.movie),
-      ).called(1);
+      verify(() => remote.getMediaDetailsBundle(7)).called(1);
       verify(
         () => remote.getMediaDetailsBundle(8, type: MediaType.tv),
       ).called(1);
@@ -307,7 +305,7 @@ void main() {
       );
       when(() => cache.getItems(any())).thenAnswer(
         (_) async => [
-          MediaItem(id: 1, title: 'Titre', overview: '', releaseDate: ''),
+          const MediaItem(id: 1, title: 'Titre', overview: '', releaseDate: ''),
           null,
         ],
       );

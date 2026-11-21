@@ -50,7 +50,6 @@ void main() {
     posterPath: '/poster.jpg',
     releaseDate: '2010-07-16',
     overview: '$longOverview $longOverview',
-    mediaType: MediaType.movie,
     runtime: 148,
     voteAverage: 8.4,
     status: 'Released',
@@ -64,7 +63,6 @@ void main() {
     title: 'Tenet',
     releaseDate: '2020-08-26',
     overview: 'Time runs backwards.',
-    mediaType: MediaType.movie,
   );
 
   const serie = MediaItem(

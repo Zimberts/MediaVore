@@ -150,13 +150,13 @@ void main() {
       },
     );
     final seen = [
-      _ep(1, 1, 1, DateTime(2024, 1, 1)),
+      _ep(1, 1, 1, DateTime(2024)),
       _ep(1, 1, 2, DateTime(2024, 1, 2)),
       _ep(2, 1, 1, DateTime(2024, 1, 3)),
       _ep(1, 2, 1, DateTime(2024, 1, 4)),
       _ep(2, 1, 2, DateTime(2024, 1, 5)),
       _ep(1, 2, 2, DateTime(2024, 1, 6)),
-      _ep(1, 2, 2, DateTime(2024, 3, 1)), // rewatch: first view counts
+      _ep(1, 2, 2, DateTime(2024, 3)), // rewatch: first view counts
       _ep(2, 2, 1, DateTime(2024, 1, 7)),
       _ep(3, 1, 1, DateTime(2024, 1, 8)),
       _ep(3, 0, 1, DateTime(2024, 1, 9)), // special: ignored
@@ -210,7 +210,7 @@ void main() {
       final a = await evaluate(
         [_def('saga_complete', 1), _def('saga_complete', 2)],
         [
-          _movie(1, DateTime(2024, 1, 1)),
+          _movie(1, DateTime(2024)),
           _movie(2, DateTime(2024, 1, 2)),
           _movie(5, DateTime(2024, 1, 3)),
           _movie(7, DateTime(2024, 1, 4)),
@@ -231,10 +231,7 @@ void main() {
   });
 
   group('watchlist_clear', () {
-    final seen = [
-      _movie(1, DateTime(2024, 1, 1)),
-      _movie(2, DateTime(2024, 1, 2)),
-    ];
+    final seen = [_movie(1, DateTime(2024)), _movie(2, DateTime(2024, 1, 2))];
 
     test('should unlock when every watchlist title is seen', () async {
       when(() => local.getListItems('watchlist')).thenAnswer(
@@ -264,7 +261,7 @@ void main() {
   });
 
   test('should keep persisted unlocks of cache-based types only', () async {
-    final unlockedAt = DateTime(2024, 5, 1);
+    final unlockedAt = DateTime(2024, 5);
     await isar.writeTxn(() async {
       await isar.achievementModels.putAll([
         AchievementModel(achievementId: 'saga', unlockedAt: unlockedAt),

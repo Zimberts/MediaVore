@@ -76,7 +76,6 @@ void main() {
               title: 'Hero $page-$i',
               overview: '',
               releaseDate: '2022-01-01',
-              mediaType: MediaType.movie,
               // Only 1 item per page meets the filter
               voteAverage: i == 0 ? 8.5 : 6.0,
             ),
@@ -89,7 +88,6 @@ void main() {
         verify(
           () => mockRepository.searchMedia(
             'hero',
-            page: 1,
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
@@ -153,7 +151,6 @@ void main() {
               title: 'Hero $page-$i',
               overview: '',
               releaseDate: '2022-01-01',
-              mediaType: MediaType.movie,
               voteAverage: i < 15 ? 7.5 : 5.0,
             ),
           );
@@ -165,7 +162,6 @@ void main() {
         verify(
           () => mockRepository.searchMedia(
             'hero',
-            page: 1,
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
@@ -211,7 +207,6 @@ void main() {
         when(
           () => mockRepository.searchMedia(
             'rare',
-            page: 1,
             genreIds: any(named: 'genreIds'),
             releaseYear: any(named: 'releaseYear'),
             minRating: any(named: 'minRating'),
@@ -225,7 +220,6 @@ void main() {
               title: 'Rare 1',
               overview: '',
               releaseDate: '2020',
-              mediaType: MediaType.movie,
               voteAverage: 7.5,
             ),
           ],

@@ -31,22 +31,20 @@ void main() {
   late SettingsProvider settingsProvider;
   late SwiperProvider swiperProvider;
 
-  final movie1 = const MediaItem(
+  const movie1 = MediaItem(
     id: 101,
     title: 'Inception',
     overview: 'Dream within a dream',
     releaseDate: '2010-07-16',
     voteAverage: 8.8,
-    mediaType: MediaType.movie,
   );
 
-  final movie2 = const MediaItem(
+  const movie2 = MediaItem(
     id: 102,
     title: 'Interstellar',
     overview: 'Space exploration',
     releaseDate: '2014-11-07',
     voteAverage: 8.6,
-    mediaType: MediaType.movie,
   );
 
   setUpAll(() {
@@ -137,7 +135,7 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
       ],
       child: MaterialApp(
-        theme: DefaultDarkPalette().toThemeData(),
+        theme: const DefaultDarkPalette().toThemeData(),
         locale: const Locale('fr'),
         localizationsDelegates: const [
           AppLocalizations.delegate,

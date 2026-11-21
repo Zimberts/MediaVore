@@ -47,7 +47,7 @@ void main() {
     test('should omit a movie already seen', () {
       final result = filterReleases(
         items: [movie()],
-        seenItems: [seen(tmdbId: 1, type: MediaType.movie)],
+        seenItems: [seen(type: MediaType.movie)],
         now: now,
       );
 

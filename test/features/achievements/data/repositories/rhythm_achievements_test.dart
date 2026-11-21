@@ -136,7 +136,7 @@ void main() {
     test('should default minMovies to 2', () async {
       final a = await evaluate(
         [_def('double_feature', 1)],
-        [_movie(1, DateTime(2024, 3, 1, 9)), _movie(2, DateTime(2024, 3, 1))],
+        [_movie(1, DateTime(2024, 3, 1, 9)), _movie(2, DateTime(2024, 3))],
       );
       expect(a['double_feature_1']!.isUnlocked, isTrue);
     });
@@ -187,7 +187,7 @@ void main() {
       final defs = [_def('monthly_streak', 3), _def('monthly_streak', 4)];
       final a = await evaluate(defs, [
         _movie(1, DateTime(2023, 11, 30)),
-        _movie(2, DateTime(2023, 12, 1)),
+        _movie(2, DateTime(2023, 12)),
         _movie(3, DateTime(2023, 12, 20)),
         // across the year boundary
         _movie(4, DateTime(2024, 1, 31, 23)),

@@ -250,13 +250,7 @@ void main() {
           ],
           lists: {
             '=list': [
-              MediaListItem(
-                id: 1,
-                type: 'tv',
-                title: '-t',
-                listName: '=list',
-                position: 0,
-              ),
+              MediaListItem(id: 1, type: 'tv', title: '-t', listName: '=list'),
             ],
           },
         ).toZipBytes(),
@@ -282,7 +276,7 @@ void main() {
       () async {
         final original = ExportEnvelope(
           version: 1,
-          exportedAt: DateTime.utc(2025, 1, 1),
+          exportedAt: DateTime.utc(2025),
           likes: [LikedItem(tmdbId: 42, type: 'movie', title: 'Inception')],
           seen: [
             SeenItemModel(

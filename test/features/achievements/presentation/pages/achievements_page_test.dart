@@ -44,7 +44,7 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           navigatorKey: navigatorKey,
-          theme: DefaultLightPalette().toThemeData(),
+          theme: const DefaultLightPalette().toThemeData(),
           home: const Scaffold(body: Text('home')),
         ),
       ),
@@ -206,7 +206,6 @@ void main() {
             group: 'my_fam',
             category: 'movies',
             tier: 2,
-            isUnlocked: false,
             progress: 0.5,
             progressLabel: '5 / 10 movies',
           ),
@@ -218,8 +217,6 @@ void main() {
             group: 'my_fam',
             category: 'movies',
             tier: 3,
-            isUnlocked: false,
-            progress: 0.0,
           ),
         ];
 

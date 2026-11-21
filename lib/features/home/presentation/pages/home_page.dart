@@ -3,6 +3,8 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/utils/notification_center_filter.dart';
+import 'package:mediavore/core/utils/release_groups.dart';
 import 'package:mediavore/core/widgets/app_card.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
@@ -15,13 +17,11 @@ import 'package:mediavore/features/home/presentation/home_formatters.dart';
 import 'package:mediavore/features/home/presentation/in_progress_actions.dart';
 import 'package:mediavore/features/home/presentation/pages/in_progress_page.dart';
 import 'package:mediavore/features/home/presentation/pages/upcoming_page.dart';
-import 'package:mediavore/features/home/presentation/widgets/upcoming_rows_card.dart';
-import 'package:mediavore/core/utils/notification_center_filter.dart';
-import 'package:mediavore/core/utils/release_groups.dart';
 import 'package:mediavore/features/home/presentation/widgets/connect_tmdb_card.dart';
 import 'package:mediavore/features/home/presentation/widgets/home_link_row.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_card.dart';
 import 'package:mediavore/features/home/presentation/widgets/in_progress_thumbnail.dart';
+import 'package:mediavore/features/home/presentation/widgets/upcoming_rows_card.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -152,11 +152,7 @@ class _HomePageState extends State<HomePage> {
     final others = active.skip(HomePage.resumeCount).toList();
 
     final candidates = provider.tonightCandidates;
-    final picks = rotatingPicks(
-      candidates,
-      _tonightOffset,
-      count: HomePage.tonightCount,
-    );
+    final picks = rotatingPicks(candidates, _tonightOffset);
     final listLabel = _listLabel(l10n, provider.tonightListName);
 
     final sections = <Widget>[
@@ -276,8 +272,6 @@ class _HomePageState extends State<HomePage> {
     List<MediaItem> picks,
     String listLabel,
   ) {
-    const spacing = 10.0;
-
     return Column(
       key: const Key('home_tonight'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -303,7 +297,6 @@ class _HomePageState extends State<HomePage> {
               context: context,
               width: constraints.maxWidth,
               crossAxisCount: HomePage.tonightCount,
-              spacing: spacing,
             ),
             children: [
               for (final item in picks)

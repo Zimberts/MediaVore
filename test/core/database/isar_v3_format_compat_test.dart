@@ -152,7 +152,7 @@ void main() {
             tmdbId: 27205,
             type: 'movie',
             title: 'Inception',
-            seenDate: DateTime(2024, 1, 1),
+            seenDate: DateTime(2024),
           ),
         );
       });

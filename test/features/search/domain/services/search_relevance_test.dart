@@ -37,7 +37,6 @@ void main() {
         title: 'Batman',
         overview: '',
         releaseDate: '2000-01-01',
-        mediaType: MediaType.movie,
         voteAverage: 7.0,
       );
       const itemPrefix = MediaItem(
@@ -45,7 +44,6 @@ void main() {
         title: 'Batman Begins',
         overview: '',
         releaseDate: '2005-01-01',
-        mediaType: MediaType.movie,
         voteAverage: 8.5,
       );
       const itemSubstring = MediaItem(
@@ -53,7 +51,6 @@ void main() {
         title: 'The Batman',
         overview: '',
         releaseDate: '2022-01-01',
-        mediaType: MediaType.movie,
         voteAverage: 9.0,
       );
       const itemNoMatch = MediaItem(
@@ -61,7 +58,6 @@ void main() {
         title: 'Superman',
         overview: '',
         releaseDate: '1998-01-01',
-        mediaType: MediaType.movie,
         voteAverage: 8.0,
       );
 

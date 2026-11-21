@@ -79,7 +79,6 @@ void main() {
           title: 'Inception',
           overview: '',
           releaseDate: '',
-          mediaType: MediaType.movie,
         );
 
     return MultiProvider(
@@ -166,7 +165,7 @@ void main() {
             tmdbId: 1,
             type: MediaType.movie,
             title: 'Inception',
-            seenDate: DateTime(2023, 5, 1),
+            seenDate: DateTime(2023, 5),
           ),
           SeenItem(
             id: 2,
@@ -208,7 +207,7 @@ void main() {
           tmdbId: 1,
           type: MediaType.movie,
           title: 'Inception',
-          seenDate: DateTime(2023, 1, 15, 20, 0),
+          seenDate: DateTime(2023, 1, 15, 20),
         ),
         SeenItem(
           id: 20,
@@ -245,7 +244,7 @@ void main() {
           tmdbId: 1,
           type: MediaType.movie,
           title: 'Inception',
-          seenDate: DateTime(2023, 1, 15, 20, 0),
+          seenDate: DateTime(2023, 1, 15, 20),
         ),
       ];
       when(
@@ -278,7 +277,7 @@ void main() {
             tmdbId: 1,
             type: MediaType.movie,
             title: 'Inception',
-            seenDate: DateTime(2023, 1, 15, 20, 0),
+            seenDate: DateTime(2023, 1, 15, 20),
           ),
         ];
         when(

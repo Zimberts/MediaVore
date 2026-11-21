@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/liked_item_info.dart';
-import 'package:mediavore/core/domain/entities/person_summary.dart';
-import 'package:mediavore/core/error/exceptions.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
-import 'package:mediavore/features/search/domain/entities/search_filters.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 
 enum ImportMode { append, replace, merge }
 

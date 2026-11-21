@@ -77,10 +77,7 @@ class SearchPeopleRow extends StatelessWidget {
                           backgroundColor: colors.surface2,
                           backgroundImage: hasProfile
                               ? CachedNetworkImageProvider(
-                                  TmdbImageUtils.buildUrl(
-                                    person.profilePath,
-                                    size: TmdbImageSize.w185,
-                                  )!,
+                                  TmdbImageUtils.buildUrl(person.profilePath)!,
                                 )
                               : null,
                           child: hasProfile
