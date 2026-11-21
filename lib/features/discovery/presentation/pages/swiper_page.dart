@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
-import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/features/discovery/presentation/widgets/swipe_card.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -72,37 +71,10 @@ class _SwiperPageState extends State<SwiperPage> {
     String targetList,
   ) async {
     await _swiper.swipeRight(targetList);
-    if (!mounted) return;
-
-    final l10n = context.l10n;
-    final message = candidate.isSaga
-        ? l10n.swiperSagaAddedMessage(
-            candidate.collectionName ?? candidate.item.title,
-            candidate.sagaItems.length,
-          )
-        : l10n.swiperAddedMessage(candidate.item.title, targetList);
-
-    showAppMessage(
-      message,
-      actionLabel: l10n.swiperUndo,
-      onAction: () => _handleUndo(),
-    );
   }
 
   void _handleSwipeLeft(SwipeCardCandidate candidate) async {
     await _swiper.swipeLeft();
-    if (!mounted) return;
-
-    final l10n = context.l10n;
-    final message = candidate.isSaga
-        ? l10n.swiperSagaDiscardedMessage
-        : l10n.swiperDiscardedMessage;
-
-    showAppMessage(
-      message,
-      actionLabel: l10n.swiperUndo,
-      onAction: () => _handleUndo(),
-    );
   }
 
   void _handleUndo() async {
