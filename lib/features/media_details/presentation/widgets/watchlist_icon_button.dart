@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:provider/provider.dart';
 
 class WatchlistIconButton extends StatelessWidget {
   final MediaItem item;
@@ -27,8 +27,12 @@ class WatchlistIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<SearchProvider>();
-    final isInWatchlist = provider.isItemInList(item, 'watchlist');
+    final libraryProvider = context.watch<LibraryProvider?>();
+    final searchProvider =
+        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final isInWatchlist = libraryProvider != null
+        ? libraryProvider.isItemInList(item, 'watchlist')
+        : searchProvider!.isItemInList(item, 'watchlist');
     final colors = context.appColors;
 
     return IconButton(
@@ -51,7 +55,13 @@ class WatchlistIconButton extends StatelessWidget {
               isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
               color: isInWatchlist ? colors.onWatchlist : null,
             ),
-      onPressed: () => provider.toggleInList(item, 'watchlist'),
+      onPressed: () {
+        if (libraryProvider != null) {
+          libraryProvider.toggleInList(item, 'watchlist');
+        } else {
+          context.read<SearchProvider>().toggleInList(item, 'watchlist');
+        }
+      },
       tooltip: isInWatchlist
           ? context.l10n.watchlistRemove
           : context.l10n.watchlistAdd,

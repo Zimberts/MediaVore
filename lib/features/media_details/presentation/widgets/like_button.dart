@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -13,8 +13,12 @@ class LikeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<SearchProvider>();
-    final isLiked = provider.isLiked(item);
+    final libraryProvider = context.watch<LibraryProvider?>();
+    final searchProvider =
+        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final isLiked = libraryProvider != null
+        ? libraryProvider.isLiked(item)
+        : searchProvider!.isLiked(item);
     final colors = context.appColors;
 
     return IconButton(
@@ -23,7 +27,13 @@ class LikeButton extends StatelessWidget {
         isLiked ? Icons.favorite : Icons.favorite_border,
         color: isLiked ? colors.likeHeart : null,
       ),
-      onPressed: () => provider.toggleLike(item),
+      onPressed: () {
+        if (libraryProvider != null) {
+          libraryProvider.toggleLike(item);
+        } else {
+          context.read<SearchProvider>().toggleLike(item);
+        }
+      },
       tooltip: isLiked ? context.l10n.likeUnlike : context.l10n.likeLike,
     );
   }

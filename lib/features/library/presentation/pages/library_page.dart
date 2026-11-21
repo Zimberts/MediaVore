@@ -43,11 +43,18 @@ class _LibraryPageState extends State<LibraryPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final provider = context.watch<SearchProvider>();
-    final section = provider.librarySection;
+    final libraryProvider = context.watch<LibraryProvider?>();
+    final searchProvider =
+        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final count = libraryProvider != null
+        ? libraryProvider.countListEntries
+        : searchProvider!.countListEntries;
+    final section = context.select<SearchProvider, LibrarySection>(
+      (p) => p.librarySection,
+    );
 
     String chipLabel(String label, MediaType? type) =>
-        l10n.libraryTypeChip(label, provider.countListEntries(type));
+        l10n.libraryTypeChip(label, count(type));
 
     return ColoredBox(
       color: context.appColors.bg,

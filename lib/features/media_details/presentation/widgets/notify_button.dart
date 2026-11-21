@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
-import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -12,24 +12,31 @@ class NotifyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SearchProvider>(
-      builder: (context, provider, child) {
-        final isNotified = provider.isNotified(item);
-        final shouldShow = item.canBeNotified;
+    final notifProvider = context.watch<NotificationProvider?>();
+    final searchProvider =
+        notifProvider == null ? context.watch<SearchProvider>() : null;
+    final isNotified = notifProvider != null
+        ? notifProvider.isNotified(item)
+        : searchProvider!.isNotified(item);
+    final shouldShow = item.canBeNotified;
 
-        if (!shouldShow && !isNotified) return const SizedBox.shrink();
+    if (!shouldShow && !isNotified) return const SizedBox.shrink();
 
-        return IconButton(
-          icon: Icon(
-            isNotified ? Icons.notifications_active : Icons.notifications_none,
-            color: isNotified ? context.appColors.warning : null,
-          ),
-          onPressed: () => provider.toggleNotification(item),
-          tooltip: isNotified
-              ? context.l10n.notifyDisable
-              : context.l10n.notifyEnable,
-        );
+    return IconButton(
+      icon: Icon(
+        isNotified ? Icons.notifications_active : Icons.notifications_none,
+        color: isNotified ? context.appColors.warning : null,
+      ),
+      onPressed: () {
+        if (notifProvider != null) {
+          notifProvider.toggleNotification(item);
+        } else {
+          context.read<SearchProvider>().toggleNotification(item);
+        }
       },
+      tooltip: isNotified
+          ? context.l10n.notifyDisable
+          : context.l10n.notifyEnable,
     );
   }
 }
