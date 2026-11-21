@@ -62,6 +62,10 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
+      # Fails on ARB keys that no Dart file reads any more.
+      - name: Check unused localization keys
+        run: dart run tool/check_unused_l10n.dart
+
       - name: Check format
         continue-on-error: true # make blocking once the codebase is formatted
         run: dart format --output=none --set-exit-if-changed lib test
