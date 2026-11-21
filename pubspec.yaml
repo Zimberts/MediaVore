@@ -2,7 +2,7 @@ name: mediavore
 description: "App to keep track of media seen"
 publish_to: "none"
 
-version: 1.4.2+7
+version: 1.4.3+8
 
 environment:
   sdk: ^3.10.4
