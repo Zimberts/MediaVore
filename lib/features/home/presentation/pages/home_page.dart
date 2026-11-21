@@ -151,7 +151,7 @@ class _HomePageState extends State<HomePage> {
     final resume = active.take(HomePage.resumeCount).toList();
     final others = active.skip(HomePage.resumeCount).toList();
 
-    final candidates = provider.tonightCandidates;
+    final candidates = provider.tonightCandidates(now);
     final picks = rotatingPicks(candidates, _tonightOffset);
     final listLabel = _listLabel(l10n, provider.tonightListName);
 

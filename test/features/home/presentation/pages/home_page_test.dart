@@ -665,6 +665,45 @@ void main() {
       );
     });
 
+    testWidgets('should leave out titles not released yet or undated', (
+      tester,
+    ) async {
+      repository.firstList.addAll([
+        const MediaItem(
+          id: 1,
+          title: 'Upcoming film',
+          overview: '',
+          releaseDate: '2026-12-15',
+        ),
+        _film(2, 'Released film'),
+        const MediaItem(
+          id: 3,
+          title: 'Undated film',
+          overview: '',
+          releaseDate: '',
+        ),
+        const MediaItem(
+          id: 4,
+          title: 'Out today',
+          overview: '',
+          releaseDate: '2026-11-14',
+        ),
+      ]);
+      await pumpHome(tester);
+
+      expect(find.byType(MediaPosterCard), findsNWidgets(2));
+      for (final id in [2, 4]) {
+        expect(find.byKey(ValueKey('home_tonight_movie_$id')), findsOneWidget);
+      }
+      for (final id in [1, 3]) {
+        expect(find.byKey(ValueKey('home_tonight_movie_$id')), findsNothing);
+      }
+      expect(
+        find.text('From your list "Watchlist" · 2 titles not seen yet'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('should sit below "Resume"', (tester) async {
       repository.addSeries(_Series(1, 'Severance'));
       repository.firstList.add(_film(1, 'Film 1'));

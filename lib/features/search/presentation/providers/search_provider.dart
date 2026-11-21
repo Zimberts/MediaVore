@@ -12,6 +12,7 @@ import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/utils/json_maps.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/core/utils/release_status.dart';
 import 'package:mediavore/core/utils/unseen_episodes.dart';
 import 'package:mediavore/features/discovery/presentation/services/because_you_service.dart';
 import 'package:mediavore/features/home/presentation/providers/notification_provider.dart';
@@ -141,12 +142,15 @@ class SearchProvider
   /// List the "Tonight" picks of the Home screen come from: the first one.
   String get tonightListName => _libraryProvider.tonightListName;
 
-  /// Titles of [tonightListName] that are neither seen nor started, in the
-  /// order of the list.
-  List<MediaItem> get tonightCandidates => [
-    for (final item in _tonightListItems)
-      if (getSeenCount(item) == 0) item,
-  ];
+  /// Titles of [tonightListName] that are neither seen nor started and are
+  /// already out on [now] (default: today), in the order of the list.
+  List<MediaItem> tonightCandidates([DateTime? now]) {
+    final day = now ?? DateTime.now();
+    return [
+      for (final item in _tonightListItems)
+        if (getSeenCount(item) == 0 && isReleased(item, day)) item,
+    ];
+  }
 
   /// Episodes removed from Quick Add, most recent first.
   List<QuickAddOptOut> get quickAddOptOuts => _quickAddOptOuts;
