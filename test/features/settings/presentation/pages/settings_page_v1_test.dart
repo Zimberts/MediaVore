@@ -81,28 +81,26 @@ void main() {
     ),
   );
 
-  testWidgets(
-    'SettingsPage renders segmented controls for ThemeMode and Palettes',
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets('SettingsPage renders a segmented ThemeMode and palette chips', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(app());
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
 
-      expect(find.byType(AppSegmented<ThemeMode>), findsOneWidget);
-      expect(find.byType(AppSegmented<AppPaletteId>), findsNWidgets(2));
+    expect(find.byType(AppSegmented<ThemeMode>), findsOneWidget);
+    expect(find.byType(AppSegmented<AppPaletteId>), findsNothing);
+    expect(find.byType(ChoiceChip), findsNWidgets(AppPalette.values.length));
 
-      // Tap dark mode in segmented control
-      await tester.tap(find.text('Dark'));
-      await tester.pumpAndSettle();
+    // Tap dark mode in segmented control
+    await tester.tap(find.text('Dark'));
+    await tester.pumpAndSettle();
 
-      expect(settings.themeMode, ThemeMode.dark);
-      verify(
-        () => mockPrefs.setInt('themeMode', ThemeMode.dark.index),
-      ).called(1);
-    },
-  );
+    expect(settings.themeMode, ThemeMode.dark);
+    verify(() => mockPrefs.setInt('themeMode', ThemeMode.dark.index)).called(1);
+  });
 
   testWidgets('SettingsPage does not contain duplicate achievements tile', (
     tester,

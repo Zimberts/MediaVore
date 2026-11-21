@@ -122,7 +122,83 @@ void main() {
       expect(Theme.of(context).scaffoldBackgroundColor, AppPalette.sand.bg);
     });
 
-    testWidgets('should list the three dark palettes and apply the picked '
+    testWidgets('should offer every light and dark palette, legacy ones '
+        'included', (tester) async {
+      await setUpSettings({});
+
+      await tester.pumpWidget(app(const Locale('en')));
+      await tester.pumpAndSettle();
+
+      for (final (key, palettes) in [
+        ('settings_light_palette_dropdown', AppPalette.lightPalettes),
+        ('settings_dark_palette_dropdown', AppPalette.darkPalettes),
+      ]) {
+        final picker = find.byKey(Key(key));
+        expect(
+          find.descendant(of: picker, matching: find.byType(ChoiceChip)),
+          findsNWidgets(palettes.length),
+        );
+        for (final palette in palettes) {
+          expect(
+            find.descendant(
+              of: picker,
+              matching: find.byKey(Key('settings_palette_${palette.id.name}')),
+            ),
+            findsOneWidget,
+            reason: palette.id.name,
+          );
+        }
+      }
+      expect(
+        AppPalette.lightPalettes.length + AppPalette.darkPalettes.length,
+        AppPalette.values.length,
+      );
+    });
+
+    testWidgets('should apply and persist a legacy palette', (tester) async {
+      await setUpSettings({'themeMode': ThemeMode.dark.index});
+
+      await tester.pumpWidget(app(const Locale('fr')));
+      await tester.pumpAndSettle();
+
+      final chip = find.byKey(const Key('settings_palette_espresso'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+
+      expect(settings.darkPalette, AppPalette.espresso);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('darkPalette'), 'espresso');
+      final context = tester.element(find.byType(SettingsPage));
+      expect(Theme.of(context).scaffoldBackgroundColor, AppPalette.espresso.bg);
+      expect(tester.widget<ChoiceChip>(chip).selected, isTrue);
+    });
+
+    testWidgets('should mark a stored legacy palette as selected', (
+      tester,
+    ) async {
+      await setUpSettings({'lightPalette': 'parchment'});
+
+      await tester.pumpWidget(app(const Locale('en')));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.byKey(const Key('settings_palette_parchment')),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<ChoiceChip>(find.byKey(const Key('settings_palette_paper')))
+            .selected,
+        isFalse,
+      );
+    });
+
+    testWidgets('should list the dark palettes and apply the picked '
         'one', (tester) async {
       await setUpSettings({'themeMode': ThemeMode.dark.index});
 
