@@ -100,6 +100,8 @@ flutter test                                              # tests
 Write Conventional Commit messages and PR titles per the rules above. Install the local
 hooks once: `pip install pre-commit && pre-commit install` (commit message + `dart format`).
 Verify with `flutter analyze` and `flutter test` before considering a change done.
+Optional AI review before a PR: `DOCS/code-review.md` (Open Code Review, rules in
+`.opencodereview/rule.json`).
 CI (`.github/workflows/ci.yml`, Flutter pinned there) runs on every PR: `build_runner`, `flutter analyze --no-fatal-infos`, `tool/check_unused_l10n.dart` (fails on ARB keys no Dart file reads: delete a string with the code that used it), `dart format --set-exit-if-changed lib test`, `flutter test --coverage`, then `tool/check_coverage.dart` (fails below the minimum in `tool/coverage_threshold.txt`; raise it when coverage goes up, never lower it to pass). `pr-title.yml` checks the PR title and every commit subject
 against Conventional Commits. `release.yml` runs on every push to `main`: `ci.yml` analyze/test, then release-please (release PR `chore(release): vX.Y.Z`; merging it tags and builds the APK + AAB, checked for 16 KB page alignment by `tool/check_16kb_alignment.sh`). Never bump `version:` or push tags by hand; see `DOCS/releasing.md`.
 
