@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/library/presentation/providers/library_provider.dart';
@@ -99,6 +101,48 @@ void main() {
           'Favorites',
         ),
       ).called(1);
+      expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
+    });
+
+    test('toggleInList notifies listeners optimistically before addToList completes', () async {
+      await provider.init();
+      final completer = Completer<void>();
+      when(() => mockRepository.addToList(any(), any())).thenAnswer((_) => completer.future);
+
+      var notifiedCount = 0;
+      var wasInListDuringNotification = false;
+      provider.addListener(() {
+        notifiedCount++;
+        if (provider.isItemInList(tMovie, 'Favorites')) {
+          wasInListDuringNotification = true;
+        }
+      });
+
+      final future = provider.toggleInList(tMovie, 'Favorites');
+
+      // Immediate optimistic update before repository completes
+      expect(notifiedCount, greaterThanOrEqualTo(1));
+      expect(wasInListDuringNotification, isTrue);
+      expect(provider.isItemInList(tMovie, 'Favorites'), isTrue);
+
+      // Now complete the repository call
+      completer.complete();
+      await future;
+      expect(provider.isItemInList(tMovie, 'Favorites'), isTrue);
+    });
+
+    test('toggleInList rolls back optimistic state on repository failure', () async {
+      await provider.init();
+      when(() => mockRepository.addToList(any(), any())).thenThrow(Exception('DB error'));
+
+      expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
+
+      await expectLater(
+        () => provider.toggleInList(tMovie, 'Favorites'),
+        throwsA(isA<Exception>()),
+      );
+
+      // Must be rolled back to false
       expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
     });
 

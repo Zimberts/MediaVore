@@ -293,19 +293,7 @@ class MediaRepositoryImpl implements MediaRepository {
       listName: listName,
       title: item.title,
     );
-    try {
-      final details = await _details.getMediaDetails(
-        item.id,
-        type: item.mediaType,
-      );
-      if (item.mediaType == MediaType.tv && details.item.seasons != null) {
-        for (final season in details.item.seasons!) {
-          await _details.getSeasonDetails(item.id, season.seasonNumber);
-        }
-      }
-    } catch (e) {
-      debugPrint('[Repo] addToList details prefetch failed: $e');
-    }
+    unawaited(_prefetchDetailsAndSeasons(item));
   }
 
   @override
@@ -317,19 +305,26 @@ class MediaRepositoryImpl implements MediaRepository {
     }
     await localDataSource.addAllToList(items: items, listName: listName);
     for (final item in items) {
-      try {
-        final details = await _details.getMediaDetails(
-          item.id,
-          type: item.mediaType,
-        );
-        if (item.mediaType == MediaType.tv && details.item.seasons != null) {
-          for (final season in details.item.seasons!) {
-            await _details.getSeasonDetails(item.id, season.seasonNumber);
-          }
+      unawaited(_prefetchDetailsAndSeasons(item));
+    }
+  }
+
+  Future<void> _prefetchDetailsAndSeasons(MediaItem item) async {
+    try {
+      final details = await _details.getMediaDetails(
+        item.id,
+        type: item.mediaType,
+      );
+      if (item.mediaType == MediaType.tv && details.item.seasons != null) {
+        final seasonNumbers = details.item.seasons!
+            .map((season) => season.seasonNumber)
+            .toList();
+        if (seasonNumbers.isNotEmpty) {
+          await _details.prefetchSeasons(item.id, seasonNumbers);
         }
-      } catch (e) {
-        debugPrint('[Repo] addAllToList details prefetch failed: $e');
       }
+    } catch (e) {
+      debugPrint('[Repo] details prefetch failed: $e');
     }
   }
 

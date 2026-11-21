@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -55,11 +56,17 @@ class WatchlistIconButton extends StatelessWidget {
               isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
               color: isInWatchlist ? colors.onWatchlist : null,
             ),
-      onPressed: () {
-        if (libraryProvider != null) {
-          libraryProvider.toggleInList(item, 'watchlist');
-        } else {
-          context.read<SearchProvider>().toggleInList(item, 'watchlist');
+      onPressed: () async {
+        try {
+          if (libraryProvider != null) {
+            await libraryProvider.toggleInList(item, 'watchlist');
+          } else {
+            await context.read<SearchProvider>().toggleInList(item, 'watchlist');
+          }
+        } catch (_) {
+          if (context.mounted) {
+            showAppMessage(context.l10n.searchErrorUnknown);
+          }
         }
       },
       tooltip: isInWatchlist
