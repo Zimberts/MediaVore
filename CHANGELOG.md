@@ -3,6 +3,15 @@
 Written by release-please from the Conventional Commits on `main` (see `DOCS/releasing.md`).
 New entries are inserted above the latest one.
 
+## [1.4.2](https://github.com/Zimberts/MediaVore/compare/v1.4.1...v1.4.2) (2026-11-21)
+
+
+### Bug fixes
+
+* **media_details:** optimistically update seen status and streamline post-mark processing ([#355](https://github.com/Zimberts/MediaVore/issues/355)) ([#417](https://github.com/Zimberts/MediaVore/issues/417)) ([cc57880](https://github.com/Zimberts/MediaVore/commit/cc578808ea13d64747f5572679cccf4379dfd689))
+* **memory:** dispose orphaned ChangeNotifiers and TextEditingControllers ([#382](https://github.com/Zimberts/MediaVore/issues/382)) ([#408](https://github.com/Zimberts/MediaVore/issues/408)) ([86586b2](https://github.com/Zimberts/MediaVore/commit/86586b20dfb09a1965baad47af29496713d8a887))
+* **swipe:** route swiper decisions through LibraryProvider to refresh library and home ([#390](https://github.com/Zimberts/MediaVore/issues/390)) ([#416](https://github.com/Zimberts/MediaVore/issues/416)) ([4f73548](https://github.com/Zimberts/MediaVore/commit/4f7354877457b592cdd7a2ae426b89f9bbcb63d1))
+
 ## [1.4.1](https://github.com/Zimberts/MediaVore/compare/v1.4.0...v1.4.1) (2026-11-20)
 
 
