@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
-import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/because_you_data.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -251,6 +251,9 @@ class SearchProvider with ChangeNotifier {
   Future<void> clearCache({required bool complete}) =>
       _cacheAdminProvider.clearCache(complete: complete);
   Future<void> fillCache() => _cacheAdminProvider.fillCache();
+  ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress =>
+      _cacheAdminProvider.cacheWarmupProgress;
+  void cancelCacheFill() => _cacheAdminProvider.cancelCacheFill();
 
   /// Reloads the titles behind [tonightCandidates]. Never throws: the Home
   /// screen then simply has no pick to offer.

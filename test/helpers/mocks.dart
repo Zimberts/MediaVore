@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -66,6 +67,27 @@ class MockMediaRepository extends Mock implements MediaRepository {
     } catch (_) {
       return Future.value();
     }
+  }
+
+  final ValueNotifier<CacheWarmupProgress?> _cacheWarmupProgress =
+      ValueNotifier(null);
+
+  @override
+  ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress {
+    try {
+      return super.noSuchMethod(
+            Invocation.getter(#cacheWarmupProgress),
+          ) as ValueListenable<CacheWarmupProgress?>;
+    } catch (_) {
+      return _cacheWarmupProgress;
+    }
+  }
+
+  @override
+  void cancelCacheWarmup() {
+    try {
+      super.noSuchMethod(Invocation.method(#cancelCacheWarmup, []));
+    } catch (_) {}
   }
   @override
   Future<List<QuickAddItem>> getQuickAddItems() {

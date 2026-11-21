@@ -94,6 +94,7 @@
   "dataCleanupCacheMessage": "Les résultats de recherche et détails de plus de 60 jours absents de vos listes seront supprimés.",
   "dataFillCache": "Remplir le cache",
   "dataFillCacheSubtitle": "Mettre en cache tous les éléments de vos listes et de l'historique récent pour un usage hors ligne.",
+  "dataCachingTitles": "Mise en cache des titres : {done} / {total}",
   "dataWipeCache": "Vider tout le cache",
   "dataWipeCacheSubtitle": "Supprimer tout le contenu du cache.",
   "dataWipeCacheMessage": "TOUTES les affiches et tous les détails en cache seront supprimés. Une connexion internet sera nécessaire pour les revoir.",

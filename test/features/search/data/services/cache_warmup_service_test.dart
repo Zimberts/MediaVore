@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/services/cache_warmup_service.dart';
@@ -10,6 +11,7 @@ import 'package:mediavore/features/search/data/services/media_details_service.da
 import 'package:mediavore/features/search/data/services/next_episode_scanner.dart';
 import 'package:mediavore/features/search/data/services/notification_refresh_service.dart';
 import 'package:mediavore/features/search/data/services/quick_add_service.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mocks.dart';
@@ -118,18 +120,156 @@ void main() {
       verify(() => local.getAllListNames()).called(1);
     });
 
-    test('should stop a cancelled run before the cleanup', () async {
-      final run = warmup.run();
-      warmup.cancel();
-      listNames.complete([]);
+    test('should report progress per title, then clear it', () async {
+      final items = [
+        for (var i = 0; i < 3; i++)
+          MediaListItem(id: i, type: 'movie', title: 'M$i'),
+      ];
+      when(
+        () => local.getListItems('watchlist'),
+      ).thenAnswer((_) async => items);
+      when(() => cache.getDetails(any(), MediaType.movie)).thenAnswer((
+        invocation,
+      ) async {
+        final id = invocation.positionalArguments[0] as int;
+        return MediaDetails(
+          item: MediaItem(id: id, title: 'M$id', overview: '', releaseDate: ''),
+          cast: const [],
+        );
+      });
+      final seen = <CacheWarmupProgress?>[];
+      warmup.progress.addListener(() => seen.add(warmup.progress.value));
+      listNames.complete(['watchlist']);
 
-      expect(await run, isFalse);
+      expect(await warmup.run(), isTrue);
+      expect(seen, const [
+        CacheWarmupProgress(0, 3),
+        CacheWarmupProgress(1, 3),
+        CacheWarmupProgress(2, 3),
+        CacheWarmupProgress(3, 3),
+        null,
+      ]);
+    });
+
+    test('should stop between titles when cancelled mid-run', () async {
+      final items = [
+        for (var i = 0; i < 20; i++)
+          MediaListItem(id: i, type: 'movie', title: 'M$i'),
+      ];
+      when(
+        () => local.getListItems('watchlist'),
+      ).thenAnswer((_) async => items);
+      when(() => cache.getDetails(any(), MediaType.movie)).thenAnswer((
+        invocation,
+      ) async {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+        final id = invocation.positionalArguments[0] as int;
+        return MediaDetails(
+          item: MediaItem(id: id, title: 'M$id', overview: '', releaseDate: ''),
+          cast: const [],
+        );
+      });
+      warmup.progress.addListener(() {
+        if (warmup.progress.value?.done == 1) warmup.cancel();
+      });
+      listNames.complete(['watchlist']);
+
+      expect(await warmup.run(), isFalse);
+      expect(warmup.progress.value, isNull);
+      // Only the titles already in flight when cancelled are finished.
+      verify(
+        () => cache.getDetails(any(), MediaType.movie),
+      ).called(lessThanOrEqualTo(CacheWarmupService.concurrency));
       verifyNever(
         () => cache.cleanup(
           keepKeys: any(named: 'keepKeys'),
           olderThan: any(named: 'olderThan'),
         ),
       );
+    });
+
+    test('should refresh a title found in several sources once', () async {
+      const show = MediaItem(
+        id: 5,
+        title: 'Show',
+        overview: '',
+        releaseDate: '',
+        mediaType: MediaType.tv,
+        seasons: [
+          TVSeason(id: 1, seasonNumber: 1, episodeCount: 2),
+          TVSeason(id: 2, seasonNumber: 2, episodeCount: 2),
+        ],
+      );
+      final recent = DateTime.now().subtract(const Duration(days: 1));
+      when(() => local.getListItems('watchlist')).thenAnswer(
+        (_) async => [MediaListItem(id: 5, type: 'tv', title: 'Show')],
+      );
+      when(() => local.getAllSeenItems()).thenAnswer(
+        (_) async => [
+          for (var e = 1; e <= 3; e++)
+            SeenItemModel(
+              tmdbId: 5,
+              type: 'tv',
+              title: 'Show',
+              posterPath: '/p.jpg',
+              seenDate: recent,
+              seasonNumber: 2,
+              episodeNumber: e,
+            ),
+        ],
+      );
+      when(() => local.getLikedItems()).thenAnswer(
+        (_) async => [LikedItem(tmdbId: 5, type: 'tv', title: 'Show')],
+      );
+      when(
+        () => cache.getDetails(5, MediaType.tv),
+      ).thenAnswer((_) async => MediaDetails(item: show, cast: const []));
+      when(() => cache.getSeason(5, any())).thenAnswer((_) async => null);
+      when(() => cache.getItem(5, MediaType.tv)).thenAnswer((_) async => null);
+      when(
+        () => cache.cacheSeason(any(), any(), any()),
+      ).thenAnswer((_) async {});
+      when(() => remote.getSeasonsDetails(5, any())).thenAnswer(
+        (_) async => {
+          1: {'season_number': 1},
+          2: {'season_number': 2},
+        },
+      );
+      listNames.complete(['watchlist']);
+
+      expect(await warmup.run(), isTrue);
+      verify(() => cache.getDetails(5, MediaType.tv)).called(1);
+      verify(() => remote.getSeasonsDetails(5, [1, 2])).called(1);
+    });
+
+    test('should refresh at most `concurrency` titles at a time', () async {
+      final items = [
+        for (var i = 0; i < 20; i++)
+          MediaListItem(id: i, type: 'movie', title: 'M$i'),
+      ];
+      when(
+        () => local.getListItems('watchlist'),
+      ).thenAnswer((_) async => items);
+      var inFlight = 0;
+      var maxInFlight = 0;
+      when(() => cache.getDetails(any(), MediaType.movie)).thenAnswer((
+        invocation,
+      ) async {
+        inFlight++;
+        if (inFlight > maxInFlight) maxInFlight = inFlight;
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        inFlight--;
+        final id = invocation.positionalArguments[0] as int;
+        return MediaDetails(
+          item: MediaItem(id: id, title: 'M$id', overview: '', releaseDate: ''),
+          cast: const [],
+        );
+      });
+      listNames.complete(['watchlist']);
+
+      expect(await warmup.run(), isTrue);
+      expect(maxInFlight, CacheWarmupService.concurrency);
+      verify(() => cache.getDetails(any(), MediaType.movie)).called(20);
     });
 
     test('should start afresh after waiting out a cancelled run', () async {

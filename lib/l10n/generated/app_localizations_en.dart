@@ -321,6 +321,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pre-cache all items in your lists and recent history for offline use.';
 
   @override
+  String dataCachingTitles(int done, int total) {
+    return 'Caching titles: $done / $total';
+  }
+
+  @override
   String get dataWipeCache => 'Wipe All Cache';
 
   @override

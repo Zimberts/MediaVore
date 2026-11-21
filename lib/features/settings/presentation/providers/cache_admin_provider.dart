@@ -30,6 +30,10 @@ class CacheAdminProvider with ChangeNotifier {
   bool get isImporting => _isImporting;
   double get importProgress => _importProgress;
   String get importStatus => _importStatus;
+  ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress =>
+      repository.cacheWarmupProgress;
+
+  void cancelCacheFill() => repository.cancelCacheWarmup();
 
   AppLocalizations get _l10n => lookupAppLocalizations(
     (localeService?.current ?? fallbackAppLanguage).locale,
