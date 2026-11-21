@@ -184,7 +184,6 @@ void main() {
     verify(() => repo.addToList(movie1, 'watchlist')).called(1);
     expect(find.text('Interstellar'), findsOneWidget);
     expect(find.text('1 ajoutés · 0 écartés'), findsOneWidget);
-    expect(find.text('Inception ajouté à watchlist'), findsOneWidget);
   });
 
   testWidgets('tapping Discard button ignores movie and advances card', (
@@ -201,10 +200,9 @@ void main() {
     verifyNever(() => repo.addToList(any(), any()));
     expect(find.text('Interstellar'), findsOneWidget);
     expect(find.text('0 ajoutés · 1 écartés'), findsOneWidget);
-    expect(find.text('Écarté'), findsOneWidget);
   });
 
-  testWidgets('tapping Undo in snackbar calls undoLastDecision', (
+  testWidgets('tapping Undo button calls undoLastDecision', (
     tester,
   ) async {
     await tester.pumpWidget(buildTestWidget());
@@ -224,15 +222,38 @@ void main() {
     await tester.tap(find.byKey(const Key('swiper_add_button')));
     await tester.pumpAndSettle();
 
-    // Tap Undo in snackbar action
-    final undoAction = find.text('Annuler');
-    expect(undoAction, findsWidgets);
-    await tester.tap(undoAction.first);
+    // Tap Undo on the swiper action bar
+    final undoButton = find.byKey(const Key('swiper_undo_button'));
+    expect(undoButton, findsOneWidget);
+    await tester.tap(undoButton);
     await tester.pumpAndSettle();
 
     verify(() => repo.undoLastSwipeDecision()).called(1);
     expect(find.text('Inception'), findsOneWidget);
   });
+
+  testWidgets(
+    'buttons remain immediately clickable without snackbar hit test overlay (#379)',
+    (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Inception'), findsOneWidget);
+
+      // First tap adds Inception
+      await tester.tap(find.byKey(const Key('swiper_add_button')));
+      await tester.pump();
+
+      // Second consecutive tap on swiper_add_button immediately adds Interstellar
+      // without hit test obstruction from an AppMessageHost overlay
+      await tester.tap(find.byKey(const Key('swiper_add_button')));
+      await tester.pumpAndSettle();
+
+      verify(() => repo.addToList(movie1, 'watchlist')).called(1);
+      verify(() => repo.addToList(movie2, 'watchlist')).called(1);
+      expect(find.text('2 ajoutés · 0 écartés'), findsOneWidget);
+    },
+  );
 
   testWidgets('displays empty state when all candidates are swiped', (
     tester,
