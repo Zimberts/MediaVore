@@ -123,9 +123,7 @@ void main() {
       expect(find.text('Movie 999'), findsNothing);
     });
 
-    testWidgets('shows Almost section for N >= 3 participants', (
-      tester,
-    ) async {
+    testWidgets('shows Almost section for N >= 3 participants', (tester) async {
       // Host has 101, 102, 103
       // Alice has 101, 102
       // Bob has 101, 103
@@ -156,7 +154,10 @@ void main() {
 
       // In 2 of 3: 102 (host + Alice) and 103 (host + Bob)
       // Almost section header: "Presque : dans 2 listes sur 3"
-      expect(find.textContaining('Presque : dans 2 listes sur 3'), findsOneWidget);
+      expect(
+        find.textContaining('Presque : dans 2 listes sur 3'),
+        findsOneWidget,
+      );
       expect(find.text('Movie 102'), findsOneWidget);
       expect(find.text('Movie 103'), findsOneWidget);
     });
@@ -169,17 +170,11 @@ void main() {
         (i) => SharedMediaEntry(100 + i, MediaType.movie),
       );
 
-      when(
-        () => repo.getWatchlistEntries(),
-      ).thenAnswer(
-        (_) async =>
-            manyEntries.map((e) => '${e.id}:${e.type.name}').toList(),
+      when(() => repo.getWatchlistEntries()).thenAnswer(
+        (_) async => manyEntries.map((e) => '${e.id}:${e.type.name}').toList(),
       );
-      when(
-        () => repo.getListEntries('watchlist'),
-      ).thenAnswer(
-        (_) async =>
-            manyEntries.map((e) => '${e.id}:${e.type.name}').toList(),
+      when(() => repo.getListEntries('watchlist')).thenAnswer(
+        (_) async => manyEntries.map((e) => '${e.id}:${e.type.name}').toList(),
       );
       await searchProvider.loadWatchlist();
 
@@ -192,7 +187,9 @@ void main() {
 
       expect(find.textContaining('8 en commun'), findsOneWidget);
       expect(
-        find.textContaining('Le vote porte sur les 6 titres les mieux notés (sur 8)'),
+        find.textContaining(
+          'Le vote porte sur les 6 titres les mieux notés (sur 8)',
+        ),
         findsOneWidget,
       );
     });
@@ -211,36 +208,37 @@ void main() {
       expect(find.text('Aucun titre en commun'), findsWidgets);
     });
 
-    testWidgets('random pick opens dialog and "On le regarde !" navigates to details', (
-      tester,
-    ) async {
-      sessionProvider.addParticipant(
-        const TogetherParticipant(
-          name: 'Alice',
-          entries: [SharedMediaEntry(101, MediaType.movie)],
-        ),
-      );
+    testWidgets(
+      'random pick opens dialog and "On le regarde !" navigates to details',
+      (tester) async {
+        sessionProvider.addParticipant(
+          const TogetherParticipant(
+            name: 'Alice',
+            entries: [SharedMediaEntry(101, MediaType.movie)],
+          ),
+        );
 
-      await tester.pumpWidget(buildSubject());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
 
-      // Tap random pick button
-      await tester.tap(find.byKey(const Key('together_random_pick_button')));
-      await tester.pumpAndSettle();
+        // Tap random pick button
+        await tester.tap(find.byKey(const Key('together_random_pick_button')));
+        await tester.pumpAndSettle();
 
-      // Dialog opens
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Movie 101'), findsWidgets);
-      expect(find.text('On le regarde !'), findsOneWidget);
+        // Dialog opens
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Movie 101'), findsWidgets);
+        expect(find.text('On le regarde !'), findsOneWidget);
 
-      // Tap "On le regarde !"
-      await tester.tap(find.text('On le regarde !'));
-      await tester.pumpAndSettle();
+        // Tap "On le regarde !"
+        await tester.tap(find.text('On le regarde !'));
+        await tester.pumpAndSettle();
 
-      // Navigates to detail page and session is reset
-      expect(find.byType(MediaDetailPage), findsOneWidget);
-      expect(sessionProvider.hasSession, isFalse);
-    });
+        // Navigates to detail page and session is reset
+        expect(find.byType(MediaDetailPage), findsOneWidget);
+        expect(sessionProvider.hasSession, isFalse);
+      },
+    );
 
     testWidgets('swipe vote button triggers startVote on session', (
       tester,
@@ -262,27 +260,28 @@ void main() {
       expect(sessionProvider.isVoting, isTrue);
     });
 
-    testWidgets('handles fetch failure with Unknown fallback during parallel details fetch', (
-      tester,
-    ) async {
-      when(
-        () => repo.getMediaDetails(999, type: any(named: 'type')),
-      ).thenThrow(Exception('TMDB network error'));
+    testWidgets(
+      'handles fetch failure with Unknown fallback during parallel details fetch',
+      (tester) async {
+        when(
+          () => repo.getMediaDetails(999, type: any(named: 'type')),
+        ).thenThrow(Exception('TMDB network error'));
 
-      sessionProvider.addParticipant(
-        const TogetherParticipant(
-          name: 'Alice',
-          entries: [
-            SharedMediaEntry(101, MediaType.movie),
-            SharedMediaEntry(999, MediaType.movie),
-          ],
-        ),
-      );
+        sessionProvider.addParticipant(
+          const TogetherParticipant(
+            name: 'Alice',
+            entries: [
+              SharedMediaEntry(101, MediaType.movie),
+              SharedMediaEntry(999, MediaType.movie),
+            ],
+          ),
+        );
 
-      await tester.pumpWidget(buildSubject());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
 
-      expect(find.text('Movie 101'), findsWidgets);
-    });
+        expect(find.text('Movie 101'), findsWidgets);
+      },
+    );
   });
 }

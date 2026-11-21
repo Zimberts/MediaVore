@@ -43,8 +43,9 @@ class Formatters {
     } catch (_) {}
 
     // Fallbacks
-    final alternatePattern =
-        primaryPattern == 'MM/dd/yyyy' ? 'dd/MM/yyyy' : 'MM/dd/yyyy';
+    final alternatePattern = primaryPattern == 'MM/dd/yyyy'
+        ? 'dd/MM/yyyy'
+        : 'MM/dd/yyyy';
     try {
       return DateFormat(alternatePattern).parseStrict(trimmed);
     } catch (_) {}

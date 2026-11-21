@@ -44,11 +44,11 @@ class TogetherVoteEngine extends ChangeNotifier {
   TogetherVoteEngine({
     required List<TogetherVoteCandidate> candidates,
     required List<String> participants,
-  })  : assert(candidates.isNotEmpty, 'Candidates cannot be empty'),
-        assert(participants.isNotEmpty, 'Participants cannot be empty'),
-        _candidates = List.unmodifiable(candidates.take(6)),
-        _participants = List.unmodifiable(participants),
-        _votes = {for (final p in participants) p: <String>{}};
+  }) : assert(candidates.isNotEmpty, 'Candidates cannot be empty'),
+       assert(participants.isNotEmpty, 'Participants cannot be empty'),
+       _candidates = List.unmodifiable(candidates.take(6)),
+       _participants = List.unmodifiable(participants),
+       _votes = {for (final p in participants) p: <String>{}};
 
   final List<TogetherVoteCandidate> _candidates;
   final List<String> _participants;
@@ -133,10 +133,9 @@ class TogetherVoteEngine extends ChangeNotifier {
           approvals++;
         }
       }
-      results.add(TogetherVoteResultItem(
-        candidate: candidate,
-        approvalCount: approvals,
-      ));
+      results.add(
+        TogetherVoteResultItem(candidate: candidate, approvalCount: approvals),
+      );
     }
 
     // Sort by approvals desc, then TMDB vote average desc
@@ -154,21 +153,25 @@ class TogetherVoteEngine extends ChangeNotifier {
     final topRating = results[0].candidate.item.voteAverage ?? 0.0;
 
     // A tie occurs if more than one candidate shares the top approvals and rating
-    final hasTieForFirst = results.length > 1 &&
+    final hasTieForFirst =
+        results.length > 1 &&
         results[1].approvalCount == topApprovals &&
         (results[1].candidate.item.voteAverage ?? 0.0) == topRating;
 
     final formatted = <TogetherVoteResultItem>[];
     for (var i = 0; i < results.length; i++) {
       final item = results[i];
-      final isTied = hasTieForFirst &&
+      final isTied =
+          hasTieForFirst &&
           item.approvalCount == topApprovals &&
           (item.candidate.item.voteAverage ?? 0.0) == topRating;
-      formatted.add(TogetherVoteResultItem(
-        candidate: item.candidate,
-        approvalCount: item.approvalCount,
-        isTied: isTied,
-      ));
+      formatted.add(
+        TogetherVoteResultItem(
+          candidate: item.candidate,
+          approvalCount: item.approvalCount,
+          isTied: isTied,
+        ),
+      );
     }
 
     return formatted;

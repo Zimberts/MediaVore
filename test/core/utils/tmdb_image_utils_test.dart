@@ -96,7 +96,10 @@ void main() {
         '/poster.png'.tmdbImageUrl(TmdbImageSize.w342),
         'https://image.tmdb.org/t/p/w342/poster.png',
       );
-      expect('poster.png'.tmdbImageUrl(), 'https://image.tmdb.org/t/p/w185/poster.png');
+      expect(
+        'poster.png'.tmdbImageUrl(),
+        'https://image.tmdb.org/t/p/w185/poster.png',
+      );
     });
   });
 }

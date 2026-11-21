@@ -26,22 +26,22 @@ void main() {
     // Common stub methods
     when(() => mock.getSeenItems()).thenAnswer((_) async => <SeenItem>[]);
     when(() => mock.getLikedEntries()).thenAnswer((_) async => <String>[]);
-    when(() => mock.getNotifiedItems()).thenAnswer(
-      (_) async => <repo_types.NotifiedItem>[],
-    );
+    when(
+      () => mock.getNotifiedItems(),
+    ).thenAnswer((_) async => <repo_types.NotifiedItem>[]);
     when(() => mock.getWatchlistEntries()).thenAnswer((_) async => <String>[]);
-    when(() => mock.getAllListNames()).thenAnswer(
-      (_) async => <String>['watchlist'],
-    );
+    when(
+      () => mock.getAllListNames(),
+    ).thenAnswer((_) async => <String>['watchlist']);
     when(() => mock.getListEntries(any())).thenAnswer((_) async => <String>[]);
     when(
       () => mock.getListPreviews(any(), limit: any(named: 'limit')),
     ).thenAnswer((_) async => <repo_types.MediaItemPreview>[]);
     when(() => mock.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mock.getSeenDbSize()).thenAnswer((_) async => 0);
-    when(() => mock.watchNotifiedItems()).thenAnswer(
-      (_) => const Stream.empty(),
-    );
+    when(
+      () => mock.watchNotifiedItems(),
+    ).thenAnswer((_) => const Stream.empty());
 
     provider = SearchProvider(mock);
   });
@@ -61,8 +61,9 @@ void main() {
         (_) async => <repo_types.QuickAddItem>[], // Empty
       );
 
-      when(() => mock.populateQuickAddFromSeenHistory())
-          .thenAnswer((_) async {});
+      when(
+        () => mock.populateQuickAddFromSeenHistory(),
+      ).thenAnswer((_) async {});
 
       final envelope = <int>[1, 2, 3];
 
@@ -116,12 +117,13 @@ void main() {
         ),
       ).thenAnswer((_) async {});
 
-      when(() => mock.getQuickAddItems()).thenAnswer(
-        (_) async => <repo_types.QuickAddItem>[],
-      );
+      when(
+        () => mock.getQuickAddItems(),
+      ).thenAnswer((_) async => <repo_types.QuickAddItem>[]);
 
-      when(() => mock.populateQuickAddFromSeenHistory())
-          .thenThrow(Exception('populate failed'));
+      when(
+        () => mock.populateQuickAddFromSeenHistory(),
+      ).thenThrow(Exception('populate failed'));
 
       final envelope = <int>[1, 2, 3];
 
@@ -142,12 +144,13 @@ void main() {
         ),
       ).thenAnswer((_) async {});
 
-      when(() => mock.getQuickAddItems()).thenAnswer(
-        (_) async => <repo_types.QuickAddItem>[],
-      );
+      when(
+        () => mock.getQuickAddItems(),
+      ).thenAnswer((_) async => <repo_types.QuickAddItem>[]);
 
-      when(() => mock.populateQuickAddFromSeenHistory())
-          .thenAnswer((_) async {});
+      when(
+        () => mock.populateQuickAddFromSeenHistory(),
+      ).thenAnswer((_) async {});
 
       final envelope = <int>[1, 2, 3];
 
@@ -166,12 +169,13 @@ void main() {
         ),
       ).thenAnswer((_) async {});
 
-      when(() => mock.getQuickAddItems()).thenAnswer(
-        (_) async => <repo_types.QuickAddItem>[],
-      );
+      when(
+        () => mock.getQuickAddItems(),
+      ).thenAnswer((_) async => <repo_types.QuickAddItem>[]);
 
-      when(() => mock.populateQuickAddFromSeenHistory())
-          .thenAnswer((_) async {});
+      when(
+        () => mock.populateQuickAddFromSeenHistory(),
+      ).thenAnswer((_) async {});
 
       final envelope = <int>[1, 2, 3];
 

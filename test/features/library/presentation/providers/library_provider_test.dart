@@ -26,25 +26,23 @@ void main() {
 
   setUp(() {
     mockRepository = MockMediaRepository();
-    when(() => mockRepository.getAllListNames()).thenAnswer(
-      (_) async => ['watchlist', 'Favorites'],
-    );
-    when(() => mockRepository.getListEntries(any())).thenAnswer(
-      (_) async => [],
-    );
-    when(() => mockRepository.getListPreviews(any())).thenAnswer(
-      (_) async => [],
-    );
-    when(() => mockRepository.getWatchlistEntries()).thenAnswer(
-      (_) async => ['101:movie'],
-    );
-    when(() => mockRepository.getLikedEntries()).thenAnswer(
-      (_) async => ['101:movie'],
-    );
-    when(() => mockRepository.toggleLike(any())).thenAnswer((_) async {});
     when(
-      () => mockRepository.addToList(any(), any()),
-    ).thenAnswer((_) async {});
+      () => mockRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist', 'Favorites']);
+    when(
+      () => mockRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getListPreviews(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => ['101:movie']);
+    when(
+      () => mockRepository.getLikedEntries(),
+    ).thenAnswer((_) async => ['101:movie']);
+    when(() => mockRepository.toggleLike(any())).thenAnswer((_) async {});
+    when(() => mockRepository.addToList(any(), any())).thenAnswer((_) async {});
     when(
       () => mockRepository.removeFromList(any(), any(), any()),
     ).thenAnswer((_) async {});
@@ -104,61 +102,71 @@ void main() {
       expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
     });
 
-    test('toggleInList notifies listeners optimistically before addToList completes', () async {
-      await provider.init();
-      final completer = Completer<void>();
-      when(() => mockRepository.addToList(any(), any())).thenAnswer((_) => completer.future);
+    test(
+      'toggleInList notifies listeners optimistically before addToList completes',
+      () async {
+        await provider.init();
+        final completer = Completer<void>();
+        when(
+          () => mockRepository.addToList(any(), any()),
+        ).thenAnswer((_) => completer.future);
 
-      var notifiedCount = 0;
-      var wasInListDuringNotification = false;
-      provider.addListener(() {
-        notifiedCount++;
-        if (provider.isItemInList(tMovie, 'Favorites')) {
-          wasInListDuringNotification = true;
-        }
-      });
+        var notifiedCount = 0;
+        var wasInListDuringNotification = false;
+        provider.addListener(() {
+          notifiedCount++;
+          if (provider.isItemInList(tMovie, 'Favorites')) {
+            wasInListDuringNotification = true;
+          }
+        });
 
-      final future = provider.toggleInList(tMovie, 'Favorites');
+        final future = provider.toggleInList(tMovie, 'Favorites');
 
-      // Immediate optimistic update before repository completes
-      expect(notifiedCount, greaterThanOrEqualTo(1));
-      expect(wasInListDuringNotification, isTrue);
-      expect(provider.isItemInList(tMovie, 'Favorites'), isTrue);
+        // Immediate optimistic update before repository completes
+        expect(notifiedCount, greaterThanOrEqualTo(1));
+        expect(wasInListDuringNotification, isTrue);
+        expect(provider.isItemInList(tMovie, 'Favorites'), isTrue);
 
-      // Now complete the repository call
-      completer.complete();
-      await future;
-      expect(provider.isItemInList(tMovie, 'Favorites'), isTrue);
-    });
+        // Now complete the repository call
+        completer.complete();
+        await future;
+        expect(provider.isItemInList(tMovie, 'Favorites'), isTrue);
+      },
+    );
 
-    test('toggleInList rolls back optimistic state on repository failure', () async {
-      await provider.init();
-      when(() => mockRepository.addToList(any(), any())).thenThrow(Exception('DB error'));
+    test(
+      'toggleInList rolls back optimistic state on repository failure',
+      () async {
+        await provider.init();
+        when(
+          () => mockRepository.addToList(any(), any()),
+        ).thenThrow(Exception('DB error'));
 
-      expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
+        expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
 
-      await expectLater(
-        () => provider.toggleInList(tMovie, 'Favorites'),
-        throwsA(isA<Exception>()),
-      );
+        await expectLater(
+          () => provider.toggleInList(tMovie, 'Favorites'),
+          throwsA(isA<Exception>()),
+        );
 
-      // Must be rolled back to false
-      expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
-    });
+        // Must be rolled back to false
+        expect(provider.isItemInList(tMovie, 'Favorites'), isFalse);
+      },
+    );
 
     test('createList and deleteList call repository', () async {
       await provider.init();
 
-      when(() => mockRepository.getAllListNames()).thenAnswer(
-        (_) async => ['watchlist', 'Favorites', 'SciFi'],
-      );
+      when(
+        () => mockRepository.getAllListNames(),
+      ).thenAnswer((_) async => ['watchlist', 'Favorites', 'SciFi']);
       await provider.createList('SciFi');
       verify(() => mockRepository.createList('SciFi')).called(1);
       expect(provider.listNames.contains('SciFi'), isTrue);
 
-      when(() => mockRepository.getAllListNames()).thenAnswer(
-        (_) async => ['watchlist', 'Favorites'],
-      );
+      when(
+        () => mockRepository.getAllListNames(),
+      ).thenAnswer((_) async => ['watchlist', 'Favorites']);
       await provider.deleteList('SciFi');
       verify(() => mockRepository.deleteList('SciFi')).called(1);
     });

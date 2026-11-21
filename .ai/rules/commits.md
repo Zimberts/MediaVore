@@ -33,7 +33,8 @@ name such as `claude/project-thread-xxxx`.
 ## Enforcement
 
 - Local: `.pre-commit-config.yaml` runs `conventional-pre-commit` at the `commit-msg`
-  stage (`pip install pre-commit && pre-commit install --hook-type commit-msg`).
+  stage (`pip install pre-commit && pre-commit install`, which also installs the
+  `dart format` pre-commit hook).
 - CI: `.github/workflows/pr-title.yml` checks the PR title (re-runs on title edit) and
   every commit subject of the PR. With squash-merge the PR title becomes the commit on
   `main`.

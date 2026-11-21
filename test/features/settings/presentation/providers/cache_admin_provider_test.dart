@@ -12,11 +12,13 @@ void main() {
     mockRepository = MockMediaRepository();
     when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 1024);
     when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 2048);
-    when(() => mockRepository.clearCache(complete: any(named: 'complete'))).thenAnswer(
-      (_) async {},
-    );
+    when(
+      () => mockRepository.clearCache(complete: any(named: 'complete')),
+    ).thenAnswer((_) async {});
     when(() => mockRepository.fillCache()).thenAnswer((_) async {});
-    when(() => mockRepository.exportAllData()).thenAnswer((_) async => [1, 2, 3]);
+    when(
+      () => mockRepository.exportAllData(),
+    ).thenAnswer((_) async => [1, 2, 3]);
 
     provider = CacheAdminProvider(mockRepository);
   });

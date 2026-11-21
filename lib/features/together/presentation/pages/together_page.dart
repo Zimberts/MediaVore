@@ -14,10 +14,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 /// Screen to configure and run a Together session by exchanging list QR codes.
 class TogetherPage extends StatefulWidget {
-  const TogetherPage({
-    super.key,
-    this.scannerBuilder,
-  });
+  const TogetherPage({super.key, this.scannerBuilder});
 
   /// Allows tests to mock the QR scanner without camera access.
   final ListScannerBuilder? scannerBuilder;
@@ -45,8 +42,9 @@ class _TogetherPageState extends State<TogetherPage> {
       return;
     }
 
-    final participantName =
-        payload.name.trim().isEmpty ? 'Ami' : payload.name.trim();
+    final participantName = payload.name.trim().isEmpty
+        ? 'Ami'
+        : payload.name.trim();
 
     session.addParticipantChunk(
       name: participantName,
@@ -181,8 +179,9 @@ class _TogetherPageState extends State<TogetherPage> {
                       : 'watchlist',
                   isExpanded: true,
                   items: availableLists.map((name) {
-                    final displayName =
-                        name == 'watchlist' ? l10n.listsWatchlist : name;
+                    final displayName = name == 'watchlist'
+                        ? l10n.listsWatchlist
+                        : name;
                     return DropdownMenuItem<String>(
                       value: name,
                       child: Text(displayName),
@@ -232,7 +231,10 @@ class _TogetherPageState extends State<TogetherPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.chevron_left, color: Colors.black),
+                          icon: const Icon(
+                            Icons.chevron_left,
+                            color: Colors.black,
+                          ),
                           onPressed: _currentQrIndex > 0
                               ? () => setState(() => _currentQrIndex--)
                               : null,
@@ -248,7 +250,10 @@ class _TogetherPageState extends State<TogetherPage> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.chevron_right, color: Colors.black),
+                          icon: const Icon(
+                            Icons.chevron_right,
+                            color: Colors.black,
+                          ),
                           onPressed: _currentQrIndex < hostUrls.length - 1
                               ? () => setState(() => _currentQrIndex++)
                               : null,

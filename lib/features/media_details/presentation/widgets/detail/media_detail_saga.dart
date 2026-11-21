@@ -89,9 +89,7 @@ class MediaDetailSaga extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               l10n.sagaSeenCount(seenCount, totalCount),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.text2,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: colors.text2),
             ),
           ],
         ),
@@ -167,7 +165,8 @@ class _SagaFilmCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     final releaseDate = DateTime.tryParse(item.releaseDate);
-    final isUpcoming = item.releaseDate.isEmpty ||
+    final isUpcoming =
+        item.releaseDate.isEmpty ||
         (releaseDate != null && releaseDate.isAfter(DateTime.now()));
 
     final year = item.releaseDate.length >= 4

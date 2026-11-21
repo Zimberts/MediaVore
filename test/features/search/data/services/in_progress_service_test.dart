@@ -259,28 +259,28 @@ void main() {
       },
     );
 
-    test('should reset seenEpisodes and progress to 0 during active rewatch', () async {
-      final rewatchStart = daysAgo(2);
-      final rewatchService = InProgressService(
-        localDataSource: local,
-        cache: cache,
-        getRewatchStart: (id) => id == 1 ? rewatchStart : null,
-      );
+    test(
+      'should reset seenEpisodes and progress to 0 during active rewatch',
+      () async {
+        final rewatchStart = daysAgo(2);
+        final rewatchService = InProgressService(
+          localDataSource: local,
+          cache: cache,
+          getRewatchStart: (id) => id == 1 ? rewatchStart : null,
+        );
 
-      stub(
-        queue: [next(1, season: 1, episode: 1, insertedAt: rewatchStart)],
-        history: [
-          seen(1, 1, 1, daysAgo(30)),
-          seen(1, 1, 2, daysAgo(29)),
-        ],
-        cached: {1: series(1, episodes: 10)},
-      );
+        stub(
+          queue: [next(1, season: 1, episode: 1, insertedAt: rewatchStart)],
+          history: [seen(1, 1, 1, daysAgo(30)), seen(1, 1, 2, daysAgo(29))],
+          cached: {1: series(1, episodes: 10)},
+        );
 
-      final items = await rewatchService.getInProgressItems(now: now);
-      expect(items, hasLength(1));
-      final item = items.single;
-      expect(item.seenEpisodes, 0);
-      expect(item.progress, 0.0);
-    });
+        final items = await rewatchService.getInProgressItems(now: now);
+        expect(items, hasLength(1));
+        final item = items.single;
+        expect(item.seenEpisodes, 0);
+        expect(item.progress, 0.0);
+      },
+    );
   });
 }

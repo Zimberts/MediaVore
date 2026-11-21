@@ -34,7 +34,8 @@ class _WatchNextButtonState extends State<WatchNextButton> {
     setState(() => _isLoading = true);
     final provider = context.read<SearchProvider>();
     final next = await provider.getNextEpisode(widget.item.id);
-    final isComplete = next == null && await provider.isSeriesCompleted(widget.item);
+    final isComplete =
+        next == null && await provider.isSeriesCompleted(widget.item);
 
     if (mounted) {
       setState(() {

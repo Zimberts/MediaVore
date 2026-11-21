@@ -25,22 +25,29 @@ void main() {
     setUp(() {
       mockRepository = MockMediaRepository();
 
-      when(() => mockRepository.getAllListNames())
-          .thenAnswer((_) async => ['watchlist', 'Favorites']);
-      when(() => mockRepository.getListEntries(any()))
-          .thenAnswer((_) async => ['101:movie', '102:movie']);
-      when(() => mockRepository.getListPreviews(any(), limit: any(named: 'limit')))
-          .thenAnswer((_) async => []);
-      when(() => mockRepository.getWatchlistEntries())
-          .thenAnswer((_) async => ['101:movie', '201:tv']);
+      when(
+        () => mockRepository.getAllListNames(),
+      ).thenAnswer((_) async => ['watchlist', 'Favorites']);
+      when(
+        () => mockRepository.getListEntries(any()),
+      ).thenAnswer((_) async => ['101:movie', '102:movie']);
+      when(
+        () => mockRepository.getListPreviews(any(), limit: any(named: 'limit')),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockRepository.getWatchlistEntries(),
+      ).thenAnswer((_) async => ['101:movie', '201:tv']);
       when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
       when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
       when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
       when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
-      when(() => mockRepository.watchNotifiedItems())
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRepository.watchNotifiedItems(),
+      ).thenAnswer((_) => const Stream.empty());
 
-      when(() => mockRepository.getCachedMediaItems(any())).thenAnswer((inv) async {
+      when(() => mockRepository.getCachedMediaItems(any())).thenAnswer((
+        inv,
+      ) async {
         final keys = inv.positionalArguments[0] as List<(int, MediaType)>;
         return keys.map<MediaItem?>((key) {
           if (key.$1 == 101) {
@@ -90,7 +97,9 @@ void main() {
       );
     }
 
-    testWidgets('displays empty message when seen items is empty', (tester) async {
+    testWidgets('displays empty message when seen items is empty', (
+      tester,
+    ) async {
       when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
       searchProvider = SearchProvider(mockRepository);
       await searchProvider.loadAllSeenStatus();
@@ -99,87 +108,94 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Statistiques'), findsOneWidget);
-      expect(find.text('Pas encore de données. À vos écrans !'), findsOneWidget);
+      expect(
+        find.text('Pas encore de données. À vos écrans !'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('renders all sections on single scrolling page when data exists',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'renders all sections on single scrolling page when data exists',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      final seenList = [
-        SeenItem(
-          tmdbId: 101,
-          type: MediaType.movie,
-          title: 'Inception',
-          runtime: 148,
-          genres: const ['Action', 'Science Fiction'],
-          seenDate: DateTime(2026, 5, 10),
-        ),
-        SeenItem(
-          tmdbId: 102,
-          type: MediaType.movie,
-          title: 'The Matrix',
-          runtime: 136,
-          genres: const ['Action', 'Science Fiction'],
-          seenDate: DateTime(2026, 5, 12),
-        ),
-        SeenItem(
-          tmdbId: 201,
-          type: MediaType.tv,
-          title: 'Breaking Bad',
-          seasonNumber: 1,
-          episodeNumber: 1,
-          runtime: 58,
-          genres: const ['Drama', 'Crime'],
-          seenDate: DateTime(2026, 6, 1),
-        ),
-      ];
+        final seenList = [
+          SeenItem(
+            tmdbId: 101,
+            type: MediaType.movie,
+            title: 'Inception',
+            runtime: 148,
+            genres: const ['Action', 'Science Fiction'],
+            seenDate: DateTime(2026, 5, 10),
+          ),
+          SeenItem(
+            tmdbId: 102,
+            type: MediaType.movie,
+            title: 'The Matrix',
+            runtime: 136,
+            genres: const ['Action', 'Science Fiction'],
+            seenDate: DateTime(2026, 5, 12),
+          ),
+          SeenItem(
+            tmdbId: 201,
+            type: MediaType.tv,
+            title: 'Breaking Bad',
+            seasonNumber: 1,
+            episodeNumber: 1,
+            runtime: 58,
+            genres: const ['Drama', 'Crime'],
+            seenDate: DateTime(2026, 6, 1),
+          ),
+        ];
 
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenList);
-      searchProvider = SearchProvider(mockRepository);
-      await searchProvider.loadAllSeenStatus();
+        when(
+          () => mockRepository.getSeenItems(),
+        ).thenAnswer((_) async => seenList);
+        searchProvider = SearchProvider(mockRepository);
+        await searchProvider.loadAllSeenStatus();
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      // Title
-      expect(find.text('Statistiques'), findsOneWidget);
+        // Title
+        expect(find.text('Statistiques'), findsOneWidget);
 
-      // Metric toggle button
-      expect(find.byKey(const Key('stats_toggle_metric')), findsOneWidget);
+        // Metric toggle button
+        expect(find.byKey(const Key('stats_toggle_metric')), findsOneWidget);
 
-      // Period scope buttons
-      expect(find.text('Tout'), findsOneWidget);
-      expect(find.text('Année'), findsOneWidget);
-      expect(find.text('Mois'), findsOneWidget);
+        // Period scope buttons
+        expect(find.text('Tout'), findsOneWidget);
+        expect(find.text('Année'), findsOneWidget);
+        expect(find.text('Mois'), findsOneWidget);
 
-      // Total Watch Time
-      expect(find.text('Temps de visionnage total'), findsOneWidget);
+        // Total Watch Time
+        expect(find.text('Temps de visionnage total'), findsOneWidget);
 
-      // Activity Chart
-      expect(find.byType(ActivityChart), findsOneWidget);
+        // Activity Chart
+        expect(find.byType(ActivityChart), findsOneWidget);
 
-      // Media split bar
-      expect(find.byType(MediaSplitBar), findsOneWidget);
+        // Media split bar
+        expect(find.byType(MediaSplitBar), findsOneWidget);
 
-      // Top genres
-      expect(find.byType(TopGenresList), findsOneWidget);
+        // Top genres
+        expect(find.byType(TopGenresList), findsOneWidget);
 
-      // Decades section
-      expect(find.byType(DecadeSection), findsOneWidget);
+        // Decades section
+        expect(find.byType(DecadeSection), findsOneWidget);
 
-      // Series progression
-      expect(find.byType(SeriesProgressionSection), findsOneWidget);
+        // Series progression
+        expect(find.byType(SeriesProgressionSection), findsOneWidget);
 
-      // Lists & discovery section
-      expect(find.byType(ListsAndDiscoverySection), findsOneWidget);
+        // Lists & discovery section
+        expect(find.byType(ListsAndDiscoverySection), findsOneWidget);
 
-      // Footer disclaimer
-      expect(find.text("Calculé sur l'historique daté."), findsOneWidget);
-    });
+        // Footer disclaimer
+        expect(find.text("Calculé sur l'historique daté."), findsOneWidget);
+      },
+    );
 
     testWidgets('toggles metric from entries to runtime', (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
@@ -195,7 +211,9 @@ void main() {
           seenDate: DateTime(2026, 5, 10),
         ),
       ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenList);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => seenList);
       searchProvider = SearchProvider(mockRepository);
       await searchProvider.loadAllSeenStatus();
 
@@ -215,8 +233,9 @@ void main() {
       expect(find.text('Palmarès (durée)'), findsOneWidget);
     });
 
-    testWidgets('displays dedicated no-data message when period has no items',
-        (tester) async {
+    testWidgets('displays dedicated no-data message when period has no items', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -230,7 +249,9 @@ void main() {
           seenDate: DateTime(2025, 5, 10),
         ),
       ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenList);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => seenList);
       searchProvider = SearchProvider(mockRepository);
       await searchProvider.loadAllSeenStatus();
 
@@ -244,7 +265,10 @@ void main() {
 
       // In 2025 (or current year):
       // If current year is 2026 and item is 2025, switch/navigate to 2025 first or verify 2026 has no data
-      final hasDataNow = find.byKey(const Key('stats_no_data')).evaluate().isEmpty;
+      final hasDataNow = find
+          .byKey(const Key('stats_no_data'))
+          .evaluate()
+          .isEmpty;
       if (hasDataNow) {
         // Navigate to next period (which has no data)
         final nextBtn = find.byTooltip('Période suivante');
@@ -268,8 +292,9 @@ void main() {
       expect(find.text("Calculé sur l'historique daté."), findsOneWidget);
     });
 
-    testWidgets('non-regression on period totals for identical dataset',
-        (tester) async {
+    testWidgets('non-regression on period totals for identical dataset', (
+      tester,
+    ) async {
       final seenList = [
         SeenItem(
           tmdbId: 101,
@@ -296,7 +321,9 @@ void main() {
         ),
       ];
       // Total: 210 min = 3h 30m, 2 movies, 1 episode
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenList);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => seenList);
       searchProvider = SearchProvider(mockRepository);
       await searchProvider.loadAllSeenStatus();
 

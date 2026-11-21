@@ -44,8 +44,9 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final libraryProvider = context.watch<LibraryProvider?>();
-    final searchProvider =
-        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final searchProvider = libraryProvider == null
+        ? context.watch<SearchProvider>()
+        : null;
     final count = libraryProvider != null
         ? libraryProvider.countListEntries
         : searchProvider!.countListEntries;

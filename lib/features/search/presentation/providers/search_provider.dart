@@ -50,14 +50,15 @@ class SearchProvider with ChangeNotifier {
     LibraryProvider? libraryProvider,
     NotificationProvider? notificationProvider,
     CacheAdminProvider? cacheAdminProvider,
-  })  : _ownsLibraryProvider = libraryProvider == null,
-        _libraryProvider = libraryProvider ?? LibraryProvider(repository),
-        _ownsNotificationProvider = notificationProvider == null,
-        _notificationProvider =
-            notificationProvider ?? NotificationProvider(repository),
-        _ownsCacheAdminProvider = cacheAdminProvider == null,
-        _cacheAdminProvider = cacheAdminProvider ??
-            CacheAdminProvider(repository, localeService: localeService) {
+  }) : _ownsLibraryProvider = libraryProvider == null,
+       _libraryProvider = libraryProvider ?? LibraryProvider(repository),
+       _ownsNotificationProvider = notificationProvider == null,
+       _notificationProvider =
+           notificationProvider ?? NotificationProvider(repository),
+       _ownsCacheAdminProvider = cacheAdminProvider == null,
+       _cacheAdminProvider =
+           cacheAdminProvider ??
+           CacheAdminProvider(repository, localeService: localeService) {
     _libraryProvider.addListener(_onLibraryChanged);
     _notificationProvider.addListener(notifyListeners);
     _cacheAdminProvider.addListener(notifyListeners);
@@ -685,7 +686,8 @@ class SearchProvider with ChangeNotifier {
         _searchResults = results;
         if (rawResults.isEmpty) _hasMore = false;
       } else {
-        final peopleFuture = (!_filters.hasActiveFilters &&
+        final peopleFuture =
+            (!_filters.hasActiveFilters &&
                 _currentQuery.isNotEmpty &&
                 _filters.type == null)
             ? repository.searchPeople(_currentQuery).catchError((e) {
@@ -1007,7 +1009,10 @@ class SearchProvider with ChangeNotifier {
       repository.getMediaDetails(id, type: type);
   Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) =>
       repository.getSeasonDetails(tvId, seasonNumber);
-  Future<List<SeenItem>> loadSeenStatusForItem(int tmdbId, MediaType type) async {
+  Future<List<SeenItem>> loadSeenStatusForItem(
+    int tmdbId,
+    MediaType type,
+  ) async {
     final status = await repository.getSeenStatus(tmdbId, type);
     final inMemory = _seenItems
         .where((s) => s.tmdbId == tmdbId && s.type == type)
@@ -1025,11 +1030,13 @@ class SearchProvider with ChangeNotifier {
       _seenCounts = Map.of(_seenCounts)..[key] = (_seenCounts[key] ?? 0) + 1;
     } else {
       final existingEpisodes = _seenItems
-          .where((i) =>
-              i.tmdbId == item.tmdbId &&
-              i.type == MediaType.tv &&
-              i.seasonNumber != null &&
-              i.episodeNumber != null)
+          .where(
+            (i) =>
+                i.tmdbId == item.tmdbId &&
+                i.type == MediaType.tv &&
+                i.seasonNumber != null &&
+                i.episodeNumber != null,
+          )
           .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
           .toSet();
       _seenCounts = Map.of(_seenCounts)..[key] = existingEpisodes.length;
@@ -1046,11 +1053,13 @@ class SearchProvider with ChangeNotifier {
       _seenCounts = Map.of(_seenCounts)..[key] = count;
     } else {
       final existingEpisodes = _seenItems
-          .where((i) =>
-              i.tmdbId == item.tmdbId &&
-              i.type == MediaType.tv &&
-              i.seasonNumber != null &&
-              i.episodeNumber != null)
+          .where(
+            (i) =>
+                i.tmdbId == item.tmdbId &&
+                i.type == MediaType.tv &&
+                i.seasonNumber != null &&
+                i.episodeNumber != null,
+          )
           .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
           .toSet();
       _seenCounts = Map.of(_seenCounts)..[key] = existingEpisodes.length;
@@ -1072,11 +1081,13 @@ class SearchProvider with ChangeNotifier {
             .length;
       } else {
         newCounts[key] = _seenItems
-            .where((i) =>
-                i.tmdbId == tmdbId &&
-                i.type == MediaType.tv &&
-                i.seasonNumber != null &&
-                i.episodeNumber != null)
+            .where(
+              (i) =>
+                  i.tmdbId == tmdbId &&
+                  i.type == MediaType.tv &&
+                  i.seasonNumber != null &&
+                  i.episodeNumber != null,
+            )
             .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
             .toSet()
             .length;
@@ -1101,11 +1112,13 @@ class SearchProvider with ChangeNotifier {
             .length;
       } else {
         newCounts[key] = _seenItems
-            .where((i) =>
-                i.tmdbId == tmdbId &&
-                i.type == MediaType.tv &&
-                i.seasonNumber != null &&
-                i.episodeNumber != null)
+            .where(
+              (i) =>
+                  i.tmdbId == tmdbId &&
+                  i.type == MediaType.tv &&
+                  i.seasonNumber != null &&
+                  i.episodeNumber != null,
+            )
             .map((i) => '${i.seasonNumber}:${i.episodeNumber}')
             .toSet()
             .length;
@@ -1475,8 +1488,9 @@ class SearchProvider with ChangeNotifier {
   /// title returns to the watchlist if marking it had removed it.
   Future<Future<void> Function()> markReleaseSeen(NotifiedItem item) async {
     final seenDate = DateTime.now();
-    final wasInWatchlist =
-        _libraryProvider.watchlistIds.contains('${item.tmdbId}');
+    final wasInWatchlist = _libraryProvider.watchlistIds.contains(
+      '${item.tmdbId}',
+    );
     final isEpisode = item.type == MediaType.tv;
 
     await markAsSeen(
@@ -1806,15 +1820,14 @@ class SearchProvider with ChangeNotifier {
   DateTime? getSeriesRewatchStart(int tmdbId) {
     return repository.getSeriesRewatchStart(tmdbId) ??
         (prefs?.getString('series_rewatch_start_$tmdbId') != null
-            ? DateTime.tryParse(prefs!.getString('series_rewatch_start_$tmdbId')!)
+            ? DateTime.tryParse(
+                prefs!.getString('series_rewatch_start_$tmdbId')!,
+              )
             : null);
   }
 
   /// Calculates the number of complete viewing cycles for [item] given [seen].
-  static int calculateCompletedCycles(
-    MediaItem item,
-    Iterable<SeenItem> seen,
-  ) {
+  static int calculateCompletedCycles(MediaItem item, Iterable<SeenItem> seen) {
     final episodeSeen = seen
         .where(
           (s) =>
@@ -1878,13 +1891,20 @@ class SearchProvider with ChangeNotifier {
   Future<int> startSeriesRewatch(MediaItem item) async {
     final now = DateTime.now();
     await repository.setSeriesRewatchStart(item.id, now);
-    await prefs?.setString('series_rewatch_start_${item.id}', now.toIso8601String());
+    await prefs?.setString(
+      'series_rewatch_start_${item.id}',
+      now.toIso8601String(),
+    );
 
     final seen = await repository.getSeenStatus(item.id, MediaType.tv);
     final completed = calculateCompletedCycles(item, seen);
     final currentCycle = (completed > 0 ? completed : 1) + 1;
 
-    await repository.clearOptOutSeries(item.id, seasonNumber: 1, episodeNumber: 1);
+    await repository.clearOptOutSeries(
+      item.id,
+      seasonNumber: 1,
+      episodeNumber: 1,
+    );
 
     DateTime? airDate;
     int? runtime;

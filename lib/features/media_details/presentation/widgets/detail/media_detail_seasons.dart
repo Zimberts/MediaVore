@@ -155,14 +155,19 @@ class MediaDetailSeasons extends StatelessWidget {
         : null;
 
     final episodesCountStr = l10n.detailSeasonEpisodes(episodeCount);
-    final progressShortStr = l10n.detailSeasonSeenShort(seenInSeason, episodeCount);
+    final progressShortStr = l10n.detailSeasonSeenShort(
+      seenInSeason,
+      episodeCount,
+    );
     final subtitle = [
       episodesCountStr,
       if (durationStr != null && durationStr.isNotEmpty) durationStr,
       progressShortStr,
     ].join(' · ');
 
-    final progressValue = episodeCount > 0 ? (seenInSeason / episodeCount) : 0.0;
+    final progressValue = episodeCount > 0
+        ? (seenInSeason / episodeCount)
+        : 0.0;
 
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -195,7 +200,8 @@ class MediaDetailSeasons extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              season.name ?? l10n.detailSeasonName(seasonNumber),
+                              season.name ??
+                                  l10n.detailSeasonName(seasonNumber),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -204,7 +210,9 @@ class MediaDetailSeasons extends StatelessWidget {
                             Text(
                               subtitle,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: isComplete ? colors.series : colors.text2,
+                                color: isComplete
+                                    ? colors.series
+                                    : colors.text2,
                                 fontWeight: isComplete ? FontWeight.bold : null,
                               ),
                             ),
@@ -213,7 +221,11 @@ class MediaDetailSeasons extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       if (isComplete) ...[
-                        Icon(Icons.check_circle, color: colors.series, size: 22),
+                        Icon(
+                          Icons.check_circle,
+                          color: colors.series,
+                          size: 22,
+                        ),
                         const SizedBox(width: 8),
                       ],
                       if (isLoading)
@@ -308,9 +320,7 @@ class MediaDetailSeasons extends StatelessWidget {
         // Seen history for this specific episode
         final history = seenStatus
             .where(
-              (s) =>
-                  s.seasonNumber == seasonNumber &&
-                  s.episodeNumber == epNum,
+              (s) => s.seasonNumber == seasonNumber && s.episodeNumber == epNum,
             )
             .toList();
         history.sort((a, b) => b.seenDate.compareTo(a.seenDate));

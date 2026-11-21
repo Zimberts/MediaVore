@@ -82,40 +82,46 @@ void main() {
       ).called(2);
     });
 
-    test('should fetch collection parts once across concurrent movies in the same collection', () async {
-      const movie1 = MediaItem(
-        id: 10,
-        title: 'Movie 1',
-        overview: '',
-        releaseDate: '2020-01-01',
-        collectionId: 999,
-      );
-      const movie2 = MediaItem(
-        id: 11,
-        title: 'Movie 2',
-        overview: '',
-        releaseDate: '2022-01-01',
-        collectionId: 999,
-      );
-      when(() => cache.getCachedCollection(999)).thenReturn(null);
-      when(() => cache.cacheCollectionParts(999, any())).thenAnswer((_) {});
-      when(() => remote.getMediaDetailsBundle(10, type: MediaType.movie))
-          .thenAnswer((_) async => bundleOf(movie1));
-      when(() => remote.getMediaDetailsBundle(11, type: MediaType.movie))
-          .thenAnswer((_) async => bundleOf(movie2));
+    test(
+      'should fetch collection parts once across concurrent movies in the same collection',
+      () async {
+        const movie1 = MediaItem(
+          id: 10,
+          title: 'Movie 1',
+          overview: '',
+          releaseDate: '2020-01-01',
+          collectionId: 999,
+        );
+        const movie2 = MediaItem(
+          id: 11,
+          title: 'Movie 2',
+          overview: '',
+          releaseDate: '2022-01-01',
+          collectionId: 999,
+        );
+        when(() => cache.getCachedCollection(999)).thenReturn(null);
+        when(() => cache.cacheCollectionParts(999, any())).thenAnswer((_) {});
+        when(
+          () => remote.getMediaDetailsBundle(10, type: MediaType.movie),
+        ).thenAnswer((_) async => bundleOf(movie1));
+        when(
+          () => remote.getMediaDetailsBundle(11, type: MediaType.movie),
+        ).thenAnswer((_) async => bundleOf(movie2));
 
-      final collectionCompleter = Completer<List<MediaItem>>();
-      when(() => remote.getCollectionParts(999))
-          .thenAnswer((_) => collectionCompleter.future);
+        final collectionCompleter = Completer<List<MediaItem>>();
+        when(
+          () => remote.getCollectionParts(999),
+        ).thenAnswer((_) => collectionCompleter.future);
 
-      final future1 = service.getMediaDetails(10);
-      final future2 = service.getMediaDetails(11);
+        final future1 = service.getMediaDetails(10);
+        final future2 = service.getMediaDetails(11);
 
-      collectionCompleter.complete([movie1, movie2]);
-      await Future.wait([future1, future2]);
+        collectionCompleter.complete([movie1, movie2]);
+        await Future.wait([future1, future2]);
 
-      verify(() => remote.getCollectionParts(999)).called(1);
-    });
+        verify(() => remote.getCollectionParts(999)).called(1);
+      },
+    );
 
     test(
       'should return complete cached details without a network call',
@@ -346,34 +352,41 @@ void main() {
       verifyNever(() => remote.getSeasonsDetails(any(), any()));
     });
 
-    test('should skip completed older seasons for ongoing series updated > 24h ago', () async {
-      const ongoingShow = MediaItem(
-        id: 2,
-        title: 'Ongoing Show',
-        overview: '',
-        releaseDate: '2020-01-01',
-        mediaType: MediaType.tv,
-        status: 'Returning Series',
-        seasons: [
-          TVSeason(id: 1, seasonNumber: 1, episodeCount: 10),
-          TVSeason(id: 2, seasonNumber: 2, episodeCount: 10),
-        ],
-      );
-      when(() => cache.getItem(2, MediaType.tv)).thenAnswer((_) async => ongoingShow);
-      when(() => cache.getSeason(2, 1)).thenAnswer((_) async => {
-        'episodes': [
-          {'episode_number': 1, 'air_date': '2020-01-01'},
-          {'episode_number': 2, 'air_date': '2020-01-08'},
-        ],
-      });
-      when(() => cache.getSeasonUpdateDate(2, 1)).thenAnswer(
-        (_) async => DateTime.now().subtract(const Duration(days: 2)),
-      );
+    test(
+      'should skip completed older seasons for ongoing series updated > 24h ago',
+      () async {
+        const ongoingShow = MediaItem(
+          id: 2,
+          title: 'Ongoing Show',
+          overview: '',
+          releaseDate: '2020-01-01',
+          mediaType: MediaType.tv,
+          status: 'Returning Series',
+          seasons: [
+            TVSeason(id: 1, seasonNumber: 1, episodeCount: 10),
+            TVSeason(id: 2, seasonNumber: 2, episodeCount: 10),
+          ],
+        );
+        when(
+          () => cache.getItem(2, MediaType.tv),
+        ).thenAnswer((_) async => ongoingShow);
+        when(() => cache.getSeason(2, 1)).thenAnswer(
+          (_) async => {
+            'episodes': [
+              {'episode_number': 1, 'air_date': '2020-01-01'},
+              {'episode_number': 2, 'air_date': '2020-01-08'},
+            ],
+          },
+        );
+        when(() => cache.getSeasonUpdateDate(2, 1)).thenAnswer(
+          (_) async => DateTime.now().subtract(const Duration(days: 2)),
+        );
 
-      await service.prefetchSeasons(2, [1]);
+        await service.prefetchSeasons(2, [1]);
 
-      verifyNever(() => remote.getSeasonsDetails(2, any()));
-    });
+        verifyNever(() => remote.getSeasonsDetails(2, any()));
+      },
+    );
   });
 
   group('seasonDetailsForRefresh', () {

@@ -51,14 +51,23 @@ void main() {
   });
 
   group('Formatters.formatSeasonDuration', () {
-    test('10 episodes of 50 min should format as 8,3 h in French and 8.3 h in English', () {
-      expect(Formatters.formatSeasonDuration(500, locale: 'fr'), '8,3 h');
-      expect(Formatters.formatSeasonDuration(500, locale: 'en'), '8.3 h');
-    });
+    test(
+      '10 episodes of 50 min should format as 8,3 h in French and 8.3 h in English',
+      () {
+        expect(Formatters.formatSeasonDuration(500, locale: 'fr'), '8,3 h');
+        expect(Formatters.formatSeasonDuration(500, locale: 'en'), '8.3 h');
+      },
+    );
 
     test('should prefix with ~ when isApproximate is true', () {
-      expect(Formatters.formatSeasonDuration(500, isApproximate: true, locale: 'fr'), '~8,3 h');
-      expect(Formatters.formatSeasonDuration(500, isApproximate: true, locale: 'en'), '~8.3 h');
+      expect(
+        Formatters.formatSeasonDuration(500, isApproximate: true, locale: 'fr'),
+        '~8,3 h',
+      );
+      expect(
+        Formatters.formatSeasonDuration(500, isApproximate: true, locale: 'en'),
+        '~8.3 h',
+      );
     });
 
     test('should format exact hours without decimal zero', () {
@@ -68,7 +77,10 @@ void main() {
 
     test('should format durations under 1 hour in minutes', () {
       expect(Formatters.formatSeasonDuration(45, locale: 'fr'), '45 min');
-      expect(Formatters.formatSeasonDuration(45, isApproximate: true, locale: 'fr'), '~45 min');
+      expect(
+        Formatters.formatSeasonDuration(45, isApproximate: true, locale: 'fr'),
+        '~45 min',
+      );
     });
 
     test('should return empty string for zero or negative duration', () {
@@ -113,24 +125,27 @@ void main() {
       expect(Formatters.formatInputDate(date, 'fr'), '31/12/2023');
     });
 
-    test('parseInputDate strictly parses based on locale and supports fallbacks', () {
-      final parsedEn = Formatters.parseInputDate('12/31/2023', 'en');
-      expect(parsedEn, equals(DateTime(2023, 12, 31)));
+    test(
+      'parseInputDate strictly parses based on locale and supports fallbacks',
+      () {
+        final parsedEn = Formatters.parseInputDate('12/31/2023', 'en');
+        expect(parsedEn, equals(DateTime(2023, 12, 31)));
 
-      final parsedFr = Formatters.parseInputDate('31/12/2023', 'fr');
-      expect(parsedFr, equals(DateTime(2023, 12, 31)));
+        final parsedFr = Formatters.parseInputDate('31/12/2023', 'fr');
+        expect(parsedFr, equals(DateTime(2023, 12, 31)));
 
-      // Fallback cross-parsing
-      final fallbackFrFromEn = Formatters.parseInputDate('31/12/2023', 'en');
-      expect(fallbackFrFromEn, equals(DateTime(2023, 12, 31)));
+        // Fallback cross-parsing
+        final fallbackFrFromEn = Formatters.parseInputDate('31/12/2023', 'en');
+        expect(fallbackFrFromEn, equals(DateTime(2023, 12, 31)));
 
-      // Fallback ISO
-      final fallbackIso = Formatters.parseInputDate('2023-12-31', 'en');
-      expect(fallbackIso, equals(DateTime(2023, 12, 31)));
+        // Fallback ISO
+        final fallbackIso = Formatters.parseInputDate('2023-12-31', 'en');
+        expect(fallbackIso, equals(DateTime(2023, 12, 31)));
 
-      // Invalid returns null
-      expect(Formatters.parseInputDate('invalid', 'en'), isNull);
-      expect(Formatters.parseInputDate('', 'en'), isNull);
-    });
+        // Invalid returns null
+        expect(Formatters.parseInputDate('invalid', 'en'), isNull);
+        expect(Formatters.parseInputDate('', 'en'), isNull);
+      },
+    );
   });
 }

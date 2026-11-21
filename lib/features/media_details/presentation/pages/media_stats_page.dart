@@ -152,8 +152,9 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
     );
 
     final watchlistCount = provider.getListItemCount('watchlist');
-    final customListNames =
-        provider.listNames.where((n) => n != 'watchlist').toList();
+    final customListNames = provider.listNames
+        .where((n) => n != 'watchlist')
+        .toList();
     final customListsCount = customListNames.length;
     final customListsItemsCount = customListNames.fold<int>(
       0,
@@ -189,10 +190,9 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest
-                  .withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -200,23 +200,20 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                 ScopeButton(
                   label: context.l10n.statsAllTime,
                   isSelected: _selectedScope == StatsScope.allTime,
-                  onTap: () => setState(
-                    () => _selectedScope = StatsScope.allTime,
-                  ),
+                  onTap: () =>
+                      setState(() => _selectedScope = StatsScope.allTime),
                 ),
                 ScopeButton(
                   label: context.l10n.statsYear,
                   isSelected: _selectedScope == StatsScope.specificYear,
-                  onTap: () => setState(
-                    () => _selectedScope = StatsScope.specificYear,
-                  ),
+                  onTap: () =>
+                      setState(() => _selectedScope = StatsScope.specificYear),
                 ),
                 ScopeButton(
                   label: context.l10n.statsMonth,
                   isSelected: _selectedScope == StatsScope.specificMonth,
-                  onTap: () => setState(
-                    () => _selectedScope = StatsScope.specificMonth,
-                  ),
+                  onTap: () =>
+                      setState(() => _selectedScope = StatsScope.specificMonth),
                 ),
               ],
             ),
@@ -283,9 +280,8 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                       context.l10n.statsNoDataForPeriod,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -304,9 +300,9 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                       watchTime.minutes,
                     ),
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -381,10 +377,7 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
               title: context.l10n.statsMediaSplit(
                 statsMetricLabel(context, _selectedMetric),
               ),
-              child: MediaSplitBar(
-                split: split,
-                metric: _selectedMetric,
-              ),
+              child: MediaSplitBar(split: split, metric: _selectedMetric),
             ),
 
             const SizedBox(height: 12),
@@ -440,11 +433,10 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
               context.l10n.statsFooterDatedHistory,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.6),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -594,18 +586,18 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                                       decoration: BoxDecoration(
                                         color:
                                             _selectedMonth == m &&
-                                                    _selectedYear == year &&
-                                                    _selectedScope ==
-                                                        StatsScope.specificMonth
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primaryContainer
-                                                : null,
+                                                _selectedYear == year &&
+                                                _selectedScope ==
+                                                    StatsScope.specificMonth
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.primaryContainer
+                                            : null,
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                          color: Theme.of(context)
-                                              .dividerColor
-                                              .withValues(alpha: 0.1),
+                                          color: Theme.of(
+                                            context,
+                                          ).dividerColor.withValues(alpha: 0.1),
                                         ),
                                       ),
                                       alignment: Alignment.center,

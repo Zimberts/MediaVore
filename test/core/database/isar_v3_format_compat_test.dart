@@ -73,22 +73,19 @@ void main() {
     final bytes = gzip.decode(fixture.readAsBytesSync());
     File('$runtimeDir/default.isar').writeAsBytesSync(bytes);
 
-    isar = await Isar.open(
-      [
-        UserListSchema,
-        MediaListItemSchema,
-        SeenItemModelSchema,
-        LikedItemSchema,
-        NotifiedItemModelSchema,
-        QuickAddItemModelSchema,
-        QuickAddOptOutModelSchema,
-        CachedMediaSchema,
-        CachedActorProfileSchema,
-        CachedSeasonSchema,
-        AchievementModelSchema,
-      ],
-      directory: runtimeDir,
-    );
+    isar = await Isar.open([
+      UserListSchema,
+      MediaListItemSchema,
+      SeenItemModelSchema,
+      LikedItemSchema,
+      NotifiedItemModelSchema,
+      QuickAddItemModelSchema,
+      QuickAddOptOutModelSchema,
+      CachedMediaSchema,
+      CachedActorProfileSchema,
+      CachedSeasonSchema,
+      AchievementModelSchema,
+    ], directory: runtimeDir);
   });
 
   tearDownAll(() async {
@@ -118,7 +115,10 @@ void main() {
       final watchlist = await isar.userLists.getByName('watchlist');
       expect(watchlist, isNotNull);
 
-      final seen = await isar.seenItemModels.filter().tmdbIdEqualTo(550).findFirst();
+      final seen = await isar.seenItemModels
+          .filter()
+          .tmdbIdEqualTo(550)
+          .findFirst();
       expect(seen, isNotNull);
       expect(seen!.title, 'Fight Club');
       expect(seen.type, 'movie');
@@ -129,13 +129,17 @@ void main() {
       // the runner's local zone: compare in UTC so the test is timezone-independent.
       expect(seen.seenDate.toUtc(), DateTime.utc(2023, 9, 30, 22));
 
-      final composite = await isar.mediaListItems
-          .getByIdTypeListName(550, 'movie', 'watchlist');
+      final composite = await isar.mediaListItems.getByIdTypeListName(
+        550,
+        'movie',
+        'watchlist',
+      );
       expect(composite, isNotNull);
       expect(composite!.title, 'Fight Club');
 
-      final achievement = await isar.achievementModels
-          .getByAchievementId('first_seen');
+      final achievement = await isar.achievementModels.getByAchievementId(
+        'first_seen',
+      );
       expect(achievement, isNotNull);
       expect(achievement!.unlockedAt.toUtc(), DateTime.utc(2023, 10, 5, 22));
     });
@@ -156,7 +160,10 @@ void main() {
       expect(await isar.userLists.getByName('migrated'), isNotNull);
       expect(await isar.seenItemModels.count(), 3);
 
-      final written = await isar.seenItemModels.filter().tmdbIdEqualTo(27205).findFirst();
+      final written = await isar.seenItemModels
+          .filter()
+          .tmdbIdEqualTo(27205)
+          .findFirst();
       expect(written, isNotNull);
       expect(written!.title, 'Inception');
     });

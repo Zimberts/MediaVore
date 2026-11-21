@@ -32,7 +32,10 @@ void main() {
     when(() => provider.families).thenReturn(groupAchievements(achievements));
   });
 
-  Future<void> pumpApp(WidgetTester tester, {Locale locale = const Locale('fr')}) async {
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    Locale locale = const Locale('fr'),
+  }) async {
     await tester.pumpWidget(
       ChangeNotifierProvider<AchievementProvider>.value(
         value: provider,
@@ -159,8 +162,9 @@ void main() {
       ];
 
       when(() => provider.achievements).thenReturn(categorizedAchievements);
-      when(() => provider.families)
-          .thenReturn(groupAchievements(categorizedAchievements));
+      when(
+        () => provider.families,
+      ).thenReturn(groupAchievements(categorizedAchievements));
 
       await pumpApp(tester);
       nav().push(AchievementsPage.route());
@@ -177,80 +181,82 @@ void main() {
       expect(find.text('Régularité'), findsNothing);
     });
 
-    testWidgets('displays pastille and tier dots for tiered family, and opens sheet with progressLabel', (
-      tester,
-    ) async {
-      final unlockedDate = DateTime(2026, 3, 15);
-      final tieredAchievements = [
-        Achievement(
-          id: 'f1',
-          title: 'Tier One',
-          description: 'First step',
-          iconPath: 'I',
-          group: 'my_fam',
-          groupTitle: 'My Family',
-          category: 'movies',
-          tier: 1,
-          isUnlocked: true,
-          unlockedAt: unlockedDate,
-        ),
-        const Achievement(
-          id: 'f2',
-          title: 'Tier Two',
-          description: 'Second step',
-          iconPath: 'I',
-          group: 'my_fam',
-          category: 'movies',
-          tier: 2,
-          isUnlocked: false,
-          progress: 0.5,
-          progressLabel: '5 / 10 movies',
-        ),
-        const Achievement(
-          id: 'f3',
-          title: 'Tier Three',
-          description: 'Third step',
-          iconPath: 'I',
-          group: 'my_fam',
-          category: 'movies',
-          tier: 3,
-          isUnlocked: false,
-          progress: 0.0,
-        ),
-      ];
+    testWidgets(
+      'displays pastille and tier dots for tiered family, and opens sheet with progressLabel',
+      (tester) async {
+        final unlockedDate = DateTime(2026, 3, 15);
+        final tieredAchievements = [
+          Achievement(
+            id: 'f1',
+            title: 'Tier One',
+            description: 'First step',
+            iconPath: 'I',
+            group: 'my_fam',
+            groupTitle: 'My Family',
+            category: 'movies',
+            tier: 1,
+            isUnlocked: true,
+            unlockedAt: unlockedDate,
+          ),
+          const Achievement(
+            id: 'f2',
+            title: 'Tier Two',
+            description: 'Second step',
+            iconPath: 'I',
+            group: 'my_fam',
+            category: 'movies',
+            tier: 2,
+            isUnlocked: false,
+            progress: 0.5,
+            progressLabel: '5 / 10 movies',
+          ),
+          const Achievement(
+            id: 'f3',
+            title: 'Tier Three',
+            description: 'Third step',
+            iconPath: 'I',
+            group: 'my_fam',
+            category: 'movies',
+            tier: 3,
+            isUnlocked: false,
+            progress: 0.0,
+          ),
+        ];
 
-      when(() => provider.achievements).thenReturn(tieredAchievements);
-      when(() => provider.families)
-          .thenReturn(groupAchievements(tieredAchievements));
+        when(() => provider.achievements).thenReturn(tieredAchievements);
+        when(
+          () => provider.families,
+        ).thenReturn(groupAchievements(tieredAchievements));
 
-      await pumpApp(tester);
-      nav().push(AchievementsPage.route());
-      await tester.pumpAndSettle();
+        await pumpApp(tester);
+        nav().push(AchievementsPage.route());
+        await tester.pumpAndSettle();
 
-      // Card title reflects level: "Niveau 1 · My Family"
-      expect(find.text('Niveau 1 · My Family'), findsOneWidget);
+        // Card title reflects level: "Niveau 1 · My Family"
+        expect(find.text('Niveau 1 · My Family'), findsOneWidget);
 
-      // Pastille "1/3" is displayed
-      expect(find.text('1/3'), findsOneWidget);
+        // Pastille "1/3" is displayed
+        expect(find.text('1/3'), findsOneWidget);
 
-      // Next level progress label is shown on the card
-      expect(find.text('Suivant : Tier Two · 5 / 10 movies'), findsOneWidget);
+        // Next level progress label is shown on the card
+        expect(find.text('Suivant : Tier Two · 5 / 10 movies'), findsOneWidget);
 
-      // Tap on the card to open tiers sheet
-      await tester.tap(find.text('Niveau 1 · My Family'));
-      await tester.pumpAndSettle();
+        // Tap on the card to open tiers sheet
+        await tester.tap(find.text('Niveau 1 · My Family'));
+        await tester.pumpAndSettle();
 
-      // In the bottom sheet:
-      // Tier 1 has unlocked date
-      expect(find.text('Niveau 1 · Tier One'), findsOneWidget);
-      expect(find.textContaining('2026'), findsWidgets);
+        // In the bottom sheet:
+        // Tier 1 has unlocked date
+        expect(find.text('Niveau 1 · Tier One'), findsOneWidget);
+        expect(find.textContaining('2026'), findsWidgets);
 
-      // Tier 2 has progress label '5 / 10 movies'
-      expect(find.text('Niveau 2 · Tier Two'), findsOneWidget);
-      expect(find.text('5 / 10 movies'), findsOneWidget);
+        // Tier 2 has progress label '5 / 10 movies'
+        expect(find.text('Niveau 2 · Tier Two'), findsOneWidget);
+        expect(find.text('5 / 10 movies'), findsOneWidget);
 
-      // Tier 3 has no progress label
-      expect(find.text('Niveau 3 · Tier Three'), findsOneWidget);
-    });
+        // Tier 3 has no progress label
+        expect(find.text('Niveau 3 · Tier Three'), findsOneWidget);
+      },
+    );
   });
 }

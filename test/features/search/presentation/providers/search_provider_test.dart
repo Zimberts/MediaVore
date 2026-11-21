@@ -747,105 +747,136 @@ void main() {
 
     setUp(() {
       when(() => mockRepository.getQuickAddItems()).thenAnswer((_) async => []);
-      when(() => mockRepository.getInProgressItems()).thenAnswer((_) async => []);
-      when(() => mockRepository.getQuickAddOptOuts()).thenAnswer((_) async => []);
+      when(
+        () => mockRepository.getInProgressItems(),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockRepository.getQuickAddOptOuts(),
+      ).thenAnswer((_) async => []);
       when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
       when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
-      when(() => mockRepository.getSeenStatus(555, MediaType.movie)).thenAnswer((_) async => []);
+      when(
+        () => mockRepository.getSeenStatus(555, MediaType.movie),
+      ).thenAnswer((_) async => []);
     });
 
-    test('markAsSeen updates _seenItems and _seenCounts immediately before repo call completes', () async {
-      final completer = Completer<void>();
-      when(() => mockRepository.markAsSeen(any())).thenAnswer((_) => completer.future);
+    test(
+      'markAsSeen updates _seenItems and _seenCounts immediately before repo call completes',
+      () async {
+        final completer = Completer<void>();
+        when(
+          () => mockRepository.markAsSeen(any()),
+        ).thenAnswer((_) => completer.future);
 
-      bool notified = false;
-      provider.addListener(() {
-        if (provider.getSeenCount(movieItem) == 1) {
-          notified = true;
-        }
-      });
+        bool notified = false;
+        provider.addListener(() {
+          if (provider.getSeenCount(movieItem) == 1) {
+            notified = true;
+          }
+        });
 
-      expect(provider.getSeenCount(movieItem), 0);
-      expect(provider.seenItems.any((s) => s.tmdbId == 555), isFalse);
+        expect(provider.getSeenCount(movieItem), 0);
+        expect(provider.seenItems.any((s) => s.tmdbId == 555), isFalse);
 
-      final future = provider.markAsSeen(seenMovie);
+        final future = provider.markAsSeen(seenMovie);
 
-      // Immediately updated in memory and notified before completer.complete()
-      expect(provider.getSeenCount(movieItem), 1);
-      expect(provider.seenItems.any((s) => s.tmdbId == 555), isTrue);
-      expect(notified, isTrue);
+        // Immediately updated in memory and notified before completer.complete()
+        expect(provider.getSeenCount(movieItem), 1);
+        expect(provider.seenItems.any((s) => s.tmdbId == 555), isTrue);
+        expect(notified, isTrue);
 
-      completer.complete();
-      await future;
+        completer.complete();
+        await future;
 
-      expect(provider.getSeenCount(movieItem), 1);
-    });
+        expect(provider.getSeenCount(movieItem), 1);
+      },
+    );
 
-    test('markAsSeen rolls back optimistic state when repo call fails', () async {
-      when(() => mockRepository.markAsSeen(any())).thenThrow(Exception('DB error'));
+    test(
+      'markAsSeen rolls back optimistic state when repo call fails',
+      () async {
+        when(
+          () => mockRepository.markAsSeen(any()),
+        ).thenThrow(Exception('DB error'));
 
-      expect(provider.getSeenCount(movieItem), 0);
+        expect(provider.getSeenCount(movieItem), 0);
 
-      expect(() => provider.markAsSeen(seenMovie), throwsA(isA<Exception>()));
+        expect(() => provider.markAsSeen(seenMovie), throwsA(isA<Exception>()));
 
-      expect(provider.getSeenCount(movieItem), 0);
-      expect(provider.seenItems.any((s) => s.tmdbId == 555), isFalse);
-    });
+        expect(provider.getSeenCount(movieItem), 0);
+        expect(provider.seenItems.any((s) => s.tmdbId == 555), isFalse);
+      },
+    );
 
-    test('markManyAsSeen updates _seenItems and _seenCounts immediately before repo call completes', () async {
-      final completer = Completer<void>();
-      when(() => mockRepository.markManyAsSeen(any())).thenAnswer((_) => completer.future);
+    test(
+      'markManyAsSeen updates _seenItems and _seenCounts immediately before repo call completes',
+      () async {
+        final completer = Completer<void>();
+        when(
+          () => mockRepository.markManyAsSeen(any()),
+        ).thenAnswer((_) => completer.future);
 
-      final episodes = [
-        SeenItem(
-          tmdbId: 888,
-          type: MediaType.tv,
+        final episodes = [
+          SeenItem(
+            tmdbId: 888,
+            type: MediaType.tv,
+            title: 'TV Show',
+            seasonNumber: 1,
+            episodeNumber: 1,
+            seenDate: DateTime.now(),
+          ),
+          SeenItem(
+            tmdbId: 888,
+            type: MediaType.tv,
+            title: 'TV Show',
+            seasonNumber: 1,
+            episodeNumber: 2,
+            seenDate: DateTime.now(),
+          ),
+        ];
+        const tvItem = MediaItem(
+          id: 888,
           title: 'TV Show',
-          seasonNumber: 1,
-          episodeNumber: 1,
-          seenDate: DateTime.now(),
-        ),
-        SeenItem(
-          tmdbId: 888,
-          type: MediaType.tv,
-          title: 'TV Show',
-          seasonNumber: 1,
-          episodeNumber: 2,
-          seenDate: DateTime.now(),
-        ),
-      ];
-      const tvItem = MediaItem(
-        id: 888,
-        title: 'TV Show',
-        overview: '',
-        releaseDate: '',
-        mediaType: MediaType.tv,
-      );
+          overview: '',
+          releaseDate: '',
+          mediaType: MediaType.tv,
+        );
 
-      final future = provider.markManyAsSeen(episodes);
+        final future = provider.markManyAsSeen(episodes);
 
-      expect(provider.getSeenCount(tvItem), 2);
-      expect(provider.seenItems.where((s) => s.tmdbId == 888).length, 2);
+        expect(provider.getSeenCount(tvItem), 2);
+        expect(provider.seenItems.where((s) => s.tmdbId == 888).length, 2);
 
-      completer.complete();
-      await future;
+        completer.complete();
+        await future;
 
-      expect(provider.getSeenCount(tvItem), 2);
-    });
+        expect(provider.getSeenCount(tvItem), 2);
+      },
+    );
 
-    test('loadSeenStatusForItem returns in-memory items when DB is pending', () async {
-      final completer = Completer<void>();
-      when(() => mockRepository.markAsSeen(any())).thenAnswer((_) => completer.future);
-      when(() => mockRepository.getSeenStatus(555, MediaType.movie)).thenAnswer((_) async => []);
+    test(
+      'loadSeenStatusForItem returns in-memory items when DB is pending',
+      () async {
+        final completer = Completer<void>();
+        when(
+          () => mockRepository.markAsSeen(any()),
+        ).thenAnswer((_) => completer.future);
+        when(
+          () => mockRepository.getSeenStatus(555, MediaType.movie),
+        ).thenAnswer((_) async => []);
 
-      final future = provider.markAsSeen(seenMovie);
+        final future = provider.markAsSeen(seenMovie);
 
-      final status = await provider.loadSeenStatusForItem(555, MediaType.movie);
-      expect(status, isNotEmpty);
-      expect(status.first.tmdbId, 555);
+        final status = await provider.loadSeenStatusForItem(
+          555,
+          MediaType.movie,
+        );
+        expect(status, isNotEmpty);
+        expect(status.first.tmdbId, 555);
 
-      completer.complete();
-      await future;
-    });
+        completer.complete();
+        await future;
+      },
+    );
   });
 }

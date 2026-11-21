@@ -41,29 +41,39 @@ void main() {
     when(() => mockPrefs.setBool(any(), any())).thenAnswer((_) async => true);
     when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
 
-    settingsProvider = SettingsProvider(
-      mockPrefs,
-      FakeTmdbCredentialStore(),
-    );
+    settingsProvider = SettingsProvider(mockPrefs, FakeTmdbCredentialStore());
 
     when(() => mockRepository.getAllListNames()).thenAnswer((_) async => []);
-    when(() => mockRepository.getListEntries(any())).thenAnswer((_) async => []);
-    when(() => mockRepository.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getListPreviews(any(), limit: any(named: 'limit')),
+    ).thenAnswer((_) async => []);
     when(() => mockRepository.getCacheSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => mockRepository.getSeenItems()).thenAnswer((_) async => []);
-    when(() => mockRepository.getWatchlistEntries()).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
     when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
     when(() => mockRepository.getNotifiedItems()).thenAnswer((_) async => []);
-    when(() => mockRepository.getSeenStatus(any(), any())).thenAnswer((_) async => []);
-    when(() => mockRepository.updateSeenEntry(any())).thenAnswer((_) async => Future.value());
-    when(() => mockRepository.deleteSeenEntry(any())).thenAnswer((_) async => Future.value());
+    when(
+      () => mockRepository.getSeenStatus(any(), any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.updateSeenEntry(any()),
+    ).thenAnswer((_) async => Future.value());
+    when(
+      () => mockRepository.deleteSeenEntry(any()),
+    ).thenAnswer((_) async => Future.value());
 
     searchProvider = SearchProvider(mockRepository);
   });
 
   Widget buildWidget({MediaItem? item}) {
-    final mediaItem = item ??
+    final mediaItem =
+        item ??
         const MediaItem(
           id: 1,
           title: 'Inception',
@@ -79,9 +89,7 @@ void main() {
       ],
       child: MaterialApp(
         theme: AppPalette.paper.toThemeData(),
-        home: Scaffold(
-          body: MediaDetailMovieViewings(item: mediaItem),
-        ),
+        home: Scaffold(body: MediaDetailMovieViewings(item: mediaItem)),
       ),
     );
   }
@@ -105,7 +113,9 @@ void main() {
           seenDate: DateTime(2023, 10, 5),
         ),
       ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => viewings);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => viewings);
       await searchProvider.loadAllSeenStatus();
 
       const tvItem = MediaItem(
@@ -122,7 +132,9 @@ void main() {
       expect(find.byKey(const Key('movie_seen_summary')), findsNothing);
     });
 
-    testWidgets('displays single viewing summary when seen once', (tester) async {
+    testWidgets('displays single viewing summary when seen once', (
+      tester,
+    ) async {
       final viewings = [
         SeenItem(
           id: 1,
@@ -132,7 +144,9 @@ void main() {
           seenDate: DateTime(2023, 11, 3),
         ),
       ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => viewings);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => viewings);
       await searchProvider.loadAllSeenStatus();
 
       await tester.pumpWidget(buildWidget());
@@ -143,33 +157,41 @@ void main() {
       expect(find.byKey(const Key('movie_visionnages_section')), findsNothing);
     });
 
-    testWidgets('displays multiple viewings summary with last date when seen multiple times', (tester) async {
-      final viewings = [
-        SeenItem(
-          id: 1,
-          tmdbId: 1,
-          type: MediaType.movie,
-          title: 'Inception',
-          seenDate: DateTime(2023, 5, 1),
-        ),
-        SeenItem(
-          id: 2,
-          tmdbId: 1,
-          type: MediaType.movie,
-          title: 'Inception',
-          seenDate: DateTime(2023, 11, 3),
-        ),
-      ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => viewings);
-      await searchProvider.loadAllSeenStatus();
+    testWidgets(
+      'displays multiple viewings summary with last date when seen multiple times',
+      (tester) async {
+        final viewings = [
+          SeenItem(
+            id: 1,
+            tmdbId: 1,
+            type: MediaType.movie,
+            title: 'Inception',
+            seenDate: DateTime(2023, 5, 1),
+          ),
+          SeenItem(
+            id: 2,
+            tmdbId: 1,
+            type: MediaType.movie,
+            title: 'Inception',
+            seenDate: DateTime(2023, 11, 3),
+          ),
+        ];
+        when(
+          () => mockRepository.getSeenItems(),
+        ).thenAnswer((_) async => viewings);
+        await searchProvider.loadAllSeenStatus();
 
-      await tester.pumpWidget(buildWidget());
-      await tester.pump();
+        await tester.pumpWidget(buildWidget());
+        await tester.pump();
 
-      expect(find.byKey(const Key('movie_seen_summary')), findsOneWidget);
-      expect(find.textContaining('Seen 2 times'), findsOneWidget);
-      expect(find.byKey(const Key('movie_visionnages_section')), findsNothing);
-    });
+        expect(find.byKey(const Key('movie_seen_summary')), findsOneWidget);
+        expect(find.textContaining('Seen 2 times'), findsOneWidget);
+        expect(
+          find.byKey(const Key('movie_visionnages_section')),
+          findsNothing,
+        );
+      },
+    );
   });
 
   group('MediaDetailMovieViewings - Advanced mode', () {
@@ -177,7 +199,9 @@ void main() {
       await settingsProvider.setAdvancedTracking(true);
     });
 
-    testWidgets('displays Visionnages section with list of viewings', (tester) async {
+    testWidgets('displays Visionnages section with list of viewings', (
+      tester,
+    ) async {
       final viewings = [
         SeenItem(
           id: 10,
@@ -194,14 +218,19 @@ void main() {
           seenDate: DateTime(2023, 6, 20, 21, 30),
         ),
       ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => viewings);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => viewings);
       await searchProvider.loadAllSeenStatus();
 
       await tester.pumpWidget(buildWidget());
       await tester.pump();
 
       expect(find.byKey(const Key('movie_seen_summary')), findsNothing);
-      expect(find.byKey(const Key('movie_visionnages_section')), findsOneWidget);
+      expect(
+        find.byKey(const Key('movie_visionnages_section')),
+        findsOneWidget,
+      );
       expect(find.text('Viewings'), findsOneWidget);
       expect(find.textContaining('1st viewing'), findsOneWidget);
       expect(find.textContaining('2nd viewing'), findsOneWidget);
@@ -219,7 +248,9 @@ void main() {
           seenDate: DateTime(2023, 1, 15, 20, 0),
         ),
       ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => viewings);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => viewings);
       await searchProvider.loadAllSeenStatus();
 
       await tester.pumpWidget(buildWidget());
@@ -238,32 +269,37 @@ void main() {
       verify(() => mockRepository.updateSeenEntry(any())).called(1);
     });
 
-    testWidgets('deleting a viewing asks confirmation and calls deleteSeenEntry', (tester) async {
-      final viewings = [
-        SeenItem(
-          id: 10,
-          tmdbId: 1,
-          type: MediaType.movie,
-          title: 'Inception',
-          seenDate: DateTime(2023, 1, 15, 20, 0),
-        ),
-      ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => viewings);
-      await searchProvider.loadAllSeenStatus();
+    testWidgets(
+      'deleting a viewing asks confirmation and calls deleteSeenEntry',
+      (tester) async {
+        final viewings = [
+          SeenItem(
+            id: 10,
+            tmdbId: 1,
+            type: MediaType.movie,
+            title: 'Inception',
+            seenDate: DateTime(2023, 1, 15, 20, 0),
+          ),
+        ];
+        when(
+          () => mockRepository.getSeenItems(),
+        ).thenAnswer((_) async => viewings);
+        await searchProvider.loadAllSeenStatus();
 
-      await tester.pumpWidget(buildWidget());
-      await tester.pump();
+        await tester.pumpWidget(buildWidget());
+        await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.delete_outline));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Remove log?'), findsOneWidget);
-      expect(find.text('Delete'), findsOneWidget);
+        expect(find.text('Remove log?'), findsOneWidget);
+        expect(find.text('Delete'), findsOneWidget);
 
-      await tester.tap(find.text('Delete'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
 
-      verify(() => mockRepository.deleteSeenEntry(10)).called(1);
-    });
+        verify(() => mockRepository.deleteSeenEntry(10)).called(1);
+      },
+    );
   });
 }

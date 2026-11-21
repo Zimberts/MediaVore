@@ -63,12 +63,8 @@ void main() {
 
     test('breaks tie by TMDB vote average', () {
       // Both candidates get 2 votes, but Movie 2 has higher TMDB rating
-      final c1 = TogetherVoteCandidate(
-        item: item(1, 'Movie 1', rating: 7.0),
-      );
-      final c2 = TogetherVoteCandidate(
-        item: item(2, 'Movie 2', rating: 8.5),
-      );
+      final c1 = TogetherVoteCandidate(item: item(1, 'Movie 1', rating: 7.0));
+      final c2 = TogetherVoteCandidate(item: item(2, 'Movie 2', rating: 8.5));
 
       final engine = TogetherVoteEngine(
         candidates: [c1, c2],
@@ -94,31 +90,30 @@ void main() {
       expect(engine.isUnanimous(results[0]), isTrue);
     });
 
-    test('detects tie for first place when both approvals and rating match', () {
-      final c1 = TogetherVoteCandidate(
-        item: item(1, 'Movie 1', rating: 8.0),
-      );
-      final c2 = TogetherVoteCandidate(
-        item: item(2, 'Movie 2', rating: 8.0),
-      );
+    test(
+      'detects tie for first place when both approvals and rating match',
+      () {
+        final c1 = TogetherVoteCandidate(item: item(1, 'Movie 1', rating: 8.0));
+        final c2 = TogetherVoteCandidate(item: item(2, 'Movie 2', rating: 8.0));
 
-      final engine = TogetherVoteEngine(
-        candidates: [c1, c2],
-        participants: ['Host', 'Alice'],
-      );
+        final engine = TogetherVoteEngine(
+          candidates: [c1, c2],
+          participants: ['Host', 'Alice'],
+        );
 
-      engine.startTurn();
-      engine.castVote(true);
-      engine.castVote(true);
+        engine.startTurn();
+        engine.castVote(true);
+        engine.castVote(true);
 
-      engine.startTurn();
-      engine.castVote(true);
-      engine.castVote(true);
+        engine.startTurn();
+        engine.castVote(true);
+        engine.castVote(true);
 
-      final results = engine.getResults();
-      expect(results[0].isTied, isTrue);
-      expect(results[1].isTied, isTrue);
-    });
+        final results = engine.getResults();
+        expect(results[0].isTied, isTrue);
+        expect(results[1].isTied, isTrue);
+      },
+    );
 
     test('handles single candidate without error', () {
       final c1 = TogetherVoteCandidate(item: item(1, 'Solo'));

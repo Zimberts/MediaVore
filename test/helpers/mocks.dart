@@ -28,7 +28,8 @@ class MockMediaRepository extends Mock implements MediaRepository {
     try {
       return super.noSuchMethod(
             Invocation.method(#getSeriesRewatchStart, [tmdbId]),
-          ) as DateTime?;
+          )
+          as DateTime?;
     } catch (_) {
       return _rewatchStarts[tmdbId];
     }
@@ -39,7 +40,8 @@ class MockMediaRepository extends Mock implements MediaRepository {
     try {
       return super.noSuchMethod(
             Invocation.method(#setSeriesRewatchStart, [tmdbId, date]),
-          ) as Future<void>;
+          )
+          as Future<void>;
     } catch (_) {
       _rewatchStarts[tmdbId] = date;
       return Future.value();
@@ -51,7 +53,8 @@ class MockMediaRepository extends Mock implements MediaRepository {
     try {
       return super.noSuchMethod(
             Invocation.method(#clearSeriesRewatchStart, [tmdbId]),
-          ) as Future<void>;
+          )
+          as Future<void>;
     } catch (_) {
       _rewatchStarts.remove(tmdbId);
       return Future.value();
@@ -63,7 +66,8 @@ class MockMediaRepository extends Mock implements MediaRepository {
     try {
       return super.noSuchMethod(
             Invocation.method(#prefetchSeasons, [tvId, seasonNumbers]),
-          ) as Future<void>;
+          )
+          as Future<void>;
     } catch (_) {
       return Future.value();
     }
@@ -75,9 +79,8 @@ class MockMediaRepository extends Mock implements MediaRepository {
   @override
   ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress {
     try {
-      return super.noSuchMethod(
-            Invocation.getter(#cacheWarmupProgress),
-          ) as ValueListenable<CacheWarmupProgress?>;
+      return super.noSuchMethod(Invocation.getter(#cacheWarmupProgress))
+          as ValueListenable<CacheWarmupProgress?>;
     } catch (_) {
       return _cacheWarmupProgress;
     }
@@ -89,6 +92,7 @@ class MockMediaRepository extends Mock implements MediaRepository {
       super.noSuchMethod(Invocation.method(#cancelCacheWarmup, []));
     } catch (_) {}
   }
+
   @override
   Future<List<QuickAddItem>> getQuickAddItems() {
     try {
@@ -324,9 +328,7 @@ class MockMediaRepository extends Mock implements MediaRepository {
   @override
   Future<List<MediaItem?>> getCachedMediaItems(List<(int, MediaType)> keys) {
     try {
-      return super.noSuchMethod(
-            Invocation.method(#getCachedMediaItems, [keys]),
-          )
+      return super.noSuchMethod(Invocation.method(#getCachedMediaItems, [keys]))
           as Future<List<MediaItem?>>;
     } catch (_) {
       return Future.value(<MediaItem?>[]);

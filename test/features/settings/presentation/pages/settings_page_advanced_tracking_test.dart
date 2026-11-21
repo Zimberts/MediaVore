@@ -127,42 +127,44 @@ void main() {
     expect(texts, contains('Données de streaming fournies par JustWatch.'));
   });
 
-  testWidgets('SettingsPage displays previous episodes setting and updates value', (
-    WidgetTester tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets(
+    'SettingsPage displays previous episodes setting and updates value',
+    (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
+      when(
+        () => mockPrefs.setString(any(), any()),
+      ).thenAnswer((_) async => true);
 
-    await tester.pumpWidget(
-      ChangeNotifierProvider<SettingsProvider>.value(
-        value: settings,
-        child: const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: SettingsPage(),
+      await tester.pumpWidget(
+        ChangeNotifierProvider<SettingsProvider>.value(
+          value: settings,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: SettingsPage(),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    final dropdownFinder = find.byType(DropdownButton<PreviousEpisodesBehavior>);
-    await tester.scrollUntilVisible(dropdownFinder, 200);
-    expect(dropdownFinder, findsOneWidget);
+      final dropdownFinder = find.byType(
+        DropdownButton<PreviousEpisodesBehavior>,
+      );
+      await tester.scrollUntilVisible(dropdownFinder, 200);
+      expect(dropdownFinder, findsOneWidget);
 
-    await tester.tap(dropdownFinder);
-    await tester.pumpAndSettle();
+      await tester.tap(dropdownFinder);
+      await tester.pumpAndSettle();
 
-    // Select "All seen"
-    await tester.tap(find.text('All seen').last);
-    await tester.pumpAndSettle();
+      // Select "All seen"
+      await tester.tap(find.text('All seen').last);
+      await tester.pumpAndSettle();
 
-    expect(settings.previousEpisodes, PreviousEpisodesBehavior.all);
-    verify(
-      () => mockPrefs.setString(
-        SettingsProvider.previousEpisodesKey,
-        'all',
-      ),
-    ).called(1);
-  });
+      expect(settings.previousEpisodes, PreviousEpisodesBehavior.all);
+      verify(
+        () => mockPrefs.setString(SettingsProvider.previousEpisodesKey, 'all'),
+      ).called(1);
+    },
+  );
 }

@@ -21,7 +21,8 @@ void main() {
       );
 
       // Should be filtered out
-      final shouldFilter = oldEpisode.releaseDate != null &&
+      final shouldFilter =
+          oldEpisode.releaseDate != null &&
           oldEpisode.type == MediaType.tv &&
           oldEpisode.releaseDate!.isBefore(thirtyDaysAgo);
 
@@ -45,7 +46,8 @@ void main() {
       );
 
       // Should NOT be filtered out
-      final shouldFilter = recentEpisode.releaseDate != null &&
+      final shouldFilter =
+          recentEpisode.releaseDate != null &&
           recentEpisode.type == MediaType.tv &&
           recentEpisode.releaseDate!.isBefore(thirtyDaysAgo);
 
@@ -68,7 +70,8 @@ void main() {
         autoNotify: true,
       );
 
-      final shouldFilter = boundaryEpisode.releaseDate != null &&
+      final shouldFilter =
+          boundaryEpisode.releaseDate != null &&
           boundaryEpisode.type == MediaType.tv &&
           boundaryEpisode.releaseDate!.isBefore(thirtyDaysAgo);
 
@@ -93,7 +96,8 @@ void main() {
       );
 
       // Should NOT be filtered (movies are not filtered)
-      final shouldFilter = oldMovie.releaseDate != null &&
+      final shouldFilter =
+          oldMovie.releaseDate != null &&
           oldMovie.type == MediaType.tv &&
           oldMovie.releaseDate!.isBefore(thirtyDaysAgo);
 
@@ -117,7 +121,8 @@ void main() {
       );
 
       // Should NOT be filtered (no date to check)
-      final shouldFilter = unplannedShow.releaseDate != null &&
+      final shouldFilter =
+          unplannedShow.releaseDate != null &&
           unplannedShow.type == MediaType.tv &&
           unplannedShow.releaseDate!.isBefore(thirtyDaysAgo);
 

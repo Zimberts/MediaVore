@@ -32,24 +32,20 @@ void main() {
 
   setUp(() {
     mockRepository = MockMediaRepository();
-    when(() => mockRepository.getAllListNames()).thenAnswer(
-      (_) async => ['watchlist'],
-    );
-    when(() => mockRepository.getListEntries(any())).thenAnswer(
-      (_) async => [],
-    );
-    when(() => mockRepository.getListPreviews(any())).thenAnswer(
-      (_) async => [],
-    );
-    when(() => mockRepository.getWatchlistEntries()).thenAnswer(
-      (_) async => [],
-    );
-    when(() => mockRepository.getLikedEntries()).thenAnswer(
-      (_) async => [],
-    );
-    when(() => mockRepository.addToList(any(), any())).thenAnswer(
-      (_) async {},
-    );
+    when(
+      () => mockRepository.getAllListNames(),
+    ).thenAnswer((_) async => ['watchlist']);
+    when(
+      () => mockRepository.getListEntries(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getListPreviews(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.getWatchlistEntries(),
+    ).thenAnswer((_) async => []);
+    when(() => mockRepository.getLikedEntries()).thenAnswer((_) async => []);
+    when(() => mockRepository.addToList(any(), any())).thenAnswer((_) async {});
     when(
       () => mockRepository.removeFromList(any(), any(), any()),
     ).thenAnswer((_) async {});
@@ -76,59 +72,62 @@ void main() {
         theme: DefaultLightPalette().toThemeData(),
         builder: (context, child) => AppMessageHost(child: child!),
         home: Scaffold(
-          body: WatchlistIconButton(
-            item: tMovie,
-            onImage: onImage,
-          ),
+          body: WatchlistIconButton(item: tMovie, onImage: onImage),
         ),
       ),
     );
   }
 
   group('WatchlistIconButton', () {
-    testWidgets('shows bookmark border when not in watchlist and updates immediately on tap', (
-      tester,
-    ) async {
-      await libraryProvider.init();
-      final completer = Completer<void>();
-      when(() => mockRepository.addToList(any(), any())).thenAnswer((_) => completer.future);
+    testWidgets(
+      'shows bookmark border when not in watchlist and updates immediately on tap',
+      (tester) async {
+        await libraryProvider.init();
+        final completer = Completer<void>();
+        when(
+          () => mockRepository.addToList(any(), any()),
+        ).thenAnswer((_) => completer.future);
 
-      await tester.pumpWidget(buildWidget());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildWidget());
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
-      expect(find.byIcon(Icons.bookmark), findsNothing);
+        expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+        expect(find.byIcon(Icons.bookmark), findsNothing);
 
-      await tester.tap(find.byType(WatchlistIconButton));
-      await tester.pump();
+        await tester.tap(find.byType(WatchlistIconButton));
+        await tester.pump();
 
-      // Should flip to bookmark icon immediately before addToList completes
-      expect(find.byIcon(Icons.bookmark), findsOneWidget);
-      expect(find.byIcon(Icons.bookmark_border), findsNothing);
+        // Should flip to bookmark icon immediately before addToList completes
+        expect(find.byIcon(Icons.bookmark), findsOneWidget);
+        expect(find.byIcon(Icons.bookmark_border), findsNothing);
 
-      completer.complete();
-      await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.bookmark), findsOneWidget);
-    });
+        completer.complete();
+        await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.bookmark), findsOneWidget);
+      },
+    );
 
-    testWidgets('reverts to border and shows error toast when addToList throws', (
-      tester,
-    ) async {
-      await libraryProvider.init();
-      when(() => mockRepository.addToList(any(), any())).thenThrow(Exception('Isar write error'));
+    testWidgets(
+      'reverts to border and shows error toast when addToList throws',
+      (tester) async {
+        await libraryProvider.init();
+        when(
+          () => mockRepository.addToList(any(), any()),
+        ).thenThrow(Exception('Isar write error'));
 
-      await tester.pumpWidget(buildWidget());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildWidget());
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+        expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
 
-      await tester.tap(find.byType(WatchlistIconButton));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byType(WatchlistIconButton));
+        await tester.pumpAndSettle();
 
-      // Reverts back to border
-      expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
-      expect(find.byIcon(Icons.bookmark), findsNothing);
-      expect(find.byType(AppMessageHost), findsOneWidget);
-    });
+        // Reverts back to border
+        expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+        expect(find.byIcon(Icons.bookmark), findsNothing);
+        expect(find.byType(AppMessageHost), findsOneWidget);
+      },
+    );
   });
 }

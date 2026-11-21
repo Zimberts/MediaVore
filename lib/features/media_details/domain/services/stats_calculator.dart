@@ -131,11 +131,7 @@ class HallOfFameResult {
   final HallOfFameEntry? topTV;
   final HallOfFameEntry? topEpisode;
 
-  const HallOfFameResult({
-    this.topMovie,
-    this.topTV,
-    this.topEpisode,
-  });
+  const HallOfFameResult({this.topMovie, this.topTV, this.topEpisode});
 }
 
 /// Pure static calculator extracting all statistical calculations from the UI.
@@ -261,7 +257,8 @@ class StatsCalculator {
   }) {
     final Map<int, (String title, int count, int runtime)> movieCounts = {};
     final Map<int, (String title, int count, int runtime)> tvCounts = {};
-    final Map<String, (String title, int count, int runtime)> episodeCounts = {};
+    final Map<String, (String title, int count, int runtime)> episodeCounts =
+        {};
 
     for (final item in items) {
       if (item.type == MediaType.movie) {
@@ -294,9 +291,7 @@ class StatsCalculator {
       }
     }
 
-    HallOfFameEntry? toEntry(
-      (String title, int count, int runtime)? record,
-    ) {
+    HallOfFameEntry? toEntry((String title, int count, int runtime)? record) {
       if (record == null) return null;
       return HallOfFameEntry(
         title: record.$1,
@@ -404,18 +399,21 @@ class StatsCalculator {
       after2020Label,
     ];
 
-    return orderedKeys.map((key) {
-      final count = decadeCounts[key] ?? 0;
-      final ratingCount = decadeRatingCounts[key] ?? 0;
-      final avgRating = ratingCount > 0
-          ? (decadeRatingSums[key]! / ratingCount)
-          : null;
-      return DecadeStatItem(
-        decadeLabel: key,
-        count: count,
-        averageRating: avgRating,
-      );
-    }).where((item) => item.count > 0).toList();
+    return orderedKeys
+        .map((key) {
+          final count = decadeCounts[key] ?? 0;
+          final ratingCount = decadeRatingCounts[key] ?? 0;
+          final avgRating = ratingCount > 0
+              ? (decadeRatingSums[key]! / ratingCount)
+              : null;
+          return DecadeStatItem(
+            decadeLabel: key,
+            count: count,
+            averageRating: avgRating,
+          );
+        })
+        .where((item) => item.count > 0)
+        .toList();
   }
 
   /// Computes series progression (episodes seen / total episodes)

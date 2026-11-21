@@ -239,10 +239,7 @@ void main() {
         'media_type': 'movie',
         'overview': '',
         'release_date': '2015-05-15',
-        'belongs_to_collection': {
-          'id': 8945,
-          'name': 'Mad Max Collection',
-        },
+        'belongs_to_collection': {'id': 8945, 'name': 'Mad Max Collection'},
       });
 
       expect(item.collectionId, 8945);
@@ -272,21 +269,24 @@ void main() {
       expect(restored, item);
     });
 
-    test('should serialize null belongs_to_collection when item has no collection', () {
-      const item = MediaItem(
-        id: 1,
-        title: 'Standalone Film',
-        overview: '',
-        releaseDate: '2020-01-01',
-        mediaType: MediaType.movie,
-      );
+    test(
+      'should serialize null belongs_to_collection when item has no collection',
+      () {
+        const item = MediaItem(
+          id: 1,
+          title: 'Standalone Film',
+          overview: '',
+          releaseDate: '2020-01-01',
+          mediaType: MediaType.movie,
+        );
 
-      final json = item.toJson();
-      expect(json['belongs_to_collection'], isNull);
+        final json = item.toJson();
+        expect(json['belongs_to_collection'], isNull);
 
-      final restored = MediaItem.fromJson(json);
-      expect(restored.collectionId, isNull);
-      expect(restored.collectionName, isNull);
-    });
+        final restored = MediaItem.fromJson(json);
+        expect(restored.collectionId, isNull);
+        expect(restored.collectionName, isNull);
+      },
+    );
   });
 }

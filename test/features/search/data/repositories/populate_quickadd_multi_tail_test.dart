@@ -120,7 +120,9 @@ void main() {
         ],
       );
 
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
+      when(
+        () => cache.getItem(tmdbId, MediaType.tv),
+      ).thenAnswer((_) async => null);
       when(
         () => remote.getMediaItem(tmdbId, type: MediaType.tv),
       ).thenAnswer((_) async => media);
@@ -200,7 +202,9 @@ void main() {
       seasons: [TVSeason(id: 1, seasonNumber: 1, episodeCount: 5)],
     );
 
-    when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
+    when(
+      () => cache.getItem(tmdbId, MediaType.tv),
+    ).thenAnswer((_) async => null);
     when(
       () => remote.getMediaItem(tmdbId, type: MediaType.tv),
     ).thenAnswer((_) async => media);
@@ -321,7 +325,9 @@ void main() {
       when(
         () => local.getSeenStatus(tmdbId, 'tv'),
       ).thenAnswer((_) async => seenItems);
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
+      when(
+        () => cache.getItem(tmdbId, MediaType.tv),
+      ).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
         (_) async => MediaItem(
           id: tmdbId,
@@ -392,7 +398,9 @@ void main() {
             inv.namedArguments[#episodeNumber] == 2,
       );
 
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
+      when(
+        () => cache.getItem(tmdbId, MediaType.tv),
+      ).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
         (_) async => MediaItem(
           id: tmdbId,
@@ -477,7 +485,9 @@ void main() {
         ),
       ).thenAnswer((_) async => false);
 
-      when(() => cache.getItem(tmdbId, MediaType.tv)).thenAnswer((_) async => null);
+      when(
+        () => cache.getItem(tmdbId, MediaType.tv),
+      ).thenAnswer((_) async => null);
       when(() => remote.getMediaItem(tmdbId, type: MediaType.tv)).thenAnswer(
         (_) async => MediaItem(
           id: tmdbId,

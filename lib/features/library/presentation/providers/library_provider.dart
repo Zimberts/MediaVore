@@ -85,7 +85,8 @@ class LibraryProvider with ChangeNotifier {
     return _listEntries[listName]?.contains(entry) ?? false;
   }
 
-  bool isWatchlist(MediaItem item) => _watchlistIds.contains(item.id.toString());
+  bool isWatchlist(MediaItem item) =>
+      _watchlistIds.contains(item.id.toString());
 
   Future<void> toggleWatchlist(MediaItem item) async {
     await toggleInList(item, 'watchlist');
@@ -130,7 +131,9 @@ class LibraryProvider with ChangeNotifier {
           _watchlistIds.add(item.id.toString());
         }
       } else {
-        _listEntries[listName] = currentEntries.where((e) => e != entry).toList();
+        _listEntries[listName] = currentEntries
+            .where((e) => e != entry)
+            .toList();
         if (listName == 'watchlist') {
           _watchlistIds.remove(item.id.toString());
         }

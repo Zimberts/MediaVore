@@ -33,10 +33,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: PromptField(
-            initialText: 'Test',
-            onChanged: (_) {},
-          ),
+          body: PromptField(initialText: 'Test', onChanged: (_) {}),
         ),
       ),
     );
@@ -45,11 +42,7 @@ void main() {
 
     // Unmount PromptField
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: SizedBox(),
-        ),
-      ),
+      const MaterialApp(home: Scaffold(body: SizedBox())),
     );
 
     expect(find.byType(PromptField), findsNothing);

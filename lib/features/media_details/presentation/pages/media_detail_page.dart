@@ -146,12 +146,13 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
               provider
                   .getSeasonDetails(widget.item.id, s.seasonNumber)
                   .then((data) {
-                if (mounted && data['episodes'] != null) {
-                  setState(() {
-                    _episodesBySeason[s.seasonNumber] = data['episodes'];
-                  });
-                }
-              }).catchError((_) {});
+                    if (mounted && data['episodes'] != null) {
+                      setState(() {
+                        _episodesBySeason[s.seasonNumber] = data['episodes'];
+                      });
+                    }
+                  })
+                  .catchError((_) {});
             }
           }
         }

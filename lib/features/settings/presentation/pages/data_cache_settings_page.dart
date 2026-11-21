@@ -32,8 +32,9 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final cacheProvider = context.watch<CacheAdminProvider?>();
-    final searchProvider =
-        cacheProvider == null ? context.watch<SearchProvider>() : null;
+    final searchProvider = cacheProvider == null
+        ? context.watch<SearchProvider>()
+        : null;
     final dynamic provider = cacheProvider ?? searchProvider;
     final achievementProvider = context.watch<AchievementProvider>();
     final settings = context.watch<SettingsProvider>();
@@ -317,18 +318,22 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             CircularProgressIndicator(
-                              value: isImporting ? provider.importProgress : null,
+                              value: isImporting
+                                  ? provider.importProgress
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               isImporting
                                   ? provider.importStatus
                                   : _isExporting
-                                      ? context.l10n.dataExporting
-                                      : _isReadingBackup
-                                          ? context.l10n.dataReadingBackup
-                                          : context.l10n.commonProcessing,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ? context.l10n.dataExporting
+                                  : _isReadingBackup
+                                  ? context.l10n.dataReadingBackup
+                                  : context.l10n.commonProcessing,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             if (isImporting)
@@ -454,75 +459,70 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                 '${warnings.length > 5 ? '\n…' : ''}\n';
 
       showDialog(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(context.l10n.dataImportPreviewTitle),
-            content: Text(
-              context.l10n.dataImportPreviewMessage(
-                seenCount,
-                likesCount,
-                notCount,
-                listsCount,
-                warningsText,
-              ),
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.l10n.dataImportPreviewTitle),
+          content: Text(
+            context.l10n.dataImportPreviewMessage(
+              seenCount,
+              likesCount,
+              notCount,
+              listsCount,
+              warningsText,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(context.l10n.commonCancel),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  await provider.importAllData(bytes, mode: ImportMode.append);
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await provider.importAllData(bytes, mode: ImportMode.append);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.l10n.dataImportedAppended)),
+                  );
+                }
+              },
+              child: Text(context.l10n.dataAppend),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await provider.importAllData(bytes, mode: ImportMode.merge);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.l10n.dataImportedMerged)),
+                  );
+                }
+              },
+              child: Text(context.l10n.dataMerge),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                final confirmed = await _confirmReplace(context);
+                if (confirmed && context.mounted) {
+                  await provider.importAllData(bytes, mode: ImportMode.replace);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(context.l10n.dataImportedAppended),
+                        content: Text(context.l10n.dataImportedReplaced),
                       ),
                     );
                   }
-                },
-                child: Text(context.l10n.dataAppend),
+                }
+              },
+              child: Text(
+                context.l10n.dataReplace,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  await provider.importAllData(bytes, mode: ImportMode.merge);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.l10n.dataImportedMerged)),
-                    );
-                  }
-                },
-                child: Text(context.l10n.dataMerge),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  final confirmed = await _confirmReplace(context);
-                  if (confirmed && context.mounted) {
-                    await provider.importAllData(
-                      bytes,
-                      mode: ImportMode.replace,
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(context.l10n.dataImportedReplaced),
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: Text(
-                  context.l10n.dataReplace,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-          ),
-        );
+            ),
+          ],
+        ),
+      );
     }
   }
 

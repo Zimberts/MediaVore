@@ -294,10 +294,7 @@ class MediaItem extends Equatable {
             }
           : null,
       'belongs_to_collection': (collectionId != null || collectionName != null)
-          ? {
-              'id': collectionId,
-              'name': collectionName,
-            }
+          ? {'id': collectionId, 'name': collectionName}
           : null,
     };
   }

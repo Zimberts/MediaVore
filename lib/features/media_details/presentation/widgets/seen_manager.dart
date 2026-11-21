@@ -17,10 +17,7 @@ class SeenDateTimeResult {
   final DateTime date;
   final bool markPrevious;
 
-  const SeenDateTimeResult({
-    required this.date,
-    this.markPrevious = false,
-  });
+  const SeenDateTimeResult({required this.date, this.markPrevious = false});
 }
 
 /// Opens the date and time picker dialog for a viewing.
@@ -72,17 +69,17 @@ Future<({bool markAll, bool rememberChoice})?> showPreviousEpisodesDialog({
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                (markAll: false, rememberChoice: remember),
-              ),
+              onPressed: () => Navigator.pop(dialogContext, (
+                markAll: false,
+                rememberChoice: remember,
+              )),
               child: Text(l10n.seenPreviousOnlyThis),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                (markAll: true, rememberChoice: remember),
-              ),
+              onPressed: () => Navigator.pop(dialogContext, (
+                markAll: true,
+                rememberChoice: remember,
+              )),
               child: Text(l10n.seenPreviousMarkAll),
             ),
           ],
@@ -175,11 +172,7 @@ class _SeenManagerState extends State<SeenManager> {
             }
           },
           icon: isSeen ? const Icon(Icons.check, size: 18) : null,
-          label: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
         ),
       );
     }
@@ -245,11 +238,11 @@ class _SeenManagerState extends State<SeenManager> {
         ),
         tooltip: isSeen
             ? (advanced
-                ? context.l10n.seenVisionnagesSectionTitle
-                : context.l10n.seenRewatchAction)
+                  ? context.l10n.seenVisionnagesSectionTitle
+                  : context.l10n.seenRewatchAction)
             : (advanced
-                ? context.l10n.commonMarkAsSeenWithDots
-                : context.l10n.commonMarkAsSeen),
+                  ? context.l10n.commonMarkAsSeenWithDots
+                  : context.l10n.commonMarkAsSeen),
         onPressed: () {
           if (!advanced) {
             _markAsSeenImmediate(context, provider);
@@ -272,7 +265,8 @@ class _SeenManagerState extends State<SeenManager> {
   ) async {
     final item = widget.item;
     final l10n = context.l10n;
-    final isEpisode = item.mediaType == MediaType.tv &&
+    final isEpisode =
+        item.mediaType == MediaType.tv &&
         widget.seasonNumber != null &&
         widget.episodeNumber != null;
 
@@ -376,7 +370,8 @@ class _SeenManagerState extends State<SeenManager> {
     final item = widget.item;
     final seasonNumber = widget.seasonNumber;
     final episodeNumber = widget.episodeNumber;
-    final isEpisode = item.mediaType == MediaType.tv &&
+    final isEpisode =
+        item.mediaType == MediaType.tv &&
         seasonNumber != null &&
         episodeNumber != null;
 
@@ -456,10 +451,7 @@ class _SeenManagerState extends State<SeenManager> {
       title: context.l10n.seenClearHistory,
       message: context.l10n.seenClearHistoryMessage(widget.item.title),
       actions: [
-        AppDialogAction(
-          label: context.l10n.commonCancel,
-          value: false,
-        ),
+        AppDialogAction(label: context.l10n.commonCancel, value: false),
         AppDialogAction(
           label: context.l10n.seenClearAll,
           value: true,
@@ -614,8 +606,7 @@ class _EpisodeSeenHistorySheet extends StatelessWidget {
                             icon: const Icon(Icons.edit_outlined),
                             tooltip: l10n.seenEditViewing,
                             onPressed: () async {
-                              final result =
-                                  await showSeenDateTimePickerDialog(
+                              final result = await showSeenDateTimePickerDialog(
                                 context,
                                 item: item,
                                 initialDate: seenEntry.seenDate,
@@ -629,7 +620,10 @@ class _EpisodeSeenHistorySheet extends StatelessWidget {
                             },
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete_outline, color: colors.error),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: colors.error,
+                            ),
                             tooltip: l10n.commonDelete,
                             onPressed: () async {
                               final confirmed = await showAppDialog<bool>(
@@ -758,8 +752,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
         : l10n.seenLogViewing;
 
     final now = DateTime.now();
-    final calendarInitialDate =
-        _selectedDate.isAfter(now) ? now : _selectedDate;
+    final calendarInitialDate = _selectedDate.isAfter(now)
+        ? now
+        : _selectedDate;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -826,8 +821,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     onDateChanged: (date) {
                       setState(() {
                         _selectedDate = date;
-                        final locale =
-                            Localizations.localeOf(context).toString();
+                        final locale = Localizations.localeOf(
+                          context,
+                        ).toString();
                         _dateController.text = Formatters.formatInputDate(
                           date,
                           locale,
@@ -940,8 +936,9 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
                     onPressed: () {
                       try {
                         if (_isTextEntry) {
-                          final locale =
-                              Localizations.localeOf(context).toString();
+                          final locale = Localizations.localeOf(
+                            context,
+                          ).toString();
                           final parsed = Formatters.parseInputDate(
                             _dateController.text,
                             locale,
@@ -962,9 +959,7 @@ class _SeenDateTimePickerDialogState extends State<_SeenDateTimePickerDialog> {
 
                         if (result.isAfter(DateTime.now())) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.seenFutureDateError),
-                            ),
+                            SnackBar(content: Text(l10n.seenFutureDateError)),
                           );
                           return;
                         }

@@ -82,8 +82,7 @@ class _HomePageState extends State<HomePage> {
     if (_isRefreshing || provider.isNotifiedRefreshing) return;
     setState(() => _isRefreshing = true);
     try {
-      final hasTmdbKey =
-          context.read<SettingsProvider>().tmdbApiKey.isNotEmpty;
+      final hasTmdbKey = context.read<SettingsProvider>().tmdbApiKey.isNotEmpty;
       if (hasTmdbKey) {
         await provider.refreshNotifiedItems(force: true);
       }

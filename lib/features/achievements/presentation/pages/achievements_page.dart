@@ -220,12 +220,8 @@ class _AchievementsPageState extends State<AchievementsPage> {
                           ),
                           child: Text(
                             categoryTitle(context, item.categoryId),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         );
                       } else if (item is _FamilyCardItem) {
@@ -364,9 +360,7 @@ class _FamilyCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: isHighlighted
-            ? Border.all(color: catColor, width: 2)
-            : null,
+        border: isHighlighted ? Border.all(color: catColor, width: 2) : null,
       ),
       child: Card(
         margin: EdgeInsets.zero,
@@ -409,9 +403,9 @@ class _FamilyCard extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
@@ -577,9 +571,9 @@ class _TierTile extends StatelessWidget {
               Text(
                 achievement.progressLabel!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: categoryColor,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: categoryColor,
+                ),
               ),
           ],
         ],

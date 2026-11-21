@@ -14,8 +14,9 @@ class LikeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final libraryProvider = context.watch<LibraryProvider?>();
-    final searchProvider =
-        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final searchProvider = libraryProvider == null
+        ? context.watch<SearchProvider>()
+        : null;
     final isLiked = libraryProvider != null
         ? libraryProvider.isLiked(item)
         : searchProvider!.isLiked(item);

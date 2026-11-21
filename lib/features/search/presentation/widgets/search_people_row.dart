@@ -75,14 +75,14 @@ class SearchPeopleRow extends StatelessWidget {
                         CircleAvatar(
                           radius: 36,
                           backgroundColor: colors.surface2,
-                              backgroundImage: hasProfile
-                                  ? CachedNetworkImageProvider(
-                                      TmdbImageUtils.buildUrl(
-                                        person.profilePath,
-                                        size: TmdbImageSize.w185,
-                                      )!,
-                                    )
-                                  : null,
+                          backgroundImage: hasProfile
+                              ? CachedNetworkImageProvider(
+                                  TmdbImageUtils.buildUrl(
+                                    person.profilePath,
+                                    size: TmdbImageSize.w185,
+                                  )!,
+                                )
+                              : null,
                           child: hasProfile
                               ? null
                               : Text(

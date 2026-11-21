@@ -38,10 +38,8 @@ class PersonPage extends StatefulWidget {
     return Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => PersonPage(
-          personId: personId,
-          personName: personName,
-        ),
+        builder: (context) =>
+            PersonPage(personId: personId, personName: personName),
       ),
     );
   }
@@ -322,10 +320,7 @@ class _FilmographyGrid extends StatelessWidget {
   final List<MediaItem> items;
   final List<SeenItem> seenItems;
 
-  const _FilmographyGrid({
-    required this.items,
-    required this.seenItems,
-  });
+  const _FilmographyGrid({required this.items, required this.seenItems});
 
   @override
   Widget build(BuildContext context) {

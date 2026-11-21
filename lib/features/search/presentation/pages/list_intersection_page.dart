@@ -179,11 +179,7 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
               Expanded(
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.person_outline,
-                      size: 20,
-                      color: colors.text2,
-                    ),
+                    Icon(Icons.person_outline, size: 20, color: colors.text2),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -441,8 +437,7 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
             child: Text(dialogContext.l10n.commonCancel),
           ),
           FilledButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, listName.trim()),
+            onPressed: () => Navigator.pop(dialogContext, listName.trim()),
             child: Text(dialogContext.l10n.commonSave),
           ),
         ],

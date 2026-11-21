@@ -65,7 +65,10 @@ class ListIntersectionCalculator {
   /// - [almostEntries]: items present in N-1 lists (present only when N >= 3).
   /// - [participantInitials]: participant initials for each item.
   static MultiIntersectionResult multiIntersect({
-    required List<({String name, String initials, List<SharedMediaEntry> entries})> lists,
+    required List<
+      ({String name, String initials, List<SharedMediaEntry> entries})
+    >
+    lists,
     MediaType? typeFilter,
     bool hideSeen = false,
     Set<(int id, MediaType type)> seenKeys = const {},
@@ -87,7 +90,9 @@ class ListIntersectionCalculator {
         if (typeFilter != null && entry.type != typeFilter) continue;
         if (hideSeen && seenKeys.contains((entry.id, entry.type))) continue;
         if (seenForParticipant.add(entry)) {
-          entryToInitials.putIfAbsent(entry, () => <String>{}).add(participant.initials);
+          entryToInitials
+              .putIfAbsent(entry, () => <String>{})
+              .add(participant.initials);
         }
       }
     }
