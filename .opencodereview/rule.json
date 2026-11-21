@@ -1,0 +1,32 @@
+{
+  "include": [
+    "lib/l10n/*.arb"
+  ],
+  "exclude": [
+    "lib/l10n/generated/**",
+    "**/*.g.dart",
+    "**/*.config.dart"
+  ],
+  "rules": [
+    {
+      "path": "lib/**/*.dart",
+      "rule": "MediaVore project rules (Flutter/Dart, see CLAUDE.md). In addition to the generic checklist, check:\n\n## Async and state\n- A future started without `await` (`unawaited(...)`, `.then`, a fire-and-forget closure) whose side effects are read right after by the caller (e.g. a provider reloading notifications or quick-add items from the DB) is a stale-state bug. Flag it and name the reader.\n- Optimistic UI updates must roll back only their own change; restoring a snapshot taken before the await erases concurrent changes. Flag buttons that stay enabled while their async action runs if a double tap can race.\n- After an `await` in a widget or State, `context` and `setState` require a `mounted` / `context.mounted` check.\n- Memoisation of network results should also memoise failures when the loop would otherwise retry the same failing call per item (offline case).\n\n## Architecture\n- `lib/features/<feature>/domain` imports neither `data` nor `presentation`; `data` does not import `presentation`.\n- No `dynamic` duck typing between providers: use a typed interface.\n- Decoded JSON is read through explicit casts or the project's typed JSON helpers, never through calls on `dynamic`.\n\n## Conventions\n- `debugPrint`, never `print`.\n- User-facing text comes from `context.l10n.<key>` (ARB files), never a hardcoded string.\n- Persistence uses `isar_community` (`package:isar_community/isar.dart`), never the upstream `isar` package.\n- Generated files (`*.g.dart`, `*.config.dart`, `lib/l10n/generated/`) are never hand-edited.\n- Zero duplication: flag copy-pasted logic that an existing helper already covers.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "test/**/*.dart",
+      "rule": "MediaVore test rules (see CLAUDE.md, Tests):\n- Test files mirror the source path and end in `_test.dart`; `group(...)` + `test('should ...')`.\n- Mocks use `mocktail`; shared mocks live in `test/helpers/mocks.dart`.\n- When the code under test fires work without awaiting it, a test must check the observable order (what the caller reads afterwards), not only that the call happened.\n- Flag tests that only assert a mock was called while the behaviour under review is the resulting state.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "lib/l10n/*.arb",
+      "rule": "Localization files. `app_en.arb` is the template; every key added, renamed or removed there must change identically in `app_fr.arb`. Placeholders (names and types in `@key`) must match between languages and with their use in Dart. A key that no Dart code reads any more must be removed. French strings follow the existing style: « » quotes and a space before : ; ! ?.",
+      "merge_system_rule": false
+    },
+    {
+      "path": ".github/workflows/*.yml",
+      "rule": "GitHub Actions workflows: pin third-party actions to a major version or SHA, keep `permissions` minimal (read-only unless a job writes), never print secrets, keep the Flutter version in a single `FLUTTER_VERSION` env. Checks that gate merges must not use `continue-on-error`.",
+      "merge_system_rule": true
+    }
+  ]
+}
