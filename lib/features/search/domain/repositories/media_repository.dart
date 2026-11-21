@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/liked_item_info.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
@@ -151,7 +152,15 @@ abstract class MediaRepository {
   Future<void> clearCache({required bool complete});
 
   /// Manually triggers a full cache fill (pre-caching lists and recent seen).
+  /// Completes early when [cancelCacheWarmup] is called.
   Future<void> fillCache();
+
+  /// Progress of the running cache warm-up (automatic or [fillCache]);
+  /// `null` when none is running.
+  ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress;
+
+  /// Stops the running cache warm-up once the titles in progress are done.
+  void cancelCacheWarmup();
 
   /// Drops TMDB data cached in a previous app language and re-fetches saved
   /// items in the current one. Safe to call when nothing changed. Returns
@@ -496,4 +505,28 @@ class QuickAddOmission {
     this.tailEpisode,
     required this.reason,
   });
+}
+
+/// Titles refreshed so far by a cache warm-up, out of [total].
+@immutable
+class CacheWarmupProgress {
+  final int done;
+  final int total;
+
+  const CacheWarmupProgress(this.done, this.total);
+
+  /// Between 0 and 1; 1 for an empty run.
+  double get fraction => total == 0 ? 1 : done / total;
+
+  @override
+  bool operator ==(Object other) =>
+      other is CacheWarmupProgress &&
+      other.done == done &&
+      other.total == total;
+
+  @override
+  int get hashCode => Object.hash(done, total);
+
+  @override
+  String toString() => 'CacheWarmupProgress($done/$total)';
 }

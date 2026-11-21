@@ -80,6 +80,9 @@ void main() {
     ).thenAnswer((_) async {});
 
     final provider = MockSearchProvider();
+    final warmupProgress = ValueNotifier<CacheWarmupProgress?>(null);
+    when(() => provider.cacheWarmupProgress).thenReturn(warmupProgress);
+    when(() => provider.cancelCacheFill()).thenReturn(null);
     when(() => provider.isCacheLoading).thenReturn(false);
     when(() => provider.isDbSizeLoading).thenReturn(false);
     when(() => provider.isImporting).thenReturn(false);
@@ -125,10 +128,30 @@ void main() {
     );
     await tester.pump();
     expect(find.byType(DataCacheSettingsPage), findsOneWidget);
+    expect(find.text('Fill Cache'), findsOneWidget);
+
+    // A running warm-up shows its progress and can be cancelled.
+    warmupProgress.value = const CacheWarmupProgress(3, 10);
+    await tester.pump();
+    expect(find.text('Fill Cache'), findsNothing);
+    expect(find.text('Caching titles: 3 / 10'), findsOneWidget);
+    final bar = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(bar.value, closeTo(0.3, 1e-9));
+    await tester.tap(find.text('Cancel'));
+    verify(() => provider.cancelCacheFill()).called(1);
+
+    warmupProgress.value = null;
+    await tester.pump();
+    expect(find.text('Fill Cache'), findsOneWidget);
   });
 
   testWidgets('shows loading overlay when isImporting is true', (tester) async {
     final provider = MockSearchProvider();
+    final warmupProgress = ValueNotifier<CacheWarmupProgress?>(null);
+    when(() => provider.cacheWarmupProgress).thenReturn(warmupProgress);
+    when(() => provider.cancelCacheFill()).thenReturn(null);
     when(() => provider.isCacheLoading).thenReturn(false);
     when(() => provider.isDbSizeLoading).thenReturn(false);
     when(() => provider.isImporting).thenReturn(true);

@@ -143,8 +143,12 @@ class MediaRepositoryImpl implements MediaRepository {
   @override
   Future<bool> applyLanguageChange() => _lifecycle.applyLanguageChange();
 
-  /// Stops the in-flight cache warm-up after the current item.
+  @override
   void cancelCacheWarmup() => _warmup.cancel();
+
+  @override
+  ValueListenable<CacheWarmupProgress?> get cacheWarmupProgress =>
+      _warmup.progress;
 
   @override
   Future<List<MediaItem>> searchMedia(

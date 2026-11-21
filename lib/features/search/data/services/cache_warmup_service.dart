@@ -1,14 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/utils/bounded_concurrency.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/search/data/services/media_details_service.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/data/services/notification_refresh_service.dart';
 
 /// Background filling/refreshing of the TMDB cache from the saved lists, seen
 /// history and likes, followed by a cleanup of unused entries.
 ///
-/// One run at a time; [cancel] stops the in-flight run after its current item.
+/// One run at a time; [cancel] stops the in-flight run once the titles
+/// being refreshed are done.
 class CacheWarmupService {
   final MediaListLocalDataSource localDataSource;
   final MediaCache cache;
@@ -18,6 +21,12 @@ class CacheWarmupService {
   final bool Function()? hasCredential;
   final MediaDetailsService details;
   final NotificationRefreshService notifications;
+
+  /// Progress of the running warm-up; `null` when none is running.
+  final ValueNotifier<CacheWarmupProgress?> progress = ValueNotifier(null);
+
+  /// Titles refreshed in parallel during a warm-up.
+  static const int concurrency = 6;
 
   /// In-flight warm-up, shared by concurrent callers.
   Future<bool>? _warmup;
@@ -36,7 +45,7 @@ class CacheWarmupService {
     this.hasCredential,
   });
 
-  /// Stops the in-flight cache warm-up after the current item.
+  /// Stops the in-flight cache warm-up once the titles in progress are done.
   void cancel() => _warmupGeneration++;
 
   /// Runs the warm-up once at a time; returns whether this call started a
@@ -59,6 +68,92 @@ class CacheWarmupService {
     }
   }
 
+  /// Builds the deduplicated work list (one task per title), in the order
+  /// lists, seen history, likes, and fills [keysToKeep] with the cache keys
+  /// the cleanup must keep.
+  Future<List<_WarmupTask>> _planTasks(Set<String> keysToKeep) async {
+    final tasks = <String, _WarmupTask>{};
+    _WarmupTask task(int id, String type) {
+      final mediaType = type == 'movie' ? MediaType.movie : MediaType.tv;
+      return tasks.putIfAbsent(
+        '${mediaType.name}:$id',
+        () => _WarmupTask(id, mediaType),
+      );
+    }
+
+    // 1. Every saved list item, with all its seasons.
+    for (final listName in await localDataSource.getAllListNames()) {
+      for (final item in await localDataSource.getListItems(listName)) {
+        final t = task(item.id, item.type);
+        keysToKeep.add('${t.type.name}:${item.id}');
+        t.allSeasons = true;
+      }
+    }
+
+    // 2. Seen items: recent ones (with their season), those missing a
+    // poster, and older ones with incomplete cached metadata.
+    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+    final checkedSeenTitles = <String>{};
+    for (final seen in await localDataSource.getAllSeenItems()) {
+      keysToKeep.add('${seen.type}:${seen.tmdbId}');
+      final isRecent = seen.seenDate.isAfter(thirtyDaysAgo);
+      final isMissingPoster = seen.posterPath == null;
+      if (isRecent || isMissingPoster) {
+        final t = task(seen.tmdbId, seen.type);
+        if (isMissingPoster) t.fixPoster = true;
+        if (isRecent && t.type == MediaType.tv && seen.seasonNumber != null) {
+          t.seasons.add(seen.seasonNumber!);
+        }
+      } else if (checkedSeenTitles.add('${seen.type}:${seen.tmdbId}')) {
+        final type = seen.type == 'movie' ? MediaType.movie : MediaType.tv;
+        final cached = await cache.getDetails(seen.tmdbId, type);
+        if (cached == null || !cached.item.isComplete) {
+          task(seen.tmdbId, seen.type);
+        }
+      }
+    }
+
+    // 3. Liked items.
+    for (final liked in await localDataSource.getLikedItems()) {
+      keysToKeep.add('${liked.type}:${liked.tmdbId}');
+      task(liked.tmdbId, liked.type);
+    }
+    return tasks.values.toList();
+  }
+
+  /// Refreshes one title: details, missing poster in the seen history, then
+  /// its seasons. Failures are logged and skip the rest of the title.
+  Future<void> _refresh(_WarmupTask task) async {
+    try {
+      final mediaDetails = await details.getMediaDetails(
+        task.id,
+        type: task.type,
+      );
+      final posterPath = mediaDetails.item.posterPath;
+      if (task.fixPoster && posterPath != null) {
+        await localDataSource.updatePosterPath(
+          task.id,
+          task.type.name,
+          posterPath,
+        );
+      }
+      if (task.type != MediaType.tv) return;
+      final seasons = {
+        if (task.allSeasons)
+          ...?mediaDetails.item.seasons?.map((s) => s.seasonNumber),
+        ...task.seasons,
+      };
+      if (seasons.isNotEmpty) {
+        await details.prefetchSeasons(task.id, seasons);
+      }
+    } catch (e) {
+      debugPrint(
+        '[Repo] _initCache refresh of ${task.type.name} '
+        '${task.id} failed: $e',
+      );
+    }
+  }
+
   /// Fills/refreshes the cache. Returns false if cancelled or failed.
   Future<bool> _initCache(int generation) async {
     bool cancelled() => generation != _warmupGeneration;
@@ -68,94 +163,20 @@ class CacheWarmupService {
     }
     try {
       debugPrint('[Repo] Starting background _initCache...');
-      // 1. Populate/Refresh cache with items from all lists
-      final allListNames = await localDataSource.getAllListNames();
-      final Set<String> keysToKeep = {};
+      final keysToKeep = <String>{};
+      final tasks = await _planTasks(keysToKeep);
+      if (cancelled()) return false;
+      var done = 0;
+      progress.value = CacheWarmupProgress(0, tasks.length);
 
-      for (final listName in allListNames) {
-        final items = await localDataSource.getListItems(listName);
-        for (final item in items) {
-          if (cancelled()) return false;
-          final type = item.type == 'movie' ? MediaType.movie : MediaType.tv;
-          keysToKeep.add('${type.name}:${item.id}');
-
-          try {
-            final mediaDetails = await details.getMediaDetails(
-              item.id,
-              type: type,
-            );
-            final seasons = mediaDetails.item.seasons;
-            if (type == MediaType.tv && seasons != null && !cancelled()) {
-              await details.prefetchSeasons(
-                item.id,
-                seasons.map((s) => s.seasonNumber),
-              );
-            }
-          } catch (e) {
-            debugPrint('[Repo] _initCache list item refresh failed: $e');
-          }
-        }
-      }
-
-      // 2. Seen items logic
-      final seenItems = await localDataSource.getAllSeenItems();
-      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
-      final checkedTitles = <(int, MediaType)>{};
-
-      for (final seen in seenItems) {
-        if (cancelled()) return false;
-        final type = seen.type == 'movie' ? MediaType.movie : MediaType.tv;
-        keysToKeep.add('${seen.type}:${seen.tmdbId}');
-
-        final isRecent = seen.seenDate.isAfter(thirtyDaysAgo);
-        final isMissingPoster = seen.posterPath == null;
-
-        if (isRecent || isMissingPoster) {
-          checkedTitles.add((seen.tmdbId, type));
-          try {
-            final mediaDetails = await details.getMediaDetails(
-              seen.tmdbId,
-              type: type,
-            );
-            if (isMissingPoster && mediaDetails.item.posterPath != null) {
-              await localDataSource.updatePosterPath(
-                seen.tmdbId,
-                seen.type,
-                mediaDetails.item.posterPath!,
-              );
-            }
-            if (isRecent && type == MediaType.tv && seen.seasonNumber != null) {
-              await details.getSeasonDetails(seen.tmdbId, seen.seasonNumber!);
-            }
-          } catch (e) {
-            debugPrint('[Repo] _initCache seen item refresh failed: $e');
-          }
-        } else if (checkedTitles.add((seen.tmdbId, type))) {
-          try {
-            final cached = await cache.getDetails(seen.tmdbId, type);
-            if (cached == null || !cached.item.isComplete) {
-              await details.getMediaDetails(seen.tmdbId, type: type);
-            }
-          } catch (e) {
-            debugPrint(
-              '[Repo] _initCache incomplete seen item refresh failed: $e',
-            );
-          }
-        }
-      }
-
-      // 3. Liked items
-      final likedItems = await localDataSource.getLikedItems();
-      for (final liked in likedItems) {
-        if (cancelled()) return false;
-        keysToKeep.add('${liked.type}:${liked.tmdbId}');
-        final type = liked.type == 'movie' ? MediaType.movie : MediaType.tv;
-        try {
-          await details.getMediaDetails(liked.tmdbId, type: type);
-        } catch (e) {
-          debugPrint('[Repo] _initCache liked item refresh failed: $e');
-        }
-      }
+      // Titles are refreshed [concurrency] at a time; the TMDB Dio keeps the
+      // request rate under the API limit (RateLimitInterceptor).
+      await mapWithConcurrency(tasks, concurrency, (task) async {
+        if (cancelled()) return;
+        await _refresh(task);
+        progress.value = CacheWarmupProgress(++done, tasks.length);
+      });
+      if (cancelled()) return false;
 
       // 4. Refresh notification dates from network in the background
       if (cancelled()) return false;
@@ -172,6 +193,26 @@ class CacheWarmupService {
     } catch (e) {
       debugPrint('[Repo] Background _initCache error: $e');
       return false;
+    } finally {
+      progress.value = null;
     }
   }
+}
+
+/// One title to refresh during a warm-up, merged across lists, seen history
+/// and likes.
+class _WarmupTask {
+  final int id;
+  final MediaType type;
+
+  /// Refresh every season listed in the details (saved list items).
+  bool allSeasons = false;
+
+  /// Seasons to refresh in any case (recently seen episodes).
+  final Set<int> seasons = {};
+
+  /// Copy the poster to seen-history rows that lack one.
+  bool fixPoster = false;
+
+  _WarmupTask(this.id, this.type);
 }

@@ -115,6 +115,13 @@
   "dataCleanupCacheMessage": "This will remove search results and details older than 60 days that are not in your lists.",
   "dataFillCache": "Fill Cache",
   "dataFillCacheSubtitle": "Pre-cache all items in your lists and recent history for offline use.",
+  "dataCachingTitles": "Caching titles: {done} / {total}",
+  "@dataCachingTitles": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
   "dataWipeCache": "Wipe All Cache",
   "dataWipeCacheSubtitle": "Delete everything from cache.",
   "dataWipeCacheMessage": "This will delete ALL cached posters and details. You will need internet to see them again.",

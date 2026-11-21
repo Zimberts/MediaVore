@@ -24,6 +24,10 @@ class MediaDetailsService {
   /// callers (UI + background cache warm-up) share one set of remote calls.
   final Map<String, Future<MediaDetails>> _inFlightDetails = {};
 
+  /// In-flight [getCollectionParts] requests keyed by `collectionId`, so
+  /// films of the same saga share one collection lookup.
+  final Map<int, Future<List<MediaItem>?>> _inFlightCollections = {};
+
   MediaDetailsService({required this.remoteDataSource, required this.cache});
 
   /// Replaces search/discover rows by their full `/movie|tv/{id}` item
@@ -121,16 +125,25 @@ class MediaDetailsService {
 
     // If this item belongs to a collection, fetch collection parts (saga)
     List<MediaItem>? collectionParts;
-    if (item.collectionId != null) {
-      collectionParts = cache.getCachedCollection(item.collectionId!);
+    final collectionId = item.collectionId;
+    if (collectionId != null) {
+      collectionParts = cache.getCachedCollection(collectionId);
       if (collectionParts == null) {
+        final future = _inFlightCollections.putIfAbsent(collectionId, () async {
+          try {
+            final parts = await remoteDataSource.getCollectionParts(
+              collectionId,
+            );
+            cache.cacheCollectionParts(collectionId, parts);
+            return parts;
+          } catch (_) {
+            return null;
+          }
+        });
         try {
-          collectionParts = await remoteDataSource.getCollectionParts(
-            item.collectionId!,
-          );
-          cache.cacheCollectionParts(item.collectionId!, collectionParts);
-        } catch (_) {
-          collectionParts = null;
+          collectionParts = await future;
+        } finally {
+          _inFlightCollections.remove(collectionId);
         }
       }
     }
@@ -195,6 +208,7 @@ class MediaDetailsService {
 
   /// Seasons of ongoing series gain episodes over time, so a cached copy older
   /// than a day is re-fetched (the stale copy remains the offline fallback).
+  /// Older completed seasons without recently aired or undated episodes are kept.
   Future<bool> _isOngoingSeasonStale(int tvId, int seasonNumber) async {
     final item = await cache.getItem(tvId, MediaType.tv);
     final status = item?.status?.toLowerCase();
@@ -203,7 +217,33 @@ class MediaDetailsService {
     }
     final updatedAt = await cache.getSeasonUpdateDate(tvId, seasonNumber);
     if (updatedAt == null) return false;
-    return DateTime.now().difference(updatedAt) >= const Duration(days: 1);
+    if (DateTime.now().difference(updatedAt) < const Duration(days: 1)) {
+      return false;
+    }
+    // Only the latest season or seasons with recent/undated episodes are stale
+    final seasons = item?.seasons?.where((s) => s.seasonNumber > 0).toList();
+    if (seasons != null && seasons.isNotEmpty) {
+      if (seasonNumber >= seasons.last.seasonNumber) {
+        return true;
+      }
+    }
+    final cached = await cache.getSeason(tvId, seasonNumber);
+    final episodes = cached?['episodes'] as List?;
+    if (episodes == null || episodes.isEmpty) return true;
+    final now = DateTime.now();
+    for (final ep in episodes) {
+      if (ep is Map) {
+        final airDateStr = ep['air_date'] as String?;
+        if (airDateStr == null || airDateStr.isEmpty) {
+          return true;
+        }
+        final airDate = DateTime.tryParse(airDateStr);
+        if (airDate == null || now.difference(airDate).inDays <= 30) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /// Fetches season details, bypassing the cache when [forceRemote] is set so

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/network/rate_limit_interceptor.dart';
 import 'package:mediavore/core/network/retry_interceptor.dart';
 import 'package:mediavore/core/network/tmdb_dio.dart';
 
@@ -141,6 +142,12 @@ void main() {
       expect(dio.options.receiveTimeout, tmdbReceiveTimeout);
       expect(dio.options.sendTimeout, tmdbSendTimeout);
       expect(dio.interceptors.whereType<RetryInterceptor>(), hasLength(1));
+      // Rate limited before the retry, so retried requests count too.
+      final interceptors = dio.interceptors.toList();
+      expect(
+        interceptors.indexWhere((i) => i is RateLimitInterceptor),
+        lessThan(interceptors.indexWhere((i) => i is RetryInterceptor)),
+      );
     });
   });
 }

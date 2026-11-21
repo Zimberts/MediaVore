@@ -322,6 +322,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Mettre en cache tous les éléments de vos listes et de l\'historique récent pour un usage hors ligne.';
 
   @override
+  String dataCachingTitles(int done, int total) {
+    return 'Mise en cache des titres : $done / $total';
+  }
+
+  @override
   String get dataWipeCache => 'Vider tout le cache';
 
   @override

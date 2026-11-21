@@ -1,9 +1,12 @@
 // Benchmark of a full cache reload (Wipe, then warm-up) against a fake TMDB
 // server with simulated latency (#212).
 //
-// The fake answers at the HTTP level (Dio adapter), so the measured request
-// count does not depend on how the data source splits its calls. The cache is
-// the real Isar-backed `MediaCache`.
+// The fake answers at the HTTP level (adapter of the app's TMDB Dio, with its
+// rate limiter and retry), so the measured request count does not depend on
+// how the data source splits its calls. The cache is the real Isar-backed
+// `MediaCache`. Half of the library is also in the recent seen history (one
+// row per movie, ten episodes per show) and one title in five is liked, so
+// the same titles come from several sources.
 //
 // N = 50 always runs and guards the request budget. N = 200 and 500 run only
 // with MEDIAVORE_BENCHMARK=1:
@@ -18,7 +21,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
+import 'package:mediavore/core/network/tmdb_dio.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
+import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 import 'package:mediavore/features/search/data/services/cache_warmup_service.dart';
 import 'package:mediavore/features/search/data/services/media_details_service.dart';
@@ -29,8 +35,15 @@ import 'package:mocktail/mocktail.dart';
 
 import '../helpers/mocks.dart';
 
-/// Simulated round-trip time of one TMDB request.
-const Duration latency = Duration(milliseconds: 10);
+/// Simulated round-trip time of one TMDB request; 10 ms unless set with
+/// MEDIAVORE_BENCHMARK_LATENCY_MS.
+final Duration latency = Duration(
+  milliseconds:
+      int.tryParse(
+        Platform.environment['MEDIAVORE_BENCHMARK_LATENCY_MS'] ?? '',
+      ) ??
+      10,
+);
 
 /// Seasons per show in the synthetic library.
 const int seasonsPerShow = 6;
@@ -48,6 +61,34 @@ List<MediaListItem> library(int n) => List.generate(n, (i) {
     position: i,
   );
 });
+
+/// Recent seen rows for the first half of [items]: one per movie, ten
+/// episodes of season 1 per show.
+List<SeenItemModel> seenHistory(List<MediaListItem> items) {
+  final seenDate = DateTime.now().subtract(const Duration(days: 1));
+  return [
+    for (final item in items.take(items.length ~/ 2))
+      if (item.type == 'movie')
+        SeenItemModel(
+          tmdbId: item.id,
+          type: 'movie',
+          title: item.title,
+          posterPath: '/p.jpg',
+          seenDate: seenDate,
+        )
+      else
+        for (var e = 1; e <= 10; e++)
+          SeenItemModel(
+            tmdbId: item.id,
+            type: 'tv',
+            title: item.title,
+            posterPath: '/p.jpg',
+            seenDate: seenDate,
+            seasonNumber: 1,
+            episodeNumber: e,
+          ),
+  ];
+}
 
 /// Fake TMDB server: counts requests (per endpoint kind) and the peak number
 /// of requests in flight, and answers after [latency].
@@ -89,107 +130,103 @@ class FakeTmdbAdapter implements HttpClientAdapter {
 
   static String _kind(List<String> s, List<String> append) {
     final base = s.length <= 2 ? s[0] : '${s[0]}/${s.skip(2).join('/')}';
-    if (append.isEmpty) return base;
-    final seasons = append.where((a) => a.startsWith('season/')).length;
-    final others = append.length - seasons;
-    return '$base+append(${others > 0 ? '$others parts' : ''}'
-        '${others > 0 && seasons > 0 ? ', ' : ''}'
-        '${seasons > 0 ? '$seasons seasons' : ''})';
+    return append.isEmpty ? base : '$base+${append.length}';
   }
 
-  static Map<String, dynamic> _body(List<String> s, List<String> append) {
-    final root = s[0];
-    if (root == 'collection') {
-      final id = int.parse(s[1]);
-      return {
-        'id': id,
-        'parts': [
-          for (var k = 0; k < 3; k++)
-            {'id': id * 10 + k, 'title': 'Part $k', 'overview': 'o'},
-        ],
+  static Map<String, dynamic> _body(List<String> s, List<String> append) =>
+      switch (s[0]) {
+        'movie' => _movie(int.parse(s[1]), append),
+        'tv' =>
+          s.length == 2
+              ? _show(int.parse(s[1]), append)
+              : _season(int.parse(s[1]), int.parse(s[3])),
+        'collection' => _collection(int.parse(s[1])),
+        _ => <String, dynamic>{},
       };
-    }
-    final id = int.parse(s[1]);
-    final isTv = root == 'tv';
-    if (s.length == 2) {
-      return {
-        ..._item(id, isTv),
-        for (final part in append)
-          part: part.startsWith('season/')
-              ? _season(id, int.parse(part.split('/')[1]))
-              : _part(part),
-      };
-    }
-    final sub = s.skip(2).join('/');
-    if (sub.startsWith('season/')) return _season(id, int.parse(s[3]));
-    return _part(sub);
+
+  static Map<String, dynamic> _movie(int id, List<String> append) {
+    // Every 4th movie is part of a 3-movie saga.
+    final collectionId = (id % 4 == 0) ? 9000 + (id % 10) : null;
+    return {
+      'id': id,
+      'title': 'Movie $id',
+      'overview': 'Overview of $id',
+      'release_date': '2020-01-01',
+      'runtime': 110,
+      'vote_count': 100,
+      'origin_country': ['US'],
+      'original_language': 'en',
+      'genres': [
+        {'id': 28, 'name': 'Action'},
+      ],
+      'poster_path': '/p$id.jpg',
+      if (collectionId != null)
+        'belongs_to_collection': {'id': collectionId, 'name': 'Saga'},
+      for (final a in append) a: _appended(a),
+    };
   }
 
-  static Map<String, dynamic> _item(int id, bool isTv) => isTv
-      ? {
-          'id': id,
-          'name': 'Show $id',
-          'overview': 'o',
-          'first_air_date': '2010-01-01',
-          'status': 'Ended',
-          'genres': [
-            {'id': 18, 'name': 'Drama'},
-          ],
-          'origin_country': ['US'],
-          'original_language': 'en',
-          'vote_count': 100,
-          'episode_run_time': [45],
-          'number_of_seasons': seasonsPerShow,
-          'seasons': [
-            for (var n = 1; n <= seasonsPerShow; n++)
-              {'id': id * 100 + n, 'season_number': n, 'episode_count': 10},
-          ],
-        }
-      : {
-          'id': id,
-          'title': 'Movie $id',
-          'overview': 'o',
-          'release_date': '2010-01-01',
-          'runtime': 120,
-          'genres': [
-            {'id': 28, 'name': 'Action'},
-          ],
-          'origin_country': ['US'],
-          'original_language': 'en',
-          'vote_count': 100,
-          if (id % 4 == 0)
-            'belongs_to_collection': {'id': id + 900000, 'name': 'Saga'},
-        };
+  static Map<String, dynamic> _show(int id, List<String> append) => {
+    'id': id,
+    'name': 'Show $id',
+    'overview': 'Overview of $id',
+    'first_air_date': '2020-01-01',
+    'status': 'Ended',
+    'vote_count': 100,
+    'origin_country': ['US'],
+    'original_language': 'en',
+    'genres': [
+      {'id': 18, 'name': 'Drama'},
+    ],
+    'poster_path': '/p$id.jpg',
+    'seasons': [
+      for (var n = 1; n <= seasonsPerShow; n++)
+        {'id': id * 10 + n, 'season_number': n, 'episode_count': 10},
+    ],
+    for (final a in append) a: _appended(a),
+  };
 
-  static Map<String, dynamic> _season(int tvId, int n) => {
-    'id': tvId * 100 + n,
-    'season_number': n,
+  static Map<String, dynamic> _season(int tvId, int seasonNumber) => {
+    'id': tvId * 10 + seasonNumber,
+    'season_number': seasonNumber,
     'episodes': [
       for (var e = 1; e <= 10; e++)
         {
+          'id': tvId * 100 + seasonNumber * 10 + e,
           'episode_number': e,
-          'season_number': n,
-          'name': 'E$e',
-          'air_date': '2010-01-0${e % 9 + 1}',
+          'name': 'S${seasonNumber}E$e',
           'runtime': 45,
+          'air_date': '2020-01-01',
         },
     ],
   };
 
-  static dynamic _part(String part) => switch (part) {
+  static Map<String, dynamic> _collection(int id) => {
+    'id': id,
+    'name': 'Collection $id',
+    'parts': [
+      for (var i = 0; i < 3; i++)
+        {
+          'id': id * 10 + i,
+          'title': 'Part $i',
+          'media_type': 'movie',
+          'release_date': '2020-01-01',
+        },
+    ],
+  };
+
+  static dynamic _appended(String a) => switch (a) {
+    _ when a.startsWith('season/') => _season(0, int.parse(a.split('/')[1])),
     'credits' => {
       'cast': [
-        {'id': 1, 'name': 'Actor', 'character': 'Role'},
+        {'id': 1, 'name': 'Actor 1', 'character': 'Role 1'},
       ],
       'crew': [
-        {'id': 2, 'name': 'Director', 'job': 'Director'},
+        {'id': 2, 'name': 'Director 1', 'job': 'Director'},
       ],
     },
-    'similar' || 'recommendations' => {
-      'results': [
-        {'id': 7, 'title': 'Other', 'overview': 'o'},
-      ],
-    },
+    'similar' => {'results': <Map<String, dynamic>>[]},
+    'recommendations' => {'results': <Map<String, dynamic>>[]},
     'watch/providers' => {'results': <String, dynamic>{}},
     'videos' => {'results': <Map<String, dynamic>>[]},
     _ => <String, dynamic>{},
@@ -224,7 +261,7 @@ class BenchmarkResult {
         (byKind.entries.toList()..sort((a, b) => b.value.compareTo(a.value)))
             .map((e) => '${e.key}: ${e.value}')
             .join(', ');
-    return 'N=$n  cold: ${cold.inMilliseconds} ms, $coldRequests requests '
+    return 'N=$n latency=${latency.inMilliseconds}ms  cold: ${cold.inMilliseconds} ms, $coldRequests requests '
         '(${(coldRequests / n).toStringAsFixed(2)}/title, '
         'max in flight $maxInFlight)  warm: ${warm.inMilliseconds} ms, '
         '$warmRequests requests\n  cold by endpoint: $kinds';
@@ -261,7 +298,7 @@ void main() {
 
   Future<BenchmarkResult> runBenchmark(int n) async {
     final adapter = FakeTmdbAdapter();
-    final dio = Dio()..httpClientAdapter = adapter;
+    final dio = createTmdbDio()..httpClientAdapter = adapter;
     final remote = MediaRemoteDataSource(
       dio: dio,
       credentials: FakeTmdbCredentialStore('0123456789abcdef0123456789abcdef'),
@@ -271,8 +308,15 @@ void main() {
     final items = library(n);
     when(() => local.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => local.getListItems('watchlist')).thenAnswer((_) async => items);
-    when(() => local.getAllSeenItems()).thenAnswer((_) async => []);
-    when(() => local.getLikedItems()).thenAnswer((_) async => []);
+    when(
+      () => local.getAllSeenItems(),
+    ).thenAnswer((_) async => seenHistory(items));
+    when(() => local.getLikedItems()).thenAnswer(
+      (_) async => [
+        for (final item in items.where((i) => i.position % 5 == 0))
+          LikedItem(tmdbId: item.id, type: item.type, title: item.title),
+      ],
+    );
     when(() => local.getNotifiedItems()).thenAnswer((_) async => []);
 
     final cache = MediaCache(isar);

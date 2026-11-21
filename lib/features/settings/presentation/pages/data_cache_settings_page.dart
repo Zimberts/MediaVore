@@ -83,16 +83,43 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                   action: () => provider.clearCache(complete: false),
                 ),
               ),
-              ListTile(
-                leading: const Icon(Icons.download),
-                title: Text(context.l10n.dataFillCache),
-                subtitle: Text(context.l10n.dataFillCacheSubtitle),
-                enabled: !isCacheLoading,
-                onTap: () async {
-                  await provider.fillCache();
-                  if (context.mounted) {
-                    await achievementProvider.refresh();
+              ValueListenableBuilder<CacheWarmupProgress?>(
+                valueListenable: provider.cacheWarmupProgress,
+                builder: (context, progress, _) {
+                  if (progress == null) {
+                    return ListTile(
+                      leading: const Icon(Icons.download),
+                      title: Text(context.l10n.dataFillCache),
+                      subtitle: Text(context.l10n.dataFillCacheSubtitle),
+                      enabled: !isCacheLoading,
+                      onTap: () async {
+                        await provider.fillCache();
+                        if (context.mounted) {
+                          await achievementProvider.refresh();
+                        }
+                      },
+                    );
                   }
+                  final value = progress.total > 0
+                      ? progress.done / progress.total
+                      : null;
+                  return ListTile(
+                    leading: const Icon(Icons.download),
+                    title: Text(
+                      context.l10n.dataCachingTitles(
+                        progress.done,
+                        progress.total,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: LinearProgressIndicator(value: value),
+                    ),
+                    trailing: TextButton(
+                      onPressed: provider.cancelCacheFill,
+                      child: Text(context.l10n.commonCancel),
+                    ),
+                  );
                 },
               ),
               ListTile(
