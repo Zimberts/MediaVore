@@ -74,3 +74,8 @@ jobs:
           name: coverage-lcov
           path: coverage/lcov.info
           retention-days: 7
+
+      # Fails when line coverage (generated code excluded) drops below
+      # tool/coverage_threshold.txt; the per-area table lands in the job summary.
+      - name: Check coverage
+        run: dart run tool/check_coverage.dart
