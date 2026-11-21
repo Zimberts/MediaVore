@@ -120,51 +120,25 @@ class SettingsPage extends StatelessWidget {
           ),
 
           // Light Theme Palette
-          _buildSegmentedOption<AppPaletteId>(
+          _buildPaletteOption(
             context: context,
             label: l10n.settingsLightTheme,
             key: const Key('settings_light_palette_dropdown'),
             selected: settings.lightPalette.id,
+            palettes: AppPalette.lightPalettes,
             enabled: settings.themeMode != ThemeMode.dark,
             onChanged: settings.setLightPalette,
-            segments: [
-              AppSegment(
-                value: AppPaletteId.paper,
-                label: paletteName(l10n, AppPaletteId.paper),
-              ),
-              AppSegment(
-                value: AppPaletteId.sand,
-                label: paletteName(l10n, AppPaletteId.sand),
-              ),
-              AppSegment(
-                value: AppPaletteId.mist,
-                label: paletteName(l10n, AppPaletteId.mist),
-              ),
-            ],
           ),
 
           // Dark Theme Palette
-          _buildSegmentedOption<AppPaletteId>(
+          _buildPaletteOption(
             context: context,
             label: l10n.settingsDarkTheme,
             key: const Key('settings_dark_palette_dropdown'),
             selected: settings.darkPalette.id,
+            palettes: AppPalette.darkPalettes,
             enabled: settings.themeMode != ThemeMode.light,
             onChanged: settings.setDarkPalette,
-            segments: [
-              AppSegment(
-                value: AppPaletteId.ink,
-                label: paletteName(l10n, AppPaletteId.ink),
-              ),
-              AppSegment(
-                value: AppPaletteId.night,
-                label: paletteName(l10n, AppPaletteId.night),
-              ),
-              AppSegment(
-                value: AppPaletteId.oled,
-                label: paletteName(l10n, AppPaletteId.oled),
-              ),
-            ],
           ),
           const Divider(),
 
@@ -331,6 +305,60 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  /// Every palette of one brightness, as wrapping chips: the core palettes
+  /// of the design first, then the preserved legacy ones.
+  Widget _buildPaletteOption({
+    required BuildContext context,
+    required String label,
+    required Key key,
+    required AppPaletteId selected,
+    required List<AppPalette> palettes,
+    required ValueChanged<AppPaletteId> onChanged,
+    bool enabled = true,
+  }) {
+    final theme = Theme.of(context);
+    final colors = context.appColors;
+    final l10n = context.l10n;
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.45,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 8),
+            IgnorePointer(
+              ignoring: !enabled,
+              child: Wrap(
+                key: key,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final palette in palettes)
+                    ChoiceChip(
+                      key: Key('settings_palette_${palette.id.name}'),
+                      avatar: _PaletteSwatch(palette: palette),
+                      label: Text(paletteName(l10n, palette.id)),
+                      selected: palette.id == selected,
+                      showCheckmark: false,
+                      onSelected: (_) => onChanged(palette.id),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _getThemeModeName(AppLocalizations l10n, ThemeMode mode) {
     switch (mode) {
       case ThemeMode.system:
@@ -443,6 +471,35 @@ class _SectionHeader extends StatelessWidget {
         style: TextStyle(
           color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
+/// Preview of a palette: its page background with a recessed surface dot.
+class _PaletteSwatch extends StatelessWidget {
+  const _PaletteSwatch({required this.palette});
+
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 18,
+      height: 18,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: palette.bg,
+        shape: BoxShape.circle,
+        border: Border.all(color: context.appColors.stateOutline),
+      ),
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: palette.surface2,
+          shape: BoxShape.circle,
         ),
       ),
     );
