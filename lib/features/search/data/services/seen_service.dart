@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
+import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
@@ -75,6 +77,25 @@ class SeenService {
   Future<void> markManyAsSeen(List<SeenItem> items) async {
     if (items.isEmpty) return;
 
+    final detailsCache = <String, MediaDetails?>{};
+    final seasonCache = <String, Map<String, dynamic>?>{};
+
+    Future<MediaDetails?> getCachedDetails(int id, MediaType type) async {
+      final key = '$id:${type.name}';
+      if (!detailsCache.containsKey(key)) {
+        detailsCache[key] = await details.getMediaDetails(id, type: type);
+      }
+      return detailsCache[key];
+    }
+
+    Future<Map<String, dynamic>?> getCachedSeason(int id, int season) async {
+      final key = '$id:$season';
+      if (!seasonCache.containsKey(key)) {
+        seasonCache[key] = await details.getSeasonDetails(id, season);
+      }
+      return seasonCache[key];
+    }
+
     final models = <SeenItemModel>[];
     for (final item in items) {
       final enriched = await details.resolveRuntimeAndGenres(
@@ -84,6 +105,8 @@ class SeenService {
         episodeNumber: item.episodeNumber,
         runtime: item.runtime,
         genres: item.genres,
+        fetchDetails: getCachedDetails,
+        fetchSeason: getCachedSeason,
       );
       models.add(
         SeenItemModel(
@@ -103,8 +126,14 @@ class SeenService {
     await localDataSource.markManyAsSeen(models);
 
     final lastItem = items.last;
-    await notifications.refreshAfterSeen(lastItem);
-    await quickAdd.queueNextAfterSeen(lastItem);
+    unawaited(() async {
+      try {
+        await notifications.refreshAfterSeen(lastItem);
+        await quickAdd.queueNextAfterSeen(lastItem);
+      } catch (e) {
+        debugPrint('[SeenService] post-mark refresh failed: $e');
+      }
+    }());
   }
 
   Future<void> removeFromSeen(

@@ -327,6 +327,7 @@ class _SeenManagerState extends State<SeenManager> {
               seasonNumber: ep.seasonNumber,
               episodeNumber: ep.episodeNumber,
               runtime: ep.runtime,
+              genres: item.genres,
               seenDate: now.subtract(Duration(seconds: offsetSeconds)),
             ),
           );
@@ -339,6 +340,7 @@ class _SeenManagerState extends State<SeenManager> {
             posterPath: item.posterPath,
             seasonNumber: widget.seasonNumber,
             episodeNumber: widget.episodeNumber,
+            genres: item.genres,
             seenDate: now,
           ),
         );
@@ -411,6 +413,7 @@ class _SeenManagerState extends State<SeenManager> {
               seasonNumber: ep.seasonNumber,
               episodeNumber: ep.episodeNumber,
               runtime: ep.runtime,
+              genres: item.genres,
               seenDate: targetDate.subtract(Duration(seconds: offsetSeconds)),
             ),
           );
@@ -423,6 +426,7 @@ class _SeenManagerState extends State<SeenManager> {
             posterPath: item.posterPath,
             seasonNumber: seasonNumber,
             episodeNumber: episodeNumber,
+            genres: item.genres,
             seenDate: targetDate,
           ),
         );
