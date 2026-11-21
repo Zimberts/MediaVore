@@ -56,6 +56,17 @@ class MockMediaRepository extends Mock implements MediaRepository {
       return Future.value();
     }
   }
+
+  @override
+  Future<void> prefetchSeasons(int tvId, Iterable<int> seasonNumbers) {
+    try {
+      return super.noSuchMethod(
+            Invocation.method(#prefetchSeasons, [tvId, seasonNumbers]),
+          ) as Future<void>;
+    } catch (_) {
+      return Future.value();
+    }
+  }
   @override
   Future<List<QuickAddItem>> getQuickAddItems() {
     try {

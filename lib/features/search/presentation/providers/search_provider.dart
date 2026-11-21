@@ -1274,6 +1274,16 @@ class SearchProvider with ChangeNotifier {
       );
       final seasons = details.item.seasons ?? [];
 
+      final seasonsToPrefetch = seasons
+          .map((s) => s.seasonNumber)
+          .where((n) => n > 0 && n <= targetSeason)
+          .toList();
+      if (seasonsToPrefetch.isNotEmpty) {
+        try {
+          await repository.prefetchSeasons(tvId, seasonsToPrefetch);
+        } catch (_) {}
+      }
+
       final allCandidates = <CandidateEpisode>[];
       for (final s in seasons) {
         if (s.seasonNumber <= 0 || s.seasonNumber > targetSeason) continue;

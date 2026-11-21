@@ -244,6 +244,12 @@ class MediaRepositoryImpl implements MediaRepository {
   }
 
   @override
+  Future<void> prefetchSeasons(int tvId, Iterable<int> seasonNumbers) async {
+    await _ensureInitialized();
+    return _details.prefetchSeasons(tvId, seasonNumbers);
+  }
+
+  @override
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) async {
     await _ensureInitialized();
     return _details.getSimilarMedia(id, type);

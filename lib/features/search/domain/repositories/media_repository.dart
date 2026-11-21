@@ -137,6 +137,9 @@ abstract class MediaRepository {
   /// Fetches details for a specific season of a TV show.
   Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber);
 
+  /// Batches the retrieval and caching of multiple seasons of a TV show.
+  Future<void> prefetchSeasons(int tvId, Iterable<int> seasonNumbers);
+
   /// Gets the approximate size of the cache in bytes.
   Future<int> getCacheSize();
 
