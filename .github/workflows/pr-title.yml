@@ -1,9 +1,10 @@
 name: Conventional Commits
 
-# `pull_request_target` so that editing the title re-runs the check without a new push.
-# Safe here: no job checks out or runs code from the PR, the token is read-only.
+# `pull_request` (not `pull_request_target`): the `edited` type re-runs the check when the
+# title changes, and both jobs only read the PR, so the read-only token of fork PRs is enough.
+# GitHub restricts `pull_request_target` on public repositories from 2026-12-02.
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, edited, synchronize, reopened]
 
 concurrency:
