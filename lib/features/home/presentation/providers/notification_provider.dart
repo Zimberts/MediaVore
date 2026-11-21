@@ -49,12 +49,12 @@ class NotificationProvider with ChangeNotifier {
     await loadNotifiedItems();
   }
 
-  Future<void> refreshNotifiedItems() async {
+  Future<void> refreshNotifiedItems({bool force = false}) async {
     _isNotifiedRefreshing = true;
     notifyListeners();
     try {
       await loadNotifiedItems();
-      await repository.refreshNotifiedItems();
+      await repository.refreshNotifiedItems(force: force);
       await loadNotifiedItems();
     } finally {
       _isNotifiedRefreshing = false;

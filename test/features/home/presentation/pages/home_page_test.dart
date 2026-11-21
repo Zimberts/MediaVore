@@ -61,6 +61,7 @@ class _FakeHomeRepository extends MockMediaRepository {
   final Map<int, QuickAddItem> queue = {};
   int _nextId = 1;
   int refreshCalls = 0;
+  bool? lastRefreshForce;
 
   void addSeries(_Series s) {
     series[s.id] = s;
@@ -162,8 +163,10 @@ class _FakeHomeRepository extends MockMediaRepository {
       queue.putIfAbsent(item.tmdbId, () => item);
 
   @override
-  Future<void> refreshNotifiedItems({bool force = false}) async =>
-      refreshCalls++;
+  Future<void> refreshNotifiedItems({bool force = false}) async {
+    refreshCalls++;
+    lastRefreshForce = force;
+  }
 
   @override
   Future<void> refreshQuickAddItems() async {}
@@ -282,7 +285,7 @@ void main() {
 
       expect(find.text('Saturday, November 14'), findsOneWidget);
       expect(find.text('Tonight'), findsOneWidget);
-      expect(find.byTooltip('Refresh releases'), findsOneWidget);
+      expect(find.byTooltip('Refresh'), findsOneWidget);
     });
 
     testWidgets('should be written in French', (tester) async {
@@ -295,13 +298,14 @@ void main() {
       expect(find.text('Prochain : S1 É4 · 50m'), findsOneWidget);
     });
 
-    testWidgets('should refresh the releases from the button', (tester) async {
+    testWidgets('should refresh the releases from the button with force: true and reload lists (#391)', (tester) async {
       await pumpHome(tester);
 
       await tester.tap(find.byKey(const Key('home_refresh')));
       await tester.pumpAndSettle();
 
       expect(repository.refreshCalls, 1);
+      expect(repository.lastRefreshForce, isTrue);
     });
 
     testWidgets('should tell when the app is offline', (tester) async {
@@ -724,7 +728,7 @@ void main() {
         expect(find.text('Connect TMDB'), findsOneWidget);
         expect(find.byKey(const Key('home_empty')), findsNothing);
         expect(find.byKey(const Key('home_upcoming')), findsNothing);
-        expect(find.byKey(const Key('home_refresh')), findsNothing);
+        expect(find.byKey(const Key('home_refresh')), findsOneWidget);
 
         await tester.tap(find.text('Connect to TMDB'));
         await tester.pumpAndSettle();

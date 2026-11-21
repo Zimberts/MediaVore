@@ -214,6 +214,8 @@ class SearchProvider with ChangeNotifier {
     await _reloadSavedTitles();
   }
 
+  Future<void> reloadSavedTitles() => _reloadSavedTitles();
+
   Future<void> _reloadSavedTitles() async {
     await _libraryProvider.init();
     await loadAllSeenStatus();
@@ -1925,8 +1927,8 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshNotifiedItems() =>
-      _notificationProvider.refreshNotifiedItems();
+  Future<void> refreshNotifiedItems({bool force = false}) =>
+      _notificationProvider.refreshNotifiedItems(force: force);
 
   Future<void> refreshQuickAddItems() async {
     await repository.refreshQuickAddItems();

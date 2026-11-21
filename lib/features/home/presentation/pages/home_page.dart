@@ -4,6 +4,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_card.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/filter_chip_row.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
@@ -71,19 +72,36 @@ class _HomePageState extends State<HomePage> {
 
   /// Series whose next episode is being marked as seen.
   final Set<int> _marking = {};
+  bool _isRefreshing = false;
 
   // In progress only holds series until books land (#325).
   MediaKind _kindOf(InProgressItem item) => MediaKind.series;
 
   Future<void> _refresh() async {
     final provider = context.read<SearchProvider>();
-    if (provider.isNotifiedRefreshing) return;
+    if (_isRefreshing || provider.isNotifiedRefreshing) return;
+    setState(() => _isRefreshing = true);
     try {
-      await provider.refreshNotifiedItems();
-      await provider.loadAllSeenStatus();
+      final hasTmdbKey =
+          context.read<SettingsProvider>().tmdbApiKey.isNotEmpty;
+      if (hasTmdbKey) {
+        await provider.refreshNotifiedItems(force: true);
+      }
+      await provider.reloadSavedTitles();
       await provider.refreshQuickAddItems();
     } catch (e) {
       debugPrint('[HomePage] refresh failed: $e');
+      if (mounted) {
+        showAppMessage(
+          provider.isOffline
+              ? context.l10n.searchErrorOffline
+              : context.l10n.searchErrorUnknown,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isRefreshing = false);
+      }
     }
   }
 
@@ -175,7 +193,7 @@ class _HomePageState extends State<HomePage> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(_gutter, 12, _gutter, 24),
             children: [
-              _buildHeader(l10n, provider, now, canRefresh: hasTmdbKey),
+              _buildHeader(l10n, provider, now, canRefresh: true),
               for (final section in sections) ...[
                 const SizedBox(height: _sectionGap),
                 section,
@@ -195,7 +213,7 @@ class _HomePageState extends State<HomePage> {
   }) {
     final textTheme = Theme.of(context).textTheme;
     final date = formatHomeDate(l10n, now);
-    final refreshing = provider.isNotifiedRefreshing;
+    final refreshing = _isRefreshing || provider.isNotifiedRefreshing;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -219,7 +237,7 @@ class _HomePageState extends State<HomePage> {
               minWidth: kMinTapTarget,
               minHeight: kMinTapTarget,
             ),
-            tooltip: l10n.homeRefreshReleases,
+            tooltip: l10n.commonRefresh,
             onPressed: refreshing ? null : _refresh,
             icon: refreshing
                 ? const SizedBox.square(
