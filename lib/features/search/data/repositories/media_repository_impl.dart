@@ -796,7 +796,10 @@ class MediaRepositoryImpl implements MediaRepository {
 
   @override
   Future<void> setSeriesRewatchStart(int tmdbId, DateTime date) async {
-    await prefs?.setString('series_rewatch_start_$tmdbId', date.toIso8601String());
+    await prefs?.setString(
+      'series_rewatch_start_$tmdbId',
+      date.toIso8601String(),
+    );
   }
 
   @override

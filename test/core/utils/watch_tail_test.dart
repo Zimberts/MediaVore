@@ -36,10 +36,7 @@ void main() {
       final rewatchStart = DateTime(2025, 1, 1);
       expect(findLatestTail(items, seenSince: rewatchStart), isNull);
 
-      final rewatchedItems = [
-        ...items,
-        seen(1, 1, date: DateTime(2025, 1, 2)),
-      ];
+      final rewatchedItems = [...items, seen(1, 1, date: DateTime(2025, 1, 2))];
       final tail = findLatestTail(rewatchedItems, seenSince: rewatchStart);
       expect(tail, isNotNull);
       expect(tail!.seasonNumber, 1);
@@ -394,7 +391,10 @@ void main() {
       final tail = seriesStartTail();
 
       expect(isEpisodeAfterTail(ep(1, 1), tail), isTrue);
-      expect(isEpisodeAfterTail(EpisodeRef(seasonNumber: 0, episodeNumber: 1), tail), isTrue);
+      expect(
+        isEpisodeAfterTail(EpisodeRef(seasonNumber: 0, episodeNumber: 1), tail),
+        isTrue,
+      );
     });
   });
 }

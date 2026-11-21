@@ -202,9 +202,7 @@ void main() {
     expect(find.text('0 ajoutés · 1 écartés'), findsOneWidget);
   });
 
-  testWidgets('tapping Undo button calls undoLastDecision', (
-    tester,
-  ) async {
+  testWidgets('tapping Undo button calls undoLastDecision', (tester) async {
     await tester.pumpWidget(buildTestWidget());
     await tester.pumpAndSettle();
 
@@ -272,28 +270,31 @@ void main() {
     expect(find.text('Plus de films'), findsOneWidget);
   });
 
-  testWidgets('SwiperPage does not dispose injected customSwiperProvider when unmounted', (
-    tester,
-  ) async {
-    when(
-      () => repo.discoverMedia(
-        type: any(named: 'type'),
-        page: any(named: 'page'),
-      ),
-    ).thenAnswer((_) async => []);
+  testWidgets(
+    'SwiperPage does not dispose injected customSwiperProvider when unmounted',
+    (tester) async {
+      when(
+        () => repo.discoverMedia(
+          type: any(named: 'type'),
+          page: any(named: 'page'),
+        ),
+      ).thenAnswer((_) async => []);
 
-    await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
-    // Unmount SwiperPage
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
-    await tester.pumpAndSettle();
+      // Unmount SwiperPage
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: SizedBox())),
+      );
+      await tester.pumpAndSettle();
 
-    // Injected swiperProvider must not be disposed
-    void dummyListener() {}
-    expect(() {
-      swiperProvider.addListener(dummyListener);
-      swiperProvider.removeListener(dummyListener);
-    }, returnsNormally);
-  });
+      // Injected swiperProvider must not be disposed
+      void dummyListener() {}
+      expect(() {
+        swiperProvider.addListener(dummyListener);
+        swiperProvider.removeListener(dummyListener);
+      }, returnsNormally);
+    },
+  );
 }

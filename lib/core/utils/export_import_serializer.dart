@@ -200,11 +200,7 @@ class ExportEnvelope {
   /// byte count, not the string length: non-ASCII titles (é, ½, ⁴…) take
   /// several bytes, and strict extractors such as macOS Archive Utility reject
   /// entries whose size does not match their content.
-  static void _addCsv(
-    Archive archive,
-    String name,
-    List<List<dynamic>> rows,
-  ) {
+  static void _addCsv(Archive archive, String name, List<List<dynamic>> rows) {
     final bytes = utf8.encode(csv.encode(rows));
     archive.addFile(ArchiveFile(name, bytes.length, bytes));
   }

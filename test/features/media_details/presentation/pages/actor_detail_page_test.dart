@@ -259,9 +259,7 @@ void main() {
       () => mockMediaRepository.getActorDetails(1),
     ).thenAnswer((_) async => tPersonWithSeen);
 
-    await tester.pumpWidget(
-      createWidgetUnderTest(locale: const Locale('fr')),
-    );
+    await tester.pumpWidget(createWidgetUnderTest(locale: const Locale('fr')));
     await tester.pumpAndSettle();
 
     // Counter "1 sur 2 vus"
@@ -271,38 +269,41 @@ void main() {
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
   });
 
-  testWidgets('expands and collapses biography when Read more / Show less is tapped', (
-    WidgetTester tester,
-  ) async {
-    const longBio =
-        'Line 1 of biography.\nLine 2 of biography.\nLine 3 of biography.\n'
-        'Line 4 of biography.\nLine 5 of biography.\nLine 6 of biography.';
-    const tBioDetails = ActorDetails(
-      id: 1,
-      name: 'Leonardo DiCaprio',
-      biography: longBio,
-    );
+  testWidgets(
+    'expands and collapses biography when Read more / Show less is tapped',
+    (WidgetTester tester) async {
+      const longBio =
+          'Line 1 of biography.\nLine 2 of biography.\nLine 3 of biography.\n'
+          'Line 4 of biography.\nLine 5 of biography.\nLine 6 of biography.';
+      const tBioDetails = ActorDetails(
+        id: 1,
+        name: 'Leonardo DiCaprio',
+        biography: longBio,
+      );
 
-    when(
-      () => mockMediaRepository.getActorDetails(1),
-    ).thenAnswer((_) async => tBioDetails);
+      when(
+        () => mockMediaRepository.getActorDetails(1),
+      ).thenAnswer((_) async => tBioDetails);
 
-    await tester.pumpWidget(createWidgetUnderTest(locale: const Locale('en')));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        createWidgetUnderTest(locale: const Locale('en')),
+      );
+      await tester.pumpAndSettle();
 
-    final readMoreFinder = find.text('Read more');
-    await tester.scrollUntilVisible(
-      readMoreFinder,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(readMoreFinder, findsOneWidget);
+      final readMoreFinder = find.text('Read more');
+      await tester.scrollUntilVisible(
+        readMoreFinder,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(readMoreFinder, findsOneWidget);
 
-    await tester.tap(readMoreFinder);
-    await tester.pumpAndSettle();
+      await tester.tap(readMoreFinder);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Show less'), findsOneWidget);
-  });
+      expect(find.text('Show less'), findsOneWidget);
+    },
+  );
 
   testWidgets('displays error message when loading fails', (
     WidgetTester tester,

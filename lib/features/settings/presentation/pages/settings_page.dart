@@ -58,15 +58,9 @@ class SettingsPage extends StatelessWidget {
               selected: settings.appLanguageOverride,
               onChanged: (lang) => settings.setAppLanguage(lang),
               segments: [
-                AppSegment(
-                  value: null,
-                  label: l10n.settingsLanguageSystem,
-                ),
+                AppSegment(value: null, label: l10n.settingsLanguageSystem),
                 for (final language in supportedAppLanguages)
-                  AppSegment(
-                    value: language,
-                    label: language.nativeName,
-                  ),
+                  AppSegment(value: language, label: language.nativeName),
               ],
             )
           else
@@ -374,8 +368,9 @@ class _SwipeResetTileState extends State<_SwipeResetTile> {
         final decisions = await locator<MediaRepository>().getSwipeDecisions();
         if (mounted) {
           setState(() {
-            _discardedCount =
-                decisions.where((d) => d.decision == 'discarded').length;
+            _discardedCount = decisions
+                .where((d) => d.decision == 'discarded')
+                .length;
             _isLoading = false;
           });
         }

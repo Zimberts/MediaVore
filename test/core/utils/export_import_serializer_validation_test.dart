@@ -277,37 +277,43 @@ void main() {
   });
 
   group('ExportEnvelope async methods (background isolate)', () {
-    test('toZipBytesAsync and fromZipBytesAsync round-trip data across isolates', () async {
-      final original = ExportEnvelope(
-        version: 1,
-        exportedAt: DateTime.utc(2025, 1, 1),
-        likes: [LikedItem(tmdbId: 42, type: 'movie', title: 'Inception')],
-        seen: [
-          SeenItemModel(
-            tmdbId: 101,
-            type: 'movie',
-            title: 'Interstellar',
-            seenDate: DateTime.utc(2025, 1, 2),
-          ),
-        ],
-      );
+    test(
+      'toZipBytesAsync and fromZipBytesAsync round-trip data across isolates',
+      () async {
+        final original = ExportEnvelope(
+          version: 1,
+          exportedAt: DateTime.utc(2025, 1, 1),
+          likes: [LikedItem(tmdbId: 42, type: 'movie', title: 'Inception')],
+          seen: [
+            SeenItemModel(
+              tmdbId: 101,
+              type: 'movie',
+              title: 'Interstellar',
+              seenDate: DateTime.utc(2025, 1, 2),
+            ),
+          ],
+        );
 
-      final zipBytes = await original.toZipBytesAsync();
-      expect(zipBytes, isNotEmpty);
+        final zipBytes = await original.toZipBytesAsync();
+        expect(zipBytes, isNotEmpty);
 
-      final parsed = await ExportEnvelope.fromZipBytesAsync(zipBytes);
-      expect(parsed.likes.length, 1);
-      expect(parsed.likes.first.tmdbId, 42);
-      expect(parsed.likes.first.title, 'Inception');
-      expect(parsed.seen.length, 1);
-      expect(parsed.seen.first.title, 'Interstellar');
-    });
+        final parsed = await ExportEnvelope.fromZipBytesAsync(zipBytes);
+        expect(parsed.likes.length, 1);
+        expect(parsed.likes.first.tmdbId, 42);
+        expect(parsed.likes.first.title, 'Inception');
+        expect(parsed.seen.length, 1);
+        expect(parsed.seen.first.title, 'Interstellar');
+      },
+    );
 
-    test('fromZipBytesAsync throws ParsingException on invalid archive', () async {
-      expect(
-        () => ExportEnvelope.fromZipBytesAsync([1, 2, 3, 4]),
-        throwsA(isA<ParsingException>()),
-      );
-    });
+    test(
+      'fromZipBytesAsync throws ParsingException on invalid archive',
+      () async {
+        expect(
+          () => ExportEnvelope.fromZipBytesAsync([1, 2, 3, 4]),
+          throwsA(isA<ParsingException>()),
+        );
+      },
+    );
   });
 }

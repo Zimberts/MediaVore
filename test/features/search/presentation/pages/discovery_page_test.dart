@@ -565,16 +565,17 @@ void main() {
       expect(find.text('Trend'), findsOneWidget);
     });
 
-    testWidgets('should hide swipe mode segment when swipeModeEnabled is false', (
-      tester,
-    ) async {
-      await settingsProvider.setSwipeModeEnabled(false);
-      stubTrending((page) => page == 1 ? [_item(1, 'Trend')] : []);
-      await pumpPage(tester);
+    testWidgets(
+      'should hide swipe mode segment when swipeModeEnabled is false',
+      (tester) async {
+        await settingsProvider.setSwipeModeEnabled(false);
+        stubTrending((page) => page == 1 ? [_item(1, 'Trend')] : []);
+        await pumpPage(tester);
 
-      expect(find.byType(AppSegmented<DiscoverMode>), findsNothing);
-      expect(find.text('Swipe'), findsNothing);
-    });
+        expect(find.byType(AppSegmented<DiscoverMode>), findsNothing);
+        expect(find.text('Swipe'), findsNothing);
+      },
+    );
   });
 
   group('DiscoveryPage rendering', () {

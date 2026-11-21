@@ -100,8 +100,9 @@ class ActiveFilterChips extends StatelessWidget {
       chips.add(
         InputChip(
           label: Text(periodLabel),
-          onDeleted: () =>
-              onFilterChanged(filters.copyWith(period: SearchReleasePeriod.all)),
+          onDeleted: () => onFilterChanged(
+            filters.copyWith(period: SearchReleasePeriod.all),
+          ),
         ),
       );
     }

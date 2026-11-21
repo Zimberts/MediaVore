@@ -8,11 +8,7 @@ class MediaSplitBar extends StatelessWidget {
   final MediaSplitResult split;
   final StatsMetric metric;
 
-  const MediaSplitBar({
-    super.key,
-    required this.split,
-    required this.metric,
-  });
+  const MediaSplitBar({super.key, required this.split, required this.metric});
 
   @override
   Widget build(BuildContext context) {
@@ -122,19 +118,20 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        Icon(
+          icon,
+          size: 16,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 4),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

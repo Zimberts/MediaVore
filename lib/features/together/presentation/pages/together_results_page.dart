@@ -97,7 +97,8 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
     final random = math.Random();
     final pickedEntry = candidates[random.nextInt(candidates.length)];
     final key = '${pickedEntry.id}:${pickedEntry.type.name}';
-    final item = _mediaCache[key] ??
+    final item =
+        _mediaCache[key] ??
         MediaItem(
           id: pickedEntry.id,
           title: 'Title',
@@ -132,9 +133,9 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
             const SizedBox(height: 12),
             Text(
               item.title,
-              style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                ctx,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             if (item.voteAverage != null && item.voteAverage! > 0) ...[
@@ -190,17 +191,9 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
     };
 
     final allLists = [
-      (
-        name: l10n.togetherYouHost,
-        initials: 'MOI',
-        entries: hostListEntries,
-      ),
+      (name: l10n.togetherYouHost, initials: 'MOI', entries: hostListEntries),
       for (final p in session.participants)
-        (
-          name: p.name,
-          initials: p.initials,
-          entries: p.entries,
-        ),
+        (name: p.name, initials: p.initials, entries: p.entries),
     ];
 
     final result = ListIntersectionCalculator.multiIntersect(
@@ -345,30 +338,28 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final entry = commonSorted[index];
-                          final key = '${entry.id}:${entry.type.name}';
-                          final item = _mediaCache[key] ??
-                              MediaItem(
-                                id: entry.id,
-                                title: '...',
-                                overview: '',
-                                releaseDate: '',
-                                mediaType: entry.type,
-                              );
-                          final initials =
-                              result.participantInitials[key] ?? const [];
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final entry = commonSorted[index];
+                        final key = '${entry.id}:${entry.type.name}';
+                        final item =
+                            _mediaCache[key] ??
+                            MediaItem(
+                              id: entry.id,
+                              title: '...',
+                              overview: '',
+                              releaseDate: '',
+                              mediaType: entry.type,
+                            );
+                        final initials =
+                            result.participantInitials[key] ?? const [];
 
-                          return _buildMediaTile(
-                            item: item,
-                            initials: initials,
-                            colors: colors,
-                            theme: theme,
-                          );
-                        },
-                        childCount: commonSorted.length,
-                      ),
+                        return _buildMediaTile(
+                          item: item,
+                          initials: initials,
+                          colors: colors,
+                          theme: theme,
+                        );
+                      }, childCount: commonSorted.length),
                     ),
                   ),
 
@@ -388,36 +379,32 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final entry = almostSorted[index];
-                          final key = '${entry.id}:${entry.type.name}';
-                          final item = _mediaCache[key] ??
-                              MediaItem(
-                                id: entry.id,
-                                title: '...',
-                                overview: '',
-                                releaseDate: '',
-                                mediaType: entry.type,
-                              );
-                          final initials =
-                              result.participantInitials[key] ?? const [];
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final entry = almostSorted[index];
+                        final key = '${entry.id}:${entry.type.name}';
+                        final item =
+                            _mediaCache[key] ??
+                            MediaItem(
+                              id: entry.id,
+                              title: '...',
+                              overview: '',
+                              releaseDate: '',
+                              mediaType: entry.type,
+                            );
+                        final initials =
+                            result.participantInitials[key] ?? const [];
 
-                          return _buildMediaTile(
-                            item: item,
-                            initials: initials,
-                            colors: colors,
-                            theme: theme,
-                          );
-                        },
-                        childCount: almostSorted.length,
-                      ),
+                        return _buildMediaTile(
+                          item: item,
+                          initials: initials,
+                          colors: colors,
+                          theme: theme,
+                        );
+                      }, childCount: almostSorted.length),
                     ),
                   ),
                 ],
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 100),
-                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
       bottomNavigationBar: SafeArea(
@@ -434,10 +421,8 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
                   key: const Key('together_random_pick_button'),
                   onPressed: commonSorted.isNotEmpty || almostSorted.isNotEmpty
                       ? () => _pickRandom(
-                            commonSorted.isNotEmpty
-                                ? commonSorted
-                                : almostSorted,
-                          )
+                          commonSorted.isNotEmpty ? commonSorted : almostSorted,
+                        )
                       : null,
                   icon: const Icon(Icons.casino_outlined),
                   label: Text(l10n.togetherRandomPick),
@@ -452,7 +437,8 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
                           session.startVote();
                           final candidates = commonSorted.take(6).map((entry) {
                             final key = '${entry.id}:${entry.type.name}';
-                            final item = _mediaCache[key] ??
+                            final item =
+                                _mediaCache[key] ??
                                 MediaItem(
                                   id: entry.id,
                                   title: 'Title ${entry.id}',
@@ -537,9 +523,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
             if (item.releaseDate.length >= 4)
               Text(
                 item.releaseDate.substring(0, 4),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colors.text2,
-                ),
+                style: theme.textTheme.bodySmall?.copyWith(color: colors.text2),
               ),
             if (item.voteAverage != null && item.voteAverage! > 0) ...[
               const SizedBox(width: 6),

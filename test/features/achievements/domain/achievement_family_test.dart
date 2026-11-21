@@ -25,21 +25,30 @@ Achievement _a(
 
 void main() {
   group('groupAchievements', () {
-    test('should group by family in first-appearance order and infer category', () {
-      final families = groupAchievements([
-        _a('m2', group: 'movies', tier: 2),
-        _a('solo', category: 'discovery'),
-        _a('m1', group: 'movies', tier: 1, unlocked: true, category: 'movies'),
-        _a('t1', group: 'tv', tier: 1, category: 'tv'),
-      ]);
+    test(
+      'should group by family in first-appearance order and infer category',
+      () {
+        final families = groupAchievements([
+          _a('m2', group: 'movies', tier: 2),
+          _a('solo', category: 'discovery'),
+          _a(
+            'm1',
+            group: 'movies',
+            tier: 1,
+            unlocked: true,
+            category: 'movies',
+          ),
+          _a('t1', group: 'tv', tier: 1, category: 'tv'),
+        ]);
 
-      expect(families.map((f) => f.id), ['movies', 'solo', 'tv']);
-      expect(families.first.tiers.map((a) => a.id), ['m1', 'm2']);
-      expect(families.first.category, 'movies');
-      expect(families[1].isTiered, isFalse);
-      expect(families[1].category, 'discovery');
-      expect(families[2].category, 'tv');
-    });
+        expect(families.map((f) => f.id), ['movies', 'solo', 'tv']);
+        expect(families.first.tiers.map((a) => a.id), ['m1', 'm2']);
+        expect(families.first.category, 'movies');
+        expect(families[1].isTiered, isFalse);
+        expect(families[1].category, 'discovery');
+        expect(families[2].category, 'tv');
+      },
+    );
   });
 
   group('AchievementFamily', () {

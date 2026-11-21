@@ -884,8 +884,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
             p = await SharedPreferences.getInstance();
           } catch (_) {}
         }
-        togetherChoices =
-            p?.getInt(StorageKeys.togetherChoicesKey) ?? 0;
+        togetherChoices = p?.getInt(StorageKeys.togetherChoicesKey) ?? 0;
       } catch (e) {
         debugPrint('Achievements: together choices unavailable: $e');
       }

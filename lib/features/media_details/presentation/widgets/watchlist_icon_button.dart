@@ -29,8 +29,9 @@ class WatchlistIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final libraryProvider = context.watch<LibraryProvider?>();
-    final searchProvider =
-        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final searchProvider = libraryProvider == null
+        ? context.watch<SearchProvider>()
+        : null;
     final isInWatchlist = libraryProvider != null
         ? libraryProvider.isItemInList(item, 'watchlist')
         : searchProvider!.isItemInList(item, 'watchlist');
@@ -61,7 +62,10 @@ class WatchlistIconButton extends StatelessWidget {
           if (libraryProvider != null) {
             await libraryProvider.toggleInList(item, 'watchlist');
           } else {
-            await context.read<SearchProvider>().toggleInList(item, 'watchlist');
+            await context.read<SearchProvider>().toggleInList(
+              item,
+              'watchlist',
+            );
           }
         } catch (_) {
           if (context.mounted) {

@@ -34,7 +34,9 @@ void main() {
     when(() => repo.getAllListNames()).thenAnswer((_) async => ['watchlist']);
     when(() => repo.getWatchlistEntries()).thenAnswer((_) async => []);
     when(() => repo.getListEntries(any())).thenAnswer((_) async => []);
-    when(() => repo.getListPreviews(any(), limit: any(named: 'limit'))).thenAnswer((_) async => []);
+    when(
+      () => repo.getListPreviews(any(), limit: any(named: 'limit')),
+    ).thenAnswer((_) async => []);
     when(() => repo.getCacheSize()).thenAnswer((_) async => 0);
     when(() => repo.getSeenDbSize()).thenAnswer((_) async => 0);
     when(() => repo.getSeenItems()).thenAnswer((_) async => []);
@@ -42,9 +44,13 @@ void main() {
     when(() => repo.getNotifiedItems()).thenAnswer((_) async => []);
     when(() => repo.getQuickAddItems()).thenAnswer((_) async => []);
     when(() => repo.getSeenStatus(any(), any())).thenAnswer((_) async => []);
-    when(() => repo.watchNotifiedItems()).thenAnswer((_) => const Stream.empty());
+    when(
+      () => repo.watchNotifiedItems(),
+    ).thenAnswer((_) => const Stream.empty());
 
-    when(() => repo.getMediaDetails(any(), type: any(named: 'type'))).thenAnswer(
+    when(
+      () => repo.getMediaDetails(any(), type: any(named: 'type')),
+    ).thenAnswer(
       (inv) async => MediaDetails(
         item: MediaItem(
           id: inv.positionalArguments[0] as int,
@@ -110,83 +116,85 @@ void main() {
   }
 
   group('TogetherVotePage', () {
-    testWidgets('transitions from host prompt to voting cards, then friend transition', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+    testWidgets(
+      'transitions from host prompt to voting cards, then friend transition',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(800, 1600));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      final candidates = [
-        TogetherVoteCandidate(item: createItem(1, 'Interstellar')),
-        TogetherVoteCandidate(item: createItem(2, 'Inception')),
-      ];
-      final participants = ['Moi', 'Léa'];
+        final candidates = [
+          TogetherVoteCandidate(item: createItem(1, 'Interstellar')),
+          TogetherVoteCandidate(item: createItem(2, 'Inception')),
+        ];
+        final participants = ['Moi', 'Léa'];
 
-      await tester.pumpWidget(
-        buildSubject(candidates: candidates, participants: participants),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildSubject(candidates: candidates, participants: participants),
+        );
+        await tester.pumpAndSettle();
 
-      // Host transition screen
-      expect(find.text('À vous de voter'), findsOneWidget);
-      expect(find.text('Je vote'), findsOneWidget);
+        // Host transition screen
+        expect(find.text('À vous de voter'), findsOneWidget);
+        expect(find.text('Je vote'), findsOneWidget);
 
-      // Start host turn
-      await tester.tap(find.byKey(const Key('together_start_turn_button')));
-      await tester.pumpAndSettle();
+        // Start host turn
+        await tester.tap(find.byKey(const Key('together_start_turn_button')));
+        await tester.pumpAndSettle();
 
-      // Card 1: Interstellar
-      expect(find.text('Interstellar'), findsOneWidget);
-      expect(find.textContaining('Titre 1 sur 2'), findsOneWidget);
-      expect(find.text('Moi'), findsOneWidget);
+        // Card 1: Interstellar
+        expect(find.text('Interstellar'), findsOneWidget);
+        expect(find.textContaining('Titre 1 sur 2'), findsOneWidget);
+        expect(find.text('Moi'), findsOneWidget);
 
-      // Vote Yes for Card 1
-      await tester.tap(find.byKey(const Key('together_vote_yes')));
-      await tester.pumpAndSettle();
+        // Vote Yes for Card 1
+        await tester.tap(find.byKey(const Key('together_vote_yes')));
+        await tester.pumpAndSettle();
 
-      // Card 2: Inception
-      expect(find.text('Inception'), findsOneWidget);
-      expect(find.textContaining('Titre 2 sur 2'), findsOneWidget);
+        // Card 2: Inception
+        expect(find.text('Inception'), findsOneWidget);
+        expect(find.textContaining('Titre 2 sur 2'), findsOneWidget);
 
-      // Vote No for Card 2
-      await tester.tap(find.byKey(const Key('together_vote_no')));
-      await tester.pumpAndSettle();
+        // Vote No for Card 2
+        await tester.tap(find.byKey(const Key('together_vote_no')));
+        await tester.pumpAndSettle();
 
-      // Next voter: Léa transition screen
-      expect(find.text('Passez le téléphone à Léa'), findsOneWidget);
-      expect(find.text('C\'est parti !'), findsOneWidget);
-    });
+        // Next voter: Léa transition screen
+        expect(find.text('Passez le téléphone à Léa'), findsOneWidget);
+        expect(find.text('C\'est parti !'), findsOneWidget);
+      },
+    );
 
-    testWidgets('exit confirmation dialog intercepts back button and leaves on confirm', (
-      tester,
-    ) async {
-      final candidates = [
-        TogetherVoteCandidate(item: createItem(1, 'Interstellar')),
-      ];
-      final participants = ['Moi', 'Léa'];
+    testWidgets(
+      'exit confirmation dialog intercepts back button and leaves on confirm',
+      (tester) async {
+        final candidates = [
+          TogetherVoteCandidate(item: createItem(1, 'Interstellar')),
+        ];
+        final participants = ['Moi', 'Léa'];
 
-      await tester.pumpWidget(
-        buildSubject(candidates: candidates, participants: participants),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildSubject(candidates: candidates, participants: participants),
+        );
+        await tester.pumpAndSettle();
 
-      // Tap close icon
-      await tester.tap(find.byIcon(Icons.close));
-      await tester.pumpAndSettle();
+        // Tap close icon
+        await tester.tap(find.byIcon(Icons.close));
+        await tester.pumpAndSettle();
 
-      // Dialog opens
-      expect(find.text('Quitter le vote'), findsOneWidget);
-      expect(
-        find.textContaining('Les votes déjà donnés seront perdus'),
-        findsOneWidget,
-      );
+        // Dialog opens
+        expect(find.text('Quitter le vote'), findsOneWidget);
+        expect(
+          find.textContaining('Les votes déjà donnés seront perdus'),
+          findsOneWidget,
+        );
 
-      // Tap Quitter
-      await tester.tap(find.text('Quitter'));
-      await tester.pumpAndSettle();
+        // Tap Quitter
+        await tester.tap(find.text('Quitter'));
+        await tester.pumpAndSettle();
 
-      expect(sessionProvider.isVoting, isFalse);
-    });
+        expect(sessionProvider.isVoting, isFalse);
+      },
+    );
 
     testWidgets('completes full vote and displays winner screen with results', (
       tester,
@@ -239,8 +247,14 @@ void main() {
       expect(find.text('#2'), findsOneWidget);
 
       // Action buttons
-      expect(find.byKey(const Key('together_watch_this_button')), findsOneWidget);
-      expect(find.byKey(const Key('together_review_list_button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('together_watch_this_button')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('together_review_list_button')),
+        findsOneWidget,
+      );
 
       // Tap "On le regarde !"
       await tester.tap(find.byKey(const Key('together_watch_this_button')));
@@ -251,66 +265,70 @@ void main() {
       expect(sessionProvider.hasSession, isFalse);
     });
 
-    testWidgets('shows tie badge when winners have identical approvals and rating', (
-      tester,
-    ) async {
-      final candidates = [
-        TogetherVoteCandidate(item: createItem(1, 'Movie A', rating: 8.0)),
-        TogetherVoteCandidate(item: createItem(2, 'Movie B', rating: 8.0)),
-      ];
-      final participants = ['Moi'];
+    testWidgets(
+      'shows tie badge when winners have identical approvals and rating',
+      (tester) async {
+        final candidates = [
+          TogetherVoteCandidate(item: createItem(1, 'Movie A', rating: 8.0)),
+          TogetherVoteCandidate(item: createItem(2, 'Movie B', rating: 8.0)),
+        ];
+        final participants = ['Moi'];
 
-      final engine = TogetherVoteEngine(
-        candidates: candidates,
-        participants: participants,
-      );
-
-      engine.startTurn();
-      engine.castVote(true);
-      engine.castVote(true);
-
-      await tester.pumpWidget(
-        buildSubject(
+        final engine = TogetherVoteEngine(
           candidates: candidates,
           participants: participants,
-          engine: engine,
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
 
-      expect(find.text('Égalité'), findsOneWidget);
-    });
+        engine.startTurn();
+        engine.castVote(true);
+        engine.castVote(true);
 
-    testWidgets('TogetherVotePage does not dispose injected engine when unmounted', (
-      tester,
-    ) async {
-      final candidates = [
-        TogetherVoteCandidate(item: createItem(1, 'Movie A', rating: 8.0)),
-      ];
-      final engine = TogetherVoteEngine(
-        candidates: candidates,
-        participants: ['Moi'],
-      );
+        await tester.pumpWidget(
+          buildSubject(
+            candidates: candidates,
+            participants: participants,
+            engine: engine,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.pumpWidget(
-        buildSubject(
+        expect(find.text('Égalité'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'TogetherVotePage does not dispose injected engine when unmounted',
+      (tester) async {
+        final candidates = [
+          TogetherVoteCandidate(item: createItem(1, 'Movie A', rating: 8.0)),
+        ];
+        final engine = TogetherVoteEngine(
           candidates: candidates,
           participants: ['Moi'],
-          engine: engine,
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
 
-      // Unmount page
-      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildSubject(
+            candidates: candidates,
+            participants: ['Moi'],
+            engine: engine,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Injected engine must not be disposed
-      void dummyListener() {}
-      expect(() {
-        engine.addListener(dummyListener);
-        engine.removeListener(dummyListener);
-      }, returnsNormally);
-    });
+        // Unmount page
+        await tester.pumpWidget(
+          const MaterialApp(home: Scaffold(body: SizedBox())),
+        );
+        await tester.pumpAndSettle();
+
+        // Injected engine must not be disposed
+        void dummyListener() {}
+        expect(() {
+          engine.addListener(dummyListener);
+          engine.removeListener(dummyListener);
+        }, returnsNormally);
+      },
+    );
   });
 }

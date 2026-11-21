@@ -102,8 +102,9 @@ class _ListsOverviewState extends State<ListsOverview> {
     final l10n = context.l10n;
     final colors = context.appColors;
     final libraryProvider = context.watch<LibraryProvider?>();
-    final searchProvider =
-        libraryProvider == null ? context.watch<SearchProvider>() : null;
+    final searchProvider = libraryProvider == null
+        ? context.watch<SearchProvider>()
+        : null;
     final dynamic provider = libraryProvider ?? searchProvider;
     final names = [
       ...provider.listNames.where((name) => name == kWatchlistName),

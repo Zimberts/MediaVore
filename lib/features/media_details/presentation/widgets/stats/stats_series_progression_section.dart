@@ -54,8 +54,9 @@ class SeriesProgressionSection extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: ratio,
                     minHeight: 6,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     valueColor: AlwaysStoppedAnimation(
                       Theme.of(context).colorScheme.primary,
                     ),

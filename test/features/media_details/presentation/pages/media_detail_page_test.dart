@@ -449,9 +449,7 @@ void main() {
       when(
         () => mockMediaRepository.getMediaDetails(any()),
       ).thenAnswer((_) async => tMediaDetails);
-      when(
-        () => mockMediaRepository.getActorDetails(42),
-      ).thenAnswer(
+      when(() => mockMediaRepository.getActorDetails(42)).thenAnswer(
         (_) async => const ActorDetails(id: 42, name: 'Christopher Nolan'),
       );
 

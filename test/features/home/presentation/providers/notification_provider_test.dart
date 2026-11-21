@@ -32,18 +32,16 @@ void main() {
 
   setUp(() {
     mockRepository = MockMediaRepository();
-    when(() => mockRepository.getNotifiedItems()).thenAnswer(
-      (_) async => [tNotified],
-    );
-    when(() => mockRepository.watchNotifiedItems()).thenAnswer(
-      (_) => const Stream.empty(),
-    );
-    when(() => mockRepository.toggleNotification(any())).thenAnswer(
-      (_) async {},
-    );
-    when(() => mockRepository.refreshNotifiedItems()).thenAnswer(
-      (_) async {},
-    );
+    when(
+      () => mockRepository.getNotifiedItems(),
+    ).thenAnswer((_) async => [tNotified]);
+    when(
+      () => mockRepository.watchNotifiedItems(),
+    ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockRepository.toggleNotification(any()),
+    ).thenAnswer((_) async {});
+    when(() => mockRepository.refreshNotifiedItems()).thenAnswer((_) async {});
 
     provider = NotificationProvider(mockRepository);
   });

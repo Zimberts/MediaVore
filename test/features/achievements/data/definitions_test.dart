@@ -89,30 +89,42 @@ void main() {
       }
     });
 
-    test('should declare a known category on the first tier of each family', () {
-      final seen = <String>{};
-      const knownCategories = {
-        'movies',
-        'tv',
-        'books',
-        'discovery',
-        'together',
-        'regularity',
-      };
-      for (final def in defs) {
-        final group = (def['group'] ?? def['id']) as String;
-        if (seen.add(group)) {
-          expect(def['category'], isA<String>(),
-              reason: 'Family $group missing category');
-          expect(knownCategories, contains(def['category']),
-              reason: 'Unknown category on $group');
-        } else {
-          expect(def['category'], isNull,
-              reason: 'Category should only be on first tier (${def['id']})');
+    test(
+      'should declare a known category on the first tier of each family',
+      () {
+        final seen = <String>{};
+        const knownCategories = {
+          'movies',
+          'tv',
+          'books',
+          'discovery',
+          'together',
+          'regularity',
+        };
+        for (final def in defs) {
+          final group = (def['group'] ?? def['id']) as String;
+          if (seen.add(group)) {
+            expect(
+              def['category'],
+              isA<String>(),
+              reason: 'Family $group missing category',
+            );
+            expect(
+              knownCategories,
+              contains(def['category']),
+              reason: 'Unknown category on $group',
+            );
+          } else {
+            expect(
+              def['category'],
+              isNull,
+              reason: 'Category should only be on first tier (${def['id']})',
+            );
+          }
         }
-      }
-      expect(seen.length, 57);
-    });
+        expect(seen.length, 57);
+      },
+    );
 
     test('should have the required fields on every entry', () {
       for (final def in defs) {

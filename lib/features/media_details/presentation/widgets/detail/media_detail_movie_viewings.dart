@@ -58,9 +58,7 @@ class MediaDetailMovieViewings extends StatelessWidget {
         child: Text(
           summaryText,
           key: const Key('movie_seen_summary'),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colors.text2,
-          ),
+          style: theme.textTheme.bodyMedium?.copyWith(color: colors.text2),
         ),
       );
     }
@@ -146,10 +144,7 @@ class _MovieViewingTile extends StatelessWidget {
                 title: l10n.seenRemoveLogTitle,
                 message: l10n.seenRemoveLogMessage,
                 actions: [
-                  AppDialogAction(
-                    label: l10n.commonCancel,
-                    value: false,
-                  ),
+                  AppDialogAction(label: l10n.commonCancel, value: false),
                   AppDialogAction(
                     label: l10n.commonDelete,
                     value: true,

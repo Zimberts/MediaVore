@@ -298,15 +298,18 @@ void main() {
       expect(find.text('Prochain : S1 É4 · 50m'), findsOneWidget);
     });
 
-    testWidgets('should refresh the releases from the button with force: true and reload lists (#391)', (tester) async {
-      await pumpHome(tester);
+    testWidgets(
+      'should refresh the releases from the button with force: true and reload lists (#391)',
+      (tester) async {
+        await pumpHome(tester);
 
-      await tester.tap(find.byKey(const Key('home_refresh')));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('home_refresh')));
+        await tester.pumpAndSettle();
 
-      expect(repository.refreshCalls, 1);
-      expect(repository.lastRefreshForce, isTrue);
-    });
+        expect(repository.refreshCalls, 1);
+        expect(repository.lastRefreshForce, isTrue);
+      },
+    );
 
     testWidgets('should tell when the app is offline', (tester) async {
       await pumpHome(tester);

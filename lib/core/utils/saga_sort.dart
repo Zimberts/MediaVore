@@ -43,7 +43,9 @@ List<MediaItem> rotateSagaElements(List<MediaItem> items, int currentId) {
   final index = sorted.indexWhere((i) => i.id == currentId);
   if (index == -1) return sorted;
 
-  final after = index + 1 < sorted.length ? sorted.sublist(index + 1) : <MediaItem>[];
+  final after = index + 1 < sorted.length
+      ? sorted.sublist(index + 1)
+      : <MediaItem>[];
   final before = sorted.sublist(0, index);
   return [...after, ...before];
 }

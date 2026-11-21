@@ -96,7 +96,9 @@ void callbackDispatcher() {
               }
             }
           } catch (e) {
-            debugPrint('[Background] refreshReturningSeries($tmdbId) failed: $e');
+            debugPrint(
+              '[Background] refreshReturningSeries($tmdbId) failed: $e',
+            );
           }
         }
 

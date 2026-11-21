@@ -116,9 +116,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   void _selectType(MediaType? type) {
     final provider = context.read<SearchProvider>();
     if (provider.filterType == type) return;
-    provider.setFilters(
-      filters: provider.filters.copyWith(type: () => type),
-    );
+    provider.setFilters(filters: provider.filters.copyWith(type: () => type));
     _refreshDiscovery();
   }
 

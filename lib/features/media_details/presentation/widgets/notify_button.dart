@@ -13,8 +13,9 @@ class NotifyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final notifProvider = context.watch<NotificationProvider?>();
-    final searchProvider =
-        notifProvider == null ? context.watch<SearchProvider>() : null;
+    final searchProvider = notifProvider == null
+        ? context.watch<SearchProvider>()
+        : null;
     final isNotified = notifProvider != null
         ? notifProvider.isNotified(item)
         : searchProvider!.isNotified(item);

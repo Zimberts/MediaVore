@@ -290,37 +290,45 @@ void main() {
   });
 
   group('swipe_decisions', () {
-    test('should count recorded swipe decisions and date milestone by the target-th decision', () async {
-      final t1 = DateTime(2024, 1, 1, 12);
-      final t2 = DateTime(2024, 1, 2, 12);
-      final t3 = DateTime(2024, 1, 3, 12);
-      when(() => local.getSwipeDecisions()).thenAnswer(
-        (_) async => [_swipe(1, t1), _swipe(2, t2), _swipe(3, t3)],
-      );
+    test(
+      'should count recorded swipe decisions and date milestone by the target-th decision',
+      () async {
+        final t1 = DateTime(2024, 1, 1, 12);
+        final t2 = DateTime(2024, 1, 2, 12);
+        final t3 = DateTime(2024, 1, 3, 12);
+        when(() => local.getSwipeDecisions()).thenAnswer(
+          (_) async => [_swipe(1, t1), _swipe(2, t2), _swipe(3, t3)],
+        );
 
-      final a = await evaluate(
-        repo([_def('swipe_decisions', 2), _def('swipe_decisions', 5)]),
-      );
+        final a = await evaluate(
+          repo([_def('swipe_decisions', 2), _def('swipe_decisions', 5)]),
+        );
 
-      expect(a['swipe_decisions_2']!.isUnlocked, isTrue);
-      expect(a['swipe_decisions_2']!.unlockedAt, t2);
-      expect(a['swipe_decisions_5']!.isUnlocked, isFalse);
-      expect(a['swipe_decisions_5']!.progressLabel, '3/5');
-      expect(a['swipe_decisions_5']!.progress, closeTo(3 / 5, 0.001));
-    });
+        expect(a['swipe_decisions_2']!.isUnlocked, isTrue);
+        expect(a['swipe_decisions_2']!.unlockedAt, t2);
+        expect(a['swipe_decisions_5']!.isUnlocked, isFalse);
+        expect(a['swipe_decisions_5']!.progressLabel, '3/5');
+        expect(a['swipe_decisions_5']!.progress, closeTo(3 / 5, 0.001));
+      },
+    );
 
-    test('should stay unlocked once persisted even after swipe decisions are cleared', () async {
-      when(() => local.getSwipeDecisions()).thenAnswer((_) async => []);
-      final r = repo([_def('swipe_decisions', 10)]);
-      await r.unlockAchievement('swipe_decisions_10', DateTime(2024, 2, 1));
+    test(
+      'should stay unlocked once persisted even after swipe decisions are cleared',
+      () async {
+        when(() => local.getSwipeDecisions()).thenAnswer((_) async => []);
+        final r = repo([_def('swipe_decisions', 10)]);
+        await r.unlockAchievement('swipe_decisions_10', DateTime(2024, 2, 1));
 
-      final a = await evaluate(r);
-      expect(a['swipe_decisions_10']!.isUnlocked, isTrue);
-      expect(a['swipe_decisions_10']!.unlockedAt, DateTime(2024, 2, 1));
-    });
+        final a = await evaluate(r);
+        expect(a['swipe_decisions_10']!.isUnlocked, isTrue);
+        expect(a['swipe_decisions_10']!.unlockedAt, DateTime(2024, 2, 1));
+      },
+    );
 
     test('should stay at 0 when swipe decisions cannot be read', () async {
-      when(() => local.getSwipeDecisions()).thenThrow(Exception('database error'));
+      when(
+        () => local.getSwipeDecisions(),
+      ).thenThrow(Exception('database error'));
       final a = await evaluate(repo([_def('swipe_decisions', 10)]));
       expect(a['swipe_decisions_10']!.isUnlocked, isFalse);
       expect(a['swipe_decisions_10']!.progress, 0.0);
@@ -328,43 +336,58 @@ void main() {
   });
 
   group('together_choices', () {
-    test('should read count from SharedPreferences and reach milestone', () async {
-      final prefs = MockSharedPreferences();
-      when(() => prefs.getInt(TogetherSessionProvider.togetherChoicesKey)).thenReturn(10);
+    test(
+      'should read count from SharedPreferences and reach milestone',
+      () async {
+        final prefs = MockSharedPreferences();
+        when(
+          () => prefs.getInt(TogetherSessionProvider.togetherChoicesKey),
+        ).thenReturn(10);
 
-      final before = DateTime.now();
-      final a = await evaluate(
-        repo(
-          [_def('together_choices', 1), _def('together_choices', 10), _def('together_choices', 25)],
-          prefs: prefs,
-        ),
-      );
+        final before = DateTime.now();
+        final a = await evaluate(
+          repo([
+            _def('together_choices', 1),
+            _def('together_choices', 10),
+            _def('together_choices', 25),
+          ], prefs: prefs),
+        );
 
-      expect(a['together_choices_1']!.isUnlocked, isTrue);
-      expect(a['together_choices_10']!.isUnlocked, isTrue);
-      expect(a['together_choices_10']!.unlockedAt!.isBefore(before), isFalse);
-      expect(a['together_choices_25']!.isUnlocked, isFalse);
-      expect(a['together_choices_25']!.progressLabel, '10/25');
-      expect(a['together_choices_25']!.progress, closeTo(10 / 25, 0.001));
-    });
+        expect(a['together_choices_1']!.isUnlocked, isTrue);
+        expect(a['together_choices_10']!.isUnlocked, isTrue);
+        expect(a['together_choices_10']!.unlockedAt!.isBefore(before), isFalse);
+        expect(a['together_choices_25']!.isUnlocked, isFalse);
+        expect(a['together_choices_25']!.progressLabel, '10/25');
+        expect(a['together_choices_25']!.progress, closeTo(10 / 25, 0.001));
+      },
+    );
 
-    test('should stay unlocked once persisted even if count regresses', () async {
-      final prefs = MockSharedPreferences();
-      when(() => prefs.getInt(TogetherSessionProvider.togetherChoicesKey)).thenReturn(0);
+    test(
+      'should stay unlocked once persisted even if count regresses',
+      () async {
+        final prefs = MockSharedPreferences();
+        when(
+          () => prefs.getInt(TogetherSessionProvider.togetherChoicesKey),
+        ).thenReturn(0);
 
-      final r = repo([_def('together_choices', 10)], prefs: prefs);
-      await r.unlockAchievement('together_choices_10', DateTime(2024, 3, 1));
+        final r = repo([_def('together_choices', 10)], prefs: prefs);
+        await r.unlockAchievement('together_choices_10', DateTime(2024, 3, 1));
 
-      final a = await evaluate(r);
-      expect(a['together_choices_10']!.isUnlocked, isTrue);
-      expect(a['together_choices_10']!.unlockedAt, DateTime(2024, 3, 1));
-    });
+        final a = await evaluate(r);
+        expect(a['together_choices_10']!.isUnlocked, isTrue);
+        expect(a['together_choices_10']!.unlockedAt, DateTime(2024, 3, 1));
+      },
+    );
 
     test('should handle missing count gracefully', () async {
       final prefs = MockSharedPreferences();
-      when(() => prefs.getInt(TogetherSessionProvider.togetherChoicesKey)).thenReturn(null);
+      when(
+        () => prefs.getInt(TogetherSessionProvider.togetherChoicesKey),
+      ).thenReturn(null);
 
-      final a = await evaluate(repo([_def('together_choices', 1)], prefs: prefs));
+      final a = await evaluate(
+        repo([_def('together_choices', 1)], prefs: prefs),
+      );
       expect(a['together_choices_1']!.isUnlocked, isFalse);
       expect(a['together_choices_1']!.progressLabel, '0/1');
     });

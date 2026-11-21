@@ -73,9 +73,9 @@ void main() {
     when(() => mockSearchProvider.seenItems).thenReturn([]);
     when(() => mockSearchProvider.listNames).thenReturn(['watchlist']);
     when(() => mockSearchProvider.isItemInList(any(), any())).thenReturn(false);
-    when(() => mockSearchProvider.markItemSeen(any())).thenAnswer(
-      (_) async => () async {},
-    );
+    when(
+      () => mockSearchProvider.markItemSeen(any()),
+    ).thenAnswer((_) async => () async {});
     when(
       () => mockSearchProvider.getPreviousUnseenEpisodes(
         tvId: any(named: 'tvId'),
@@ -142,9 +142,7 @@ void main() {
           ),
       ];
 
-      await tester.pumpWidget(
-        buildWidget(item: tTvItem, seenStatus: seen),
-      );
+      await tester.pumpWidget(buildWidget(item: tTvItem, seenStatus: seen));
       await tester.pumpAndSettle();
 
       // Title
@@ -191,53 +189,46 @@ void main() {
     },
   );
 
-  testWidgets('expanded season displays episodes list with checkmark styling and duration', (
-    tester,
-  ) async {
-    final seen = [
-      SeenItem(
-        tmdbId: 1,
-        type: MediaType.tv,
-        title: 'Breaking Bad',
-        seenDate: DateTime(2023, 1, 1),
-        seasonNumber: 1,
-        episodeNumber: 1,
-      ),
-    ];
-    when(() => mockSearchProvider.seenItems).thenReturn(seen);
+  testWidgets(
+    'expanded season displays episodes list with checkmark styling and duration',
+    (tester) async {
+      final seen = [
+        SeenItem(
+          tmdbId: 1,
+          type: MediaType.tv,
+          title: 'Breaking Bad',
+          seenDate: DateTime(2023, 1, 1),
+          seasonNumber: 1,
+          episodeNumber: 1,
+        ),
+      ];
+      when(() => mockSearchProvider.seenItems).thenReturn(seen);
 
-    await tester.pumpWidget(
-      buildWidget(
-        item: tTvItem,
-        seenStatus: seen,
-        expandedSeason: 1,
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        buildWidget(item: tTvItem, seenStatus: seen, expandedSeason: 1),
+      );
+      await tester.pumpAndSettle();
 
-    // Check episode row items
-    expect(find.text('E1: Episode 1'), findsOneWidget);
-    expect(find.text('E2: Episode 2'), findsOneWidget);
-    expect(find.text('Overview for episode 1'), findsOneWidget);
+      // Check episode row items
+      expect(find.text('E1: Episode 1'), findsOneWidget);
+      expect(find.text('E2: Episode 2'), findsOneWidget);
+      expect(find.text('Overview for episode 1'), findsOneWidget);
 
-    // Episode 1 runtime & air date & seen date:
-    // "50 min · 11 janv. 2008 · Vu 1 fois · le 1 janv. 2023"
-    expect(find.textContaining('50 min'), findsAtLeastNWidgets(1));
-    expect(find.textContaining('Vu 1 fois'), findsOneWidget);
+      // Episode 1 runtime & air date & seen date:
+      // "50 min · 11 janv. 2008 · Vu 1 fois · le 1 janv. 2023"
+      expect(find.textContaining('50 min'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('Vu 1 fois'), findsOneWidget);
 
-    // Episode 1 is seen: check icon visible
-    expect(find.byIcon(Icons.check_circle), findsAtLeastNWidgets(1));
-  });
+      // Episode 1 is seen: check icon visible
+      expect(find.byIcon(Icons.check_circle), findsAtLeastNWidgets(1));
+    },
+  );
 
   testWidgets('tapping unseen episode checkmark calls markItemSeen', (
     tester,
   ) async {
     await tester.pumpWidget(
-      buildWidget(
-        item: tTvItem,
-        seenStatus: const [],
-        expandedSeason: 1,
-      ),
+      buildWidget(item: tTvItem, seenStatus: const [], expandedSeason: 1),
     );
     await tester.pumpAndSettle();
 
@@ -251,57 +242,59 @@ void main() {
     verify(() => mockSearchProvider.markItemSeen(any())).called(1);
   });
 
-  testWidgets('unreleased episode is grayed out and hidden when hideNonReleased is enabled', (
-    tester,
-  ) async {
-    final futureDate = DateTime.now().add(const Duration(days: 30));
-    final episodesWithUnreleased = [
-      {
-        'episode_number': 1,
-        'name': 'Aired Episode',
-        'air_date': '2020-01-01',
-        'runtime': 45,
-      },
-      {
-        'episode_number': 2,
-        'name': 'Future Episode',
-        'air_date': '${futureDate.year}-${futureDate.month.toString().padLeft(2, '0')}-${futureDate.day.toString().padLeft(2, '0')}',
-        'runtime': 45,
-      },
-    ];
+  testWidgets(
+    'unreleased episode is grayed out and hidden when hideNonReleased is enabled',
+    (tester) async {
+      final futureDate = DateTime.now().add(const Duration(days: 30));
+      final episodesWithUnreleased = [
+        {
+          'episode_number': 1,
+          'name': 'Aired Episode',
+          'air_date': '2020-01-01',
+          'runtime': 45,
+        },
+        {
+          'episode_number': 2,
+          'name': 'Future Episode',
+          'air_date':
+              '${futureDate.year}-${futureDate.month.toString().padLeft(2, '0')}-${futureDate.day.toString().padLeft(2, '0')}',
+          'runtime': 45,
+        },
+      ];
 
-    // Case 1: hideNonReleased = false -> Future episode is displayed
-    when(() => mockSettingsProvider.hideNonReleased).thenReturn(false);
+      // Case 1: hideNonReleased = false -> Future episode is displayed
+      when(() => mockSettingsProvider.hideNonReleased).thenReturn(false);
 
-    await tester.pumpWidget(
-      buildWidget(
-        item: tTvItem,
-        seenStatus: const [],
-        expandedSeason: 1,
-        episodesBySeason: {1: episodesWithUnreleased},
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        buildWidget(
+          item: tTvItem,
+          seenStatus: const [],
+          expandedSeason: 1,
+          episodesBySeason: {1: episodesWithUnreleased},
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('E1: Aired Episode'), findsOneWidget);
-    expect(find.text('E2: Future Episode'), findsOneWidget);
+      expect(find.text('E1: Aired Episode'), findsOneWidget);
+      expect(find.text('E2: Future Episode'), findsOneWidget);
 
-    // Case 2: hideNonReleased = true -> Future episode is hidden
-    when(() => mockSettingsProvider.hideNonReleased).thenReturn(true);
+      // Case 2: hideNonReleased = true -> Future episode is hidden
+      when(() => mockSettingsProvider.hideNonReleased).thenReturn(true);
 
-    await tester.pumpWidget(
-      buildWidget(
-        item: tTvItem,
-        seenStatus: const [],
-        expandedSeason: 1,
-        episodesBySeason: {1: episodesWithUnreleased},
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        buildWidget(
+          item: tTvItem,
+          seenStatus: const [],
+          expandedSeason: 1,
+          episodesBySeason: {1: episodesWithUnreleased},
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('E1: Aired Episode'), findsOneWidget);
-    expect(find.text('E2: Future Episode'), findsNothing);
-  });
+      expect(find.text('E1: Aired Episode'), findsOneWidget);
+      expect(find.text('E2: Future Episode'), findsNothing);
+    },
+  );
 
   testWidgets('English localization formats season subtitle correctly', (
     tester,

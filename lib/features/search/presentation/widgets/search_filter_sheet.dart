@@ -306,7 +306,8 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
               const SizedBox(width: 8),
               ChoiceChip(
                 label: Text(l10n.filtersPeriodBefore1990),
-                selected: _currentFilters.period == SearchReleasePeriod.before1990,
+                selected:
+                    _currentFilters.period == SearchReleasePeriod.before1990,
                 onSelected: (selected) {
                   setState(() {
                     _currentFilters = _currentFilters.copyWith(
@@ -366,7 +367,8 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
               const SizedBox(width: 8),
               ChoiceChip(
                 label: Text(l10n.filtersPeriod2020plus),
-                selected: _currentFilters.period == SearchReleasePeriod.d2020plus,
+                selected:
+                    _currentFilters.period == SearchReleasePeriod.d2020plus,
                 onSelected: (selected) {
                   setState(() {
                     _currentFilters = _currentFilters.copyWith(

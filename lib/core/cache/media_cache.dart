@@ -47,7 +47,10 @@ class MediaCache {
     _detailsCache.put(key, details);
     _itemCache.put(key, details.item);
     if (details.item.collectionId != null && details.collection != null) {
-      _collectionPartsCache.put(details.item.collectionId!, details.collection!);
+      _collectionPartsCache.put(
+        details.item.collectionId!,
+        details.collection!,
+      );
     }
 
     final now = DateTime.now();
@@ -189,7 +192,10 @@ class MediaCache {
     );
     if (details == null) return null;
     if (details.item.collectionId != null && details.collection != null) {
-      _collectionPartsCache.put(details.item.collectionId!, details.collection!);
+      _collectionPartsCache.put(
+        details.item.collectionId!,
+        details.collection!,
+      );
     }
     return _detailsCache.remember(key, details);
   }

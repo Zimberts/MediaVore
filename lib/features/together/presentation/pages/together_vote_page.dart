@@ -40,7 +40,8 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
   void initState() {
     super.initState();
     _ownsEngine = widget.engine == null;
-    _engine = widget.engine ??
+    _engine =
+        widget.engine ??
         TogetherVoteEngine(
           candidates: widget.candidates,
           participants: widget.participants,
@@ -133,13 +134,13 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
           title: _engine.isFinished
               ? Text(context.l10n.togetherTonightChoice)
               : !_engine.isTransition
-                  ? Text(
-                      context.l10n.togetherVoteProgress(
-                        _engine.currentCandidateIndex + 1,
-                        _engine.candidates.length,
-                      ),
-                    )
-                  : null,
+              ? Text(
+                  context.l10n.togetherVoteProgress(
+                    _engine.currentCandidateIndex + 1,
+                    _engine.candidates.length,
+                  ),
+                )
+              : null,
           centerTitle: true,
           actions: [
             if (!_engine.isFinished && !_engine.isTransition)
@@ -161,8 +162,8 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
           child: _engine.isFinished
               ? _buildWinnerView(context)
               : _engine.isTransition
-                  ? _buildTransitionView(context)
-                  : _buildVotingCardView(context),
+              ? _buildTransitionView(context)
+              : _buildVotingCardView(context),
         ),
       ),
     );
@@ -194,7 +195,9 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
             ),
             const SizedBox(height: 24),
             Text(
-              isHost ? l10n.togetherYourTurn : l10n.togetherPassPhone(voterName),
+              isHost
+                  ? l10n.togetherYourTurn
+                  : l10n.togetherPassPhone(voterName),
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -203,9 +206,7 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
             const SizedBox(height: 12),
             Text(
               l10n.togetherVoteLimitNotice(_engine.candidates.length),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colors.text2,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(color: colors.text2),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 36),
@@ -273,8 +274,8 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
                       color: _dragDx > 40
                           ? colors.success
                           : _dragDx < -40
-                              ? colors.danger
-                              : colors.border,
+                          ? colors.danger
+                          : colors.border,
                       width: _dragDx.abs() > 40 ? 2 : 1,
                     ),
                   ),
@@ -284,7 +285,8 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
                     children: [
                       Expanded(
                         flex: 3,
-                        child: item.posterPath != null &&
+                        child:
+                            item.posterPath != null &&
                                 item.posterPath!.isNotEmpty
                             ? Image.network(
                                 TmdbImageUtils.buildUrl(
@@ -328,8 +330,8 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
                                       item.title,
                                       style: theme.textTheme.titleLarge
                                           ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -422,9 +424,7 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
     final results = _engine.getResults();
 
     if (results.isEmpty) {
-      return Center(
-        child: Text(l10n.togetherEmptyCommonTitle),
-      );
+      return Center(child: Text(l10n.togetherEmptyCommonTitle));
     }
 
     final winner = results.first;
@@ -458,7 +458,11 @@ class _TogetherVotePageState extends State<TogetherVotePage> {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Container(
                       color: colors.surface2,
-                      child: Icon(Icons.movie, size: 48, color: colors.placeholder),
+                      child: Icon(
+                        Icons.movie,
+                        size: 48,
+                        color: colors.placeholder,
+                      ),
                     ),
                   ),
                 ),

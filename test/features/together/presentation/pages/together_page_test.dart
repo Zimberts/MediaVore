@@ -74,100 +74,111 @@ void main() {
   }
 
   group('TogetherPage', () {
-    testWidgets('renders setup elements and disables see common button when empty', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+    testWidgets(
+      'renders setup elements and disables see common button when empty',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(800, 1600));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(buildSubject());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
 
-      // Type selector
-      expect(find.byKey(const Key('together_type_segmented_button')), findsOneWidget);
+        // Type selector
+        expect(
+          find.byKey(const Key('together_type_segmented_button')),
+          findsOneWidget,
+        );
 
-      // List dropdown
-      expect(find.byKey(const Key('together_list_dropdown')), findsOneWidget);
+        // List dropdown
+        expect(find.byKey(const Key('together_list_dropdown')), findsOneWidget);
 
-      // QR Image
-      expect(find.byKey(const Key('together_qr_image')), findsOneWidget);
+        // QR Image
+        expect(find.byKey(const Key('together_qr_image')), findsOneWidget);
 
-      // Warning notice
-      expect(find.textContaining('Le QR contient votre liste'), findsOneWidget);
+        // Warning notice
+        expect(
+          find.textContaining('Le QR contient votre liste'),
+          findsOneWidget,
+        );
 
-      // Host participant in list
-      expect(find.byKey(const Key('together_participant_host')), findsOneWidget);
+        // Host participant in list
+        expect(
+          find.byKey(const Key('together_participant_host')),
+          findsOneWidget,
+        );
 
-      // Prompt to scan
-      expect(
-        find.textContaining('Scannez au moins un ami pour continuer'),
-        findsOneWidget,
-      );
+        // Prompt to scan
+        expect(
+          find.textContaining('Scannez au moins un ami pour continuer'),
+          findsOneWidget,
+        );
 
-      // "Voir les titres en commun" button exists but is disabled
-      final seeCommonButton = tester.widget<ElevatedButton>(
-        find.byKey(const Key('together_see_common_button')),
-      );
-      expect(seeCommonButton.onPressed, isNull);
-    });
+        // "Voir les titres en commun" button exists but is disabled
+        final seeCommonButton = tester.widget<ElevatedButton>(
+          find.byKey(const Key('together_see_common_button')),
+        );
+        expect(seeCommonButton.onPressed, isNull);
+      },
+    );
 
-    testWidgets('scans friend QR, adds participant, and enables see common button', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+    testWidgets(
+      'scans friend QR, adds participant, and enables see common button',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(800, 1600));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      final friendQrUrl = ListShareCodec.createShareUrl(
-        listName: 'Alice',
-        entries: const [
-          SharedMediaEntry(101, MediaType.movie),
-          SharedMediaEntry(301, MediaType.movie),
-        ],
-        customScheme: true,
-        version: 2,
-      );
+        final friendQrUrl = ListShareCodec.createShareUrl(
+          listName: 'Alice',
+          entries: const [
+            SharedMediaEntry(101, MediaType.movie),
+            SharedMediaEntry(301, MediaType.movie),
+          ],
+          customScheme: true,
+          version: 2,
+        );
 
-      await tester.pumpWidget(
-        buildSubject(
-          scannerBuilder: (context, onCode) {
-            return Center(
-              child: ElevatedButton(
-                key: const Key('mock_scan_trigger'),
-                onPressed: () => onCode(friendQrUrl),
-                child: const Text('Simulate Scan'),
-              ),
-            );
-          },
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildSubject(
+            scannerBuilder: (context, onCode) {
+              return Center(
+                child: ElevatedButton(
+                  key: const Key('mock_scan_trigger'),
+                  onPressed: () => onCode(friendQrUrl),
+                  child: const Text('Simulate Scan'),
+                ),
+              );
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Tap scan button
-      await tester.tap(find.byKey(const Key('together_scan_button')));
-      await tester.pumpAndSettle();
+        // Tap scan button
+        await tester.tap(find.byKey(const Key('together_scan_button')));
+        await tester.pumpAndSettle();
 
-      // Trigger simulated scan
-      expect(find.byKey(const Key('mock_scan_trigger')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('mock_scan_trigger')));
-      await tester.pumpAndSettle();
+        // Trigger simulated scan
+        expect(find.byKey(const Key('mock_scan_trigger')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('mock_scan_trigger')));
+        await tester.pumpAndSettle();
 
-      // Participant Alice should be in the list
-      expect(find.text('Alice'), findsOneWidget);
-      expect(sessionProvider.participants, hasLength(1));
-      expect(sessionProvider.participants.first.name, 'Alice');
+        // Participant Alice should be in the list
+        expect(find.text('Alice'), findsOneWidget);
+        expect(sessionProvider.participants, hasLength(1));
+        expect(sessionProvider.participants.first.name, 'Alice');
 
-      // "Voir les titres en commun" button should now be enabled
-      final seeCommonButton = tester.widget<ElevatedButton>(
-        find.byKey(const Key('together_see_common_button')),
-      );
-      expect(seeCommonButton.onPressed, isNotNull);
+        // "Voir les titres en commun" button should now be enabled
+        final seeCommonButton = tester.widget<ElevatedButton>(
+          find.byKey(const Key('together_see_common_button')),
+        );
+        expect(seeCommonButton.onPressed, isNotNull);
 
-      // Tapping it pushes TogetherResultsPage
-      await tester.tap(find.byKey(const Key('together_see_common_button')));
-      await tester.pumpAndSettle();
+        // Tapping it pushes TogetherResultsPage
+        await tester.tap(find.byKey(const Key('together_see_common_button')));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(TogetherResultsPage), findsOneWidget);
-    });
+        expect(find.byType(TogetherResultsPage), findsOneWidget);
+      },
+    );
 
     testWidgets('allows removing a scanned participant', (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1600));

@@ -177,19 +177,22 @@ void main() {
       expect(genreStats[2].value, 1.0);
     });
 
-    test('calculateHallOfFame finds most watched movie, series and episode', () {
-      final hof = StatsCalculator.calculateHallOfFame(
-        items,
-        metric: StatsMetric.entries,
-      );
-      expect(hof.topMovie?.title, 'M1');
-      expect(hof.topMovie?.count, 1);
+    test(
+      'calculateHallOfFame finds most watched movie, series and episode',
+      () {
+        final hof = StatsCalculator.calculateHallOfFame(
+          items,
+          metric: StatsMetric.entries,
+        );
+        expect(hof.topMovie?.title, 'M1');
+        expect(hof.topMovie?.count, 1);
 
-      expect(hof.topTV?.title, 'TV1');
-      expect(hof.topTV?.count, 2);
+        expect(hof.topTV?.title, 'TV1');
+        expect(hof.topTV?.count, 2);
 
-      expect(hof.topEpisode?.title, 'TV1 S1E1');
-    });
+        expect(hof.topEpisode?.title, 'TV1 S1E1');
+      },
+    );
   });
 
   group('StatsCalculator - Decade stats', () {
@@ -268,26 +271,33 @@ void main() {
       ),
     };
 
-    test('calculateDecadeStats groups correctly and computes average rating', () {
-      final stats = StatsCalculator.calculateDecadeStats(seen, cached);
-      expect(stats.length, 4);
+    test(
+      'calculateDecadeStats groups correctly and computes average rating',
+      () {
+        final stats = StatsCalculator.calculateDecadeStats(seen, cached);
+        expect(stats.length, 4);
 
-      final before90 = stats.firstWhere((s) => s.decadeLabel == 'Before 1990');
-      expect(before90.count, 1);
-      expect(before90.averageRating, closeTo(8.4, 0.01));
+        final before90 = stats.firstWhere(
+          (s) => s.decadeLabel == 'Before 1990',
+        );
+        expect(before90.count, 1);
+        expect(before90.averageRating, closeTo(8.4, 0.01));
 
-      final nineties = stats.firstWhere((s) => s.decadeLabel == '1990–1999');
-      expect(nineties.count, 1);
-      expect(nineties.averageRating, closeTo(9.0, 0.01));
+        final nineties = stats.firstWhere((s) => s.decadeLabel == '1990–1999');
+        expect(nineties.count, 1);
+        expect(nineties.averageRating, closeTo(9.0, 0.01));
 
-      final tens = stats.firstWhere((s) => s.decadeLabel == '2010–2019');
-      expect(tens.count, 1);
-      expect(tens.averageRating, closeTo(7.2, 0.01));
+        final tens = stats.firstWhere((s) => s.decadeLabel == '2010–2019');
+        expect(tens.count, 1);
+        expect(tens.averageRating, closeTo(7.2, 0.01));
 
-      final twenties = stats.firstWhere((s) => s.decadeLabel == '2020 and later');
-      expect(twenties.count, 1);
-      expect(twenties.averageRating, closeTo(6.8, 0.01));
-    });
+        final twenties = stats.firstWhere(
+          (s) => s.decadeLabel == '2020 and later',
+        );
+        expect(twenties.count, 1);
+        expect(twenties.averageRating, closeTo(6.8, 0.01));
+      },
+    );
   });
 
   group('StatsCalculator - Series progression', () {
@@ -345,19 +355,25 @@ void main() {
       ),
     };
 
-    test('calculateSeriesProgression calculates distinct episodes and progress ratio', () {
-      final progression = StatsCalculator.calculateSeriesProgression(seen, cached);
-      expect(progression.length, 2);
+    test(
+      'calculateSeriesProgression calculates distinct episodes and progress ratio',
+      () {
+        final progression = StatsCalculator.calculateSeriesProgression(
+          seen,
+          cached,
+        );
+        expect(progression.length, 2);
 
-      final showA = progression.firstWhere((p) => p.tmdbId == 100);
-      expect(showA.watchedEpisodes, 2); // 2 distinct episodes (ep 1 and ep 2)
-      expect(showA.totalEpisodes, 10);
-      expect(showA.progressRatio, closeTo(0.2, 0.01));
+        final showA = progression.firstWhere((p) => p.tmdbId == 100);
+        expect(showA.watchedEpisodes, 2); // 2 distinct episodes (ep 1 and ep 2)
+        expect(showA.totalEpisodes, 10);
+        expect(showA.progressRatio, closeTo(0.2, 0.01));
 
-      final showB = progression.firstWhere((p) => p.tmdbId == 200);
-      expect(showB.watchedEpisodes, 1);
-      expect(showB.totalEpisodes, isNull);
-      expect(showB.progressRatio, isNull);
-    });
+        final showB = progression.firstWhere((p) => p.tmdbId == 200);
+        expect(showB.watchedEpisodes, 1);
+        expect(showB.totalEpisodes, isNull);
+        expect(showB.progressRatio, isNull);
+      },
+    );
   });
 }

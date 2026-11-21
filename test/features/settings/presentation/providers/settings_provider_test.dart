@@ -258,7 +258,9 @@ void main() {
     });
 
     test('should fall back to the defaults on an unknown identifier', () {
-      when(() => mockPrefs.getString('lightPalette')).thenReturn('unknown_theme');
+      when(
+        () => mockPrefs.getString('lightPalette'),
+      ).thenReturn('unknown_theme');
       when(() => mockPrefs.getString('darkPalette')).thenReturn('');
 
       final loaded = build();

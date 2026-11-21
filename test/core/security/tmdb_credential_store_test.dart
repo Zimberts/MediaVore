@@ -21,7 +21,9 @@ void main() {
         value: any(named: 'value'),
       ),
     ).thenAnswer((_) => Future.value());
-    when(() => secure.delete(key: any(named: 'key'))).thenAnswer((_) => Future.value());
+    when(
+      () => secure.delete(key: any(named: 'key')),
+    ).thenAnswer((_) => Future.value());
   });
 
   group('TmdbCredentialStore.load', () {

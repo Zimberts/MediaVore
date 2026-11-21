@@ -44,16 +44,15 @@ void main() {
   group('progressFilterKinds', () {
     test('should offer no filter when a single kind is present', () {
       expect(progressFilterKinds([]), isEmpty);
-      expect(progressFilterKinds([MediaKind.series, MediaKind.series]), isEmpty);
+      expect(
+        progressFilterKinds([MediaKind.series, MediaKind.series]),
+        isEmpty,
+      );
     });
 
     test('should offer the kinds present, in order, from two kinds on', () {
       expect(
-        progressFilterKinds([
-          MediaKind.book,
-          MediaKind.series,
-          MediaKind.book,
-        ]),
+        progressFilterKinds([MediaKind.book, MediaKind.series, MediaKind.book]),
         [MediaKind.series, MediaKind.book],
       );
     });

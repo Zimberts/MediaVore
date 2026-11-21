@@ -48,10 +48,7 @@ void main() {
     when(() => mockPrefs.setBool(any(), any())).thenAnswer((_) async => true);
     when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
 
-    settingsProvider = SettingsProvider(
-      mockPrefs,
-      FakeTmdbCredentialStore(),
-    );
+    settingsProvider = SettingsProvider(mockPrefs, FakeTmdbCredentialStore());
 
     // Default mocks for SearchProvider init
     when(
@@ -87,12 +84,7 @@ void main() {
       () => mockRepository.getMediaDetails(any(), type: any(named: 'type')),
     ).thenAnswer(
       (_) async => MediaDetails(
-        item: const MediaItem(
-          id: 1,
-          title: 'T',
-          overview: '',
-          releaseDate: '',
-        ),
+        item: const MediaItem(id: 1, title: 'T', overview: '', releaseDate: ''),
         cast: [],
       ),
     );
@@ -181,20 +173,21 @@ void main() {
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('tapping check_circle_outline marks immediately with DateTime.now() and shows Undo', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
+    testWidgets(
+      'tapping check_circle_outline marks immediately with DateTime.now() and shows Undo',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.check_circle_outline));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.check_circle_outline));
+        await tester.pumpAndSettle();
 
-      // No date picker dialog shown
-      expect(find.byType(Dialog), findsNothing);
-      verify(() => mockRepository.markAsSeen(any())).called(1);
-      expect(find.text('Undo'), findsOneWidget);
-    });
+        // No date picker dialog shown
+        expect(find.byType(Dialog), findsNothing);
+        verify(() => mockRepository.markAsSeen(any())).called(1);
+        expect(find.text('Undo'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'tapping check_circle_outline optimistically updates icon to check_circle immediately before repository completes (#355)',
@@ -223,105 +216,110 @@ void main() {
       },
     );
 
-    testWidgets('tapping check_circle icon (when seen) adds viewing immediately without dialog', (
-      WidgetTester tester,
-    ) async {
-      final viewings = [
-        SeenItem(
-          id: 1,
-          tmdbId: 1,
-          type: MediaType.movie,
-          title: 'Inception',
-          seenDate: DateTime(2023),
-        ),
-      ];
-      when(
-        () => mockRepository.getSeenItems(),
-      ).thenAnswer((_) async => viewings);
-      await searchProvider.loadAllSeenStatus();
+    testWidgets(
+      'tapping check_circle icon (when seen) adds viewing immediately without dialog',
+      (WidgetTester tester) async {
+        final viewings = [
+          SeenItem(
+            id: 1,
+            tmdbId: 1,
+            type: MediaType.movie,
+            title: 'Inception',
+            seenDate: DateTime(2023),
+          ),
+        ];
+        when(
+          () => mockRepository.getSeenItems(),
+        ).thenAnswer((_) async => viewings);
+        await searchProvider.loadAllSeenStatus();
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.check_circle));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.check_circle));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(BottomSheet), findsNothing);
-      expect(find.byType(Dialog), findsNothing);
-      verify(() => mockRepository.markAsSeen(any())).called(1);
-      expect(find.text('Undo'), findsOneWidget);
-    });
+        expect(find.byType(BottomSheet), findsNothing);
+        expect(find.byType(Dialog), findsNothing);
+        verify(() => mockRepository.markAsSeen(any())).called(1);
+        expect(find.text('Undo'), findsOneWidget);
+      },
+    );
 
-    testWidgets('shows confirmation dialog when long-pressing to clear history', (
-      WidgetTester tester,
-    ) async {
-      final viewings = [
-        SeenItem(
-          id: 1,
-          tmdbId: 1,
-          type: MediaType.movie,
-          title: 'Inception',
-          seenDate: DateTime(2023),
-        ),
-      ];
-      when(
-        () => mockRepository.getSeenItems(),
-      ).thenAnswer((_) async => viewings);
-      await searchProvider.loadAllSeenStatus();
+    testWidgets(
+      'shows confirmation dialog when long-pressing to clear history',
+      (WidgetTester tester) async {
+        final viewings = [
+          SeenItem(
+            id: 1,
+            tmdbId: 1,
+            type: MediaType.movie,
+            title: 'Inception',
+            seenDate: DateTime(2023),
+          ),
+        ];
+        when(
+          () => mockRepository.getSeenItems(),
+        ).thenAnswer((_) async => viewings);
+        await searchProvider.loadAllSeenStatus();
 
-      when(
-        () => mockRepository.removeFromSeen(
-          any(),
-          any(),
-          seasonNumber: any(named: 'seasonNumber'),
-          episodeNumber: any(named: 'episodeNumber'),
-        ),
-      ).thenAnswer((_) async => {});
+        when(
+          () => mockRepository.removeFromSeen(
+            any(),
+            any(),
+            seasonNumber: any(named: 'seasonNumber'),
+            episodeNumber: any(named: 'episodeNumber'),
+          ),
+        ).thenAnswer((_) async => {});
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
 
-      await tester.longPress(find.byType(ListTile));
-      await tester.pumpAndSettle();
+        await tester.longPress(find.byType(ListTile));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Clear History'), findsOneWidget);
-      expect(find.text('Clear All'), findsOneWidget);
+        expect(find.text('Clear History'), findsOneWidget);
+        expect(find.text('Clear All'), findsOneWidget);
 
-      await tester.tap(find.text('Clear All'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Clear All'));
+        await tester.pumpAndSettle();
 
-      verify(() => mockRepository.removeFromSeen(1, MediaType.movie)).called(1);
-    });
+        verify(
+          () => mockRepository.removeFromSeen(1, MediaType.movie),
+        ).called(1);
+      },
+    );
 
-    testWidgets('primary button has no dots and toggles from Mark as seen to Rewatch', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(createWidgetUnderTest(primary: true));
-      await tester.pump();
+    testWidgets(
+      'primary button has no dots and toggles from Mark as seen to Rewatch',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(primary: true));
+        await tester.pump();
 
-      expect(find.text('Mark as seen'), findsOneWidget);
-      expect(find.text('Mark as seen…'), findsNothing);
+        expect(find.text('Mark as seen'), findsOneWidget);
+        expect(find.text('Mark as seen…'), findsNothing);
 
-      final viewings = [
-        SeenItem(
-          id: 1,
-          tmdbId: 1,
-          type: MediaType.movie,
-          title: 'Inception',
-          seenDate: DateTime(2023),
-        ),
-      ];
-      when(
-        () => mockRepository.getSeenItems(),
-      ).thenAnswer((_) async => viewings);
-      await searchProvider.loadAllSeenStatus();
+        final viewings = [
+          SeenItem(
+            id: 1,
+            tmdbId: 1,
+            type: MediaType.movie,
+            title: 'Inception',
+            seenDate: DateTime(2023),
+          ),
+        ];
+        when(
+          () => mockRepository.getSeenItems(),
+        ).thenAnswer((_) async => viewings);
+        await searchProvider.loadAllSeenStatus();
 
-      await tester.pumpWidget(createWidgetUnderTest(primary: true));
-      await tester.pump();
+        await tester.pumpWidget(createWidgetUnderTest(primary: true));
+        await tester.pump();
 
-      expect(find.text('Rewatch'), findsOneWidget);
-      expect(find.text('Rewatch…'), findsNothing);
-    });
+        expect(find.text('Rewatch'), findsOneWidget);
+        expect(find.text('Rewatch…'), findsNothing);
+      },
+    );
   });
 
   group('SeenManager - Advanced mode', () {
@@ -722,7 +720,9 @@ void main() {
 
   group('Previous unseen episodes prompt & batch marking', () {
     void setupShowWithAnteriorEpisodes() {
-      when(() => mockRepository.getMediaDetails(10, type: MediaType.tv)).thenAnswer(
+      when(
+        () => mockRepository.getMediaDetails(10, type: MediaType.tv),
+      ).thenAnswer(
         (_) async => MediaDetails(
           item: const MediaItem(
             id: 10,
@@ -759,14 +759,36 @@ void main() {
       );
       // S1 complete in seen items
       final seenItems = [
-        SeenItem(id: 1, tmdbId: 10, type: MediaType.tv, title: 'Show', seasonNumber: 1, episodeNumber: 1, seenDate: DateTime(2022)),
-        SeenItem(id: 2, tmdbId: 10, type: MediaType.tv, title: 'Show', seasonNumber: 1, episodeNumber: 2, seenDate: DateTime(2022)),
+        SeenItem(
+          id: 1,
+          tmdbId: 10,
+          type: MediaType.tv,
+          title: 'Show',
+          seasonNumber: 1,
+          episodeNumber: 1,
+          seenDate: DateTime(2022),
+        ),
+        SeenItem(
+          id: 2,
+          tmdbId: 10,
+          type: MediaType.tv,
+          title: 'Show',
+          seasonNumber: 1,
+          episodeNumber: 2,
+          seenDate: DateTime(2022),
+        ),
       ];
-      when(() => mockRepository.getSeenItems()).thenAnswer((_) async => seenItems);
-      when(() => mockRepository.markManyAsSeen(any())).thenAnswer((_) async => Future.value());
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => seenItems);
+      when(
+        () => mockRepository.markManyAsSeen(any()),
+      ).thenAnswer((_) async => Future.value());
     }
 
-    testWidgets('behavior ask: shows prompt proposing 4 previous episodes', (tester) async {
+    testWidgets('behavior ask: shows prompt proposing 4 previous episodes', (
+      tester,
+    ) async {
       setupShowWithAnteriorEpisodes();
       await searchProvider.loadAllSeenStatus();
 
@@ -785,7 +807,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.check_circle_outline));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('4 previous episodes are unseen'), findsOneWidget);
+      expect(
+        find.textContaining('4 previous episodes are unseen'),
+        findsOneWidget,
+      );
       expect(find.text('Remember my choice'), findsOneWidget);
       expect(find.text('No, only this episode'), findsOneWidget);
       expect(find.text('Yes, mark all as seen'), findsOneWidget);
@@ -795,37 +820,44 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify batch mark with 5 episodes
-      verify(() => mockRepository.markManyAsSeen(any(that: hasLength(5)))).called(1);
+      verify(
+        () => mockRepository.markManyAsSeen(any(that: hasLength(5))),
+      ).called(1);
     });
 
-    testWidgets('behavior ask: choosing only this episode marks single episode', (tester) async {
-      setupShowWithAnteriorEpisodes();
-      await searchProvider.loadAllSeenStatus();
+    testWidgets(
+      'behavior ask: choosing only this episode marks single episode',
+      (tester) async {
+        setupShowWithAnteriorEpisodes();
+        await searchProvider.loadAllSeenStatus();
 
-      await tester.pumpWidget(
-        createWidgetUnderTest(
-          tmdbId: 10,
-          type: MediaType.tv,
-          title: 'Show',
-          seasonNumber: 2,
-          episodeNumber: 5,
-          compact: true,
-        ),
-      );
-      await tester.pump();
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            tmdbId: 10,
+            type: MediaType.tv,
+            title: 'Show',
+            seasonNumber: 2,
+            episodeNumber: 5,
+            compact: true,
+          ),
+        );
+        await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.check_circle_outline));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.check_circle_outline));
+        await tester.pumpAndSettle();
 
-      // Tap No, only this episode
-      await tester.tap(find.text('No, only this episode'));
-      await tester.pumpAndSettle();
+        // Tap No, only this episode
+        await tester.tap(find.text('No, only this episode'));
+        await tester.pumpAndSettle();
 
-      verifyNever(() => mockRepository.markManyAsSeen(any()));
-      verify(() => mockRepository.markAsSeen(any())).called(1);
-    });
+        verifyNever(() => mockRepository.markManyAsSeen(any()));
+        verify(() => mockRepository.markAsSeen(any())).called(1);
+      },
+    );
 
-    testWidgets('behavior all: marks all episodes immediately without prompt', (tester) async {
+    testWidgets('behavior all: marks all episodes immediately without prompt', (
+      tester,
+    ) async {
       setupShowWithAnteriorEpisodes();
       await searchProvider.loadAllSeenStatus();
       await settingsProvider.setPreviousEpisodes(PreviousEpisodesBehavior.all);
@@ -846,10 +878,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AlertDialog), findsNothing);
-      verify(() => mockRepository.markManyAsSeen(any(that: hasLength(5)))).called(1);
+      verify(
+        () => mockRepository.markManyAsSeen(any(that: hasLength(5))),
+      ).called(1);
     });
 
-    testWidgets('behavior one: marks only this episode without prompt', (tester) async {
+    testWidgets('behavior one: marks only this episode without prompt', (
+      tester,
+    ) async {
       setupShowWithAnteriorEpisodes();
       await searchProvider.loadAllSeenStatus();
       await settingsProvider.setPreviousEpisodes(PreviousEpisodesBehavior.one);
@@ -874,39 +910,47 @@ void main() {
       verify(() => mockRepository.markAsSeen(any())).called(1);
     });
 
-    testWidgets('advanced mode: date dialog integrates previous episodes checkbox', (tester) async {
-      tester.view.physicalSize = const Size(1200, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'advanced mode: date dialog integrates previous episodes checkbox',
+      (tester) async {
+        tester.view.physicalSize = const Size(1200, 1200);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      setupShowWithAnteriorEpisodes();
-      await searchProvider.loadAllSeenStatus();
-      await settingsProvider.setAdvancedTracking(true);
+        setupShowWithAnteriorEpisodes();
+        await searchProvider.loadAllSeenStatus();
+        await settingsProvider.setAdvancedTracking(true);
 
-      await tester.pumpWidget(
-        createWidgetUnderTest(
-          tmdbId: 10,
-          type: MediaType.tv,
-          title: 'Show',
-          seasonNumber: 2,
-          episodeNumber: 5,
-          compact: true,
-        ),
-      );
-      await tester.pump();
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            tmdbId: 10,
+            type: MediaType.tv,
+            title: 'Show',
+            seasonNumber: 2,
+            episodeNumber: 5,
+            compact: true,
+          ),
+        );
+        await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.check_circle_outline));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.check_circle_outline));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(Dialog), findsOneWidget);
-      expect(find.textContaining('4 previous episodes are unseen'), findsOneWidget);
-      expect(find.byType(CheckboxListTile), findsOneWidget);
+        expect(find.byType(Dialog), findsOneWidget);
+        expect(
+          find.textContaining('4 previous episodes are unseen'),
+          findsOneWidget,
+        );
+        expect(find.byType(CheckboxListTile), findsOneWidget);
 
-      await tester.tap(find.text('LOG VIEWING'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('LOG VIEWING'));
+        await tester.pumpAndSettle();
 
-      verify(() => mockRepository.markManyAsSeen(any(that: hasLength(5)))).called(1);
-    });
+        verify(
+          () => mockRepository.markManyAsSeen(any(that: hasLength(5))),
+        ).called(1);
+      },
+    );
   });
 }

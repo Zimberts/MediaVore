@@ -7,11 +7,7 @@ class TopGenresList extends StatelessWidget {
   final List<GenreStatItem> genres;
   final StatsMetric metric;
 
-  const TopGenresList({
-    super.key,
-    required this.genres,
-    required this.metric,
-  });
+  const TopGenresList({super.key, required this.genres, required this.metric});
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +53,9 @@ class TopGenresList extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: (item.percentage / 100).clamp(0.0, 1.0),
                   minHeight: 6,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation(
                     Theme.of(context).colorScheme.primary,
                   ),
