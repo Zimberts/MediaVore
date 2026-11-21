@@ -3,6 +3,21 @@
 Written by release-please from the Conventional Commits on `main` (see `DOCS/releasing.md`).
 New entries are inserted above the latest one.
 
+## [1.4.3](https://github.com/Zimberts/MediaVore/compare/v1.4.2...v1.4.3) (2026-11-21)
+
+
+### Bug fixes
+
+* **home:** unconstrain manual home refresh and synchronize local lists ([#391](https://github.com/Zimberts/MediaVore/issues/391)) ([#420](https://github.com/Zimberts/MediaVore/issues/420)) ([b1cc93f](https://github.com/Zimberts/MediaVore/commit/b1cc93f7360b773c9b5e9b7d017924c0e9f1dfba))
+* **lists:** optimistically toggle watchlist icon and parallelize season prefetch ([#396](https://github.com/Zimberts/MediaVore/issues/396)) ([#421](https://github.com/Zimberts/MediaVore/issues/421)) ([a4ea8a9](https://github.com/Zimberts/MediaVore/commit/a4ea8a917a29db75508c1880f5e5eb4e5900a73b))
+* **swipe:** remove bottom undo message overlay blocking swipe buttons ([#379](https://github.com/Zimberts/MediaVore/issues/379)) ([#419](https://github.com/Zimberts/MediaVore/issues/419)) ([f1bfab6](https://github.com/Zimberts/MediaVore/commit/f1bfab6bff4b314a4ea9f6d33c9a4a99c4fb2555))
+
+
+### Performance
+
+* **cache:** accelerate cache warm-up with rate limiting and parallel batching ([#292](https://github.com/Zimberts/MediaVore/issues/292)) ([#423](https://github.com/Zimberts/MediaVore/issues/423)) ([79f3ee5](https://github.com/Zimberts/MediaVore/commit/79f3ee538fad75cd0bd0c8c7bdb2d0104d6f6fef))
+* **seen:** optimize bulk episode marking with season batching ([#395](https://github.com/Zimberts/MediaVore/issues/395)) ([#422](https://github.com/Zimberts/MediaVore/issues/422)) ([fe12abb](https://github.com/Zimberts/MediaVore/commit/fe12abb39a160e97bb1adc0ba1bfe86f6e6cf342))
+
 ## [1.4.2](https://github.com/Zimberts/MediaVore/compare/v1.4.1...v1.4.2) (2026-11-21)
 
 
