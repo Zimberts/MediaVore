@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -24,6 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:workmanager_android/workmanager_android.dart';
 
+import '../helpers/fake_image_cache.dart';
 import '../helpers/fake_tmdb.dart';
 
 /// App booted by the running test.
@@ -58,10 +60,13 @@ class AppSeed {
 
 /// The app booted by [bootTestApp].
 class TestApp {
-  TestApp._(this.tmdb, this.workmanager, this._links, this._dir);
+  TestApp._(this.tmdb, this.images, this.workmanager, this._links, this._dir);
 
   /// Fake TMDB server answering every API request.
   final FakeTmdb tmdb;
+
+  /// Records the images the app loaded (always a transparent PNG).
+  final FakeImageService images;
 
   /// Records the background sync registrations.
   final FakeWorkmanager workmanager;
@@ -84,7 +89,8 @@ class TestApp {
 /// answered by [tmdb] (a default [FakeTmdb] when null).
 ///
 /// Platform plugins are neutralised: path_provider, secure storage,
-/// SharedPreferences, workmanager and app_links. Everything is torn down at
+/// SharedPreferences, workmanager, app_links and the image cache (no
+/// network, no sqflite). Everything is torn down at
 /// the end of the test, which fails if a TMDB request was not covered.
 Future<TestApp> bootTestApp(
   WidgetTester tester, {
@@ -97,7 +103,7 @@ Future<TestApp> bootTestApp(
     '${DateTime.now().microsecondsSinceEpoch}',
   )..createSync(recursive: true);
 
-  PathProviderPlatform.instance = _FakePathProvider(dir.path);
+  _fakePlatform(dir.path);
   SharedPreferences.setMockInitialValues(seed.prefs);
   FlutterSecureStorage.setMockInitialValues({
     if (seed.tmdbCredential != null)
@@ -105,6 +111,10 @@ Future<TestApp> bootTestApp(
   });
   final workmanager = FakeWorkmanager();
   WorkmanagerPlatform.instance = workmanager;
+  final images = FakeImageService();
+  CachedNetworkImageProvider.defaultCacheManager = fakeImageCacheManager(
+    images,
+  );
   final links = _mockAppLinks(tester);
 
   // Safety net when a test skips [disposeTestApp]: no scratch dir leaks.
@@ -112,25 +122,65 @@ Future<TestApp> bootTestApp(
     if (dir.existsSync()) dir.deleteSync(recursive: true);
   });
 
-  await tester.runAsync(() async {
-    await Isar.initializeIsarCore(download: true);
-    await bootstrapServices(tmdbHttpClientAdapter: server);
-    await _applySeed(seed);
-  });
-
-  final app = _current = TestApp._(server, workmanager, links, dir);
-  await tester.pumpWidget(const MediaVoreApp());
-  await pumpUntilSettled(tester);
+  final app = _current = TestApp._(server, images, workmanager, links, dir);
+  try {
+    await tester.runAsync(() async {
+      await _initializeIsarCore();
+      await bootstrapServices(tmdbHttpClientAdapter: server);
+      await _applySeed(seed);
+    });
+    await tester.pumpWidget(const MediaVoreApp());
+    await pumpUntilSettled(tester);
+  } catch (_) {
+    // Close what the failed boot opened before reporting it.
+    try {
+      await disposeTestApp(tester, verifyTmdb: false);
+    } catch (e) {
+      debugPrint('[bootTestApp] teardown after a failed boot failed: $e');
+    }
+    rethrow;
+  }
   return app;
+}
+
+Future<void>? _isarCore;
+
+/// Loads the Isar native library once per test process.
+/// A failed load is retried by the next test.
+Future<void> _initializeIsarCore() => _isarCore ??=
+    Isar.initializeIsarCore(download: true).catchError((Object e) {
+      _isarCore = null;
+      throw e;
+    });
+
+/// Fakes path_provider (scratch [root]) and the image cache; restores the
+/// previous instances at the end of the test.
+void _fakePlatform(String root) {
+  final pathProvider = PathProviderPlatform.instance;
+  final workmanager = WorkmanagerPlatform.instance;
+  PathProviderPlatform.instance = _FakePathProvider(root);
+  // Read after faking path_provider: the first read builds the default
+  // cache, which asks for the temporary directory.
+  final imageCache = CachedNetworkImageProvider.defaultCacheManager;
+  addTearDown(() {
+    PathProviderPlatform.instance = pathProvider;
+    WorkmanagerPlatform.instance = workmanager;
+    CachedNetworkImageProvider.defaultCacheManager = imageCache;
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+  });
 }
 
 /// Tears down the app booted by [bootTestApp]: unmounts it, flushes the
 /// pending timers, closes and deletes the database, resets the DI. Fails if
-/// a TMDB request was not covered by the fake.
+/// a TMDB request was not covered by the fake, unless [verifyTmdb] is false.
 ///
 /// Must run inside the test body (before flutter_test checks that no timer
 /// is pending); [testApp] does it.
-Future<void> disposeTestApp(WidgetTester tester) async {
+Future<void> disposeTestApp(
+  WidgetTester tester, {
+  bool verifyTmdb = true,
+}) async {
   final app = _current;
   if (app == null) return;
   _current = null;
@@ -151,6 +201,7 @@ Future<void> disposeTestApp(WidgetTester tester) async {
   await _realAwait(tester, Future.sync(locator.reset));
   await app._links.close();
   if (app._dir.existsSync()) app._dir.deleteSync(recursive: true);
+  if (!verifyTmdb) return;
   expect(
     app.tmdb.unhandled,
     isEmpty,
@@ -159,7 +210,8 @@ Future<void> disposeTestApp(WidgetTester tester) async {
 }
 
 /// [testWidgets] on the booted app: [bootTestApp], [body], then
-/// [disposeTestApp] even when [body] fails.
+/// [disposeTestApp] even when [body] fails. A failure of [body] is the one
+/// reported: teardown problems never hide it.
 void testApp(
   String description,
   Future<void> Function(WidgetTester tester, TestApp app) body, {
@@ -171,9 +223,15 @@ void testApp(
     final app = await bootTestApp(tester, seed: seed, tmdb: tmdb?.call());
     try {
       await body(tester, app);
-    } finally {
-      await disposeTestApp(tester);
+    } catch (_) {
+      try {
+        await disposeTestApp(tester, verifyTmdb: false);
+      } catch (e) {
+        debugPrint('[testApp] teardown after a failure also failed: $e');
+      }
+      rethrow;
     }
+    await disposeTestApp(tester);
   }, timeout: timeout);
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
+import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 
 import 'harness.dart';
@@ -20,9 +21,10 @@ void main() {
       // Every TMDB request reached the fake; any other is in `unhandled`.
       expect(app.tmdb.requestCount, greaterThan(0));
       expect(app.tmdb.unhandled, isEmpty);
-      // Background sync went through the fake, never the host scheduler.
-      expect(app.workmanager.initialized, isTrue);
-      expect(app.workmanager.registered, isNotEmpty);
+      // Images came from the fake cache, never from image.tmdb.org.
+      expect(app.images.requests, isNotEmpty);
+      // The daily sync was scheduled on the fake, never on the host.
+      expect(app.workmanager.registered, [fetchTaskIdentifier]);
     });
 
     testApp('should reach every tab', (tester, app) async {

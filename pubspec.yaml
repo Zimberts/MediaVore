@@ -45,7 +45,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   mocktail: ^1.0.5
   plugin_platform_interface: ^2.1.8
-  # App-level test harness (test/app/): fake path provider and background sync.
+  # App-level test harness (test/app/): fake image cache, path provider and
+  # background sync.
+  flutter_cache_manager: ^3.4.1
   path_provider_platform_interface: ^2.1.2
   workmanager_android: ^0.10.9
   injectable_generator: ^2.10.0
