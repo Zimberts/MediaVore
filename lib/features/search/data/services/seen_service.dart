@@ -77,24 +77,21 @@ class SeenService {
   Future<void> markManyAsSeen(List<SeenItem> items) async {
     if (items.isEmpty) return;
 
-    final detailsCache = <String, MediaDetails?>{};
-    final seasonCache = <String, Map<String, dynamic>?>{};
-
-    Future<MediaDetails?> getCachedDetails(int id, MediaType type) async {
-      final key = '$id:${type.name}';
-      if (!detailsCache.containsKey(key)) {
-        detailsCache[key] = await details.getMediaDetails(id, type: type);
-      }
-      return detailsCache[key];
-    }
-
-    Future<Map<String, dynamic>?> getCachedSeason(int id, int season) async {
-      final key = '$id:$season';
-      if (!seasonCache.containsKey(key)) {
-        seasonCache[key] = await details.getSeasonDetails(id, season);
-      }
-      return seasonCache[key];
-    }
+    // One lookup per show/season for the whole batch, failures included
+    // (as in ImportExportService): offline, a batch of N episodes must not
+    // pay the network timeout N times.
+    final detailsByKey = <String, Future<MediaDetails?>>{};
+    final seasonsByKey = <String, Future<Map<String, dynamic>?>>{};
+    Future<MediaDetails?> getCachedDetails(int id, MediaType type) =>
+        detailsByKey.putIfAbsent(
+          '${type.name}:$id',
+          () => _nullOnError(() => details.getMediaDetails(id, type: type)),
+        );
+    Future<Map<String, dynamic>?> getCachedSeason(int id, int season) =>
+        seasonsByKey.putIfAbsent(
+          '$id:$season',
+          () => _nullOnError(() => details.getSeasonDetails(id, season)),
+        );
 
     final models = <SeenItemModel>[];
     for (final item in items) {
@@ -125,15 +122,32 @@ class SeenService {
 
     await localDataSource.markManyAsSeen(models);
 
+    // Awaited, as in [markAsSeen]: callers reload notified and Quick Add
+    // items right after this returns, so both writes must be done by then.
+    // The seen state itself is already shown optimistically by the caller.
+    // A refresh failure must not fail the mark (the batch is already stored),
+    // nor skip the other refresh: each one is guarded separately.
     final lastItem = items.last;
-    unawaited(() async {
-      try {
-        await notifications.refreshAfterSeen(lastItem);
-        await quickAdd.queueNextAfterSeen(lastItem);
-      } catch (e) {
-        debugPrint('[SeenService] post-mark refresh failed: $e');
-      }
-    }());
+    try {
+      await notifications.refreshAfterSeen(lastItem);
+    } catch (e) {
+      debugPrint('[SeenService] notification refresh failed: $e');
+    }
+    try {
+      await quickAdd.queueNextAfterSeen(lastItem);
+    } catch (e) {
+      debugPrint('[SeenService] Quick Add refresh failed: $e');
+    }
+  }
+
+  /// Runs [lookup], logging and mapping any error (sync or async) to null.
+  static Future<T?> _nullOnError<T>(Future<T> Function() lookup) async {
+    try {
+      return await lookup();
+    } catch (e) {
+      debugPrint('[SeenService] batch lookup failed: $e');
+      return null;
+    }
   }
 
   Future<void> removeFromSeen(
