@@ -13,6 +13,8 @@ For project-wide rules, see the root [`AGENTS.md`](../AGENTS.md).
   `AGENTS.md`, `.ai/rules/`, `.ai/agents/`, etc.).
 - `DOCS/ios-release.md` covers the App Store Connect setup, `ios/ExportOptions.plist` and
   the local `flutter build ipa`. Update it when iOS signing or `Info.plist` keys change.
+- `DOCS/release-checklist.md` is the manual test pass run before merging a release PR. Update
+  it when a screen path, a setting or the background sync it names changes.
 
 ## Keep-in-sync rule
 
