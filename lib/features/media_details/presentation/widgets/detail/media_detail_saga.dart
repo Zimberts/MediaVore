@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/release_status.dart';
@@ -19,18 +18,20 @@ import 'package:provider/provider.dart';
 /// Shows « Saga · {name} », seen counter « n films vus sur m », the movies in
 /// chronological order (with index, seen badge, "This title" overlay, "Upcoming"
 /// overlay), and an action button to add missing movies to the target list.
+///
+/// The seen state of every movie in the saga comes from the global history held
+/// by [SearchProvider] (see #438): a per-item snapshot would only know about the
+/// movie whose detail page is open.
 class MediaDetailSaga extends StatelessWidget {
   const MediaDetailSaga({
     super.key,
     required this.currentItem,
     required this.collection,
-    required this.seenStatus,
     required this.onOpen,
   });
 
   final MediaItem currentItem;
   final List<MediaItem>? collection;
-  final List<SeenItem> seenStatus;
   final ValueChanged<MediaItem> onOpen;
 
   @override
@@ -48,10 +49,10 @@ class MediaDetailSaga extends StatelessWidget {
     final theme = Theme.of(context);
     final searchProvider = context.watch<SearchProvider>();
 
+    bool isItemSeen(MediaItem item) => searchProvider.getSeenCount(item) > 0;
+
     final totalCount = sorted.length;
-    final seenCount = sorted
-        .where((item) => seenStatus.any((s) => s.tmdbId == item.id))
-        .length;
+    final seenCount = sorted.where(isItemSeen).length;
 
     // Resolve target list: current film's list or first available list (watchlist).
     final targetList = searchProvider.listNames.firstWhere(
@@ -61,9 +62,8 @@ class MediaDetailSaga extends StatelessWidget {
 
     // Missing films: neither seen nor already present in target list.
     final missingFilms = sorted.where((item) {
-      final isSeen = seenStatus.any((s) => s.tmdbId == item.id);
       final inList = searchProvider.isItemInList(item, targetList);
-      return !isSeen && !inList;
+      return !isItemSeen(item) && !inList;
     }).toList();
 
     final sagaName = currentItem.collectionName?.trim();
@@ -107,7 +107,7 @@ class MediaDetailSaga extends StatelessWidget {
                 item: item,
                 index: index + 1,
                 isCurrent: item.id == currentItem.id,
-                isSeen: seenStatus.any((s) => s.tmdbId == item.id),
+                isSeen: isItemSeen(item),
                 onTap: item.id == currentItem.id ? null : () => onOpen(item),
               );
             },
