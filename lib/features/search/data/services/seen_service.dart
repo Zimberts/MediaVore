@@ -83,7 +83,14 @@ class SeenService {
     Future<MediaDetails?> getCachedDetails(int id, MediaType type) async {
       final key = '$id:${type.name}';
       if (!detailsCache.containsKey(key)) {
-        detailsCache[key] = await details.getMediaDetails(id, type: type);
+        // Failures are memoized as null too: offline, retrying per episode
+        // would pay the network timeout once per item of the batch.
+        try {
+          detailsCache[key] = await details.getMediaDetails(id, type: type);
+        } catch (e) {
+          debugPrint('[SeenService] details lookup failed for $key: $e');
+          detailsCache[key] = null;
+        }
       }
       return detailsCache[key];
     }
@@ -91,7 +98,12 @@ class SeenService {
     Future<Map<String, dynamic>?> getCachedSeason(int id, int season) async {
       final key = '$id:$season';
       if (!seasonCache.containsKey(key)) {
-        seasonCache[key] = await details.getSeasonDetails(id, season);
+        try {
+          seasonCache[key] = await details.getSeasonDetails(id, season);
+        } catch (e) {
+          debugPrint('[SeenService] season lookup failed for $key: $e');
+          seasonCache[key] = null;
+        }
       }
       return seasonCache[key];
     }
@@ -125,15 +137,17 @@ class SeenService {
 
     await localDataSource.markManyAsSeen(models);
 
+    // Awaited, as in [markAsSeen]: callers reload notified and Quick Add
+    // items right after this returns, so both writes must be done by then.
+    // The seen state itself is already shown optimistically by the caller.
+    // A refresh failure must not fail the mark: the batch is already stored.
     final lastItem = items.last;
-    unawaited(() async {
-      try {
-        await notifications.refreshAfterSeen(lastItem);
-        await quickAdd.queueNextAfterSeen(lastItem);
-      } catch (e) {
-        debugPrint('[SeenService] post-mark refresh failed: $e');
-      }
-    }());
+    try {
+      await notifications.refreshAfterSeen(lastItem);
+      await quickAdd.queueNextAfterSeen(lastItem);
+    } catch (e) {
+      debugPrint('[SeenService] post-mark refresh failed: $e');
+    }
   }
 
   Future<void> removeFromSeen(

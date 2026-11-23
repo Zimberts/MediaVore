@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
@@ -240,5 +242,122 @@ void main() {
         ).called(1);
       },
     );
+
+    group('post-mark refresh (#431)', () {
+      SeenItem episode(int season, int number) => SeenItem(
+        tmdbId: 42,
+        type: MediaType.tv,
+        title: 'Breaking Bad',
+        seasonNumber: season,
+        episodeNumber: number,
+        runtime: 45,
+        genres: const ['Drama'],
+        seenDate: tDate,
+      );
+
+      setUp(() {
+        when(
+          () => details.resolveRuntimeAndGenres(
+            tmdbId: any(named: 'tmdbId'),
+            type: any(named: 'type'),
+            seasonNumber: any(named: 'seasonNumber'),
+            episodeNumber: any(named: 'episodeNumber'),
+            runtime: any(named: 'runtime'),
+            genres: any(named: 'genres'),
+            fetchDetails: any(named: 'fetchDetails'),
+            fetchSeason: any(named: 'fetchSeason'),
+          ),
+        ).thenAnswer(
+          (_) async => (runtime: 45, genres: const <String>['Drama']),
+        );
+      });
+
+      test(
+        'returns only once notifications and Quick Add are refreshed',
+        () async {
+          final refresh = Completer<void>();
+          when(
+            () => notifications.refreshAfterSeen(any()),
+          ).thenAnswer((_) => refresh.future);
+
+          var done = false;
+          final future = service
+              .markManyAsSeen([episode(1, 1), episode(1, 2)])
+              .then((_) => done = true);
+
+          await pumpEventQueue();
+          expect(done, isFalse);
+          verifyNever(() => quickAdd.queueNextAfterSeen(any()));
+
+          refresh.complete();
+          await future;
+
+          expect(done, isTrue);
+          verifyInOrder([
+            () => localDataSource.markManyAsSeen(any()),
+            () => notifications.refreshAfterSeen(
+              any(
+                that: isA<SeenItem>().having(
+                  (i) => i.episodeNumber,
+                  'episodeNumber',
+                  2,
+                ),
+              ),
+            ),
+            () => quickAdd.queueNextAfterSeen(any()),
+          ]);
+        },
+      );
+
+      test('a refresh failure does not fail the stored batch', () async {
+        when(
+          () => notifications.refreshAfterSeen(any()),
+        ).thenThrow(Exception('offline'));
+
+        await expectLater(service.markManyAsSeen([episode(1, 1)]), completes);
+        verify(() => localDataSource.markManyAsSeen(any())).called(1);
+      });
+    });
+
+    test('memoizes a failed details lookup for the whole batch', () async {
+      when(
+        () => details.getMediaDetails(42, type: MediaType.tv),
+      ).thenThrow(Exception('offline'));
+      when(
+        () => details.resolveRuntimeAndGenres(
+          tmdbId: any(named: 'tmdbId'),
+          type: any(named: 'type'),
+          seasonNumber: any(named: 'seasonNumber'),
+          episodeNumber: any(named: 'episodeNumber'),
+          runtime: any(named: 'runtime'),
+          genres: any(named: 'genres'),
+          fetchDetails: any(named: 'fetchDetails'),
+          fetchSeason: any(named: 'fetchSeason'),
+        ),
+      ).thenAnswer((invocation) async {
+        final fetchDetails =
+            invocation.namedArguments[#fetchDetails]
+                as Future<MediaDetails?> Function(int, MediaType);
+        final d = await fetchDetails(42, MediaType.tv);
+        return (runtime: null, genres: d?.item.genres);
+      });
+
+      await service.markManyAsSeen([
+        for (var e = 1; e <= 3; e++)
+          SeenItem(
+            tmdbId: 42,
+            type: MediaType.tv,
+            title: 'Breaking Bad',
+            seasonNumber: 1,
+            episodeNumber: e,
+            seenDate: tDate,
+          ),
+      ]);
+
+      verify(() => details.getMediaDetails(42, type: MediaType.tv)).called(1);
+      verify(
+        () => localDataSource.markManyAsSeen(any(that: hasLength(3))),
+      ).called(1);
+    });
   });
 }
