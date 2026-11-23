@@ -1,0 +1,22 @@
+{
+  "_id": "season",
+  "air_date": "2020-01-01",
+  "id": 0,
+  "name": "Season",
+  "overview": "",
+  "poster_path": "/season.jpg",
+  "season_number": 0,
+  "episodes": [
+    {
+      "air_date": "2020-01-01",
+      "episode_number": 0,
+      "id": 0,
+      "name": "Episode",
+      "overview": "Overview of the episode.",
+      "runtime": 45,
+      "season_number": 0,
+      "still_path": "/still.jpg",
+      "vote_average": 7.8
+    }
+  ]
+}

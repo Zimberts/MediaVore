@@ -1,0 +1,16 @@
+{
+  "cast": [
+    {
+      "id": 101,
+      "media_type": "movie",
+      "title": "Discover Movie 1",
+      "character": "Role 1",
+      "poster_path": "/d1.jpg",
+      "release_date": "2021-03-01",
+      "genre_ids": [28],
+      "vote_average": 7.9,
+      "vote_count": 4200
+    }
+  ],
+  "crew": []
+}

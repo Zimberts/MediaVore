@@ -1,0 +1,26 @@
+{
+  "adult": false,
+  "backdrop_path": "/backdrop.jpg",
+  "belongs_to_collection": null,
+  "genres": [
+    { "id": 28, "name": "Action" },
+    { "id": 878, "name": "Science Fiction" }
+  ],
+  "id": 0,
+  "imdb_id": "tt0000000",
+  "origin_country": ["US"],
+  "original_language": "en",
+  "original_title": "Movie",
+  "overview": "Overview of the movie.",
+  "popularity": 50.5,
+  "poster_path": "/poster.jpg",
+  "production_countries": [{ "iso_3166_1": "US", "name": "United States of America" }],
+  "release_date": "2020-01-01",
+  "runtime": 110,
+  "status": "Released",
+  "tagline": "A tagline.",
+  "title": "Movie",
+  "video": false,
+  "vote_average": 7.5,
+  "vote_count": 1000
+}

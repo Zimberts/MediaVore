@@ -6,6 +6,7 @@ Shared test utilities: mocks and fixture loading.
 
 - `test/helpers/mocks.dart`
 - `test/helpers/fixture_reader.dart`
+- `test/helpers/fake_tmdb.dart` (fake TMDB server for app-level tests and the benchmark)
 
 ## Gotchas
 

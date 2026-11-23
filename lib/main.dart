@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -48,7 +49,13 @@ Future<void> main() async {
 }
 
 /// Startup work run by [BootstrapperApp]. Safe to call again after a failure.
-Future<void> bootstrapServices() async {
+///
+/// [tmdbHttpClientAdapter] replaces the transport of the TMDB [Dio] (its
+/// interceptors are kept): app-level tests answer TMDB with a fake server.
+/// Production leaves it null.
+Future<void> bootstrapServices({
+  HttpClientAdapter? tmdbHttpClientAdapter,
+}) async {
   // A previous attempt may have failed midway: release what it opened and
   // clear partial registrations so `init` can register everything again.
   if (locator.isRegistered<Isar>()) {
@@ -58,6 +65,9 @@ Future<void> bootstrapServices() async {
   await locator.reset();
 
   await init(locator);
+  if (tmdbHttpClientAdapter != null) {
+    locator<Dio>().httpClientAdapter = tmdbHttpClientAdapter;
+  }
 
   // Background sync is best-effort: a failure here must not block startup.
   final isMobile =

@@ -1,0 +1,16 @@
+{
+  "results": {
+    "FR": {
+      "link": "https://www.themoviedb.org/movie/0/watch?locale=FR",
+      "flatrate": [
+        { "display_priority": 1, "logo_path": "/provider.jpg", "provider_id": 8, "provider_name": "Netflix" }
+      ]
+    },
+    "US": {
+      "link": "https://www.themoviedb.org/movie/0/watch?locale=US",
+      "flatrate": [
+        { "display_priority": 1, "logo_path": "/provider.jpg", "provider_id": 8, "provider_name": "Netflix" }
+      ]
+    }
+  }
+}

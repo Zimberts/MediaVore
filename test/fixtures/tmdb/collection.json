@@ -1,0 +1,20 @@
+{
+  "id": 0,
+  "name": "Collection",
+  "overview": "Overview of the collection.",
+  "poster_path": "/collection.jpg",
+  "parts": [
+    {
+      "id": 0,
+      "title": "Part",
+      "original_title": "Part",
+      "media_type": "movie",
+      "overview": "Overview of the part.",
+      "poster_path": "/part.jpg",
+      "release_date": "2020-01-01",
+      "genre_ids": [28],
+      "vote_average": 7.0,
+      "vote_count": 500
+    }
+  ]
+}
