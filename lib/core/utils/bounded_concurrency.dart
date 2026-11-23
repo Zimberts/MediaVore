@@ -1,8 +1,9 @@
 /// Maps [items] through [action] with at most [concurrency] futures in flight.
 ///
-/// Output order matches input order. An error thrown by [action] propagates
-/// once the in-flight work has settled; callers wanting per-item fallback
-/// should catch inside [action].
+/// Output order matches input order, and the returned list is growable: it is
+/// a fresh copy, so callers may `add`/`addAll` to it. An error thrown by
+/// [action] propagates once the in-flight work has settled; callers wanting
+/// per-item fallback should catch inside [action].
 Future<List<R>> mapWithConcurrency<T, R>(
   List<T> items,
   int concurrency,
@@ -23,5 +24,6 @@ Future<List<R>> mapWithConcurrency<T, R>(
 
   final workers = concurrency < items.length ? concurrency : items.length;
   await Future.wait(List.generate(workers, (_) => worker()));
-  return results.cast<R>();
+  // [results] is fixed-length; copy it so callers get a growable list.
+  return List<R>.of(results.cast<R>());
 }

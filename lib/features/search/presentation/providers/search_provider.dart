@@ -630,7 +630,11 @@ class SearchProvider
     try {
       if (isTrending) {
         _peopleResults = [];
-        _searchResults = await repository.getTrendingMedia(page: _currentPage);
+        // Copy: [fetchNextPage] appends to [_searchResults], so it must not
+        // alias a list the repository may return fixed-length.
+        _searchResults = List<MediaItem>.of(
+          await repository.getTrendingMedia(page: _currentPage),
+        );
       } else if (_isDiscoverMode && _currentQuery.isEmpty) {
         _peopleResults = [];
         final List<MediaItem> rawResults;
@@ -693,7 +697,8 @@ class SearchProvider
             : rawResults;
 
         sortMediaItems(results, _filters.sort, query: _currentQuery);
-        _searchResults = results;
+        // Copy, for the same reason as the trending branch above.
+        _searchResults = List<MediaItem>.of(results);
         if (rawResults.isEmpty) _hasMore = false;
       } else {
         final peopleFuture =
