@@ -273,7 +273,7 @@ void main() {
       });
 
       test(
-        'returns only once notifications and Quick Add are refreshed',
+        'should return only once notifications and Quick Add are refreshed',
         () async {
           final refresh = Completer<void>();
           when(
@@ -309,55 +309,70 @@ void main() {
         },
       );
 
-      test('a refresh failure does not fail the stored batch', () async {
+      test(
+        'should still queue Quick Add and not fail the batch when the notification refresh fails',
+        () async {
+          when(
+            () => notifications.refreshAfterSeen(any()),
+          ).thenThrow(Exception('offline'));
+
+          await expectLater(service.markManyAsSeen([episode(1, 1)]), completes);
+          verify(() => localDataSource.markManyAsSeen(any())).called(1);
+          verify(() => quickAdd.queueNextAfterSeen(any())).called(1);
+        },
+      );
+    });
+
+    test(
+      'should memoize failed details and season lookups for the whole batch',
+      () async {
         when(
-          () => notifications.refreshAfterSeen(any()),
+          () => details.getMediaDetails(42, type: MediaType.tv),
         ).thenThrow(Exception('offline'));
-
-        await expectLater(service.markManyAsSeen([episode(1, 1)]), completes);
-        verify(() => localDataSource.markManyAsSeen(any())).called(1);
-      });
-    });
-
-    test('memoizes a failed details lookup for the whole batch', () async {
-      when(
-        () => details.getMediaDetails(42, type: MediaType.tv),
-      ).thenThrow(Exception('offline'));
-      when(
-        () => details.resolveRuntimeAndGenres(
-          tmdbId: any(named: 'tmdbId'),
-          type: any(named: 'type'),
-          seasonNumber: any(named: 'seasonNumber'),
-          episodeNumber: any(named: 'episodeNumber'),
-          runtime: any(named: 'runtime'),
-          genres: any(named: 'genres'),
-          fetchDetails: any(named: 'fetchDetails'),
-          fetchSeason: any(named: 'fetchSeason'),
-        ),
-      ).thenAnswer((invocation) async {
-        final fetchDetails =
-            invocation.namedArguments[#fetchDetails]
-                as Future<MediaDetails?> Function(int, MediaType);
-        final d = await fetchDetails(42, MediaType.tv);
-        return (runtime: null, genres: d?.item.genres);
-      });
-
-      await service.markManyAsSeen([
-        for (var e = 1; e <= 3; e++)
-          SeenItem(
-            tmdbId: 42,
-            type: MediaType.tv,
-            title: 'Breaking Bad',
-            seasonNumber: 1,
-            episodeNumber: e,
-            seenDate: tDate,
+        when(
+          () => details.getSeasonDetails(42, 1),
+        ).thenAnswer((_) async => throw Exception('offline'));
+        when(
+          () => details.resolveRuntimeAndGenres(
+            tmdbId: any(named: 'tmdbId'),
+            type: any(named: 'type'),
+            seasonNumber: any(named: 'seasonNumber'),
+            episodeNumber: any(named: 'episodeNumber'),
+            runtime: any(named: 'runtime'),
+            genres: any(named: 'genres'),
+            fetchDetails: any(named: 'fetchDetails'),
+            fetchSeason: any(named: 'fetchSeason'),
           ),
-      ]);
+        ).thenAnswer((invocation) async {
+          final fetchDetails =
+              invocation.namedArguments[#fetchDetails]
+                  as Future<MediaDetails?> Function(int, MediaType);
+          final fetchSeason =
+              invocation.namedArguments[#fetchSeason]
+                  as Future<Map<String, dynamic>?> Function(int, int);
+          final d = await fetchDetails(42, MediaType.tv);
+          final s = await fetchSeason(42, 1);
+          return (runtime: s == null ? null : 0, genres: d?.item.genres);
+        });
 
-      verify(() => details.getMediaDetails(42, type: MediaType.tv)).called(1);
-      verify(
-        () => localDataSource.markManyAsSeen(any(that: hasLength(3))),
-      ).called(1);
-    });
+        await service.markManyAsSeen([
+          for (var e = 1; e <= 3; e++)
+            SeenItem(
+              tmdbId: 42,
+              type: MediaType.tv,
+              title: 'Breaking Bad',
+              seasonNumber: 1,
+              episodeNumber: e,
+              seenDate: tDate,
+            ),
+        ]);
+
+        verify(() => details.getMediaDetails(42, type: MediaType.tv)).called(1);
+        verify(() => details.getSeasonDetails(42, 1)).called(1);
+        verify(
+          () => localDataSource.markManyAsSeen(any(that: hasLength(3))),
+        ).called(1);
+      },
+    );
   });
 }
