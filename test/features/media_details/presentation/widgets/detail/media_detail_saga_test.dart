@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
-import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_saga.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -63,15 +62,22 @@ void main() {
     mockSearchProvider = MockSearchProvider();
     when(() => mockSearchProvider.listNames).thenReturn(['watchlist']);
     when(() => mockSearchProvider.isItemInList(any(), any())).thenReturn(false);
+    when(() => mockSearchProvider.getSeenCount(any())).thenReturn(0);
     when(
       () => mockSearchProvider.addAllToList(any(), any()),
     ).thenAnswer((_) async {});
   });
 
+  /// Marks [items] as seen in the global history held by the provider.
+  void stubSeen(List<MediaItem> items) {
+    for (final item in items) {
+      when(() => mockSearchProvider.getSeenCount(item)).thenReturn(1);
+    }
+  }
+
   Widget buildWidget({
     required MediaItem currentItem,
     List<MediaItem>? collection,
-    List<SeenItem> seenStatus = const [],
     ValueChanged<MediaItem>? onOpen,
     Locale locale = const Locale('fr'),
   }) {
@@ -92,7 +98,6 @@ void main() {
             child: MediaDetailSaga(
               currentItem: currentItem,
               collection: collection,
-              seenStatus: seenStatus,
               onOpen: onOpen ?? (_) {},
             ),
           ),
@@ -119,21 +124,10 @@ void main() {
     (tester) async {
       // Intentionally pass films out of order: Film 3, Film 1, Film 2
       final unsorted = [tFilm3, tFilm1, tFilm2];
-      final seen = [
-        SeenItem(
-          tmdbId: tFilm1.id,
-          type: MediaType.movie,
-          title: tFilm1.title,
-          seenDate: DateTime(2020),
-        ),
-      ];
+      stubSeen([tFilm1]);
 
       await tester.pumpWidget(
-        buildWidget(
-          currentItem: tFilm2,
-          collection: unsorted,
-          seenStatus: seen,
-        ),
+        buildWidget(currentItem: tFilm2, collection: unsorted),
       );
       await tester.pumpAndSettle();
 
@@ -162,14 +156,7 @@ void main() {
     'calculates missing films and button proposes to add 1 film on a trilogy with 1 seen and 1 in list',
     (tester) async {
       // Film 1 is seen
-      final seen = [
-        SeenItem(
-          tmdbId: tFilm1.id,
-          type: MediaType.movie,
-          title: tFilm1.title,
-          seenDate: DateTime(2020),
-        ),
-      ];
+      stubSeen([tFilm1]);
 
       // Film 2 is already in watchlist
       when(
@@ -184,11 +171,7 @@ void main() {
       ).thenReturn(false);
 
       await tester.pumpWidget(
-        buildWidget(
-          currentItem: tFilm1,
-          collection: [tFilm1, tFilm2, tFilm3],
-          seenStatus: seen,
-        ),
+        buildWidget(currentItem: tFilm1, collection: [tFilm1, tFilm2, tFilm3]),
       );
       await tester.pumpAndSettle();
 
@@ -210,33 +193,10 @@ void main() {
     tester,
   ) async {
     // All 3 films are seen
-    final seen = [
-      SeenItem(
-        tmdbId: tFilm1.id,
-        type: MediaType.movie,
-        title: tFilm1.title,
-        seenDate: DateTime(2020),
-      ),
-      SeenItem(
-        tmdbId: tFilm2.id,
-        type: MediaType.movie,
-        title: tFilm2.title,
-        seenDate: DateTime(2021),
-      ),
-      SeenItem(
-        tmdbId: tFilm3.id,
-        type: MediaType.movie,
-        title: tFilm3.title,
-        seenDate: DateTime(2022),
-      ),
-    ];
+    stubSeen([tFilm1, tFilm2, tFilm3]);
 
     await tester.pumpWidget(
-      buildWidget(
-        currentItem: tFilm1,
-        collection: [tFilm1, tFilm2, tFilm3],
-        seenStatus: seen,
-      ),
+      buildWidget(currentItem: tFilm1, collection: [tFilm1, tFilm2, tFilm3]),
     );
     await tester.pumpAndSettle();
 
@@ -298,5 +258,40 @@ void main() {
     expect(find.text('0 of 3 films seen'), findsOneWidget);
     expect(find.text('This title'), findsOneWidget);
     expect(find.text('Add 3 missing films to "Watchlist"'), findsOneWidget);
+  });
+
+  testWidgets('counts every seen film of the saga from the global history, '
+      'whatever detail page is open (#438)', (tester) async {
+    // Films 1 and 2 are seen; the open detail page is the unseen film 3.
+    stubSeen([tFilm1, tFilm2]);
+
+    await tester.pumpWidget(
+      buildWidget(currentItem: tFilm3, collection: [tFilm1, tFilm2, tFilm3]),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 films vus sur 3'), findsOneWidget);
+    // One seen badge per seen film, none on the current unseen film.
+    expect(find.byIcon(Icons.check_circle), findsNWidgets(2));
+    // Only film 3 is missing, and it is the current one.
+    expect(find.text('Ajouter 1 film manquant à « À voir »'), findsOneWidget);
+  });
+
+  testWidgets('add missing films never proposes an already seen film (#438)', (
+    tester,
+  ) async {
+    stubSeen([tFilm1, tFilm2]);
+
+    await tester.pumpWidget(
+      buildWidget(currentItem: tFilm1, collection: [tFilm1, tFilm2, tFilm3]),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ajouter 1 film manquant à « À voir »'));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockSearchProvider.addAllToList([tFilm3], 'watchlist'),
+    ).called(1);
   });
 }

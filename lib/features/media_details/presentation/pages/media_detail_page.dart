@@ -538,7 +538,6 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                         MediaDetailSaga(
                           currentItem: item,
                           collection: details.collection,
-                          seenStatus: _seenStatus,
                           onOpen: _openRelated,
                         ),
                       ],
