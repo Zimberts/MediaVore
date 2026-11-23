@@ -630,7 +630,11 @@ class SearchProvider
     try {
       if (isTrending) {
         _peopleResults = [];
-        _searchResults = await repository.getTrendingMedia(page: _currentPage);
+        // Copy: [fetchNextPage] appends to [_searchResults], so it must not
+        // alias a list the repository may return fixed-length.
+        _searchResults = List<MediaItem>.of(
+          await repository.getTrendingMedia(page: _currentPage),
+        );
       } else if (_isDiscoverMode && _currentQuery.isEmpty) {
         _peopleResults = [];
         final List<MediaItem> rawResults;
@@ -688,9 +692,11 @@ class SearchProvider
                 );
         }
 
+        // Copy before sorting in place: [fetchNextPage] appends to
+        // [_searchResults], and the repository's list may be fixed-length.
         final results = _filters.hideSeen
             ? rawResults.where((item) => getSeenCount(item) == 0).toList()
-            : rawResults;
+            : List<MediaItem>.of(rawResults);
 
         sortMediaItems(results, _filters.sort, query: _currentQuery);
         _searchResults = results;
@@ -872,9 +878,11 @@ class SearchProvider
                 );
         }
 
+        // Copy before sorting in place, so the repository's list is never
+        // mutated.
         final filtered = _filters.hideSeen
             ? rawResults.where((item) => getSeenCount(item) == 0).toList()
-            : rawResults;
+            : List<MediaItem>.of(rawResults);
 
         sortMediaItems(filtered, _filters.sort, query: _currentQuery);
 

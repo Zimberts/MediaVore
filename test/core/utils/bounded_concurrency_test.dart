@@ -21,6 +21,15 @@ void main() {
       expect(maxInFlight, 4);
     });
 
+    test('should return a growable list', () async {
+      final results = await mapWithConcurrency([1, 2], 2, (i) async => i);
+
+      // Regression: the internal buffer is fixed-length, so a cast view of it
+      // would make callers fail with "Cannot add to a fixed-length list".
+      expect(() => results.add(3), returnsNormally);
+      expect(results, [1, 2, 3]);
+    });
+
     test('should handle an empty list', () async {
       expect(
         await mapWithConcurrency<int, int>([], 4, (i) async => i),

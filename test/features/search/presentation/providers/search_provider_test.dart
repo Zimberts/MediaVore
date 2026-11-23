@@ -101,6 +101,70 @@ void main() {
     );
 
     test(
+      'should append trending page 2 on fetchNextPage when the repository returns a fixed-length list',
+      () async {
+        // Regression (#439): enrichment returned a fixed-length list, so
+        // appending page 2 threw and the grid showed "Retry" forever.
+        when(
+          () => mockRepository.getTrendingMedia(page: any(named: 'page')),
+        ).thenAnswer(
+          // Fixed-length, like the list enrichment used to return.
+          (invocation) async => List<MediaItem>.filled(
+            1,
+            MediaItem(
+              id: invocation.namedArguments[const Symbol('page')] as int? ?? 1,
+              title: 'A',
+              overview: '',
+              releaseDate: '',
+            ),
+          ),
+        );
+
+        await provider.searchMedia('');
+        await provider.fetchNextPage();
+
+        expect(provider.items.map((item) => item.id), [1, 2]);
+        expect(provider.errorType, isNull);
+      },
+    );
+
+    test(
+      'should append a discover page on fetchNextPage when the repository returns a fixed-length list',
+      () async {
+        when(
+          () => mockRepository.discoverMedia(
+            page: any(named: 'page'),
+            filters: any(named: 'filters'),
+            genreIds: any(named: 'genreIds'),
+            releaseYear: any(named: 'releaseYear'),
+            minRating: any(named: 'minRating'),
+            originalLanguage: any(named: 'originalLanguage'),
+            type: any(named: 'type'),
+            sortBy: any(named: 'sortBy'),
+          ),
+        ).thenAnswer(
+          // Fixed-length, like the list enrichment used to return.
+          (invocation) async => List<MediaItem>.filled(
+            1,
+            MediaItem(
+              id: invocation.namedArguments[const Symbol('page')] as int? ?? 1,
+              title: 'A',
+              overview: '',
+              releaseDate: '',
+            ),
+          ),
+        );
+
+        provider.setFilters(type: MediaType.movie);
+        await provider.searchMedia('');
+        await provider.fetchNextPage();
+
+        expect(provider.items.map((item) => item.id), [1, 2]);
+        expect(provider.errorType, isNull);
+      },
+    );
+
+    test(
       'searchMedia with empty query and a rating filter should call discoverMedia for both Movie and TV',
       () async {
         when(
