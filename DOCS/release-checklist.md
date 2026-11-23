@@ -13,8 +13,9 @@ do not merge until it is fixed or explicitly deferred.
 - Phone A: the **previous** release installed from its GitHub release APK, with real data (seen
   movies and episodes, a few lists, at least one series in *Upcoming*) and a TMDB key.
 - Phone B (step 7 and 8): any phone with MediaVore installed, ideally the new build.
-- The new APK: *Actions → Release → Run workflow* on the release PR branch (artifact
-  `mediavore-android-release`). Same upload key as the GitHub releases, so it installs over them.
+- The new APK: *Actions → Release → Run workflow* on the release PR branch, then download the
+  artifact `mediavore-android-release` and unzip it to get `app-release.apk`. Same upload key as
+  the GitHub releases, so it installs over them.
 - A TMDB API key (v3) or read access token (v4).
 
 ## Checks
