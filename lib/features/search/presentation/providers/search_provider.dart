@@ -692,13 +692,14 @@ class SearchProvider
                 );
         }
 
+        // Copy before sorting in place: [fetchNextPage] appends to
+        // [_searchResults], and the repository's list may be fixed-length.
         final results = _filters.hideSeen
             ? rawResults.where((item) => getSeenCount(item) == 0).toList()
-            : rawResults;
+            : List<MediaItem>.of(rawResults);
 
         sortMediaItems(results, _filters.sort, query: _currentQuery);
-        // Copy, for the same reason as the trending branch above.
-        _searchResults = List<MediaItem>.of(results);
+        _searchResults = results;
         if (rawResults.isEmpty) _hasMore = false;
       } else {
         final peopleFuture =
@@ -877,9 +878,11 @@ class SearchProvider
                 );
         }
 
+        // Copy before sorting in place, so the repository's list is never
+        // mutated.
         final filtered = _filters.hideSeen
             ? rawResults.where((item) => getSeenCount(item) == 0).toList()
-            : rawResults;
+            : List<MediaItem>.of(rawResults);
 
         sortMediaItems(filtered, _filters.sort, query: _currentQuery);
 

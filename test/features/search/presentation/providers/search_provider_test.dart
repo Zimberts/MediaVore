@@ -101,7 +101,7 @@ void main() {
     );
 
     test(
-      'fetchNextPage should append trending page 2 when the repository returns a fixed-length list',
+      'should append trending page 2 on fetchNextPage when the repository returns a fixed-length list',
       () async {
         // Regression (#439): enrichment returned a fixed-length list, so
         // appending page 2 threw and the grid showed "Retry" forever.
@@ -123,13 +123,13 @@ void main() {
         await provider.searchMedia('');
         await provider.fetchNextPage();
 
-        expect(provider.items, hasLength(2));
+        expect(provider.items.map((item) => item.id), [1, 2]);
         expect(provider.errorType, isNull);
       },
     );
 
     test(
-      'fetchNextPage should append a discover page when the repository returns a fixed-length list',
+      'should append a discover page on fetchNextPage when the repository returns a fixed-length list',
       () async {
         when(
           () => mockRepository.discoverMedia(
@@ -159,7 +159,7 @@ void main() {
         await provider.searchMedia('');
         await provider.fetchNextPage();
 
-        expect(provider.items, hasLength(2));
+        expect(provider.items.map((item) => item.id), [1, 2]);
         expect(provider.errorType, isNull);
       },
     );
