@@ -260,24 +260,27 @@ void main() {
     expect(find.text('Add 3 missing films to "Watchlist"'), findsOneWidget);
   });
 
-  testWidgets('counts every seen film of the saga from the global history, '
-      'whatever detail page is open (#438)', (tester) async {
-    // Films 1 and 2 are seen; the open detail page is the unseen film 3.
-    stubSeen([tFilm1, tFilm2]);
+  testWidgets(
+    'should count every seen film of the saga from the global history, '
+    'whatever detail page is open (#438)',
+    (tester) async {
+      // Films 1 and 2 are seen; the open detail page is the unseen film 3.
+      stubSeen([tFilm1, tFilm2]);
 
-    await tester.pumpWidget(
-      buildWidget(currentItem: tFilm3, collection: [tFilm1, tFilm2, tFilm3]),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        buildWidget(currentItem: tFilm3, collection: [tFilm1, tFilm2, tFilm3]),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('2 films vus sur 3'), findsOneWidget);
-    // One seen badge per seen film, none on the current unseen film.
-    expect(find.byIcon(Icons.check_circle), findsNWidgets(2));
-    // Only film 3 is missing, and it is the current one.
-    expect(find.text('Ajouter 1 film manquant à « À voir »'), findsOneWidget);
-  });
+      expect(find.text('2 films vus sur 3'), findsOneWidget);
+      // One seen badge per seen film, none on the current unseen film.
+      expect(find.byIcon(Icons.check_circle), findsNWidgets(2));
+      // Only film 3 is missing, and it is the current one.
+      expect(find.text('Ajouter 1 film manquant à « À voir »'), findsOneWidget);
+    },
+  );
 
-  testWidgets('add missing films never proposes an already seen film (#438)', (
+  testWidgets('should never propose an already seen film as missing (#438)', (
     tester,
   ) async {
     stubSeen([tFilm1, tFilm2]);
