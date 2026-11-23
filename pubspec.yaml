@@ -17,7 +17,7 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.5.6
   equatable: ^3.0.0
-  get_it: ^7.6.7
+  get_it: ^9.3.0
   injectable: ^2.4.2
   cached_network_image: ^4.0.3
   isar_community: ^3.3.2
