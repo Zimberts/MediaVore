@@ -114,6 +114,7 @@ Future<TestApp> bootTestApp(
   final images = FakeImageService();
   CachedNetworkImageProvider.defaultCacheManager = fakeImageCacheManager(
     images,
+    Directory('${dir.path}/images'),
   );
   final links = _mockAppLinks(tester);
 
@@ -153,19 +154,24 @@ Future<void> _initializeIsarCore() => _isarCore ??=
       throw e;
     });
 
-/// Fakes path_provider (scratch [root]) and the image cache; restores the
-/// previous instances at the end of the test.
+/// Fakes path_provider (scratch [root]); restores the previous instances and
+/// clears the storage mocks at the end of the test.
+///
+/// The image cache is not restored: reading the default would build the real
+/// `DefaultCacheManager` (sqflite on macOS, iOS and Android). It is parked on
+/// a fake in the system temporary directory instead, so that a later test in
+/// the same file never writes into a deleted scratch dir.
 void _fakePlatform(String root) {
   final pathProvider = PathProviderPlatform.instance;
   final workmanager = WorkmanagerPlatform.instance;
   PathProviderPlatform.instance = _FakePathProvider(root);
-  // Read after faking path_provider: the first read builds the default
-  // cache, which asks for the temporary directory.
-  final imageCache = CachedNetworkImageProvider.defaultCacheManager;
   addTearDown(() {
     PathProviderPlatform.instance = pathProvider;
     WorkmanagerPlatform.instance = workmanager;
-    CachedNetworkImageProvider.defaultCacheManager = imageCache;
+    CachedNetworkImageProvider.defaultCacheManager = fakeImageCacheManager(
+      FakeImageService(),
+      Directory('${Directory.systemTemp.path}/mediavore_test_images'),
+    );
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
   });

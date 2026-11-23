@@ -1,20 +1,42 @@
 import 'dart:convert';
+import 'dart:io' as io;
 
+import 'package:file/file.dart' show File;
+import 'package:file/local.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 /// Image cache for app-level tests: every image is a 1×1 transparent PNG,
-/// served without network and without the platform database (sqflite on
-/// Android, iOS and macOS hosts).
+/// served without network, without the platform database (sqflite on
+/// Android, iOS and macOS hosts) and without path_provider. Files go to
+/// [directory].
 ///
-/// Install it as `CachedNetworkImageProvider.defaultCacheManager`, after
-/// faking `path_provider` (the files go to its temporary directory).
-CacheManager fakeImageCacheManager(FakeImageService service) => CacheManager(
+/// Install it as `CachedNetworkImageProvider.defaultCacheManager`. Never read
+/// that field before: its first read builds the real `DefaultCacheManager`.
+CacheManager fakeImageCacheManager(
+  FakeImageService service,
+  io.Directory directory,
+) => CacheManager(
   Config(
     'mediavore_test_images',
     repo: NonStoringObjectProvider(),
     fileService: service,
+    fileSystem: _DirectoryFileSystem(directory.path),
   ),
 );
+
+/// Cache files in a fixed directory, created on demand.
+class _DirectoryFileSystem implements FileSystem {
+  _DirectoryFileSystem(this.path);
+
+  final String path;
+
+  @override
+  Future<File> createFile(String name) async {
+    final directory = const LocalFileSystem().directory(path);
+    await directory.create(recursive: true);
+    return directory.childFile(name);
+  }
+}
 
 /// Records the image URLs the app asked for and answers a transparent PNG.
 class FakeImageService extends FileService {
