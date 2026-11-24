@@ -641,14 +641,18 @@ class _TierDots extends StatelessWidget {
             ),
           ),
         const SizedBox(width: 4),
-        Text(
-          context.l10n.achievementsLevelProgress(
-            family.unlockedCount,
-            family.tiers.length,
+        Flexible(
+          child: Text(
+            context.l10n.achievementsLevelProgress(
+              family.unlockedCount,
+              family.tiers.length,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.text2),
           ),
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.text2),
         ),
       ],
     );

@@ -157,17 +157,21 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton(
-                key: const Key('profile_achievements'),
-                onPressed: () =>
-                    Navigator.of(context).push(AchievementsPage.route()),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(48, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  visualDensity: VisualDensity.compact,
-                ),
-                child: Text(
-                  l10n.profileAchievementsSeeAll(unlockedCount, totalCount),
+              Flexible(
+                child: TextButton(
+                  key: const Key('profile_achievements'),
+                  onPressed: () =>
+                      Navigator.of(context).push(AchievementsPage.route()),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: Text(
+                    l10n.profileAchievementsSeeAll(unlockedCount, totalCount),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ],

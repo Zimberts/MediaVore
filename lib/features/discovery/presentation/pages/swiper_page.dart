@@ -157,10 +157,14 @@ class _SwiperPageState extends State<SwiperPage> {
                     children: [
                       Icon(Icons.playlist_add, color: primary, size: 20),
                       const SizedBox(width: 8),
-                      Text(
-                        '${context.l10n.swiperAddTo} : ',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          '${context.l10n.swiperAddTo} : ',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),

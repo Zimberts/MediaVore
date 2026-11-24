@@ -306,17 +306,23 @@ class _MediaStatsPageState extends State<MediaStatsPage> {
                   ),
                   const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      SummaryMiniCard(
-                        label: context.l10n.statsMoviesCount(split.movieCount),
-                        value: split.movieCount.toString(),
-                        icon: Icons.movie_outlined,
+                      Expanded(
+                        child: SummaryMiniCard(
+                          label: context.l10n.statsMoviesCount(
+                            split.movieCount,
+                          ),
+                          value: split.movieCount.toString(),
+                          icon: Icons.movie_outlined,
+                        ),
                       ),
-                      SummaryMiniCard(
-                        label: context.l10n.statsEpisodesCount(split.tvCount),
-                        value: split.tvCount.toString(),
-                        icon: Icons.tv_outlined,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SummaryMiniCard(
+                          label: context.l10n.statsEpisodesCount(split.tvCount),
+                          value: split.tvCount.toString(),
+                          icon: Icons.tv_outlined,
+                        ),
                       ),
                     ],
                   ),

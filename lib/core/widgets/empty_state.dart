@@ -33,41 +33,49 @@ class EmptyState extends StatelessWidget {
     final label = actionLabel;
     final action = onAction;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 64, color: colors.onSurfaceVariant),
-            const SizedBox(height: 16),
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 64, color: colors.onSurfaceVariant),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium,
+          ),
+          if (message != null) ...[
+            const SizedBox(height: 8),
             Text(
-              title,
+              message!,
               textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium,
-            ),
-            if (message != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                message!,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
               ),
-            ],
-            if (label != null && action != null) ...[
-              const SizedBox(height: 24),
-              actionIcon != null
-                  ? FilledButton.icon(
-                      onPressed: action,
-                      icon: Icon(actionIcon),
-                      label: Text(label),
-                    )
-                  : FilledButton(onPressed: action, child: Text(label)),
-            ],
+            ),
           ],
-        ),
+          if (label != null && action != null) ...[
+            const SizedBox(height: 24),
+            actionIcon != null
+                ? FilledButton.icon(
+                    onPressed: action,
+                    icon: Icon(actionIcon),
+                    label: Text(label),
+                  )
+                : FilledButton(onPressed: action, child: Text(label)),
+          ],
+        ],
+      ),
+    );
+
+    // Scrolls instead of overflowing when the height is too small (short
+    // screen, large text); a scroll view needs a bounded height.
+    return LayoutBuilder(
+      builder: (context, constraints) => Center(
+        child: constraints.hasBoundedHeight
+            ? SingleChildScrollView(child: content)
+            : content,
       ),
     );
   }
