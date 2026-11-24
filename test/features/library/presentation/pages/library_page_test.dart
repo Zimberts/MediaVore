@@ -32,6 +32,8 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(<MediaItem>[]);
+    registerFallbackValue(<(int, MediaType)>[]);
     registerFallbackValue(
       const MediaItem(id: 0, title: '', overview: '', releaseDate: ''),
     );
@@ -97,6 +99,22 @@ void main() {
       final name = invocation.positionalArguments[1] as String;
       lists[name] = [...?lists[name], '${item.id}:${item.mediaType.name}'];
     });
+    when(() => repository.addAllToList(any(), any())).thenAnswer((
+      invocation,
+    ) async {
+      final items = invocation.positionalArguments[0] as List<MediaItem>;
+      final name = invocation.positionalArguments[1] as String;
+      lists[name] = [
+        ...?lists[name],
+        for (final item in items) '${item.id}:${item.mediaType.name}',
+      ];
+    });
+    when(() => repository.getCachedMediaItems(any())).thenAnswer(
+      (invocation) async => List<MediaItem?>.filled(
+        (invocation.positionalArguments[0] as List<(int, MediaType)>).length,
+        null,
+      ),
+    );
     when(() => repository.removeFromList(any(), any(), any())).thenAnswer((
       invocation,
     ) async {
@@ -444,7 +462,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       verify(() => repository.createList('Shared')).called(1);
-      verify(() => repository.addToList(any(), 'Shared')).called(2);
+      final added =
+          verify(
+                () => repository.addAllToList(captureAny(), 'Shared'),
+              ).captured.single
+              as List<MediaItem>;
+      expect(added, hasLength(2));
       expect(row('Shared'), findsOneWidget);
       expect(rowLabel(tester, 'Shared'), contains('2 items'));
       expect(find.text('All · 10'), findsOneWidget);
