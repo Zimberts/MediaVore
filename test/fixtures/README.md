@@ -1,5 +1,101 @@
 # Test fixtures
 
+## `export_v1.4.4.mdv`
+
+A data export (`.mdv`, format version 1) written by the serializer of release
+**v1.4.4**: `test/app/journeys/export_import_test.dart` proves that the
+current app still imports a backup made by the previous release.
+
+| | |
+| --- | --- |
+| Written by | `ExportEnvelope.toZipBytes` at tag `v1.4.4` |
+| Files | `meta.csv`, `seen.csv`, `likes.csv`, `notifications.csv`, `lists.csv`, `quickadd.csv` |
+| SHA-256 | `6E268B63535E88B96E80B307024076B4324720862936D036B588071A2C90A094` |
+
+### When to regenerate
+
+At every change of the export format (`DOCS/export-format.md`): once the
+release that carries the change is tagged, write the fixture again from that
+tag, rename it after the tag, and update the journey's expectations. Keep the
+archive written by the old code: a fixture written by the code under test
+proves nothing.
+
+### Procedure
+
+1. Check out the previous release in a throwaway worktree and set it up:
+
+   ```bash
+   git worktree add ../mediavore-release v1.4.4
+   cd ../mediavore-release
+   touch .env && flutter pub get
+   dart run build_runner build --delete-conflicting-outputs
+   ```
+
+2. Add this scratch generator as `test/tmp_generate_mdv_fixture_test.dart`
+   (same data as the journey expects):
+
+   ```dart
+   import 'dart:io';
+
+   import 'package:flutter_test/flutter_test.dart';
+   import 'package:mediavore/core/utils/export_import_serializer.dart';
+   import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+   import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
+   import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+   import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+   import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
+
+   void main() {
+     test('generate v1.4.4 export fixture', () {
+       MediaListItem item(int id, String type, String list, int pos) =>
+           MediaListItem(
+             id: id,
+             type: type,
+             title: type == 'movie' ? 'Movie $id' : 'Show $id',
+             listName: list,
+             position: pos,
+           );
+       final envelope = ExportEnvelope(
+         version: 1,
+         exportedAt: DateTime.utc(2026, 11, 22, 9),
+         seen: [
+           SeenItemModel(tmdbId: 550, type: 'movie', title: 'Movie 550', posterPath: '/p550.jpg', seenDate: DateTime.utc(2024, 1, 10, 20), runtime: 110, genres: ['Action', 'Science Fiction']),
+           SeenItemModel(tmdbId: 550, type: 'movie', title: 'Movie 550', posterPath: '/p550.jpg', seenDate: DateTime.utc(2024, 6, 1, 18, 30), runtime: 110, genres: ['Action', 'Science Fiction']),
+           SeenItemModel(tmdbId: 100, type: 'tv', title: 'Show 100', posterPath: '/p100.jpg', seenDate: DateTime.utc(2024, 7, 1, 17), seasonNumber: 1, episodeNumber: 1, runtime: 45, genres: ['Drama']),
+           SeenItemModel(tmdbId: 100, type: 'tv', title: 'Show 100', posterPath: '/p100.jpg', seenDate: DateTime.utc(2024, 7, 2, 17), seasonNumber: 1, episodeNumber: 2, runtime: 45, genres: ['Drama']),
+         ],
+         likes: [LikedItem(tmdbId: 550, type: 'movie', title: 'Movie 550')],
+         notifications: [
+           NotifiedItemModel(tmdbId: 200, type: 'tv', title: 'Show 200', posterPath: '/p200.jpg', releaseDate: DateTime.utc(2020), seasonNumber: 1, episodeNumber: 1, autoNotify: false),
+         ],
+         quickAdd: [
+           QuickAddItemModel(tmdbId: 100, type: 'tv', seasonNumber: 1, episodeNumber: 3, insertedAt: DateTime.utc(2024, 7, 2, 17), airDate: DateTime.utc(2020), title: 'Show 100', posterPath: '/p100.jpg'),
+         ],
+         lists: {
+           'watchlist': [item(552, 'movie', 'watchlist', 0)],
+           'Weekend': [item(553, 'movie', 'Weekend', 0), item(100, 'tv', 'Weekend', 1)],
+         },
+       );
+       File('test/tmp_v1.4.4.mdv').writeAsBytesSync(envelope.toZipBytes());
+     });
+   }
+   ```
+
+3. Run it and copy the archive into the main checkout:
+
+   ```bash
+   flutter test test/tmp_generate_mdv_fixture_test.dart
+   cp test/tmp_v1.4.4.mdv "$MAIN/test/fixtures/export_v1.4.4.mdv"
+   cd "$MAIN" && git worktree remove ../mediavore-release --force
+   ```
+
+4. Run the journey and record the new SHA-256 above:
+
+   ```bash
+   flutter test test/app/journeys/export_import_test.dart
+   sha256sum test/fixtures/export_v1.4.4.mdv
+   ```
+
 ## `isar_v3_default.isar.gz`
 
 > **IMPORTANT — one-of-a-kind artifact. Do not regenerate, reformat, rename, or
