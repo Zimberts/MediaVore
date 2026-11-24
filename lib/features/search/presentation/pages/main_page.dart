@@ -44,6 +44,12 @@ class _MainPageState extends State<MainPage> {
   bool _isProcessingQueue = false;
   OverlayEntry? _currentNotification;
 
+  /// Completes when the banner on screen goes away; the queue waits on it.
+  Completer<void>? _notificationDone;
+
+  /// Hides the banner on screen after 4 s.
+  Timer? _notificationTimer;
+
   List<AppTab> get _tabs => widget.tabs ?? AppTab.visibleTabs;
 
   /// Provisional content of each tab; every epic then replaces its own.
@@ -83,9 +89,7 @@ class _MainPageState extends State<MainPage> {
   void dispose() {
     _linkSubscription?.cancel();
     _achievementSubscription?.cancel();
-    _currentNotification?.remove();
-    // The auto-dismiss timer may still fire: it must find nothing to remove.
-    _currentNotification = null;
+    _closeNotification();
     super.dispose();
   }
 
@@ -116,7 +120,7 @@ class _MainPageState extends State<MainPage> {
   Future<void> _showTopNotification(Achievement achievement) async {
     if (!mounted) return;
 
-    final completer = Completer<void>();
+    final completer = _notificationDone = Completer<void>();
     final mainPageContext = context;
 
     _currentNotification = OverlayEntry(
@@ -124,26 +128,28 @@ class _MainPageState extends State<MainPage> {
         key: ValueKey('achievement_banner_${achievement.id}'),
         achievement: achievement,
         mainPageContext: mainPageContext,
-        onDismiss: () {
-          _currentNotification?.remove();
-          _currentNotification = null;
-          if (!completer.isCompleted) completer.complete();
-        },
+        onDismiss: _closeNotification,
       ),
     );
 
     Overlay.of(context).insert(_currentNotification!);
 
     // Auto-dismiss after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
-      if (_currentNotification != null && !completer.isCompleted) {
-        _currentNotification?.remove();
-        _currentNotification = null;
-        completer.complete();
-      }
-    });
+    _notificationTimer = Timer(const Duration(seconds: 4), _closeNotification);
 
     return completer.future;
+  }
+
+  /// Removes the banner on screen, if any, and releases the queue. Runs once
+  /// per banner whatever closes it first (tap, timer, page disposed).
+  void _closeNotification() {
+    _notificationTimer?.cancel();
+    _notificationTimer = null;
+    _currentNotification?.remove();
+    _currentNotification = null;
+    final done = _notificationDone;
+    _notificationDone = null;
+    if (done != null && !done.isCompleted) done.complete();
   }
 
   void _initDeepLinks() async {
@@ -273,6 +279,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
 
   void _handleDismiss() async {
     await _controller.reverse();
+    if (!mounted) return;
     widget.onDismiss();
   }
 
