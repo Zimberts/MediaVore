@@ -53,8 +53,8 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
       text: context.read<SearchProvider>().currentQuery,
     );
     _scrollController.addListener(_onScroll);
-    // Reload once a TMDB credential is saved (first-launch screen or
-    // Settings), so a stale "missing key" error doesn't stay on screen.
+    // Reload whenever the TMDB credential is saved or removed (first-launch
+    // screen or Settings), so the grid always reflects the current key.
     _settings = context.read<SettingsProvider>();
     _credential = _settings.tmdbApiKey;
     _settings.addListener(_onSettingsChanged);
@@ -83,7 +83,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     final credential = _settings.tmdbApiKey;
     if (credential == _credential) return;
     _credential = credential;
-    if (credential.isNotEmpty && mounted) _refreshDiscovery();
+    // A removed key reloads too: the results of the old key must give way
+    // to the "connect TMDB" invitation.
+    if (mounted) _refreshDiscovery();
   }
 
   void _refreshDiscovery([String? query]) {

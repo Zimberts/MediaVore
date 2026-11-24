@@ -506,6 +506,25 @@ void main() {
       expect(find.text('Loaded'), findsOneWidget);
     });
 
+    // Regression test for #463: removing the key must drop the results it
+    // loaded and invite to connect TMDB again.
+    testWidgets('should invite to connect TMDB when the key is removed', (
+      tester,
+    ) async {
+      await settingsProvider.setTmdbApiKey('old_key');
+      stubTrending((page) => page == 1 ? [_item(1, 'Loaded')] : []);
+      await pumpPage(tester);
+      expect(find.text('Loaded'), findsOneWidget);
+
+      stubTrendingThrows(const ConfigurationException('missing key'));
+      await settingsProvider.setTmdbApiKey('');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Loaded'), findsNothing);
+      expect(find.byKey(const Key('discovery_connect_tmdb')), findsOneWidget);
+    });
+
     testWidgets('should show the offline banner and a retry button', (
       tester,
     ) async {
