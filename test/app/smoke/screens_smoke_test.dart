@@ -294,18 +294,8 @@ void main() {
       testApp(
         'should render every screen without error when ${variant.name}',
         (tester, app) async {
-          tester.view
-            ..devicePixelRatio = 3
-            ..physicalSize = variant.size * 3;
-          tester.platformDispatcher
-            ..localesTestValue = [Locale(variant.language)]
-            ..textScaleFactorTestValue = variant.textScale;
-          addTearDown(tester.view.reset);
-          addTearDown(tester.platformDispatcher.clearAllTestValues);
-          await pumpUntilSettled(tester);
-
           final problems = <String>[];
-          var screen = 'boot';
+          var screen = 'resize';
           final reportError = FlutterError.onError;
           // Every error is collected (with its screen) instead of stopping at
           // the first one; the full report still goes to the console.
@@ -316,6 +306,16 @@ void main() {
             );
           };
           try {
+            tester.view
+              ..devicePixelRatio = 3
+              ..physicalSize = variant.size * 3;
+            tester.platformDispatcher
+              ..localesTestValue = [Locale(variant.language)]
+              ..textScaleFactorTestValue = variant.textScale;
+            addTearDown(tester.view.reset);
+            addTearDown(tester.platformDispatcher.clearAllTestValues);
+            await pumpUntilSettled(tester);
+
             for (final s in _screens) {
               screen = s.name;
               await s.open(tester);
