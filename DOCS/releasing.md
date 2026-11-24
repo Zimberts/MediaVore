@@ -22,7 +22,8 @@ pushes a tag by hand.
 
    A commit footer `Release-As: 1.3.0` forces a version. A non-conforming commit is ignored.
    The `bump` type is obsolete: only the release PR changes the version.
-3. **To release, merge the release PR** (squash). The run on that merge creates the tag `vX.Y.Z`
+3. **To release, run the manual checklist** (`DOCS/release-checklist.md`), tick its box in the
+   release PR (footer set by `pull-request-footer`), **then merge the release PR** (squash). The run on that merge creates the tag `vX.Y.Z`
    and the GitHub release (notes = the changelog section), then builds the Android APK and AAB
    from the tag in the same workflow and attaches the APK to that release.
 

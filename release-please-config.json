@@ -3,6 +3,7 @@
   "release-type": "dart",
   "include-component-in-tag": false,
   "pull-request-title-pattern": "chore(release): v${version}",
+  "pull-request-footer": "- [ ] Manual checklist done ([DOCS/release-checklist.md](https://github.com/Zimberts/MediaVore/blob/main/DOCS/release-checklist.md)): phones used, skipped steps.\n\nThis PR was generated with [Release Please](https://github.com/googleapis/release-please).",
   "bootstrap-sha": "981a5286f3d61ce496b1ee7d65cf0f0352c845f4",
   "packages": {
     ".": {
