@@ -25,6 +25,12 @@ class MockNotificationRefreshService extends Mock
 
 class MockQuickAddService extends Mock implements QuickAddService {}
 
+/// Matches the episode [season]x[episode] of the series [tmdbId].
+Matcher isEpisode(int tmdbId, int season, int episode) => isA<SeenItem>()
+    .having((i) => i.tmdbId, 'tmdbId', tmdbId)
+    .having((i) => i.seasonNumber, 'seasonNumber', season)
+    .having((i) => i.episodeNumber, 'episodeNumber', episode);
+
 void main() {
   late MockMediaListLocalDataSource localDataSource;
   late MockMediaCache cache;
@@ -330,8 +336,37 @@ void main() {
             (tmdbId: 42, seasonNumber: 1, episodeNumber: 3),
             (tmdbId: 42, seasonNumber: 2, episodeNumber: 1),
           ]),
-          () => quickAdd.queueNextAfterSeen(any()),
+          () => quickAdd.queueNextAfterSeen(any(that: isEpisode(42, 2, 1))),
         ]);
+        verifyNoMoreInteractions(quickAdd);
+      });
+
+      test('should refresh and queue from the furthest episode of each series '
+          'of a batch, whatever its order', () async {
+        SeenItem other(int season, int number) => SeenItem(
+          tmdbId: 43,
+          type: MediaType.tv,
+          title: 'Better Call Saul',
+          seasonNumber: season,
+          episodeNumber: number,
+          seenDate: tDate,
+        );
+
+        await service.markManyAsSeen([
+          episode(2, 1),
+          other(1, 4),
+          episode(1, 3),
+          other(1, 2),
+        ]);
+
+        verifyInOrder([
+          () => notifications.refreshAfterSeen(any(that: isEpisode(42, 2, 1))),
+          () => quickAdd.queueNextAfterSeen(any(that: isEpisode(42, 2, 1))),
+          () => notifications.refreshAfterSeen(any(that: isEpisode(43, 1, 4))),
+          () => quickAdd.queueNextAfterSeen(any(that: isEpisode(43, 1, 4))),
+        ]);
+        verifyNoMoreInteractions(quickAdd);
+        verifyNoMoreInteractions(notifications);
       });
 
       test(
