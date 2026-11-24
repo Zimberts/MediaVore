@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -61,6 +62,9 @@ class _FakeHomeRepository extends MockMediaRepository {
   int _nextId = 1;
   int refreshCalls = 0;
   bool? lastRefreshForce;
+
+  /// Thrown by [refreshNotifiedItems] when set.
+  Object? refreshError;
 
   void addSeries(_Series s) {
     series[s.id] = s;
@@ -165,6 +169,7 @@ class _FakeHomeRepository extends MockMediaRepository {
   Future<void> refreshNotifiedItems({bool force = false}) async {
     refreshCalls++;
     lastRefreshForce = force;
+    if (refreshError case final error?) throw error;
   }
 
   @override
@@ -307,6 +312,26 @@ void main() {
 
         expect(repository.refreshCalls, 1);
         expect(repository.lastRefreshForce, isTrue);
+      },
+    );
+
+    testWidgets(
+      'should say the refresh failed offline and keep the lists (#471)',
+      (tester) async {
+        repository.addSeries(_Series(1, 'Severance'));
+        repository.refreshError = const NetworkException('Network error');
+        await pumpHome(tester);
+
+        await tester.tap(find.byKey(const Key('home_refresh')));
+        await tester.pump();
+        await tester.pump();
+
+        expect(
+          appMessageController.current?.text,
+          fallbackLocalizations.searchErrorOffline,
+        );
+        expect(find.text('Severance'), findsWidgets);
+        await tester.pumpAndSettle();
       },
     );
 

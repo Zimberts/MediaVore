@@ -81,27 +81,37 @@ class _HomePageState extends State<HomePage> {
     final provider = context.read<SearchProvider>();
     if (_isRefreshing || provider.isNotifiedRefreshing) return;
     setState(() => _isRefreshing = true);
+    Object? failure;
     try {
       final hasTmdbKey = context.read<SettingsProvider>().tmdbApiKey.isNotEmpty;
       if (hasTmdbKey) {
-        await provider.refreshNotifiedItems(force: true);
+        try {
+          await provider.refreshNotifiedItems(force: true);
+        } catch (e) {
+          // Still reload what is stored locally below (#471).
+          failure = e;
+        }
       }
       await provider.reloadSavedTitles();
       await provider.refreshQuickAddItems();
     } catch (e) {
-      debugPrint('[HomePage] refresh failed: $e');
-      if (mounted) {
-        showAppMessage(
-          provider.isOffline
-              ? context.l10n.searchErrorOffline
-              : context.l10n.searchErrorUnknown,
-        );
-      }
+      failure ??= e;
     } finally {
       if (mounted) {
         setState(() => _isRefreshing = false);
       }
     }
+    if (failure == null) return;
+    debugPrint('[HomePage] refresh failed: $failure');
+    if (!mounted) return;
+    final offline =
+        provider.isOffline ||
+        classifySearchError(failure) == SearchErrorType.offline;
+    showAppMessage(
+      offline
+          ? context.l10n.searchErrorOffline
+          : context.l10n.searchErrorUnknown,
+    );
   }
 
   Future<void> _markSeen(InProgressItem item) async {

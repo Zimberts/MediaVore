@@ -205,7 +205,8 @@ abstract class MediaRepository {
   ///
   /// Only entries missing information (no release date, or one already in the
   /// past) are reconciled, and each series is throttled to at most once per day
-  /// unless [force] is set.
+  /// unless [force] is set. Failures are skipped; with [force] (a manual
+  /// refresh) a lost connection is rethrown once every series was tried.
   Future<void> refreshNotifiedItems({bool force = false});
 
   /// Reconciles a single notified series/movie with the network, throttled to at

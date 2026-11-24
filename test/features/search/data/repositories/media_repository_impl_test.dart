@@ -1447,6 +1447,82 @@ void main() {
         );
       },
     );
+
+    group('manual refresh offline (#471)', () {
+      setUp(() {
+        stubNotified();
+        final film = NotifiedItemModel(
+          tmdbId: 2,
+          type: 'movie',
+          title: 'Film',
+          releaseDate: DateTime(2024),
+        );
+        when(() => mockLocalDataSource.getNotifiedItems()).thenAnswer(
+          (_) async => [
+            NotifiedItemModel(
+              tmdbId: 1,
+              type: 'tv',
+              title: 'Show',
+              releaseDate: DateTime(2024),
+            ),
+            film,
+          ],
+        );
+        when(
+          () => mockLocalDataSource.getNotifiedItem(2, 'movie'),
+        ).thenAnswer((_) async => film);
+      });
+
+      test(
+        'should rethrow a lost connection after trying every title when forced',
+        () async {
+          when(
+            () => mockRemoteDataSource.getMediaItem(
+              any(),
+              type: any(named: 'type'),
+            ),
+          ).thenThrow(const NetworkException('Network error'));
+
+          await expectLater(
+            repository.refreshNotifiedItems(force: true),
+            throwsA(isA<NetworkException>()),
+          );
+          // The film is still tried after the series failed (the startup
+          // warm-up may have tried them once more).
+          verify(
+            () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+          ).called(greaterThanOrEqualTo(1));
+          verify(
+            () => mockRemoteDataSource.getMediaItem(2),
+          ).called(greaterThanOrEqualTo(1));
+        },
+      );
+
+      test('should stay silent when not forced', () async {
+        when(
+          () => mockRemoteDataSource.getMediaItem(
+            any(),
+            type: any(named: 'type'),
+          ),
+        ).thenThrow(const NetworkException('Network error'));
+
+        await expectLater(repository.refreshNotifiedItems(), completes);
+      });
+
+      test('should stay silent on another failure even when forced', () async {
+        when(
+          () => mockRemoteDataSource.getMediaItem(
+            any(),
+            type: any(named: 'type'),
+          ),
+        ).thenThrow(const ServerException('Unauthorized', 401));
+
+        await expectLater(
+          repository.refreshNotifiedItems(force: true),
+          completes,
+        );
+      });
+    });
   });
 
   group('markAsSeen next Quick Add', () {
