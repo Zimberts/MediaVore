@@ -99,6 +99,11 @@ class SearchProvider
   /// Viewings shown optimistically whose write is still running: a reload
   /// of the stored history keeps them (see [loadAllSeenStatus]).
   final List<SeenItem> _pendingSeen = [];
+
+  /// Identity of one viewing: title, episode and instant.
+  static String _seenEntryKey(SeenItem item) =>
+      '${item.tmdbId}:${item.type.name}:${item.seasonNumber}:'
+      '${item.episodeNumber}:${item.seenDate.millisecondsSinceEpoch}';
   Map<String, int> _seenCounts = {}; // "id:type" -> count
   List<QuickAddItem> _quickAddItems = [];
   List<InProgressItem> _inProgressItems = [];
@@ -299,7 +304,15 @@ class SearchProvider
 
   Future<void> loadAllSeenStatus() async {
     final stored = await repository.getSeenItems();
-    _seenItems = [..._pendingSeen.reversed, ...stored];
+    // A pending viewing already stored (its write ended just before this
+    // read) is listed once, from the database.
+    final storedKeys = stored.map(_seenEntryKey).toSet();
+    _seenItems = [
+      ..._pendingSeen.reversed.where(
+        (item) => !storedKeys.contains(_seenEntryKey(item)),
+      ),
+      ...stored,
+    ];
     final Map<String, int> counts = {};
 
     final Map<String, List<SeenItem>> grouped = {};

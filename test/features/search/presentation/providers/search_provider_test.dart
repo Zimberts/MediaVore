@@ -975,6 +975,29 @@ void main() {
       expect(provider.seenItems.singleWhere((s) => s.tmdbId == 556).id, 2);
     });
 
+    test('should list a viewing once when a reload reads it stored before '
+        'its own write returns', () async {
+      final slowWrite = Completer<void>();
+      when(
+        () => mockRepository.markAsSeen(any()),
+      ).thenAnswer((_) => slowWrite.future);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => [_stored(seenMovie, 1)]);
+
+      final pending = provider.markAsSeen(seenMovie);
+      // Another reload reads the row already written, the write not yet
+      // returned.
+      await provider.loadAllSeenStatus();
+
+      expect(provider.seenItems.where((s) => s.tmdbId == 555), hasLength(1));
+      expect(provider.getSeenCount(movieItem), 1);
+
+      slowWrite.complete();
+      await pending;
+      expect(provider.getSeenCount(movieItem), 1);
+    });
+
     test('should swap the optimistic entries for the stored ones when '
         'markManyAsSeen completes', () async {
       when(() => mockRepository.markManyAsSeen(any())).thenAnswer((_) async {});
