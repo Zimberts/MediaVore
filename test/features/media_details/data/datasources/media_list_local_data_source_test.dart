@@ -141,6 +141,29 @@ void main() {
         expect(items[1].posterPath, '/new_path.jpg');
       },
     );
+
+    test(
+      'should keep runtime and genres when updatePosterPath fills the poster',
+      () async {
+        await dataSource.markAsSeen(
+          SeenItemModel(
+            tmdbId: 1,
+            type: 'movie',
+            title: 'A',
+            seenDate: DateTime(2024, 5, 2),
+            runtime: 110,
+            genres: const ['Action'],
+          ),
+        );
+
+        await dataSource.updatePosterPath(1, 'movie', '/new_path.jpg');
+
+        final item = (await dataSource.getAllSeenItems()).single;
+        expect(item.posterPath, '/new_path.jpg');
+        expect(item.runtime, 110);
+        expect(item.genres, ['Action']);
+      },
+    );
   });
 
   group('MediaListLocalDataSource - Lists', () {
