@@ -633,6 +633,23 @@ class MediaListLocalDataSource {
     });
   }
 
+  /// Removes the quick-add entries of [episodes], in one transaction.
+  Future<void> removeQuickAddItemsForEpisodes(
+    List<({int tmdbId, int seasonNumber, int episodeNumber})> episodes,
+  ) async {
+    if (episodes.isEmpty) return;
+    await _isar.writeTxn(() async {
+      for (final episode in episodes) {
+        await _isar.quickAddItemModels
+            .filter()
+            .tmdbIdEqualTo(episode.tmdbId)
+            .seasonNumberEqualTo(episode.seasonNumber)
+            .episodeNumberEqualTo(episode.episodeNumber)
+            .deleteAll();
+      }
+    });
+  }
+
   // Opt-out methods
   Future<void> addOptOut(
     int tmdbId, {

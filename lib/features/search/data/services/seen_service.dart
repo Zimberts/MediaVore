@@ -127,6 +127,24 @@ class SeenService {
     // The seen state itself is already shown optimistically by the caller.
     // A refresh failure must not fail the mark (the batch is already stored),
     // nor skip the other refresh: each one is guarded separately.
+    // No episode of the batch is a "next episode" any more:
+    // queueNextAfterSeen below only drops the entry of the last one.
+    try {
+      await localDataSource.removeQuickAddItemsForEpisodes([
+        for (final item in items)
+          if (item.type == MediaType.tv &&
+              item.seasonNumber != null &&
+              item.episodeNumber != null)
+            (
+              tmdbId: item.tmdbId,
+              seasonNumber: item.seasonNumber!,
+              episodeNumber: item.episodeNumber!,
+            ),
+      ]);
+    } catch (e) {
+      debugPrint('[SeenService] Quick Add cleanup failed: $e');
+    }
+
     final lastItem = items.last;
     try {
       await notifications.refreshAfterSeen(lastItem);

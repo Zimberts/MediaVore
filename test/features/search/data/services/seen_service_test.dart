@@ -58,6 +58,9 @@ void main() {
       ),
     );
     registerFallbackValue(<SeenItemModel>[]);
+    registerFallbackValue(
+      <({int tmdbId, int seasonNumber, int episodeNumber})>[],
+    );
   });
 
   setUp(() {
@@ -68,6 +71,9 @@ void main() {
     quickAdd = MockQuickAddService();
 
     when(() => localDataSource.markManyAsSeen(any())).thenAnswer((_) async {});
+    when(
+      () => localDataSource.removeQuickAddItemsForEpisodes(any()),
+    ).thenAnswer((_) async {});
     when(() => notifications.refreshAfterSeen(any())).thenAnswer((_) async {});
     when(() => quickAdd.queueNextAfterSeen(any())).thenAnswer((_) async {});
 
@@ -306,6 +312,37 @@ void main() {
             ),
             () => quickAdd.queueNextAfterSeen(any()),
           ]);
+        },
+      );
+
+      test('should drop the Quick Add entry of every episode of the batch '
+          'before queueing the next one', () async {
+        await service.markManyAsSeen([
+          episode(1, 2),
+          episode(1, 3),
+          episode(2, 1),
+        ]);
+
+        verifyInOrder([
+          () => localDataSource.markManyAsSeen(any()),
+          () => localDataSource.removeQuickAddItemsForEpisodes([
+            (tmdbId: 42, seasonNumber: 1, episodeNumber: 2),
+            (tmdbId: 42, seasonNumber: 1, episodeNumber: 3),
+            (tmdbId: 42, seasonNumber: 2, episodeNumber: 1),
+          ]),
+          () => quickAdd.queueNextAfterSeen(any()),
+        ]);
+      });
+
+      test(
+        'should still queue Quick Add when the Quick Add cleanup fails',
+        () async {
+          when(
+            () => localDataSource.removeQuickAddItemsForEpisodes(any()),
+          ).thenThrow(Exception('disk full'));
+
+          await expectLater(service.markManyAsSeen([episode(1, 1)]), completes);
+          verify(() => quickAdd.queueNextAfterSeen(any())).called(1);
         },
       );
 
