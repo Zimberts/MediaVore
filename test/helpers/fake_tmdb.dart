@@ -26,6 +26,41 @@ enum FakeTmdbFailure {
   offline,
 }
 
+/// Shape of one show of a [FakeTmdb] (see [FakeTmdb.shows]).
+class FakeShow {
+  const FakeShow({
+    required this.seasons,
+    required this.episodesPerSeason,
+    this.airDate,
+  });
+
+  /// Number of seasons.
+  final int seasons;
+
+  /// Episodes of every season.
+  final int episodesPerSeason;
+
+  /// Air date (`yyyy-MM-dd`) of an episode; [FakeTmdb.defaultAirDate] when
+  /// null. A show with an episode airing after today is "Returning Series"
+  /// and announces it as `next_episode_to_air`; otherwise it is "Ended".
+  final String Function(int season, int episode)? airDate;
+
+  String dateOf(int season, int episode) =>
+      airDate?.call(season, episode) ?? FakeTmdb.defaultAirDate;
+
+  /// First episode airing after today, as `(season, episode, airDate)`.
+  (int, int, String)? nextToAir() {
+    final today = DateTime.now();
+    for (var s = 1; s <= seasons; s++) {
+      for (var e = 1; e <= episodesPerSeason; e++) {
+        final date = dateOf(s, e);
+        if (DateTime.parse(date).isAfter(today)) return (s, e, date);
+      }
+    }
+    return null;
+  }
+}
+
 /// Host of every TMDB API request.
 const String tmdbApiHost = 'api.themoviedb.org';
 
@@ -46,7 +81,11 @@ class FakeTmdb implements HttpClientAdapter {
     this.episodesPerSeason = 10,
     this.collectionOf,
     this.releaseDateOf,
+    this.shows = const {},
   });
+
+  /// Air date of every episode of a show without a [FakeShow].
+  static const String defaultAirDate = '2020-01-01';
 
   /// Simulated round-trip time of one request.
   final Duration latency;
@@ -64,6 +103,14 @@ class FakeTmdb implements HttpClientAdapter {
   /// Release date (`yyyy-MM-dd`) of a movie, by movie id; the fixture's when
   /// null or when it returns null.
   final String? Function(int movieId)? releaseDateOf;
+
+  /// Shape of some shows, by id; the others have [seasonsPerShow] seasons
+  /// of [episodesPerSeason] episodes, aired on [defaultAirDate].
+  final Map<int, FakeShow> shows;
+
+  FakeShow _shapeOf(int tvId) =>
+      shows[tvId] ??
+      FakeShow(seasons: seasonsPerShow, episodesPerSeason: episodesPerSeason);
 
   /// Every request received, in order (including failed ones).
   final List<Uri> requests = [];
@@ -310,40 +357,60 @@ class FakeTmdb implements HttpClientAdapter {
       });
   }
 
-  Map<String, dynamic> _show(int id, List<String> append) => _fixture('tv.json')
-    ..['id'] = id
-    ..['name'] = 'Show $id'
-    ..['original_name'] = 'Show $id'
-    ..['poster_path'] = '/p$id.jpg'
-    ..['number_of_seasons'] = seasonsPerShow
-    ..['number_of_episodes'] = seasonsPerShow * episodesPerSeason
-    ..['seasons'] = [
-      for (var n = 1; n <= seasonsPerShow; n++)
-        {
-          'id': id * 10 + n,
-          'season_number': n,
-          'name': 'Season $n',
-          'episode_count': episodesPerSeason,
-          'air_date': '2020-01-01',
+  Map<String, dynamic> _show(int id, List<String> append) {
+    final shape = _shapeOf(id);
+    final next = shape.nextToAir();
+    return _fixture('tv.json')
+      ..['id'] = id
+      ..['name'] = 'Show $id'
+      ..['original_name'] = 'Show $id'
+      ..['poster_path'] = '/p$id.jpg'
+      ..['number_of_seasons'] = shape.seasons
+      ..['number_of_episodes'] = shape.seasons * shape.episodesPerSeason
+      ..['seasons'] = [
+        for (var n = 1; n <= shape.seasons; n++)
+          {
+            'id': id * 10 + n,
+            'season_number': n,
+            'name': 'Season $n',
+            'episode_count': shape.episodesPerSeason,
+            'air_date': shape.dateOf(n, 1),
+          },
+      ]
+      ..addAll({
+        if (next != null) ...{
+          'status': 'Returning Series',
+          'in_production': true,
+          'next_episode_to_air': {
+            'id': id * 100 + next.$1 * 10 + next.$2,
+            'season_number': next.$1,
+            'episode_number': next.$2,
+            'air_date': next.$3,
+            'name': 'S${next.$1}E${next.$2}',
+          },
         },
-    ]
-    ..addAll({for (final a in append) a: _appended(a, 'tv', id)});
+      })
+      ..addAll({for (final a in append) a: _appended(a, 'tv', id)});
+  }
 
   Map<String, dynamic> _season(int tvId, int seasonNumber) {
+    final shape = _shapeOf(tvId);
     final body = _fixture('tv_season.json');
     final template = (body['episodes'] as List).first as Map<String, dynamic>;
     return body
       ..['id'] = tvId * 10 + seasonNumber
       ..['name'] = 'Season $seasonNumber'
       ..['season_number'] = seasonNumber
+      ..['air_date'] = shape.dateOf(seasonNumber, 1)
       ..['episodes'] = [
-        for (var e = 1; e <= episodesPerSeason; e++)
+        for (var e = 1; e <= shape.episodesPerSeason; e++)
           {
             ...template,
             'id': tvId * 100 + seasonNumber * 10 + e,
             'episode_number': e,
             'season_number': seasonNumber,
             'name': 'S${seasonNumber}E$e',
+            'air_date': shape.dateOf(seasonNumber, e),
           },
       ];
   }
