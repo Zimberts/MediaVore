@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -52,6 +53,10 @@ class SwiperProvider extends ChangeNotifier {
   bool _hasMore = true;
   int _currentPage = 1;
 
+  /// Items of the fetched discover pages not examined yet: a page can hold
+  /// more titles than the deck needs, the rest is kept for the next load.
+  final Queue<MediaItem> _pendingItems = Queue();
+
   int _sessionAddedCount = 0;
   int _sessionDiscardedCount = 0;
 
@@ -67,7 +72,7 @@ class SwiperProvider extends ChangeNotifier {
       _candidates.isNotEmpty ? _candidates.first : null;
 
   bool get isLoading => _isLoading;
-  bool get hasMore => _hasMore;
+  bool get hasMore => _hasMore || _pendingItems.isNotEmpty;
   bool get canUndo => _historyStack.isNotEmpty;
 
   int get sessionAddedCount => _sessionAddedCount;
@@ -103,6 +108,7 @@ class SwiperProvider extends ChangeNotifier {
       _sessionDiscardedCount = 0;
       _currentPage = 1;
       _hasMore = true;
+      _pendingItems.clear();
 
       await _loadCandidatesUntilThreshold();
     } finally {
@@ -316,63 +322,62 @@ class SwiperProvider extends ChangeNotifier {
   }
 
   void _checkPrefetch() {
-    if (_candidates.length < 3 && !_isFetchingMore && _hasMore) {
+    if (_candidates.length < 3 && !_isFetchingMore && hasMore) {
       _loadCandidatesUntilThreshold();
     }
   }
 
   Future<void> _loadCandidatesUntilThreshold({int targetCount = 4}) async {
-    if (_isFetchingMore || !_hasMore) return;
+    if (_isFetchingMore || !hasMore) return;
     _isFetchingMore = true;
 
     try {
-      while (_candidates.length < targetCount &&
-          _hasMore &&
-          _currentPage <= 50) {
-        final pageItems = await repository.discoverMedia(page: _currentPage);
-        _currentPage++;
+      while (_candidates.length < targetCount) {
+        if (_pendingItems.isEmpty) {
+          if (!_hasMore || _currentPage > 50) break;
+          final pageItems = await repository.discoverMedia(page: _currentPage);
+          _currentPage++;
 
-        if (pageItems.isEmpty) {
-          _hasMore = false;
-          break;
+          if (pageItems.isEmpty) {
+            _hasMore = false;
+            break;
+          }
+          _pendingItems.addAll(pageItems);
         }
 
-        for (final item in pageItems) {
-          if (_decidedTmdbIds.contains(item.id)) continue;
-          if (_existingListIds.contains(item.id)) continue;
-          if (_seenIds.contains(item.id)) continue;
-          if (_candidates.any((c) => c.item.id == item.id)) continue;
+        final item = _pendingItems.removeFirst();
+        if (_decidedTmdbIds.contains(item.id)) continue;
+        if (_existingListIds.contains(item.id)) continue;
+        if (_seenIds.contains(item.id)) continue;
+        if (_candidates.any((c) => c.item.id == item.id)) continue;
 
-          // Enrich with details to detect collections/sagas
-          try {
-            final details = await repository.getMediaDetails(item.id);
-            final collId = details.item.collectionId;
-            final collName = details.item.collectionName;
+        // Enrich with details to detect collections/sagas
+        try {
+          final details = await repository.getMediaDetails(item.id);
+          final collId = details.item.collectionId;
+          final collName = details.item.collectionName;
 
-            if (collId != null &&
-                details.collection != null &&
-                details.collection!.isNotEmpty) {
-              if (_seenSagaCollectionIds.contains(collId)) continue;
+          if (collId != null &&
+              details.collection != null &&
+              details.collection!.isNotEmpty) {
+            if (_seenSagaCollectionIds.contains(collId)) continue;
 
-              final sagaSorted = sortSagaByDate(details.collection!);
-              _seenSagaCollectionIds.add(collId);
+            final sagaSorted = sortSagaByDate(details.collection!);
+            _seenSagaCollectionIds.add(collId);
 
-              _candidates.add(
-                SwipeCardCandidate(
-                  item: details.item,
-                  collectionId: collId,
-                  collectionName: collName ?? details.item.title,
-                  sagaItems: sagaSorted,
-                ),
-              );
-            } else {
-              _candidates.add(SwipeCardCandidate(item: details.item));
-            }
-          } catch (_) {
-            _candidates.add(SwipeCardCandidate(item: item));
+            _candidates.add(
+              SwipeCardCandidate(
+                item: details.item,
+                collectionId: collId,
+                collectionName: collName ?? details.item.title,
+                sagaItems: sagaSorted,
+              ),
+            );
+          } else {
+            _candidates.add(SwipeCardCandidate(item: details.item));
           }
-
-          if (_candidates.length >= targetCount) break;
+        } catch (_) {
+          _candidates.add(SwipeCardCandidate(item: item));
         }
       }
     } catch (_) {

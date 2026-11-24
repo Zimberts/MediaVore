@@ -216,6 +216,46 @@ void main() {
     },
   );
 
+  test('keeps the rest of a discover page for the next cards instead of '
+      'skipping it', () async {
+    MediaItem movie(int id) => MediaItem(
+      id: id,
+      title: 'Movie $id',
+      overview: '',
+      releaseDate: '2023-01-01',
+    );
+    when(
+      () => repo.discoverMedia(
+        type: any(named: 'type'),
+        page: any(named: 'page'),
+      ),
+    ).thenAnswer((invocation) async {
+      final page = invocation.namedArguments[#page] as int;
+      return page <= 2
+          ? [for (var i = 1; i <= 3; i++) movie(page * 100 + i)]
+          : <MediaItem>[];
+    });
+    when(
+      () => repo.getMediaDetails(any(), type: any(named: 'type')),
+    ).thenAnswer(
+      (invocation) async => MediaDetails(
+        item: movie(invocation.positionalArguments.first as int),
+        cast: const [],
+      ),
+    );
+
+    await provider.init();
+    final shown = <int>[];
+    while (provider.currentCandidate != null) {
+      shown.add(provider.currentCandidate!.item.id);
+      await provider.swipeLeft();
+    }
+
+    // The first load stops at 4 cards, in the middle of page 2: its last
+    // two titles still come next.
+    expect(shown, [101, 102, 103, 201, 202, 203]);
+  });
+
   group('with LibraryProvider', () {
     late LibraryProvider libraryProvider;
 
