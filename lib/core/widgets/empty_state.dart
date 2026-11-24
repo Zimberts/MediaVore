@@ -7,7 +7,10 @@ import 'package:flutter/material.dart';
 /// that fills the screen (e.g. searching for a movie).
 ///
 /// Sizes itself to its content and centers it, so it works both as a page
-/// body and inside a scrollable (e.g. under a `RefreshIndicator`).
+/// body and inside a scrollable (e.g. under a `RefreshIndicator`). With a
+/// bounded height too small for its content (short screen, large text), it
+/// scrolls instead of overflowing. Built with a [LayoutBuilder]: never place
+/// it under `IntrinsicHeight` / `IntrinsicWidth`.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,

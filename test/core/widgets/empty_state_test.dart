@@ -72,5 +72,58 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('No releases'), findsOneWidget);
     });
+
+    testWidgets(
+      'should scroll instead of overflowing when the height is short',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            const Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                height: 120,
+                child: EmptyState(
+                  icon: Icons.history,
+                  title: 'Nothing here',
+                  message: 'Add something.',
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.descendant(
+            of: find.byType(EmptyState),
+            matching: find.byType(SingleChildScrollView),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('should not nest a scroll view when inside a scrollable', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          ListView(
+            children: const [
+              EmptyState(icon: Icons.history, title: 'Nothing here'),
+            ],
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(EmptyState),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsNothing,
+      );
+    });
   });
 }
