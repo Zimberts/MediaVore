@@ -13,6 +13,8 @@ import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
 import 'package:mediavore/features/library/presentation/pages/list_page.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_media_grid_item.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_media_tile.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_actions.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
@@ -80,9 +82,14 @@ Finder _tonight(int id) => find.byKey(ValueKey('home_tonight_movie_$id'));
 Finder _upcoming(int id) =>
     find.byKey(ValueKey('upcoming_row_movie_${id}_null_null'));
 
+/// Row (or grid cell) of the movie [id] in the open list.
 Finder _listEntry(int id) => find.descendant(
   of: find.byType(ListPage),
-  matching: find.byKey(ValueKey('${id}_movie')),
+  matching: find.byWidgetPredicate(
+    (w) =>
+        (w is ListMediaTile || w is ListMediaGridItem) &&
+        w.key == ValueKey('${id}_movie'),
+  ),
 );
 
 SearchProvider _search(WidgetTester tester) =>
@@ -135,25 +142,22 @@ Future<void> _scrollDiscover(WidgetTester tester) async {
   await pumpUntilSettled(tester);
 }
 
-String _isoDate(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';
-
-/// TMDB where [unreleasedId] comes out in 30 days, with a latency so that
-/// the network is still busy when the icon must change.
+/// TMDB where [unreleasedId] comes out in 30 days.
 FakeTmdb _unreleasedTmdb() {
-  final release = _isoDate(DateTime.now().add(const Duration(days: 30)));
+  final release = DateTime.now()
+      .add(const Duration(days: 30))
+      .toIso8601String()
+      .split('T')
+      .first;
   final movie = jsonDecode(fixture('tmdb/movie.json')) as Map<String, dynamic>;
-  return FakeTmdb(latency: const Duration(milliseconds: 300))
-    ..respond('movie/$unreleasedId', {
-      ...movie,
-      'id': unreleasedId,
-      'title': 'Upcoming Movie',
-      'original_title': 'Upcoming Movie',
-      'release_date': release,
-      'status': 'Post Production',
-    });
+  return FakeTmdb()..respond('movie/$unreleasedId', {
+    ...movie,
+    'id': unreleasedId,
+    'title': 'Upcoming Movie',
+    'original_title': 'Upcoming Movie',
+    'release_date': release,
+    'status': 'Post Production',
+  });
 }
 
 void main() {
@@ -197,7 +201,7 @@ void main() {
       expect(_discoverBookmark(releasedId, Icons.bookmark), findsOne);
 
       await _openWatchlist(tester);
-      expect(_listEntry(releasedId), findsWidgets);
+      expect(_listEntry(releasedId), findsOneWidget);
       await _close(tester, find.byType(ListPage));
 
       await goToTab(tester, AppTab.home);
@@ -205,7 +209,8 @@ void main() {
       // Released: no release to wait for (#445).
       expect(_upcoming(releasedId), findsNothing);
 
-      // Removed from its detail page: gone from Library and Home.
+      // Removed from its detail page: gone from Home, Library and the
+      // Discover bookmark.
       await openDetail(tester, releasedId);
       expect(_listButtonIcon(Icons.check), findsOneWidget);
       await tester.tap(find.byKey(ListSplitButton.mainKey));
@@ -217,6 +222,9 @@ void main() {
       await _openWatchlist(tester);
       expect(_listEntry(releasedId), findsNothing);
       await _close(tester, find.byType(ListPage));
+      await goToTab(tester, AppTab.discover);
+      await _revealCell(tester, releasedId);
+      expect(_discoverBookmark(releasedId, Icons.bookmark_border), findsOne);
       expect(
         await _persistedWatchlist(tester, app),
         isNot(contains('$releasedId:movie')),
@@ -224,26 +232,24 @@ void main() {
     });
 
     testApp('should list an unreleased title under "Upcoming", never under '
-        '"To watch tonight", when added while TMDB is slow', (
+        '"To watch tonight", when added from its detail page', (
       tester,
       app,
     ) async {
-      // Opened from Discover (the search path is the previous test's).
-      await goToTab(tester, AppTab.discover);
+      // Opened directly: the search path is the previous test's.
       await openDetail(tester, unreleasedId);
       expect(_listButtonIcon(Icons.add), findsOneWidget);
 
-      // #396: the icon does not wait for the release-date request.
-      final before = app.tmdb.countFor('movie/$unreleasedId');
+      // #396: one frame, no real I/O: the icon flips before the database
+      // write and the release follow-up complete.
       await tester.tap(find.byKey(ListSplitButton.mainKey));
       await tester.pump();
       expect(_listButtonIcon(Icons.check), findsOneWidget);
-      expect(app.tmdb.countFor('movie/$unreleasedId'), before);
       await pumpUntilSettled(tester);
       await _close(tester, find.byType(MediaDetailPage));
 
       await _openWatchlist(tester);
-      expect(_listEntry(unreleasedId), findsWidgets);
+      expect(_listEntry(unreleasedId), findsOneWidget);
       await _close(tester, find.byType(ListPage));
 
       await goToTab(tester, AppTab.home);
