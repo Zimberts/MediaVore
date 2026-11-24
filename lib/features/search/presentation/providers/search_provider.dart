@@ -1148,6 +1148,10 @@ class SearchProvider
       rethrow;
     }
 
+    // Swap the optimistic entry for the stored one: it carries the database
+    // id (needed to edit or delete the viewing) and the runtime and genres
+    // resolved from TMDB (statistics).
+    await loadAllSeenStatus();
     await _postMarkAsSeen(item);
   }
 
@@ -1280,6 +1284,8 @@ class SearchProvider
       rethrow;
     }
 
+    // Stored entries replace the optimistic ones (see [markAsSeen]).
+    await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
     await loadQuickAddItems();
