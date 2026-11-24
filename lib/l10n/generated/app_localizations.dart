@@ -4100,6 +4100,12 @@ abstract class AppLocalizations {
   /// **'Me (Host)'**
   String get togetherYouHost;
 
+  /// Name of a scanned participant whose QR code carries none; later ones get a number (Friend 2).
+  ///
+  /// In en, this message translates to:
+  /// **'Friend'**
+  String get togetherFriendName;
+
   /// No description provided for @togetherItemsCount.
   ///
   /// In en, this message translates to:

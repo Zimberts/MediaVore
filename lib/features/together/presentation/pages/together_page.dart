@@ -42,15 +42,13 @@ class _TogetherPageState extends State<TogetherPage> {
       return;
     }
 
-    final participantName = payload.name.trim().isEmpty
-        ? 'Ami'
-        : payload.name.trim();
-
+    final sharedName = payload.name.trim();
     session.addParticipantChunk(
-      name: participantName,
+      name: sharedName.isEmpty ? l10n.togetherFriendName : sharedName,
       part: payload.part,
       totalParts: payload.totalParts,
       entries: payload.entries,
+      reservedNames: {l10n.togetherYouHost},
     );
 
     if (payload.totalParts > 1 && payload.part < payload.totalParts) {
@@ -100,7 +98,6 @@ class _TogetherPageState extends State<TogetherPage> {
     );
 
     final hostUrls = ListShareCodec.createTogetherUrls(
-      name: l10n.togetherYouHost,
       entries: hostListEntries,
     );
 

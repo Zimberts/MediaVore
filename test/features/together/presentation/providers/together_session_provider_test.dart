@@ -140,6 +140,83 @@ void main() {
       expect(session.participants.first.entries, hasLength(2));
     });
 
+    test('should keep two friends apart when their QR codes share a name', () {
+      final first = session.addParticipantChunk(
+        name: 'Friend',
+        part: 1,
+        totalParts: 1,
+        entries: const [SharedMediaEntry(101, MediaType.movie)],
+      );
+      final second = session.addParticipantChunk(
+        name: 'Friend',
+        part: 1,
+        totalParts: 1,
+        entries: const [SharedMediaEntry(102, MediaType.movie)],
+      );
+
+      expect((first, second), ('Friend', 'Friend 2'));
+      expect(
+        [for (final p in session.participants) (p.name, p.entries.length)],
+        [('Friend', 1), ('Friend 2', 1)],
+      );
+    });
+
+    test('should ignore a QR code scanned twice', () {
+      for (var i = 0; i < 2; i++) {
+        session.addParticipantChunk(
+          name: 'Friend',
+          part: 1,
+          totalParts: 1,
+          entries: const [SharedMediaEntry(101, MediaType.movie)],
+        );
+      }
+
+      expect(session.participants, hasLength(1));
+    });
+
+    test('should not give a participant a reserved name', () {
+      final name = session.addParticipantChunk(
+        name: 'Me (Host)',
+        part: 1,
+        totalParts: 1,
+        entries: const [SharedMediaEntry(101, MediaType.movie)],
+        reservedNames: {'Me (Host)'},
+      );
+
+      expect(name, 'Me (Host) 2');
+      expect(session.participants.single.name, 'Me (Host) 2');
+    });
+
+    test('should start a new participant when a complete one gets a part', () {
+      session.addParticipantChunk(
+        name: 'Friend',
+        part: 1,
+        totalParts: 1,
+        entries: const [SharedMediaEntry(101, MediaType.movie)],
+      );
+      session.addParticipantChunk(
+        name: 'Friend',
+        part: 1,
+        totalParts: 2,
+        entries: const [SharedMediaEntry(201, MediaType.movie)],
+      );
+      final name = session.addParticipantChunk(
+        name: 'Friend',
+        part: 2,
+        totalParts: 2,
+        entries: const [SharedMediaEntry(202, MediaType.movie)],
+      );
+
+      expect(name, 'Friend 2');
+      expect(
+        [
+          for (final p in session.participants)
+            (p.name, p.entries.length, p.isComplete),
+        ],
+        [('Friend', 1, true), ('Friend 2', 2, true)],
+      );
+    });
+
     test('should update type filter, list name and hide seen', () {
       session.setSelectedType(MediaType.movie);
       expect(session.selectedType, MediaType.movie);
