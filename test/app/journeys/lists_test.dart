@@ -3,6 +3,7 @@
 // Regressions covered: the share QR code named a missing logo asset, and
 // importing a shared list overwrote the cached title and poster of the
 // titles already known with a placeholder.
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -123,6 +124,33 @@ Future<List<(String, String?)>> _watchlistPreviews(
     (p.title, p.posterPath),
 ];
 
+/// Expects the stored entries of [name] to match [matcher] once the writes
+/// of the last action have landed.
+Future<void> _expectStored(
+  WidgetTester tester,
+  TestApp app,
+  String name,
+  Object matcher,
+) async {
+  final wrapped = wrapMatcher(matcher);
+  await _until(
+    tester,
+    () async => wrapped.matches(await app.repository.getListEntries(name), {}),
+    reason: 'list $name matches $matcher',
+  );
+  expect(await _entries(tester, app, name), matcher);
+}
+
+/// Expects the open list page to show [expected] once it has rebuilt.
+Future<void> _expectShown(WidgetTester tester, List<String> expected) async {
+  await _until(
+    tester,
+    () async => listEquals(_shown(tester), expected),
+    reason: 'the list page shows $expected',
+  );
+  expect(_shown(tester), expected);
+}
+
 Finder _row(String name) => find.byKey(ValueKey('library_list_$name'));
 
 /// Pops the top page of the navigator holding [page].
@@ -206,7 +234,7 @@ void main() {
         await _typeInDialog(tester, listName);
         await _confirmDialog(tester);
         expect(_row(listName), findsOneWidget);
-        expect(await _entries(tester, app, listName), isEmpty);
+        await _expectStored(tester, app, listName, isEmpty);
 
         // 2. Add two movies and a show from their detail pages.
         for (final (id, type) in [
@@ -218,7 +246,7 @@ void main() {
           await _addFromDetail(tester, listName);
           await _close(tester, find.byType(MediaDetailPage));
         }
-        expect(await _entries(tester, app, listName), [movieA, movieB, showS]);
+        await _expectStored(tester, app, listName, [movieA, movieB, showS]);
         // Only the chosen list changed.
         expect(await _entries(tester, app, 'watchlist'), isEmpty);
 
@@ -241,26 +269,26 @@ void main() {
 
         // 4. The list opens in the order of addition.
         await _openList(tester, listName);
-        expect(_shown(tester), [movieA, movieB, showS]);
+        await _expectShown(tester, [movieA, movieB, showS]);
 
         // 5. Release date order, reversed, then back to manual.
         await _openSortSheet(tester);
         await tester.tap(find.byIcon(Icons.calendar_today));
         await pumpUntilSettled(tester);
-        expect(_shown(tester), [movieB, showS, movieA]);
+        await _expectShown(tester, [movieB, showS, movieA]);
 
         await _openSortSheet(tester);
         await tester.tap(find.byType(Switch));
         await pumpUntilSettled(tester);
         await _close(tester, find.byType(Switch));
-        expect(_shown(tester), [movieA, showS, movieB]);
+        await _expectShown(tester, [movieA, showS, movieB]);
 
         await _openSortSheet(tester);
         await tester.tap(find.byType(Switch));
         await pumpUntilSettled(tester);
         await tester.tap(find.byIcon(Icons.drag_indicator));
         await pumpUntilSettled(tester);
-        expect(_shown(tester), [movieA, movieB, showS]);
+        await _expectShown(tester, [movieA, movieB, showS]);
         // Sorting only changes the display.
         expect(await _entries(tester, app, listName), [movieA, movieB, showS]);
 
@@ -279,8 +307,8 @@ void main() {
         }
         await drag.up();
         await pumpUntilSettled(tester);
-        expect(_shown(tester), [showS, movieA, movieB]);
-        expect(await _entries(tester, app, listName), [showS, movieA, movieB]);
+        await _expectShown(tester, [showS, movieA, movieB]);
+        await _expectStored(tester, app, listName, [showS, movieA, movieB]);
       },
       tmdb: _datedTmdb,
       // List display: rows with drag handles.
@@ -362,7 +390,7 @@ void main() {
         await pumpUntilSettled(tester);
         await _typeInDialog(tester, 'Common');
         await _confirmDialog(tester);
-        expect(await _entries(tester, app, 'Common'), [movieB]);
+        await _expectStored(tester, app, 'Common', [movieB]);
         await _close(tester, find.byType(ListIntersectionPage));
 
         // 4. Delete the list: titles stay in the history and other lists.
@@ -376,7 +404,7 @@ void main() {
           await _real(tester, app.repository.getAllListNames),
           isNot(contains(listName)),
         );
-        expect(await _entries(tester, app, listName), isEmpty);
+        await _expectStored(tester, app, listName, isEmpty);
         expect(await _entries(tester, app, 'watchlist'), [
           movieA,
           movieB,
