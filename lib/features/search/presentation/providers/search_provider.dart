@@ -95,6 +95,10 @@ class SearchProvider
   bool _isDiscoverMode = false;
 
   List<SeenItem> _seenItems = [];
+
+  /// Viewings shown optimistically whose write is still running: a reload
+  /// of the stored history keeps them (see [loadAllSeenStatus]).
+  final List<SeenItem> _pendingSeen = [];
   Map<String, int> _seenCounts = {}; // "id:type" -> count
   List<QuickAddItem> _quickAddItems = [];
   List<InProgressItem> _inProgressItems = [];
@@ -294,7 +298,8 @@ class SearchProvider
   Future<void> loadLikedStatus() => _libraryProvider.loadLikedStatus();
 
   Future<void> loadAllSeenStatus() async {
-    _seenItems = await repository.getSeenItems();
+    final stored = await repository.getSeenItems();
+    _seenItems = [..._pendingSeen.reversed, ...stored];
     final Map<String, int> counts = {};
 
     final Map<String, List<SeenItem>> grouped = {};
@@ -1138,6 +1143,7 @@ class SearchProvider
     // Immediate optimistic update (< 100 ms) so the UI icon and counters flip
     // instantly without waiting for network or disk operations.
     _recordSeenItemInMemory(item);
+    _pendingSeen.add(item);
     notifyListeners();
 
     try {
@@ -1146,6 +1152,8 @@ class SearchProvider
       _revertSeenItemInMemory(item);
       notifyListeners();
       rethrow;
+    } finally {
+      _pendingSeen.removeWhere((pending) => identical(pending, item));
     }
 
     // Swap the optimistic entry for the stored one: it carries the database
@@ -1274,6 +1282,7 @@ class SearchProvider
   Future<void> markManyAsSeen(List<SeenItem> items) async {
     if (items.isEmpty) return;
     _recordManySeenItemsInMemory(items);
+    _pendingSeen.addAll(items);
     notifyListeners();
 
     try {
@@ -1282,13 +1291,17 @@ class SearchProvider
       _revertManySeenItemsInMemory(items);
       notifyListeners();
       rethrow;
+    } finally {
+      _pendingSeen.removeWhere(
+        (pending) => items.any((item) => identical(item, pending)),
+      );
     }
 
-    // Stored entries replace the optimistic ones (see [markAsSeen]).
+    // Stored entries replace the optimistic ones (see [markAsSeen]); the
+    // reload also refreshes Quick Add.
     await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
-    await loadQuickAddItems();
   }
 
   /// Finds anterior unseen episodes for a series before [targetSeason] / [targetEpisode].

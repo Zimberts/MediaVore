@@ -933,6 +933,48 @@ void main() {
       expect(provider.getSeenCount(movieItem), 1);
     });
 
+    test('should keep a viewing still being stored when another one reloads '
+        'the history', () async {
+      const other = MediaItem(
+        id: 556,
+        title: 'Other Movie',
+        overview: '',
+        releaseDate: '',
+      );
+      final seenOther = SeenItem(
+        tmdbId: 556,
+        type: MediaType.movie,
+        title: 'Other Movie',
+        seenDate: DateTime(2026, 1, 2),
+      );
+      final slowWrite = Completer<void>();
+      when(() => mockRepository.markAsSeen(any())).thenAnswer(
+        (invocation) =>
+            (invocation.positionalArguments.single as SeenItem).tmdbId == 556
+            ? slowWrite.future
+            : Future.value(),
+      );
+      // Only the first viewing is stored when it reloads the history.
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => [_stored(seenMovie, 1)]);
+
+      final pending = provider.markAsSeen(seenOther);
+      await provider.markAsSeen(seenMovie);
+
+      expect(provider.getSeenCount(other), 1);
+      expect(provider.getSeenCount(movieItem), 1);
+
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => [_stored(seenMovie, 1), _stored(seenOther, 2)]);
+      slowWrite.complete();
+      await pending;
+
+      expect(provider.getSeenCount(other), 1);
+      expect(provider.seenItems.singleWhere((s) => s.tmdbId == 556).id, 2);
+    });
+
     test('should swap the optimistic entries for the stored ones when '
         'markManyAsSeen completes', () async {
       when(() => mockRepository.markManyAsSeen(any())).thenAnswer((_) async {});
