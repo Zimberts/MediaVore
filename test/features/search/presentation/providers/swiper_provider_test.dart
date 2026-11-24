@@ -218,7 +218,7 @@ void main() {
     },
   );
 
-  test('keeps the rest of a discover page for the next cards instead of '
+  test('should keep the rest of a discover page for the next cards instead of '
       'skipping it', () async {
     MediaItem movie(int id) => MediaItem(
       id: id,
