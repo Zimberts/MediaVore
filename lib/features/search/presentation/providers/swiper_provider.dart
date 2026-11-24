@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 
@@ -52,6 +53,9 @@ class SwiperProvider extends ChangeNotifier {
   bool _isFetchingMore = false;
   bool _hasMore = true;
   int _currentPage = 1;
+
+  /// Last discover page the deck draws from.
+  static const int _maxPages = 50;
 
   /// Items of the fetched discover pages not examined yet: a page can hold
   /// more titles than the deck needs, the rest is kept for the next load.
@@ -304,10 +308,8 @@ class SwiperProvider extends ChangeNotifier {
         }
       }
 
-      if (lastCandidate.collectionId != null) {
-        _seenSagaCollectionIds.remove(lastCandidate.collectionId!);
-      }
-
+      // The saga stays in _seenSagaCollectionIds: its card is back in the
+      // deck, so a later load must not propose it a second time.
       _candidates.insert(0, lastCandidate);
       notifyListeners();
 
@@ -323,7 +325,7 @@ class SwiperProvider extends ChangeNotifier {
 
   void _checkPrefetch() {
     if (_candidates.length < 3 && !_isFetchingMore && hasMore) {
-      _loadCandidatesUntilThreshold();
+      unawaited(_loadCandidatesUntilThreshold());
     }
   }
 
@@ -334,7 +336,11 @@ class SwiperProvider extends ChangeNotifier {
     try {
       while (_candidates.length < targetCount) {
         if (_pendingItems.isEmpty) {
-          if (!_hasMore || _currentPage > 50) break;
+          if (!_hasMore) break;
+          if (_currentPage > _maxPages) {
+            _hasMore = false;
+            break;
+          }
           final pageItems = await repository.discoverMedia(page: _currentPage);
           _currentPage++;
 

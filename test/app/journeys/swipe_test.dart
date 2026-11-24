@@ -160,7 +160,7 @@ void main() {
         await _press(tester, _discard, top: _sagaId);
         expect(_watchlist(tester), isNot(contains('$_passed:movie')));
 
-        // 5. A volume of a saga is proposed as the whole saga; liking it adds
+        // 3. A volume of a saga is proposed as the whole saga; liking it adds
         // every part.
         final saga = _swiper(tester).currentCandidate!;
         expect(saga.sagaItems.map((m) => m.id), _sagaParts);
@@ -183,7 +183,7 @@ void main() {
         expect(swiper.sessionAddedCount, 2);
         expect(swiper.sessionDiscardedCount, 1);
 
-        // 3. Without a restart: the liked titles are in the library and in
+        // 4. Without a restart: the liked titles are in the library and in
         // Home's "Tonight", the passed one is in neither.
         await goToTab(tester, AppTab.library);
         final library = _search(tester);
@@ -201,7 +201,7 @@ void main() {
           findsOneWidget,
         );
 
-        // 4. Back to Discover: same session, same card, same counters.
+        // 5. Back to Discover: same session, same card, same counters.
         await goToTab(tester, AppTab.discover);
         expect(identical(_swiper(tester), swiper), isTrue);
         expect(_topCard(tester), _next);
@@ -239,9 +239,5 @@ void main() {
   });
 }
 
-MediaItem _movie(int id) => MediaItem(
-  id: id,
-  title: 'Movie $id',
-  overview: '',
-  releaseDate: '',
-);
+MediaItem _movie(int id) =>
+    MediaItem(id: id, title: 'Movie $id', overview: '', releaseDate: '');
