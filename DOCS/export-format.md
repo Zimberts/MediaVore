@@ -12,6 +12,7 @@ category:
 - `notifications.csv` — notification subscriptions.
 - `quickadd.csv` — quick-add entries (next unseen episodes).
 - `lists.csv` — user lists (watchlist and named lists).
+- `optouts.csv` — series streaks excluded from quick add.
 
 > The `.mdv` extension is the app's own naming for this archive. The import
 > dialog also accepts `.zip` files with identical contents as a convenience.
@@ -25,7 +26,8 @@ export.mdv
 ├── likes.csv
 ├── notifications.csv
 ├── quickadd.csv
-└── lists.csv
+├── lists.csv
+└── optouts.csv
 ```
 
 ## CSV files rules
@@ -114,6 +116,19 @@ Columns: `listName`, `tmdbId`, `type`, `title`, `position`
 - `title` — string.
 - `position` — int, the intended ordering within the list (see format notes).
 
+### `optouts.csv`
+
+Columns: `tmdbId`, `seasonNumber`, `episodeNumber`, `optedOutAt`
+
+- `tmdbId` — int, the excluded series.
+- `seasonNumber`, `episodeNumber` — nullable int; the excluded episode, or empty
+  for the whole series.
+- `optedOutAt` — ISO8601 string, when the user excluded it (the archive's
+  `exportedAt` when missing).
+
+Added without a version bump: older apps skip the unknown entry, and archives
+without it import no opt-out.
+
 ## Validation
 
 - The archive is rejected as a whole (nothing is imported) when it is not a
@@ -122,13 +137,14 @@ Columns: `listName`, `tmdbId`, `type`, `title`, `position`
   CSV, or has an unsupported `version`.
 - Individual rows are skipped, and reported as warnings in the import preview
   (`<file> row <line>: <reason>`), when `tmdbId` is missing or not a positive
-  integer, `type` is not `movie` / `tv`, `seenDate` (seen) is missing or not a
+  integer, `type` is not `movie` / `tv` (all files but `optouts.csv`), `seenDate` (seen) is missing or not a
   date, or `listName` (lists) is empty. Blank lines are ignored.
 - Entries with unknown names are ignored.
 
 ## Import semantics
 
-Imports are processed in a fixed order: seen, likes, notifications, quick add, lists.
+Imports are processed in a fixed order: seen, likes, notifications, quick add, lists,
+opt-outs. Importing an opt-out removes the quick-add entries it excludes.
 A category is only imported when its CSV file is present in the archive.
 
 - **append** — insert everything as-is, no deduplication.
@@ -142,6 +158,7 @@ A category is only imported when its CSV file is present in the archive.
   - Likes: `(tmdbId, type)`.
   - Notifications: `(tmdbId, type)`.
   - Quick add: `(tmdbId, seasonNumber, episodeNumber)`.
+  - Opt-outs: `(tmdbId, seasonNumber, episodeNumber)`.
   - Lists: behaves the same as append; duplicates are resolved by
     `(tmdbId, type, listName)`.
 
@@ -150,9 +167,6 @@ A category is only imported when its CSV file is present in the archive.
 - **List ordering (`position`) is not restored on import.** Items are re-ordered on
   import (in file order), so the `position` column is exported for reference only
   and is not authoritative across a round-trip.
-- **Quick-add opt-outs are not part of the format.** There is no CSV column or
-  archive entry for opt-out state, so it is not preserved across an export/import
-  round-trip.
 - **Seen `runtime` and `genres` are optional.** When absent from an imported seen
   row, the importing app may attempt to backfill them from remote data; this can
   make a seen-only import require network access.

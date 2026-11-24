@@ -37,6 +37,7 @@ class ImportExportService {
     final likedModels = await localDataSource.getLikedItems();
     final notifiedModels = await localDataSource.getNotifiedItems();
     final quickAddModels = await localDataSource.getQuickAddItems();
+    final optOutModels = await localDataSource.getOptOuts();
 
     final names = await localDataSource.getAllListNames();
     final Map<String, List<MediaListItem>> lists = {};
@@ -52,6 +53,7 @@ class ImportExportService {
       notifications: notifiedModels,
       quickAdd: quickAddModels,
       lists: lists,
+      optOuts: optOutModels,
     );
 
     return envelope.toZipBytesAsync();
@@ -79,6 +81,7 @@ class ImportExportService {
       notifications: envelope.notifications,
       quickAdd: envelope.quickAdd,
       lists: envelope.lists,
+      optOuts: envelope.optOuts,
     );
     onProgress?.call(1.0, _l10n.progressImportComplete);
   }

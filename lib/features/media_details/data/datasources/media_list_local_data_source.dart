@@ -883,6 +883,7 @@ class MediaListLocalDataSource {
     List<NotifiedItemModel> notifications = const [],
     List<QuickAddItemModel> quickAdd = const [],
     Map<String, List<MediaListItem>> lists = const {},
+    List<QuickAddOptOutModel> optOuts = const [],
   }) async {
     await _isar.writeTxn(() async {
       if (seen.isNotEmpty) await _importSeenInTxn(seen, mode);
@@ -892,7 +893,36 @@ class MediaListLocalDataSource {
       }
       if (quickAdd.isNotEmpty) await _importQuickAddInTxn(quickAdd, mode, null);
       if (lists.isNotEmpty) await _importListsInTxn(lists, mode, null);
+      if (optOuts.isNotEmpty) await _importOptOutsInTxn(optOuts, mode);
     });
+  }
+
+  /// Imports Quick Add opt-outs, then drops the queued episodes they exclude
+  /// (as [addOptOut] does): a merged archive cannot bring back a streak the
+  /// user excluded. Must run inside a write transaction.
+  Future<void> _importOptOutsInTxn(
+    List<QuickAddOptOutModel> optOuts,
+    ImportMode mode,
+  ) async {
+    await _importItemsInTxn(
+      _isar.quickAddOptOutModels,
+      optOuts,
+      mode: mode,
+      writeStatus: 'Importing quick add opt-outs...',
+      exists: (o) => _isar.quickAddOptOutModels
+          .filter()
+          .tmdbIdEqualTo(o.tmdbId)
+          .seasonNumberEqualTo(o.seasonNumber)
+          .episodeNumberEqualTo(o.episodeNumber)
+          .findFirst()
+          .then((e) => e != null),
+    );
+    for (final o in optOuts) {
+      var q = _isar.quickAddItemModels.filter().tmdbIdEqualTo(o.tmdbId);
+      if (o.seasonNumber != null) q = q.seasonNumberEqualTo(o.seasonNumber);
+      if (o.episodeNumber != null) q = q.episodeNumberEqualTo(o.episodeNumber);
+      await q.deleteAll();
+    }
   }
 
   Future<void> recordSwipeDecision(SwipeDecisionModel decision) async {
