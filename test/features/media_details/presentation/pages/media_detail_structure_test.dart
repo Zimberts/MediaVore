@@ -8,6 +8,7 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
@@ -701,7 +702,7 @@ void main() {
     testWidgets('should show the offline banner and a retry', (tester) async {
       when(
         () => repository.getMediaDetails(1, type: any(named: 'type')),
-      ).thenThrow(Exception('SocketException'));
+      ).thenThrow(const NetworkException('Network error while fetching'));
 
       await pumpPage(tester, film);
 
@@ -709,6 +710,35 @@ void main() {
       expect(find.text('Try Again'), findsOneWidget);
       expect(find.byType(ListSplitButton), findsOneWidget);
     });
+
+    testWidgets(
+      'should say why and offer a retry when TMDB rejects the request (#471)',
+      (tester) async {
+        when(
+          () => repository.getMediaDetails(1, type: any(named: 'type')),
+        ).thenThrow(const ServerException('Unauthorized', 401));
+
+        await pumpPage(tester, film);
+
+        expect(
+          find.textContaining(fallbackLocalizations.searchErrorInvalidApiKey),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Offline Mode'), findsNothing);
+        expect(find.byKey(const Key('detail_retry')), findsOneWidget);
+
+        when(
+          () => repository.getMediaDetails(1, type: any(named: 'type')),
+        ).thenThrow(const ServerException('Internal error', 500));
+        await tester.tap(find.byKey(const Key('detail_retry')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(fallbackLocalizations.searchErrorServer),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('navigation', () {
