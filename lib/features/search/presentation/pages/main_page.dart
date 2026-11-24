@@ -47,9 +47,6 @@ class _MainPageState extends State<MainPage> {
   /// Completes when the banner on screen goes away; the queue waits on it.
   Completer<void>? _notificationDone;
 
-  /// Hides the banner on screen after 4 s.
-  Timer? _notificationTimer;
-
   List<AppTab> get _tabs => widget.tabs ?? AppTab.visibleTabs;
 
   /// Provisional content of each tab; every epic then replaces its own.
@@ -89,6 +86,7 @@ class _MainPageState extends State<MainPage> {
   void dispose() {
     _linkSubscription?.cancel();
     _achievementSubscription?.cancel();
+    _achievementQueue.clear();
     _closeNotification();
     super.dispose();
   }
@@ -134,17 +132,12 @@ class _MainPageState extends State<MainPage> {
 
     Overlay.of(context).insert(_currentNotification!);
 
-    // Auto-dismiss after 4 seconds
-    _notificationTimer = Timer(const Duration(seconds: 4), _closeNotification);
-
     return completer.future;
   }
 
   /// Removes the banner on screen, if any, and releases the queue. Runs once
-  /// per banner whatever closes it first (tap, timer, page disposed).
+  /// per banner whatever closes it first (its dismissal, page disposed).
   void _closeNotification() {
-    _notificationTimer?.cancel();
-    _notificationTimer = null;
     _currentNotification?.remove();
     _currentNotification = null;
     final done = _notificationDone;
@@ -256,6 +249,12 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
 
+  /// Dismisses the banner after 4 s.
+  Timer? _autoDismiss;
+
+  /// Set by the first dismissal (tap, swipe, timer); later ones are ignored.
+  bool _dismissing = false;
+
   @override
   void initState() {
     super.initState();
@@ -269,15 +268,20 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     _controller.forward();
+    _autoDismiss = Timer(const Duration(seconds: 4), _handleDismiss);
   }
 
   @override
   void dispose() {
+    _autoDismiss?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  void _handleDismiss() async {
+  Future<void> _handleDismiss() async {
+    if (_dismissing) return;
+    _dismissing = true;
+    _autoDismiss?.cancel();
     await _controller.reverse();
     if (!mounted) return;
     widget.onDismiss();
@@ -330,15 +334,16 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
           color: Colors.transparent,
           child: GestureDetector(
             onTap: () {
+              if (_dismissing) return;
               AchievementsPage.showAchievement(
                 Navigator.of(context),
                 widget.achievement.id,
               );
-              _handleDismiss();
+              unawaited(_handleDismiss());
             },
             onVerticalDragUpdate: (details) {
               if (details.primaryDelta! < -10) {
-                _handleDismiss();
+                unawaited(_handleDismiss());
               }
             },
             child: Container(
@@ -389,7 +394,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                       size: 20,
                     ),
                     tooltip: context.l10n.commonClose,
-                    onPressed: _handleDismiss,
+                    onPressed: () => unawaited(_handleDismiss()),
                   ),
                 ],
               ),
