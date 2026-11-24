@@ -56,6 +56,9 @@ SharedPreferences, workmanager, app_links) are faked.
   assert traffic with `requestCount`, `countFor(prefix)`, `byKind`. A request no route covers
   fails and fails the test at dispose: extend the routes, never silence them.
 - Cross-screen journeys go in `test/app/journeys/<journey>_test.dart`, one journey per file.
+- `test/app/smoke/screens_smoke_test.dart` renders every screen in light/dark, FR/EN, at
+  320 dp with text x1.3, and fails on any Flutter error (overflow included) or raw ARB key.
+  A new screen adds an entry to its `_screens` list.
 - Find widgets by `Key` (or type), never by localized text.
 - Every bug fix adds a regression test at the lowest level that reproduces it (unit, then
   widget, then app). A feature that touches two tabs or more extends a journey.
