@@ -1,0 +1,52 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "adult": false,
+      "backdrop_path": "/b1.jpg",
+      "genre_ids": [28, 12],
+      "id": 101,
+      "original_language": "en",
+      "original_title": "Discover Movie 1",
+      "overview": "First result.",
+      "popularity": 90.0,
+      "poster_path": "/d1.jpg",
+      "release_date": "2021-03-01",
+      "title": "Discover Movie 1",
+      "vote_average": 7.9,
+      "vote_count": 4200
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/b2.jpg",
+      "genre_ids": [35],
+      "id": 102,
+      "original_language": "fr",
+      "original_title": "Discover Movie 2",
+      "overview": "Second result.",
+      "popularity": 80.0,
+      "poster_path": "/d2.jpg",
+      "release_date": "2019-07-12",
+      "title": "Discover Movie 2",
+      "vote_average": 7.1,
+      "vote_count": 1300
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/b3.jpg",
+      "genre_ids": [18],
+      "id": 103,
+      "original_language": "en",
+      "original_title": "Discover Movie 3",
+      "overview": "Third result.",
+      "popularity": 70.0,
+      "poster_path": "/d3.jpg",
+      "release_date": "2018-10-20",
+      "title": "Discover Movie 3",
+      "vote_average": 6.8,
+      "vote_count": 900
+    }
+  ],
+  "total_pages": 3,
+  "total_results": 9
+}

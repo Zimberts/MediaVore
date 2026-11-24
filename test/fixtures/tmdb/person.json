@@ -1,0 +1,12 @@
+{
+  "biography": "Biography of the person.",
+  "birthday": "1970-01-01",
+  "deathday": null,
+  "gender": 2,
+  "id": 0,
+  "known_for_department": "Acting",
+  "name": "Person",
+  "place_of_birth": "Paris, France",
+  "popularity": 30.0,
+  "profile_path": "/person.jpg"
+}
