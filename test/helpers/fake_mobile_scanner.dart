@@ -14,19 +14,14 @@ class FakeMobileScanner extends MobileScannerPlatform
   final StreamController<BarcodeCapture?> _barcodes =
       StreamController.broadcast();
 
-  /// Number of camera sessions started.
-  int starts = 0;
-
-  /// Whether a camera session is running (a scanner is on screen).
-  bool get isRunning => _running;
-  bool _running = false;
-
   /// Makes this fake the platform implementation until the end of the test.
   void install() {
     final previous = MobileScannerPlatform.instance;
     MobileScannerPlatform.instance = this;
     addTearDown(() {
       MobileScannerPlatform.instance = previous;
+      // The camera session owner is static: never leak it to the next test.
+      MobileScannerController.resetPlatformSessionOwner();
       unawaited(_barcodes.close());
     });
   }
@@ -54,8 +49,6 @@ class FakeMobileScanner extends MobileScannerPlatform
 
   @override
   Future<MobileScannerViewAttributes> start(StartOptions startOptions) async {
-    starts++;
-    _running = true;
     return const MobileScannerViewAttributes(
       cameraDirection: CameraFacing.back,
       currentTorchMode: TorchState.unavailable,
@@ -65,14 +58,14 @@ class FakeMobileScanner extends MobileScannerPlatform
   }
 
   @override
-  Future<void> stop() async => _running = false;
+  Future<void> stop() async {}
 
   @override
-  Future<void> pause() async => _running = false;
+  Future<void> pause() async {}
 
   @override
   Future<void> updateScanWindow(Rect? window) async {}
 
   @override
-  Future<void> dispose() async => _running = false;
+  Future<void> dispose() async {}
 }

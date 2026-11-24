@@ -203,15 +203,8 @@ void main() {
         await _tapKey(tester, 'together_review_list_button');
         expect(find.byType(TogetherResultsPage), findsOneWidget);
         expect(session.isVoting, isFalse);
-        await tester.tap(
-          find.descendant(
-            of: find.byType(TogetherResultsPage),
-            matching: find.byIcon(Icons.refresh),
-          ),
-        );
-        await pumpUntilSettled(tester);
-        await tester.tap(find.text(l10n.commonConfirm));
-        await pumpUntilSettled(tester);
+        await _tapKey(tester, 'together_results_reset_button');
+        await _tapKey(tester, 'together_reset_confirm_button');
 
         expect(find.byType(TogetherResultsPage), findsNothing);
         expect(session.hasSession, isFalse);
