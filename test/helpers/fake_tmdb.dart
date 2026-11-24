@@ -45,6 +45,7 @@ class FakeTmdb implements HttpClientAdapter {
     this.seasonsPerShow = 2,
     this.episodesPerSeason = 10,
     this.collectionOf,
+    this.releaseDateOf,
   });
 
   /// Simulated round-trip time of one request.
@@ -59,6 +60,10 @@ class FakeTmdb implements HttpClientAdapter {
   /// Collection (saga) of a movie, by movie id; none when null or when it
   /// returns null.
   final int? Function(int movieId)? collectionOf;
+
+  /// Release date (`yyyy-MM-dd`) of a movie, by movie id; the fixture's when
+  /// null or when it returns null.
+  final String? Function(int movieId)? releaseDateOf;
 
   /// Every request received, in order (including failed ones).
   final List<Uri> requests = [];
@@ -291,7 +296,10 @@ class FakeTmdb implements HttpClientAdapter {
       ..['belongs_to_collection'] = collectionId == null
           ? null
           : {'id': collectionId, 'name': 'Saga $collectionId'}
-      ..addAll({for (final a in append) a: _appended(a, 'movie', id)});
+      ..addAll({for (final a in append) a: _appended(a, 'movie', id)})
+      ..addAll({
+        if (releaseDateOf?.call(id) case final date?) 'release_date': date,
+      });
   }
 
   Map<String, dynamic> _show(int id, List<String> append) => _fixture('tv.json')
