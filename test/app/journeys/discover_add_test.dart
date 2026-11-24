@@ -128,7 +128,8 @@ Future<List<String>> _persistedWatchlist(
   WidgetTester tester,
   TestApp app,
 ) async =>
-    (await tester.runAsync(() => app.repository.getListEntries('watchlist')))!;
+    await tester.runAsync(() => app.repository.getListEntries('watchlist')) ??
+    fail('reading the persisted watchlist did not complete');
 
 /// Drags the Discover grid up, past the infinite-scroll threshold.
 Future<void> _scrollDiscover(WidgetTester tester) async {
@@ -162,11 +163,9 @@ FakeTmdb _unreleasedTmdb() {
 
 void main() {
   group('Discover and add journey', () {
-    testApp('should show a released title added from its detail page in the '
-        'Library and in "To watch tonight", and drop it once removed', (
-      tester,
-      app,
-    ) async {
+    testApp('should show a released title in Discover, the Library and '
+        '"To watch tonight", then drop it, when added then removed from its '
+        'detail page', (tester, app) async {
       await _searchFor(tester, 'dune');
       expect(
         app.tmdb.requests.where(
@@ -236,7 +235,8 @@ void main() {
       tester,
       app,
     ) async {
-      // Opened directly: the search path is the previous test's.
+      // Opened directly (as a poster tap does), not through a search:
+      // the Discover search path is the previous test's.
       await openDetail(tester, unreleasedId);
       expect(_listButtonIcon(Icons.add), findsOneWidget);
 
