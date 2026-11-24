@@ -21,6 +21,21 @@ import 'package:share_plus/share_plus.dart';
 class DataCacheSettingsPage extends StatefulWidget {
   const DataCacheSettingsPage({super.key});
 
+  /// "Export all data" tile.
+  static const Key exportKey = Key('data_export_all');
+
+  /// "Save to device" choice of the export sheet.
+  static const Key saveToDeviceKey = Key('data_export_save_to_device');
+
+  /// "Import all data" tile.
+  static const Key importKey = Key('data_import_all');
+
+  /// "Replace" choice of the import preview.
+  static const Key importReplaceKey = Key('data_import_replace');
+
+  /// Confirmation of the replacing import.
+  static const Key replaceConfirmKey = Key('data_import_replace_confirm');
+
   @override
   State<DataCacheSettingsPage> createState() => _DataCacheSettingsPageState();
 }
@@ -36,6 +51,10 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
         ? context.watch<SearchProvider>()
         : null;
     final CacheAdminActions provider = cacheProvider ?? searchProvider!;
+    // Imports and refetches rewrite the user's data: they go through
+    // SearchProvider, which reloads every screen afterwards. The bare
+    // CacheAdminProvider would leave them stale until a restart.
+    final userData = context.read<SearchProvider>();
     final achievementProvider = context.watch<AchievementProvider>();
     final settings = context.watch<SettingsProvider>();
     final isCacheLoading = provider.isCacheLoading;
@@ -164,10 +183,11 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                   context,
                   title: context.l10n.dataRefetchTitle,
                   message: context.l10n.dataRefetchMessage,
-                  action: provider.refetchMissingData,
+                  action: userData.refetchMissingData,
                 ),
               ),
               ListTile(
+                key: DataCacheSettingsPage.exportKey,
                 leading: const Icon(Icons.cloud_upload),
                 title: Text(context.l10n.dataExportAll),
                 subtitle: Text(context.l10n.dataExportAllSubtitle),
@@ -190,6 +210,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 ListTile(
+                                  key: DataCacheSettingsPage.saveToDeviceKey,
                                   leading: const Icon(Icons.save_alt),
                                   title: Text(context.l10n.dataSaveToDevice),
                                   onTap: () async {
@@ -242,11 +263,12 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                 },
               ),
               ListTile(
+                key: DataCacheSettingsPage.importKey,
                 leading: const Icon(Icons.file_download),
                 title: Text(context.l10n.dataImportAll),
                 subtitle: Text(context.l10n.dataImportAllSubtitle),
                 enabled: !isBusy,
-                onTap: () => _importAllDataWithPreview(context, provider),
+                onTap: () => _importAllDataWithPreview(context, userData),
               ),
               ListTile(
                 leading: const Icon(Icons.playlist_add),
@@ -507,6 +529,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                 child: Text(context.l10n.dataMerge),
               ),
               TextButton(
+                key: DataCacheSettingsPage.importReplaceKey,
                 onPressed: () async {
                   Navigator.pop(dialogContext);
                   final confirmed = await _confirmReplace(context);
@@ -549,6 +572,7 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
                 child: Text(context.l10n.commonCancel),
               ),
               TextButton(
+                key: DataCacheSettingsPage.replaceConfirmKey,
                 onPressed: () => Navigator.pop(dialogContext, true),
                 child: Text(
                   context.l10n.dataReplaceConfirm,
