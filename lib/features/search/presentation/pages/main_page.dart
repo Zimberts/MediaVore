@@ -84,6 +84,8 @@ class _MainPageState extends State<MainPage> {
     _linkSubscription?.cancel();
     _achievementSubscription?.cancel();
     _currentNotification?.remove();
+    // The auto-dismiss timer may still fire: it must find nothing to remove.
+    _currentNotification = null;
     super.dispose();
   }
 
