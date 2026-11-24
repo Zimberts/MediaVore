@@ -12,6 +12,7 @@ class TogetherParticipant {
     this.entries = const [],
     this.totalParts = 1,
     this.scannedParts = const {1},
+    this.partEntries = const {},
     String? sharedName,
   }) : sharedName = sharedName ?? name;
 
@@ -28,6 +29,10 @@ class TogetherParticipant {
   /// Multi-part QR code progress.
   final int totalParts;
   final Set<int> scannedParts;
+
+  /// Titles of each scanned QR part, by part number; tells a rescan of a
+  /// part from another friend's code.
+  final Map<int, Set<SharedMediaEntry>> partEntries;
 
   bool get isComplete => scannedParts.length >= totalParts;
 
@@ -107,7 +112,7 @@ class TogetherSessionProvider extends ChangeNotifier {
   /// A QR name identifies nobody: two friends' QR codes can carry the same
   /// one, and the host's own label ([reservedNames]) can show up too. A part
   /// joins the first participant of that name still waiting for it; a part
-  /// already scanned with the same titles is a rescan and changes nothing;
+  /// already scanned with exactly the same titles is a rescan and changes nothing;
   /// anything else is a new participant, named `name 2`, `name 3`…
   String addParticipantChunk({
     required String name,
@@ -116,11 +121,11 @@ class TogetherSessionProvider extends ChangeNotifier {
     required List<SharedMediaEntry> entries,
     Set<String> reservedNames = const {},
   }) {
-    final sameName = _participants.where((p) => p.sharedName == name);
-    for (final p in sameName) {
-      if (p.totalParts == totalParts &&
-          p.scannedParts.contains(part) &&
-          entries.every(p.entries.contains)) {
+    final chunk = entries.toSet();
+    for (final p in _participants) {
+      if (p.sharedName == name &&
+          p.totalParts == totalParts &&
+          setEquals(p.partEntries[part], chunk)) {
         return p.name;
       }
     }
@@ -139,6 +144,7 @@ class TogetherSessionProvider extends ChangeNotifier {
         entries: {...existing.entries, ...entries}.toList(),
         totalParts: totalParts,
         scannedParts: {...existing.scannedParts, part},
+        partEntries: {...existing.partEntries, part: chunk},
       );
       notifyListeners();
       return existing.name;
@@ -151,6 +157,7 @@ class TogetherSessionProvider extends ChangeNotifier {
         entries: entries,
         totalParts: totalParts,
         scannedParts: {part},
+        partEntries: {part: chunk},
       ),
     );
     notifyListeners();

@@ -174,6 +174,30 @@ void main() {
       expect(session.participants, hasLength(1));
     });
 
+    test('should add a friend whose list is part of another friend\'s', () {
+      session.addParticipantChunk(
+        name: 'Friend',
+        part: 1,
+        totalParts: 1,
+        entries: const [
+          SharedMediaEntry(101, MediaType.movie),
+          SharedMediaEntry(102, MediaType.movie),
+        ],
+      );
+      final name = session.addParticipantChunk(
+        name: 'Friend',
+        part: 1,
+        totalParts: 1,
+        entries: const [SharedMediaEntry(101, MediaType.movie)],
+      );
+
+      expect(name, 'Friend 2');
+      expect(
+        [for (final p in session.participants) (p.name, p.entries.length)],
+        [('Friend', 2), ('Friend 2', 1)],
+      );
+    });
+
     test('should not give a participant a reserved name', () {
       final name = session.addParticipantChunk(
         name: 'Me (Host)',
