@@ -21,6 +21,8 @@ void main() {
   setUpAll(() {
     registerFallbackValue(tMovie);
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(<MediaItem>[]);
+    registerFallbackValue(<(int, MediaType)>[]);
   });
 
   setUp(() {
@@ -168,6 +170,38 @@ void main() {
       ).thenAnswer((_) async => ['watchlist', 'Favorites']);
       await provider.deleteList('SciFi');
       verify(() => mockRepository.deleteList('SciFi')).called(1);
+    });
+
+    test('should import cached titles with their metadata when a shared list '
+        'is imported', () async {
+      await provider.init();
+      when(
+        () => mockRepository.getCachedMediaItems(any()),
+      ).thenAnswer((_) async => [tMovie, null]);
+      when(
+        () => mockRepository.addAllToList(any(), any()),
+      ).thenAnswer((_) async {});
+
+      await provider.importList('Shared', ['101:movie', '7:tv']);
+
+      verify(
+        () => mockRepository.getCachedMediaItems([
+          (101, MediaType.movie),
+          (7, MediaType.tv),
+        ]),
+      ).called(1);
+      verify(() => mockRepository.createList('Shared')).called(1);
+      final added =
+          verify(
+                () => mockRepository.addAllToList(captureAny(), 'Shared'),
+              ).captured.single
+              as List<MediaItem>;
+      // The cached title keeps its title and poster; the unknown one is a
+      // placeholder.
+      expect(added.first, tMovie);
+      expect(added.last.id, 7);
+      expect(added.last.mediaType, MediaType.tv);
+      verifyNever(() => mockRepository.addToList(any(), any()));
     });
   });
 }

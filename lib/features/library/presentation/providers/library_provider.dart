@@ -309,25 +309,36 @@ class LibraryProvider with ChangeNotifier implements ListPreviewSource {
     await importList(name, strList);
   }
 
+  /// Creates (or completes) the list [name] with [entries] (`id:type`).
+  ///
+  /// Titles already known locally are added with their cached metadata: a
+  /// placeholder would overwrite their cached title and poster.
   Future<void> importList(String name, List<String> entries) async {
-    await repository.createList(name);
-    await loadListNames();
+    final keys = <(int, MediaType)>[];
     for (final entry in entries) {
       final parts = entry.split(':');
       if (parts.length != 2) continue;
       final id = int.tryParse(parts[0]);
-      final type = parts[1] == 'tv' ? MediaType.tv : MediaType.movie;
-      if (id != null) {
-        final shell = MediaItem(
-          id: id,
-          title: 'Unknown',
-          overview: '',
-          releaseDate: '',
-          mediaType: type,
-        );
-        await repository.addToList(shell, name);
-      }
+      if (id == null) continue;
+      keys.add((id, parts[1] == 'tv' ? MediaType.tv : MediaType.movie));
     }
+    final cached = keys.isEmpty
+        ? const <MediaItem?>[]
+        : await repository.getCachedMediaItems(keys);
+    final items = [
+      for (var i = 0; i < keys.length; i++)
+        cached[i] ??
+            MediaItem(
+              id: keys[i].$1,
+              title: 'Unknown',
+              overview: '',
+              releaseDate: '',
+              mediaType: keys[i].$2,
+            ),
+    ];
+    await repository.createList(name);
+    await loadListNames();
+    await repository.addAllToList(items, name);
     await loadAllListEntries();
     notifyListeners();
   }
