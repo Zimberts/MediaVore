@@ -121,6 +121,7 @@ class _MainPageState extends State<MainPage> {
 
     _currentNotification = OverlayEntry(
       builder: (context) => _AchievementTopBanner(
+        key: ValueKey('achievement_banner_${achievement.id}'),
         achievement: achievement,
         mainPageContext: mainPageContext,
         onDismiss: () {
@@ -234,6 +235,7 @@ class _AchievementTopBanner extends StatefulWidget {
   final VoidCallback onDismiss;
 
   const _AchievementTopBanner({
+    super.key,
     required this.achievement,
     required this.mainPageContext,
     required this.onDismiss,

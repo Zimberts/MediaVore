@@ -104,6 +104,10 @@ Future<TestApp> bootTestApp(
   )..createSync(recursive: true);
 
   _fakePlatform(dir.path);
+  // rootBundle caches asset loads across tests: a load a previous test left
+  // pending on its fake clock would never complete in this one (big assets,
+  // such as the achievement definitions, are decoded off the main isolate).
+  rootBundle.clear();
   SharedPreferences.setMockInitialValues(seed.prefs);
   FlutterSecureStorage.setMockInitialValues({
     if (seed.tmdbCredential != null)
