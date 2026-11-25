@@ -3,6 +3,23 @@
 Written by release-please from the Conventional Commits on `main` (see `DOCS/releasing.md`).
 New entries are inserted above the latest one.
 
+## [1.4.5](https://github.com/Zimberts/MediaVore/compare/v1.4.4...v1.4.5) (2026-11-25)
+
+
+### Bug fixes
+
+* **discovery:** invite to connect TMDB again once the key is removed ([#478](https://github.com/Zimberts/MediaVore/issues/478)) ([66a2e5f](https://github.com/Zimberts/MediaVore/commit/66a2e5f922113e4694a3c8c0a49354648b67882c))
+* **export:** restore every screen and Quick Add exclusions after an import ([#483](https://github.com/Zimberts/MediaVore/issues/483)) ([709ac26](https://github.com/Zimberts/MediaVore/commit/709ac266ee9a83ed881f591f228c0a967faa5eda))
+* **library:** lists journey, share QR logo and list import keeping cached titles ([#482](https://github.com/Zimberts/MediaVore/issues/482)) ([4f05bf2](https://github.com/Zimberts/MediaVore/commit/4f05bf2e4f2e0d3c9484706560deecbbe1029446))
+* **media_details:** count saga seen films from the global history ([#459](https://github.com/Zimberts/MediaVore/issues/459)) ([ee28575](https://github.com/Zimberts/MediaVore/commit/ee285752e9b506ff0002e78a1890a0b42d8eb92a))
+* **offline:** report TMDB failures on the detail page and the Home refresh ([#486](https://github.com/Zimberts/MediaVore/issues/486)) ([05ef7e3](https://github.com/Zimberts/MediaVore/commit/05ef7e32df7e9d0560b33324f33c9ad49f1df300))
+* **search:** keep discover pages appendable past page 1 ([#456](https://github.com/Zimberts/MediaVore/issues/456)) ([8d74744](https://github.com/Zimberts/MediaVore/commit/8d7474447bae72f0d70c4564808331804f24f2c4))
+* **seen:** await post-mark refresh in markManyAsSeen ([#431](https://github.com/Zimberts/MediaVore/issues/431)) ([#460](https://github.com/Zimberts/MediaVore/issues/460)) ([4019bce](https://github.com/Zimberts/MediaVore/commit/4019bce4a54bf2a8ef9ac91e4afac75cb3f0bafc))
+* **seen:** keep a fully seen series out of In progress after a bulk mark ([#480](https://github.com/Zimberts/MediaVore/issues/480)) ([6b885e3](https://github.com/Zimberts/MediaVore/commit/6b885e325fa779438c24968526a9ce44df73d11b))
+* **swipe:** keep the rest of a discover page in the swipe deck, with swipe journey ([#481](https://github.com/Zimberts/MediaVore/issues/481)) ([3e7a272](https://github.com/Zimberts/MediaVore/commit/3e7a272bac431a149aa3787f6068e0fb156bc65d))
+* **together:** keep two scanned friends apart (Together journey) ([#485](https://github.com/Zimberts/MediaVore/issues/485)) ([f727f6e](https://github.com/Zimberts/MediaVore/commit/f727f6e9c98491d91dd6347cdd191585a9cccaea))
+* **ui:** avoid overflows at 320 dp with large text, add screens smoke test ([#484](https://github.com/Zimberts/MediaVore/issues/484)) ([2d007db](https://github.com/Zimberts/MediaVore/commit/2d007db7577814c13abd5b12a06e1013aadfa477))
+
 ## [1.4.4](https://github.com/Zimberts/MediaVore/compare/v1.4.3...v1.4.4) (2026-11-21)
 
 
