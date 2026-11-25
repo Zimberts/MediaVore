@@ -73,4 +73,29 @@ void main() {
       },
     );
   });
+
+  group('MediaListLocalDataSource.isOptedOut', () {
+    test('should match every episode when the whole series is opted out, '
+        'and only its episode otherwise', () async {
+      final local = MediaListLocalDataSource(isar);
+      await local.addOptOut(100);
+      await local.addOptOut(200, seasonNumber: 1, episodeNumber: 2);
+
+      expect(
+        await local.isOptedOut(100, seasonNumber: 3, episodeNumber: 4),
+        isTrue,
+      );
+      expect(await local.isOptedOut(100), isTrue);
+      expect(
+        await local.isOptedOut(200, seasonNumber: 1, episodeNumber: 2),
+        isTrue,
+      );
+      expect(
+        await local.isOptedOut(200, seasonNumber: 1, episodeNumber: 3),
+        isFalse,
+      );
+      expect(await local.isOptedOut(200), isTrue);
+      expect(await local.isOptedOut(300), isFalse);
+    });
+  });
 }

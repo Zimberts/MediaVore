@@ -201,6 +201,15 @@ Future<void> disposeTestApp(
   // auto-dismissed messages).
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump(const Duration(minutes: 1));
+  // Reads started before the unmount (e.g. an achievement evaluation) still
+  // run on real I/O: closing Isar under them leaves the native store in a
+  // state that breaks the next app booted in this process.
+  for (var i = 0; i < 20; i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
 
   if (locator.isRegistered<Isar>()) {
     final isar = locator<Isar>();
@@ -262,6 +271,21 @@ void testApp(
     }
     await disposeTestApp(tester);
   }, timeout: timeout);
+}
+
+/// Wipes the app as a reinstall (or a new phone) does: tears down the app
+/// booted by [bootTestApp] (database, preferences, secure storage) and boots
+/// a new one from [seed] with the same fake TMDB server.
+///
+/// The returned app replaces the previous one: [testApp] disposes it.
+Future<TestApp> reinstallTestApp(
+  WidgetTester tester, {
+  AppSeed seed = const AppSeed(),
+}) async {
+  final previous = _current;
+  if (previous == null) fail('no app to reinstall');
+  await disposeTestApp(tester);
+  return bootTestApp(tester, seed: seed, tmdb: previous.tmdb);
 }
 
 /// Waits for [future], which completes on real I/O (Isar), while letting

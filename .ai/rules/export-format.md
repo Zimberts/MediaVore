@@ -14,7 +14,7 @@ sync** — any schema change must update both.
 ## Archive contents
 
 - `meta.csv` — `version`, `exportedAt`, `source`.
-- `seen.csv`, `likes.csv`, `notifications.csv`, `quickadd.csv`, `lists.csv`.
+- `seen.csv`, `likes.csv`, `notifications.csv`, `quickadd.csv`, `lists.csv`, `optouts.csv`.
 
 ## Schema rules
 
@@ -29,7 +29,12 @@ sync** — any schema change must update both.
 - `ImportMode.merge` — dedupe by keys:
   - Likes/Notifications: `(tmdbId, type)`.
   - Lists: `(listName, tmdbId)`.
+  - Quick add opt-outs: `(tmdbId, seasonNumber, episodeNumber)`.
   - Seen: `(tmdbId, type, season, episode)` plus a ±1s `seenDate` window.
 
 When adding a column, changing a column name/order, or altering dedupe rules, update
 `DOCS/export-format.md` in the same change and bump `meta.csv` `version` if breaking.
+
+`test/app/journeys/export_import_test.dart` imports `test/fixtures/export_v<release>.mdv`, an
+archive written by the previous release. After a release that changes the format, regenerate it
+from that release's tag (procedure in `test/fixtures/README.md`).

@@ -1692,21 +1692,39 @@ class SearchProvider
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
   }) async {
-    await _cacheAdminProvider.importAllData(zipBytes, mode: mode);
-    await loadAllSeenStatus();
-    await loadNotifiedItems();
+    await _cacheAdminProvider.importAllData(
+      zipBytes,
+      mode: mode,
+      onImported: _reloadAfterImport,
+    );
+  }
+
+  /// Rebuilds every screen from the imported data; runs while the import is
+  /// still reported in progress, so the Storage page stays busy until done.
+  Future<void> _reloadAfterImport() async {
     // If quick add was not part of import, populate from seen history
     try {
       final qaItems = await repository.getQuickAddItems();
       if (qaItems.isEmpty) {
         await repository.populateQuickAddFromSeenHistory();
-        await loadQuickAddItems();
       }
     } catch (e) {
       debugPrint(
         '[SearchProvider] auto-populate quickadd after import failed: $e',
       );
     }
+    await _reloadSavedTitles();
+    // A restore on a new install starts from an empty TMDB cache, and the
+    // boot warm-up (once a day) already ran on the empty library: until it
+    // is refilled, Tonight has no release dates and In progress no totals.
+    try {
+      await repository.fillCache();
+    } catch (e) {
+      debugPrint('[SearchProvider] cache warm-up after import failed: $e');
+    }
+    await _reloadSavedTitles();
+    // "Because you..." was built from the previous likes and history.
+    await loadBecauseYouRecommendations(forceRefresh: true);
   }
 
   @override

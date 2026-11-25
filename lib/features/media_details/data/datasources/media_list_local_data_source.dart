@@ -707,16 +707,24 @@ class MediaListLocalDataSource {
     return await _isar.quickAddOptOutModels.where().findAll();
   }
 
+  /// Whether [tmdbId] (at the given episode, when set) is excluded from
+  /// Quick Add: by an opt-out of that episode or of the whole series (empty
+  /// season and episode).
   Future<bool> isOptedOut(
     int tmdbId, {
     int? seasonNumber,
     int? episodeNumber,
   }) async {
-    var q = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(tmdbId);
-    if (seasonNumber != null) q = q.and().seasonNumberEqualTo(seasonNumber);
-    if (episodeNumber != null) q = q.and().episodeNumberEqualTo(episodeNumber);
-    final count = await q.count();
-    return count > 0;
+    final rows = await _isar.quickAddOptOutModels
+        .filter()
+        .tmdbIdEqualTo(tmdbId)
+        .findAll();
+    return rows.any(
+      (o) =>
+          (o.seasonNumber == null && o.episodeNumber == null) ||
+          ((seasonNumber == null || o.seasonNumber == seasonNumber) &&
+              (episodeNumber == null || o.episodeNumber == episodeNumber)),
+    );
   }
 
   Future<List<NotifiedItemModel>> getNotifiedItems() async {
@@ -900,6 +908,7 @@ class MediaListLocalDataSource {
     List<NotifiedItemModel> notifications = const [],
     List<QuickAddItemModel> quickAdd = const [],
     Map<String, List<MediaListItem>> lists = const {},
+    List<QuickAddOptOutModel> optOuts = const [],
   }) async {
     await _isar.writeTxn(() async {
       if (seen.isNotEmpty) await _importSeenInTxn(seen, mode);
@@ -909,7 +918,42 @@ class MediaListLocalDataSource {
       }
       if (quickAdd.isNotEmpty) await _importQuickAddInTxn(quickAdd, mode, null);
       if (lists.isNotEmpty) await _importListsInTxn(lists, mode, null);
+      if (optOuts.isNotEmpty) await _importOptOutsInTxn(optOuts, mode);
+      if (quickAdd.isNotEmpty || optOuts.isNotEmpty) {
+        await _dropOptedOutQuickAddInTxn();
+      }
     });
+  }
+
+  /// Imports Quick Add opt-outs. Must run inside a write transaction.
+  Future<void> _importOptOutsInTxn(
+    List<QuickAddOptOutModel> optOuts,
+    ImportMode mode,
+  ) => _importItemsInTxn(
+    _isar.quickAddOptOutModels,
+    optOuts,
+    mode: mode,
+    writeStatus: 'Importing quick add opt-outs...',
+    exists: (o) => _isar.quickAddOptOutModels
+        .filter()
+        .tmdbIdEqualTo(o.tmdbId)
+        .seasonNumberEqualTo(o.seasonNumber)
+        .episodeNumberEqualTo(o.episodeNumber)
+        .findFirst()
+        .then((e) => e != null),
+  );
+
+  /// Drops the queued episodes that an opt-out excludes (as [addOptOut]
+  /// does), whether the opt-out was imported or already on the device: an
+  /// imported archive cannot bring back a streak the user excluded. Must run
+  /// inside a write transaction.
+  Future<void> _dropOptedOutQuickAddInTxn() async {
+    for (final o in await _isar.quickAddOptOutModels.where().findAll()) {
+      var q = _isar.quickAddItemModels.filter().tmdbIdEqualTo(o.tmdbId);
+      if (o.seasonNumber != null) q = q.seasonNumberEqualTo(o.seasonNumber);
+      if (o.episodeNumber != null) q = q.episodeNumberEqualTo(o.episodeNumber);
+      await q.deleteAll();
+    }
   }
 
   Future<void> recordSwipeDecision(SwipeDecisionModel decision) async {

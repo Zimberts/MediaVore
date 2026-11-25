@@ -62,6 +62,9 @@ class LibraryProvider with ChangeNotifier implements ListPreviewSource {
   }
 
   Future<void> loadAllListEntries() async {
+    // Lists deleted meanwhile (e.g. by an import that replaces them).
+    _listEntries.removeWhere((name, _) => !_listNames.contains(name));
+    _listPreviews.removeWhere((name, _) => !_listNames.contains(name));
     for (final name in _listNames) {
       _listEntries[name] = await repository.getListEntries(name);
       _listPreviews[name] = await repository.getListPreviews(name);

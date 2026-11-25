@@ -8,6 +8,7 @@ import '../../features/media_details/data/models/liked_item.dart';
 import '../../features/media_details/data/models/media_list_item.dart';
 import '../../features/media_details/data/models/notified_item_model.dart';
 import '../../features/media_details/data/models/quick_add_item_model.dart';
+import '../../features/media_details/data/models/quick_add_opt_out_model.dart';
 import '../../features/media_details/data/models/seen_item_model.dart';
 import '../error/exceptions.dart';
 
@@ -21,6 +22,9 @@ class ExportEnvelope {
   final List<NotifiedItemModel> notifications;
   final List<QuickAddItemModel> quickAdd;
   final Map<String, List<MediaListItem>> lists;
+
+  /// Series streaks the user excluded from Quick Add.
+  final List<QuickAddOptOutModel> optOuts;
 
   /// Non-fatal problems found while parsing (e.g. skipped invalid rows).
   /// Always empty for envelopes built in memory.
@@ -47,12 +51,14 @@ class ExportEnvelope {
     List<NotifiedItemModel>? notifications,
     List<QuickAddItemModel>? quickAdd,
     Map<String, List<MediaListItem>>? lists,
+    List<QuickAddOptOutModel>? optOuts,
     List<String>? warnings,
   }) : seen = seen ?? [],
        likes = likes ?? [],
        notifications = notifications ?? [],
        quickAdd = quickAdd ?? [],
        lists = lists ?? {},
+       optOuts = optOuts ?? [],
        warnings = warnings ?? [];
 
   /// Serializes this envelope into a ZIP archive.
@@ -182,6 +188,22 @@ class ExportEnvelope {
         ]);
       }
       _addCsv(archive, 'quickadd.csv', qaRows);
+    }
+
+    // optouts.csv
+    if (optOuts.isNotEmpty) {
+      final optOutRows = <List<dynamic>>[
+        ['tmdbId', 'seasonNumber', 'episodeNumber', 'optedOutAt'],
+      ];
+      for (final o in optOuts) {
+        optOutRows.add([
+          o.tmdbId,
+          o.seasonNumber?.toString() ?? '',
+          o.episodeNumber?.toString() ?? '',
+          _date(o.optedOutAt),
+        ]);
+      }
+      _addCsv(archive, 'optouts.csv', optOutRows);
     }
 
     return ZipEncoder().encode(archive);
@@ -381,6 +403,23 @@ class ExportEnvelope {
           );
     }
 
+    final optOuts = <QuickAddOptOutModel>[];
+    for (final r in _RowReader.rowsOf('optouts.csv', tables, warnings)) {
+      final id = r.tmdbId();
+      // An unreadable episode must not widen the opt-out to the whole series.
+      final season = r.strictInt('seasonNumber');
+      final episode = r.strictInt('episodeNumber');
+      if (id == null || season.invalid || episode.invalid) continue;
+      optOuts.add(
+        QuickAddOptOutModel(
+          tmdbId: id,
+          seasonNumber: season.value,
+          episodeNumber: episode.value,
+          optedOutAt: r.optDate('optedOutAt') ?? exportedAt,
+        ),
+      );
+    }
+
     return ExportEnvelope(
       version: version,
       exportedAt: exportedAt,
@@ -390,6 +429,7 @@ class ExportEnvelope {
       notifications: notifications,
       quickAdd: quickAdd,
       lists: lists,
+      optOuts: optOuts,
       warnings: warnings,
     );
   }
@@ -401,6 +441,7 @@ class ExportEnvelope {
     'notifications.csv',
     'quickadd.csv',
     'lists.csv',
+    'optouts.csv',
   };
 
   /// Dates are written in UTC with an explicit `Z` so that an export read on a
@@ -485,6 +526,15 @@ class _RowReader {
     if (v is int) return v;
     if (v is double && v == v.truncateToDouble()) return v.toInt();
     return v == null ? null : int.tryParse(v.toString().trim());
+  }
+
+  /// [optInt] that tells an empty cell (`value` null) from an unreadable one
+  /// (`invalid`, with a warning).
+  ({int? value, bool invalid}) strictInt(String column) {
+    final value = optInt(column);
+    final invalid = value == null && optText(column) != null;
+    if (invalid) warn('invalid $column "${raw(column)}"');
+    return (value: value, invalid: invalid);
   }
 
   DateTime? optDate(String column) {

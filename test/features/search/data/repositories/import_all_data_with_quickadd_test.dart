@@ -10,6 +10,7 @@ import 'package:mediavore/features/media_details/data/models/liked_item.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_opt_out_model.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/user_list.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
@@ -42,6 +43,7 @@ void main() {
         LikedItemSchema,
         NotifiedItemModelSchema,
         QuickAddItemModelSchema,
+        QuickAddOptOutModelSchema,
       ],
       directory: tempPath,
       name:
