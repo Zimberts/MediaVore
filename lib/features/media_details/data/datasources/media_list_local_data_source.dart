@@ -690,16 +690,24 @@ class MediaListLocalDataSource {
     return await _isar.quickAddOptOutModels.where().findAll();
   }
 
+  /// Whether [tmdbId] (at the given episode, when set) is excluded from
+  /// Quick Add: by an opt-out of that episode or of the whole series (empty
+  /// season and episode).
   Future<bool> isOptedOut(
     int tmdbId, {
     int? seasonNumber,
     int? episodeNumber,
   }) async {
-    var q = _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(tmdbId);
-    if (seasonNumber != null) q = q.and().seasonNumberEqualTo(seasonNumber);
-    if (episodeNumber != null) q = q.and().episodeNumberEqualTo(episodeNumber);
-    final count = await q.count();
-    return count > 0;
+    final rows = await _isar.quickAddOptOutModels
+        .filter()
+        .tmdbIdEqualTo(tmdbId)
+        .findAll();
+    return rows.any(
+      (o) =>
+          (o.seasonNumber == null && o.episodeNumber == null) ||
+          ((seasonNumber == null || o.seasonNumber == seasonNumber) &&
+              (episodeNumber == null || o.episodeNumber == episodeNumber)),
+    );
   }
 
   Future<List<NotifiedItemModel>> getNotifiedItems() async {
