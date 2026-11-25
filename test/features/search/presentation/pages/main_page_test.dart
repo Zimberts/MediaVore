@@ -661,6 +661,36 @@ void main() {
       expect(find.text('Achievement Unlocked!'), findsNothing);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('should not fail when the page is disposed while the banner '
+        'is shown and its auto-dismiss fires later', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+      achievements.add(achievement);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('First steps'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      // The auto-dismiss timer fires after the page is gone.
+      await tester.pump(const Duration(seconds: 5));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('should cancel the auto-dismiss when the page is disposed '
+        'while the banner is shown', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+      achievements.add(achievement);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('First steps'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      // No pump past the 4 s: flutter_test fails the test if a timer is
+      // still pending once it ends.
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('TMDB credential', () {

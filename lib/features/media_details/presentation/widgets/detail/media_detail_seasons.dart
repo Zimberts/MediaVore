@@ -185,6 +185,7 @@ class MediaDetailSeasons extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           InkWell(
+            key: ValueKey('detail_season_$seasonNumber'),
             borderRadius: isExpanded
                 ? const BorderRadius.vertical(top: Radius.circular(12))
                 : BorderRadius.circular(12),

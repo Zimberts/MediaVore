@@ -259,6 +259,7 @@ class MediaDetailHeader extends StatelessWidget {
                     ),
                     if (item.canBeNotified || isNotified)
                       DetailRoundButton(
+                        key: const Key('detail_notify'),
                         icon: isNotified
                             ? Icons.notifications_active
                             : Icons.notifications_none,

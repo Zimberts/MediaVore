@@ -25,6 +25,12 @@ class MockNotificationRefreshService extends Mock
 
 class MockQuickAddService extends Mock implements QuickAddService {}
 
+/// Matches the episode [season]x[episode] of the series [tmdbId].
+Matcher isEpisode(int tmdbId, int season, int episode) => isA<SeenItem>()
+    .having((i) => i.tmdbId, 'tmdbId', tmdbId)
+    .having((i) => i.seasonNumber, 'seasonNumber', season)
+    .having((i) => i.episodeNumber, 'episodeNumber', episode);
+
 void main() {
   late MockMediaListLocalDataSource localDataSource;
   late MockMediaCache cache;
@@ -58,6 +64,9 @@ void main() {
       ),
     );
     registerFallbackValue(<SeenItemModel>[]);
+    registerFallbackValue(
+      <({int tmdbId, int seasonNumber, int episodeNumber})>[],
+    );
   });
 
   setUp(() {
@@ -68,6 +77,9 @@ void main() {
     quickAdd = MockQuickAddService();
 
     when(() => localDataSource.markManyAsSeen(any())).thenAnswer((_) async {});
+    when(
+      () => localDataSource.removeQuickAddItemsForEpisodes(any()),
+    ).thenAnswer((_) async {});
     when(() => notifications.refreshAfterSeen(any())).thenAnswer((_) async {});
     when(() => quickAdd.queueNextAfterSeen(any())).thenAnswer((_) async {});
 
@@ -306,6 +318,66 @@ void main() {
             ),
             () => quickAdd.queueNextAfterSeen(any()),
           ]);
+        },
+      );
+
+      test('should drop the Quick Add entry of every episode of the batch '
+          'before queueing the next one', () async {
+        await service.markManyAsSeen([
+          episode(1, 2),
+          episode(1, 3),
+          episode(2, 1),
+        ]);
+
+        verifyInOrder([
+          () => localDataSource.markManyAsSeen(any()),
+          () => localDataSource.removeQuickAddItemsForEpisodes([
+            (tmdbId: 42, seasonNumber: 1, episodeNumber: 2),
+            (tmdbId: 42, seasonNumber: 1, episodeNumber: 3),
+            (tmdbId: 42, seasonNumber: 2, episodeNumber: 1),
+          ]),
+          () => quickAdd.queueNextAfterSeen(any(that: isEpisode(42, 2, 1))),
+        ]);
+        verifyNoMoreInteractions(quickAdd);
+      });
+
+      test('should refresh and queue from the furthest episode of each series '
+          'of a batch, whatever its order', () async {
+        SeenItem other(int season, int number) => SeenItem(
+          tmdbId: 43,
+          type: MediaType.tv,
+          title: 'Better Call Saul',
+          seasonNumber: season,
+          episodeNumber: number,
+          seenDate: tDate,
+        );
+
+        await service.markManyAsSeen([
+          episode(2, 1),
+          other(1, 4),
+          episode(1, 3),
+          other(1, 2),
+        ]);
+
+        verifyInOrder([
+          () => notifications.refreshAfterSeen(any(that: isEpisode(42, 2, 1))),
+          () => quickAdd.queueNextAfterSeen(any(that: isEpisode(42, 2, 1))),
+          () => notifications.refreshAfterSeen(any(that: isEpisode(43, 1, 4))),
+          () => quickAdd.queueNextAfterSeen(any(that: isEpisode(43, 1, 4))),
+        ]);
+        verifyNoMoreInteractions(quickAdd);
+        verifyNoMoreInteractions(notifications);
+      });
+
+      test(
+        'should still queue Quick Add when the Quick Add cleanup fails',
+        () async {
+          when(
+            () => localDataSource.removeQuickAddItemsForEpisodes(any()),
+          ).thenThrow(Exception('disk full'));
+
+          await expectLater(service.markManyAsSeen([episode(1, 1)]), completes);
+          verify(() => quickAdd.queueNextAfterSeen(any())).called(1);
         },
       );
 

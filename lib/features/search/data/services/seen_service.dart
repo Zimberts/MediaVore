@@ -122,22 +122,64 @@ class SeenService {
 
     await localDataSource.markManyAsSeen(models);
 
+    // No episode of the batch is a "next episode" any more:
+    // queueNextAfterSeen below only drops the entry of the tail it gets.
+    try {
+      await localDataSource.removeQuickAddItemsForEpisodes([
+        for (final item in items)
+          if (item.type == MediaType.tv &&
+              item.seasonNumber != null &&
+              item.episodeNumber != null)
+            (
+              tmdbId: item.tmdbId,
+              seasonNumber: item.seasonNumber!,
+              episodeNumber: item.episodeNumber!,
+            ),
+      ]);
+    } catch (e) {
+      debugPrint('[SeenService] Quick Add cleanup failed: $e');
+    }
+
     // Awaited, as in [markAsSeen]: callers reload notified and Quick Add
     // items right after this returns, so both writes must be done by then.
     // The seen state itself is already shown optimistically by the caller.
     // A refresh failure must not fail the mark (the batch is already stored),
     // nor skip the other refresh: each one is guarded separately.
-    final lastItem = items.last;
-    try {
-      await notifications.refreshAfterSeen(lastItem);
-    } catch (e) {
-      debugPrint('[SeenService] notification refresh failed: $e');
+    // One refresh per title, from its furthest item: a batch may hold several
+    // titles, in any order.
+    for (final tail in _tails(items)) {
+      try {
+        await notifications.refreshAfterSeen(tail);
+      } catch (e) {
+        debugPrint('[SeenService] notification refresh failed: $e');
+      }
+      try {
+        await quickAdd.queueNextAfterSeen(tail);
+      } catch (e) {
+        debugPrint('[SeenService] Quick Add refresh failed: $e');
+      }
     }
-    try {
-      await quickAdd.queueNextAfterSeen(lastItem);
-    } catch (e) {
-      debugPrint('[SeenService] Quick Add refresh failed: $e');
+  }
+
+  /// The furthest item of each title of [items], in order of first
+  /// appearance: highest (season, episode) for a series, latest viewing
+  /// otherwise; the latest viewing breaks ties.
+  static List<SeenItem> _tails(List<SeenItem> items) {
+    final tails = <(MediaType, int), SeenItem>{};
+    for (final item in items) {
+      final key = (item.type, item.tmdbId);
+      final kept = tails[key];
+      if (kept == null || _isFurther(item, kept)) tails[key] = item;
     }
+    return tails.values.toList();
+  }
+
+  static bool _isFurther(SeenItem a, SeenItem b) {
+    final bySeason = (a.seasonNumber ?? 0).compareTo(b.seasonNumber ?? 0);
+    if (bySeason != 0) return bySeason > 0;
+    final byEpisode = (a.episodeNumber ?? 0).compareTo(b.episodeNumber ?? 0);
+    if (byEpisode != 0) return byEpisode > 0;
+    return !a.seenDate.isBefore(b.seenDate);
   }
 
   /// Runs [lookup], logging and mapping any error (sync or async) to null.
