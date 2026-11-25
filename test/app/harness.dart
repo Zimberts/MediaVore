@@ -215,6 +215,25 @@ Future<void> disposeTestApp(
   );
 }
 
+/// Closes and reopens the app booted by [bootTestApp], as a user relaunching
+/// it: unmounts the tree, then boots the services and the app again on the
+/// same database, preferences and secure storage. [TestApp.tmdb] keeps
+/// answering, and keeps its records.
+Future<void> restartTestApp(WidgetTester tester) async {
+  final app = _current;
+  if (app == null) throw StateError('restartTestApp: no app booted');
+  await pumpUntilSettled(tester);
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump(const Duration(minutes: 1));
+  // bootstrapServices closes the open database (kept on disk) and resets
+  // the DI before registering everything again.
+  await tester.runAsync(
+    () => bootstrapServices(tmdbHttpClientAdapter: app.tmdb),
+  );
+  await tester.pumpWidget(const MediaVoreApp());
+  await pumpUntilSettled(tester);
+}
+
 /// [testWidgets] on the booted app: [bootTestApp], [body], then
 /// [disposeTestApp] even when [body] fails. A failure of [body] is the one
 /// reported: teardown problems never hide it.
