@@ -111,22 +111,15 @@ Future<void> _seedExtras(WidgetTester tester, TestApp app) async {
     await repository.populateQuickAddFromSeenHistory();
     await repository.optOutSeries(_excluded, seasonNumber: 1, episodeNumber: 2);
   });
-  final search = _search(tester);
-  await tester.runAsync(() async {
-    await search.loadAllSeenStatus();
-    await search.loadNotifiedItems();
-    await search.loadQuickAddItems();
-  });
+  // What a user action would have reloaded (it may fetch TMDB: fake time).
+  await _settle(tester, _search(tester).reloadSavedTitles());
   await pumpUntilSettled(tester);
 }
 
 /// Everything the user owns, read from the database, in a comparable form:
 /// local ids and insertion times are left out, orders that the user sees
 /// are kept, dates are in UTC.
-///
-/// Series in progress leave out their episode total: it comes from the TMDB
-/// cache, which a reinstall empties and the next warm-up or a visit to the
-/// series fills again.
+
 Future<Map<String, Object>> _snapshot(WidgetTester tester, TestApp app) async {
   final snapshot = await tester.runAsync(() async {
     final repository = app.repository;
@@ -163,7 +156,8 @@ Future<Map<String, Object>> _snapshot(WidgetTester tester, TestApp app) async {
       'inProgress': [
         for (final i in inProgress)
           '${i.next.tmdbId} S${i.next.seasonNumber}E${i.next.episodeNumber} '
-              'seen:${i.seenEpisodes} ${i.lastActivity.toUtc()} paused:${i.paused}',
+              'seen:${i.seenEpisodes}/${i.totalEpisodes} ${i.lastActivity.toUtc()} '
+              'paused:${i.paused}',
       ],
       'optOuts': [
         for (final o in optOuts)
@@ -172,6 +166,35 @@ Future<Map<String, Object>> _snapshot(WidgetTester tester, TestApp app) async {
     };
   });
   return snapshot!;
+}
+
+/// What the screens read from the providers: Library (lists, watchlist,
+/// likes), Home (Tonight, in progress, Quick Add) and alerts.
+Map<String, Object> _screens(WidgetTester tester) {
+  final search = _search(tester);
+  String key(int id, MediaType type) => '${type.name}:$id';
+  return {
+    'listNames': [...search.listNames]..sort(),
+    'listEntries': {
+      for (final name in [...search.listEntries.keys]..sort())
+        name: search.listEntries[name],
+    },
+    'watchlist': search.watchlistIds,
+    'likes': [...search.likedIds]..sort(),
+    'tonight': [
+      for (final m in search.tonightCandidates()) key(m.id, m.mediaType),
+    ],
+    'inProgress': [
+      for (final i in search.inProgressItems)
+        '${i.next.tmdbId} S${i.next.seasonNumber}E${i.next.episodeNumber}',
+    ],
+    'quickAdd': [
+      for (final q in search.quickAddItems)
+        '${key(q.tmdbId, q.type)} S${q.seasonNumber}E${q.episodeNumber}',
+    ]..sort(),
+    'alerts': [for (final n in search.notifiedItems) key(n.tmdbId, n.type)]
+      ..sort(),
+  };
 }
 
 /// Unlocked achievements as the app shows them: id and date.
@@ -192,8 +215,12 @@ Future<void> _settle(WidgetTester tester, Future<void> future) async {
 
 /// Pumps until [condition] holds, giving real time to Isar at each step:
 /// achievements follow the database through a watcher, on real time.
-Future<void> _pumpUntil(WidgetTester tester, bool Function() condition) async {
-  for (var i = 0; i < 300 && !condition(); i++) {
+Future<void> _pumpUntil(
+  WidgetTester tester,
+  bool Function() condition, {
+  int steps = 300,
+}) async {
+  for (var i = 0; i < steps && !condition(); i++) {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 20)),
     );
@@ -312,7 +339,7 @@ Future<void> _import(
   // The import ends on real I/O, then the screens reload: wait on real time
   // for the message shown once both are done.
   final done = find.text(_context(tester).l10n.dataImportedReplaced);
-  await _pumpUntil(tester, () => done.evaluate().isNotEmpty);
+  await _pumpUntil(tester, () => done.evaluate().isNotEmpty, steps: 1200);
   expect(done, findsOneWidget);
   await pumpUntilSettled(tester);
   await _back(tester);
@@ -335,6 +362,9 @@ void main() {
         final picker = _fakeFilePicker();
         await _seedExtras(tester, app);
         final before = await _snapshot(tester, app);
+        final screens = _screens(tester);
+        expect(screens['listEntries'], isNotEmpty);
+        expect(screens['inProgress'], hasLength(1));
         expect(before['optOuts'], ['$_excluded S1E2']);
         expect(before['inProgress'], hasLength(1));
 
@@ -371,6 +401,7 @@ void main() {
         // 3. Import the file: same data, same screens.
         await _import(tester, picker, _file(fileName, bytes));
         expect(await _snapshot(tester, app), before);
+        expect(_screens(tester), screens);
         await _pumpUntil(
           tester,
           () => _achievements(tester).length == achievements.length,
@@ -428,7 +459,7 @@ void main() {
         'tv:100 S1E3 Show 100 2020-01-01 00:00:00.000Z',
       ]);
       expect(snapshot['inProgress'], [
-        '100 S1E3 seen:2 2024-07-02 17:00:00.000Z paused:true',
+        '100 S1E3 seen:2/20 2024-07-02 17:00:00.000Z paused:true',
       ]);
       expect(snapshot['optOuts'], isEmpty);
 

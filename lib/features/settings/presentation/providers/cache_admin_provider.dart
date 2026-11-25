@@ -126,10 +126,13 @@ class CacheAdminProvider with ChangeNotifier implements CacheAdminActions {
     await repository.populateQuickAddFromSeenHistory();
   }
 
+  /// Imports [zipBytes]; [onImported] runs after a successful import, while
+  /// [isImporting] is still true.
   @override
   Future<void> importAllData(
     List<int> zipBytes, {
     ImportMode mode = ImportMode.append,
+    Future<void> Function()? onImported,
   }) async {
     _isImporting = true;
     _importProgress = 0.0;
@@ -146,6 +149,7 @@ class CacheAdminProvider with ChangeNotifier implements CacheAdminActions {
           notifyListeners();
         },
       );
+      await onImported?.call();
 
       _importProgress = 1.0;
       _importStatus = _l10n.progressDone;

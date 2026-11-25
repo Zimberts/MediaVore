@@ -440,12 +440,12 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
         return;
       }
 
-      final bytes = await picked.readAsBytes();
-      if (!context.mounted) return;
-
+      final List<int> bytes;
       final ExportEnvelope envelope;
       try {
         setState(() => _isReadingBackup = true);
+        bytes = await picked.readAsBytes();
+        if (!context.mounted) return;
         // Use serializer to normalize and validate on background isolate
         envelope = await ExportEnvelope.fromZipBytesAsync(bytes);
       } on ParsingException catch (e) {
