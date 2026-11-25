@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
@@ -215,6 +217,110 @@ void main() {
       expect(provider.currentCandidate?.item.id, 101);
     },
   );
+
+  test('should keep the rest of a discover page for the next cards instead of '
+      'skipping it', () async {
+    MediaItem movie(int id) => MediaItem(
+      id: id,
+      title: 'Movie $id',
+      overview: '',
+      releaseDate: '2023-01-01',
+    );
+    when(
+      () => repo.discoverMedia(
+        type: any(named: 'type'),
+        page: any(named: 'page'),
+      ),
+    ).thenAnswer((invocation) async {
+      final page = invocation.namedArguments[#page] as int;
+      return page <= 2
+          ? [for (var i = 1; i <= 3; i++) movie(page * 100 + i)]
+          : <MediaItem>[];
+    });
+    when(
+      () => repo.getMediaDetails(any(), type: any(named: 'type')),
+    ).thenAnswer(
+      (invocation) async => MediaDetails(
+        item: movie(invocation.positionalArguments.first as int),
+        cast: const [],
+      ),
+    );
+
+    await provider.init();
+    final shown = <int>[];
+    while (provider.currentCandidate != null) {
+      shown.add(provider.currentCandidate!.item.id);
+      await provider.swipeLeft();
+    }
+
+    // The first load stops at 4 cards, in the middle of page 2: its last
+    // two titles still come next.
+    expect(shown, [101, 102, 103, 201, 202, 203]);
+  });
+
+  test('should not propose an undone saga twice when a load in flight meets '
+      'another of its parts', () async {
+    final page2 = Completer<List<MediaItem>>();
+    when(
+      () => repo.discoverMedia(
+        type: any(named: 'type'),
+        page: any(named: 'page'),
+      ),
+    ).thenAnswer((invocation) async {
+      final page = invocation.namedArguments[#page] as int;
+      if (page == 1) return [movieSagaPart1, movie1, movie2];
+      if (page == 2) return page2.future;
+      return <MediaItem>[];
+    });
+    when(() => repo.getMediaDetails(202, type: any(named: 'type'))).thenAnswer(
+      (_) async => MediaDetails(
+        item: movieSagaPart2,
+        cast: const [],
+        collection: [movieSagaPart1, movieSagaPart2],
+      ),
+    );
+    when(() => repo.undoLastSwipeDecision()).thenAnswer(
+      (_) async => SwipeDecisionModel(
+        isarId: 1,
+        tmdbId: 201,
+        title: 'Saga Part 1',
+        decision: 'discarded',
+        decidedAt: DateTime.now(),
+        collectionId: 999,
+      ),
+    );
+
+    // The first load holds 3 cards and waits for page 2.
+    final loading = provider.init();
+    await pumpEventQueue();
+    expect(provider.currentCandidate?.collectionId, 999);
+
+    await provider.swipeLeft();
+    await provider.undoLastDecision();
+    expect(provider.currentCandidate?.collectionId, 999);
+
+    // Page 2 brings the other part of the saga, which is back in the deck.
+    page2.complete([movieSagaPart2]);
+    await loading;
+
+    expect(
+      provider.candidates.where((c) => c.collectionId == 999),
+      hasLength(1),
+    );
+  });
+
+  test('should report no more cards once the page limit is reached', () async {
+    await provider.init();
+
+    // Every page repeats the same titles: the deck stops at page 50.
+    verify(
+      () => repo.discoverMedia(
+        type: any(named: 'type'),
+        page: any(named: 'page'),
+      ),
+    ).called(50);
+    expect(provider.hasMore, isFalse);
+  });
 
   group('with LibraryProvider', () {
     late LibraryProvider libraryProvider;
