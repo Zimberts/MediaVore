@@ -711,6 +711,7 @@
   "togetherScanQrButton": "Scanner le QR d'un ami",
   "togetherParticipantsTitle": "Participants",
   "togetherYouHost": "Moi (Hôte)",
+  "togetherFriendName": "Ami",
   "togetherItemsCount": "{count, plural, =0{0 titre} =1{1 titre} other{{count} titres}}",
   "togetherScanPrompt": "Scannez au moins un ami pour continuer",
   "togetherSeeCommonTitles": "Voir les titres en commun",

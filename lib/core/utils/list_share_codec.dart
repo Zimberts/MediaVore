@@ -210,8 +210,11 @@ class ListShareCodec {
 
   /// Generates one or more `mediavore://together` URLs for sharing in a Together session.
   /// If [entries] exceeds [chunkSize], multiple chunked URLs with `&part=i/n` are produced.
+  ///
+  /// [name] is empty by default: the sender's own label ("Me (Host)") means
+  /// nothing on the phone that scans it, which names the participant itself.
   static List<String> createTogetherUrls({
-    required String name,
+    String name = '',
     required List<SharedMediaEntry> entries,
     int chunkSize = 150,
   }) {

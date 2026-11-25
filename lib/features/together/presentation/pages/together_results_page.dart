@@ -229,6 +229,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
         title: Text(l10n.togetherCommonCount(commonSorted.length)),
         actions: [
           IconButton(
+            key: const Key('together_results_reset_button'),
             icon: const Icon(Icons.refresh),
             tooltip: l10n.togetherResetSession,
             onPressed: () {
@@ -243,6 +244,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
                       child: Text(l10n.commonCancel),
                     ),
                     TextButton(
+                      key: const Key('together_reset_confirm_button'),
                       onPressed: () {
                         Navigator.pop(ctx);
                         session.reset();

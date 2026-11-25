@@ -1831,6 +1831,10 @@
   "togetherScanQrButton": "Scan a friend's QR",
   "togetherParticipantsTitle": "Participants",
   "togetherYouHost": "Me (Host)",
+  "togetherFriendName": "Friend",
+  "@togetherFriendName": {
+    "description": "Name of a scanned participant whose QR code carries none; later ones get a number (Friend 2)."
+  },
   "togetherItemsCount": "{count, plural, =0{0 titles} =1{1 title} other{{count} titles}}",
   "@togetherItemsCount": {
     "placeholders": {

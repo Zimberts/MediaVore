@@ -2674,6 +2674,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get togetherYouHost => 'Me (Host)';
 
   @override
+  String get togetherFriendName => 'Friend';
+
+  @override
   String togetherItemsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

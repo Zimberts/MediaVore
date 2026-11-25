@@ -12,9 +12,16 @@ class TogetherParticipant {
     this.entries = const [],
     this.totalParts = 1,
     this.scannedParts = const {1},
-  });
+    this.partEntries = const {},
+    String? sharedName,
+  }) : sharedName = sharedName ?? name;
 
+  /// Name shown in the session, unique within it (also the vote key).
   final String name;
+
+  /// Name carried by the scanned QR code; several participants can share it
+  /// (each friend's app labels its own QR the same way).
+  final String sharedName;
 
   /// Shared titles.
   final List<SharedMediaEntry> entries;
@@ -22,6 +29,10 @@ class TogetherParticipant {
   /// Multi-part QR code progress.
   final int totalParts;
   final Set<int> scannedParts;
+
+  /// Titles of each scanned QR part, by part number; tells a rescan of a
+  /// part from another friend's code.
+  final Map<int, Set<SharedMediaEntry>> partEntries;
 
   bool get isComplete => scannedParts.length >= totalParts;
 
@@ -95,34 +106,73 @@ class TogetherSessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addParticipantChunk({
+  /// Adds part [part] of [totalParts] of a list shared under [name]; returns
+  /// the name the participant got in the session.
+  ///
+  /// A QR name identifies nobody: two friends' QR codes can carry the same
+  /// one, and the host's own label ([reservedNames]) can show up too. A part
+  /// joins the first participant of that name still waiting for it; a part
+  /// already scanned with exactly the same titles is a rescan and changes nothing;
+  /// anything else is a new participant, named `name 2`, `name 3`…
+  String addParticipantChunk({
     required String name,
     required int part,
     required int totalParts,
     required List<SharedMediaEntry> entries,
+    Set<String> reservedNames = const {},
   }) {
-    final existingIndex = _participants.indexWhere((p) => p.name == name);
+    final chunk = entries.toSet();
+    for (final p in _participants) {
+      if (p.sharedName == name &&
+          p.totalParts == totalParts &&
+          setEquals(p.partEntries[part], chunk)) {
+        return p.name;
+      }
+    }
+    final existingIndex = _participants.indexWhere(
+      (p) =>
+          p.sharedName == name &&
+          !p.isComplete &&
+          p.totalParts == totalParts &&
+          !p.scannedParts.contains(part),
+    );
     if (existingIndex >= 0) {
       final existing = _participants[existingIndex];
-      final combinedEntries = {...existing.entries, ...entries}.toList();
-      final updatedParts = {...existing.scannedParts, part};
       _participants[existingIndex] = TogetherParticipant(
-        name: name,
-        entries: combinedEntries,
+        name: existing.name,
+        sharedName: name,
+        entries: {...existing.entries, ...entries}.toList(),
         totalParts: totalParts,
-        scannedParts: updatedParts,
+        scannedParts: {...existing.scannedParts, part},
+        partEntries: {...existing.partEntries, part: chunk},
       );
-    } else {
-      _participants.add(
-        TogetherParticipant(
-          name: name,
-          entries: entries,
-          totalParts: totalParts,
-          scannedParts: {part},
-        ),
-      );
+      notifyListeners();
+      return existing.name;
     }
+    final unique = _uniqueName(name, reservedNames);
+    _participants.add(
+      TogetherParticipant(
+        name: unique,
+        sharedName: name,
+        entries: entries,
+        totalParts: totalParts,
+        scannedParts: {part},
+        partEntries: {part: chunk},
+      ),
+    );
     notifyListeners();
+    return unique;
+  }
+
+  /// [name], or `name 2`, `name 3`… when taken by a participant or reserved.
+  String _uniqueName(String name, Set<String> reservedNames) {
+    final taken = {...reservedNames, for (final p in _participants) p.name};
+    if (!taken.contains(name)) return name;
+    var n = 2;
+    while (taken.contains('$name $n')) {
+      n++;
+    }
+    return '$name $n';
   }
 
   void removeParticipant(String name) {
