@@ -301,36 +301,43 @@ class LibraryProvider with ChangeNotifier implements ListPreviewSource {
     );
   }
 
+  /// Creates (or completes) the list [name] with [entries].
+  ///
+  /// Titles already known locally are added with their cached metadata: a
+  /// placeholder would overwrite their cached title and poster.
   Future<void> importSharedEntries(
     String name,
     List<SharedMediaEntry> entries,
   ) async {
-    final strList = entries.map((e) => '${e.id}:${e.type.name}').toList();
-    await importList(name, strList);
+    final cached = entries.isEmpty
+        ? const <MediaItem?>[]
+        : await repository.getCachedMediaItems([
+            for (final e in entries) (e.id, e.type),
+          ]);
+    final items = [
+      for (var i = 0; i < entries.length; i++)
+        cached[i] ??
+            MediaItem(
+              id: entries[i].id,
+              title: 'Unknown',
+              overview: '',
+              releaseDate: '',
+              mediaType: entries[i].type,
+            ),
+    ];
+    await repository.createList(name);
+    await repository.addAllToList(items, name);
+    _listNames = await repository.getAllListNames();
+    if (name == 'watchlist') {
+      await loadWatchlist();
+    }
+    // Notifies once, with the names, entries and previews in place.
+    await loadAllListEntries();
   }
 
-  Future<void> importList(String name, List<String> entries) async {
-    await repository.createList(name);
-    await loadListNames();
-    for (final entry in entries) {
-      final parts = entry.split(':');
-      if (parts.length != 2) continue;
-      final id = int.tryParse(parts[0]);
-      final type = parts[1] == 'tv' ? MediaType.tv : MediaType.movie;
-      if (id != null) {
-        final shell = MediaItem(
-          id: id,
-          title: 'Unknown',
-          overview: '',
-          releaseDate: '',
-          mediaType: type,
-        );
-        await repository.addToList(shell, name);
-      }
-    }
-    await loadAllListEntries();
-    notifyListeners();
-  }
+  /// [importSharedEntries] from raw `id:type` entries.
+  Future<void> importList(String name, List<String> entries) =>
+      importSharedEntries(name, ListShareCodec.parseEntries(entries));
 
   List<String> getListEntriesCached(String listName) {
     return _listEntries[listName] ?? [];

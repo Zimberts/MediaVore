@@ -564,10 +564,19 @@ class SearchProvider
   Future<void> importSharedEntries(
     String name,
     List<SharedMediaEntry> entries,
-  ) => _libraryProvider.importSharedEntries(name, entries);
+  ) async {
+    await _libraryProvider.importSharedEntries(name, entries);
+    if (name == tonightListName) {
+      await _loadTonightListItems(notify: false);
+    }
+  }
 
-  Future<void> importList(String name, List<String> entries) =>
-      _libraryProvider.importList(name, entries);
+  Future<void> importList(String name, List<String> entries) async {
+    await _libraryProvider.importList(name, entries);
+    if (name == tonightListName) {
+      await _loadTonightListItems(notify: false);
+    }
+  }
 
   /// Maximum number of TMDB pages to fetch in a single search/filter batch.
   static const int maxSearchPagesBatch = 5;

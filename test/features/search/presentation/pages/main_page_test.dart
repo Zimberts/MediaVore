@@ -47,6 +47,8 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
+    registerFallbackValue(<MediaItem>[]);
+    registerFallbackValue(<(int, MediaType)>[]);
     registerFallbackValue(FakeMediaItem());
   });
 
@@ -98,6 +100,15 @@ void main() {
     ).thenAnswer((_) async => []);
     when(() => mockRepository.createList(any())).thenAnswer((_) async {});
     when(() => mockRepository.addToList(any(), any())).thenAnswer((_) async {});
+    when(
+      () => mockRepository.addAllToList(any(), any()),
+    ).thenAnswer((_) async {});
+    when(() => mockRepository.getCachedMediaItems(any())).thenAnswer(
+      (invocation) async => List<MediaItem?>.filled(
+        (invocation.positionalArguments[0] as List<(int, MediaType)>).length,
+        null,
+      ),
+    );
 
     searchProvider = SearchProvider(mockRepository);
     swipeSession = SwipeSessionProvider();
