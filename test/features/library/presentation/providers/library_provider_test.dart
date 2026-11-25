@@ -172,36 +172,99 @@ void main() {
       verify(() => mockRepository.deleteList('SciFi')).called(1);
     });
 
-    test('should import cached titles with their metadata when a shared list '
-        'is imported', () async {
-      await provider.init();
-      when(
-        () => mockRepository.getCachedMediaItems(any()),
-      ).thenAnswer((_) async => [tMovie, null]);
-      when(
-        () => mockRepository.addAllToList(any(), any()),
-      ).thenAnswer((_) async {});
+    group('importList', () {
+      const cachedMovie = MediaItem(
+        id: 101,
+        title: 'Inception',
+        overview: '',
+        releaseDate: '2010-07-16',
+        posterPath: '/inception.jpg',
+      );
+      late Map<String, List<String>> stored;
 
-      await provider.importList('Shared', ['101:movie', '7:tv']);
+      setUp(() {
+        stored = {
+          'watchlist': ['101:movie'],
+          'Favorites': [],
+        };
+        when(
+          () => mockRepository.getAllListNames(),
+        ).thenAnswer((_) async => stored.keys.toList());
+        when(() => mockRepository.getListEntries(any())).thenAnswer(
+          (invocation) async => [
+            ...?stored[invocation.positionalArguments.first as String],
+          ],
+        );
+        when(
+          () => mockRepository.getWatchlistEntries(),
+        ).thenAnswer((_) async => [...stored['watchlist']!]);
+        when(() => mockRepository.createList(any())).thenAnswer((
+          invocation,
+        ) async {
+          stored.putIfAbsent(
+            invocation.positionalArguments.first as String,
+            () => [],
+          );
+        });
+        when(() => mockRepository.addAllToList(any(), any())).thenAnswer((
+          invocation,
+        ) async {
+          final items = invocation.positionalArguments[0] as List<MediaItem>;
+          final name = invocation.positionalArguments[1] as String;
+          for (final item in items) {
+            final entry = '${item.id}:${item.mediaType.name}';
+            if (!stored[name]!.contains(entry)) stored[name]!.add(entry);
+          }
+        });
+        when(
+          () => mockRepository.getCachedMediaItems(any()),
+        ).thenAnswer((_) async => [cachedMovie, null]);
+      });
 
-      verify(
-        () => mockRepository.getCachedMediaItems([
-          (101, MediaType.movie),
-          (7, MediaType.tv),
-        ]),
-      ).called(1);
-      verify(() => mockRepository.createList('Shared')).called(1);
-      final added =
-          verify(
-                () => mockRepository.addAllToList(captureAny(), 'Shared'),
-              ).captured.single
-              as List<MediaItem>;
-      // The cached title keeps its title and poster; the unknown one is a
-      // placeholder.
-      expect(added.first, tMovie);
-      expect(added.last.id, 7);
-      expect(added.last.mediaType, MediaType.tv);
-      verifyNever(() => mockRepository.addToList(any(), any()));
+      test('should add cached titles with their metadata and unknown ones as '
+          'placeholders when a shared list is imported', () async {
+        await provider.init();
+        var notifications = 0;
+        provider.addListener(() => notifications++);
+
+        await provider.importList('Shared', ['101:movie', '7:TV']);
+
+        verify(
+          () => mockRepository.getCachedMediaItems([
+            (101, MediaType.movie),
+            (7, MediaType.tv),
+          ]),
+        ).called(1);
+        final added =
+            verify(
+                  () => mockRepository.addAllToList(captureAny(), 'Shared'),
+                ).captured.single
+                as List<MediaItem>;
+        // Re-adding the cached item rewrites the cache with itself: its
+        // title and poster survive.
+        expect(added.first, cachedMovie);
+        expect(added.last.id, 7);
+        expect(added.last.mediaType, MediaType.tv);
+        expect(added.last.title, 'Unknown');
+        verifyNever(() => mockRepository.addToList(any(), any()));
+        expect(provider.listNames, contains('Shared'));
+        expect(provider.getListEntriesCached('Shared'), ['101:movie', '7:tv']);
+        expect(notifications, 1);
+      });
+
+      test('should refresh the watchlist ids when a list is imported into '
+          'the watchlist', () async {
+        await provider.init();
+        expect(provider.watchlistIds, ['101']);
+
+        await provider.importList('watchlist', ['101:movie', '7:tv']);
+
+        expect(provider.watchlistIds, ['101', '7']);
+        expect(provider.getListEntriesCached('watchlist'), [
+          '101:movie',
+          '7:tv',
+        ]);
+      });
     });
   });
 }

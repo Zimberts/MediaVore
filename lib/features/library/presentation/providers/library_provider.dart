@@ -301,47 +301,43 @@ class LibraryProvider with ChangeNotifier implements ListPreviewSource {
     );
   }
 
+  /// Creates (or completes) the list [name] with [entries].
+  ///
+  /// Titles already known locally are added with their cached metadata: a
+  /// placeholder would overwrite their cached title and poster.
   Future<void> importSharedEntries(
     String name,
     List<SharedMediaEntry> entries,
   ) async {
-    final strList = entries.map((e) => '${e.id}:${e.type.name}').toList();
-    await importList(name, strList);
-  }
-
-  /// Creates (or completes) the list [name] with [entries] (`id:type`).
-  ///
-  /// Titles already known locally are added with their cached metadata: a
-  /// placeholder would overwrite their cached title and poster.
-  Future<void> importList(String name, List<String> entries) async {
-    final keys = <(int, MediaType)>[];
-    for (final entry in entries) {
-      final parts = entry.split(':');
-      if (parts.length != 2) continue;
-      final id = int.tryParse(parts[0]);
-      if (id == null) continue;
-      keys.add((id, parts[1] == 'tv' ? MediaType.tv : MediaType.movie));
-    }
-    final cached = keys.isEmpty
+    final cached = entries.isEmpty
         ? const <MediaItem?>[]
-        : await repository.getCachedMediaItems(keys);
+        : await repository.getCachedMediaItems([
+            for (final e in entries) (e.id, e.type),
+          ]);
     final items = [
-      for (var i = 0; i < keys.length; i++)
+      for (var i = 0; i < entries.length; i++)
         cached[i] ??
             MediaItem(
-              id: keys[i].$1,
+              id: entries[i].id,
               title: 'Unknown',
               overview: '',
               releaseDate: '',
-              mediaType: keys[i].$2,
+              mediaType: entries[i].type,
             ),
     ];
     await repository.createList(name);
-    await loadListNames();
     await repository.addAllToList(items, name);
+    _listNames = await repository.getAllListNames();
+    if (name == 'watchlist') {
+      await loadWatchlist();
+    }
+    // Notifies once, with the names, entries and previews in place.
     await loadAllListEntries();
-    notifyListeners();
   }
+
+  /// [importSharedEntries] from raw `id:type` entries.
+  Future<void> importList(String name, List<String> entries) =>
+      importSharedEntries(name, ListShareCodec.parseEntries(entries));
 
   List<String> getListEntriesCached(String listName) {
     return _listEntries[listName] ?? [];
