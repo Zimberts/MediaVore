@@ -109,5 +109,18 @@ void main() {
         ..sort();
       expect(queued, [20, 40]);
     });
+
+    test('should not queue again a streak excluded on the device when a '
+        'merged archive has no opt-out', () async {
+      await local.addOptOut(50, seasonNumber: 1, episodeNumber: 3);
+
+      await local.importAll(
+        mode: ImportMode.merge,
+        quickAdd: [_queued(50, 1, 3), _queued(60, 1, 1)],
+      );
+
+      final queued = [for (final q in await local.getQuickAddItems()) q.tmdbId];
+      expect(queued, [60]);
+    });
   });
 }

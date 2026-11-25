@@ -68,7 +68,7 @@ void main() {
     });
 
     test('should date an opt-out with the export when optedOutAt is '
-        'missing, and skip a row without a valid tmdbId', () {
+        'missing, and skip a row with an invalid id or episode', () {
       final parsed = ExportEnvelope.fromZipBytes(
         _zip({
           'meta.csv':
@@ -76,14 +76,18 @@ void main() {
           'optouts.csv':
               'tmdbId,seasonNumber,episodeNumber,optedOutAt\r\n'
               '300,1,2,\r\n'
-              'abc,1,2,2025-01-01T00:00:00.000Z\r\n',
+              'abc,1,2,2025-01-01T00:00:00.000Z\r\n'
+              '400,one,2,2025-01-01T00:00:00.000Z\r\n',
         }),
       );
 
       expect(parsed.optOuts, hasLength(1));
       expect(parsed.optOuts.single.tmdbId, 300);
       expect(parsed.optOuts.single.optedOutAt, DateTime.utc(2025, 6, 1, 10));
-      expect(parsed.warnings, ['optouts.csv row 3: invalid tmdbId "abc"']);
+      expect(parsed.warnings, [
+        'optouts.csv row 3: invalid tmdbId "abc"',
+        'optouts.csv row 4: invalid seasonNumber "one"',
+      ]);
     });
   });
 }

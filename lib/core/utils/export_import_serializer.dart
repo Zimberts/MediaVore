@@ -406,12 +406,15 @@ class ExportEnvelope {
     final optOuts = <QuickAddOptOutModel>[];
     for (final r in _RowReader.rowsOf('optouts.csv', tables, warnings)) {
       final id = r.tmdbId();
-      if (id == null) continue;
+      // An unreadable episode must not widen the opt-out to the whole series.
+      final season = r.strictInt('seasonNumber');
+      final episode = r.strictInt('episodeNumber');
+      if (id == null || season.invalid || episode.invalid) continue;
       optOuts.add(
         QuickAddOptOutModel(
           tmdbId: id,
-          seasonNumber: r.optInt('seasonNumber'),
-          episodeNumber: r.optInt('episodeNumber'),
+          seasonNumber: season.value,
+          episodeNumber: episode.value,
           optedOutAt: r.optDate('optedOutAt') ?? exportedAt,
         ),
       );
@@ -523,6 +526,15 @@ class _RowReader {
     if (v is int) return v;
     if (v is double && v == v.truncateToDouble()) return v.toInt();
     return v == null ? null : int.tryParse(v.toString().trim());
+  }
+
+  /// [optInt] that tells an empty cell (`value` null) from an unreadable one
+  /// (`invalid`, with a warning).
+  ({int? value, bool invalid}) strictInt(String column) {
+    final value = optInt(column);
+    final invalid = value == null && optText(column) != null;
+    if (invalid) warn('invalid $column "${raw(column)}"');
+    return (value: value, invalid: invalid);
   }
 
   DateTime? optDate(String column) {
