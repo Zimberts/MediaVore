@@ -1723,6 +1723,8 @@ class SearchProvider
       debugPrint('[SearchProvider] cache warm-up after import failed: $e');
     }
     await _reloadSavedTitles();
+    // "Because you..." was built from the previous likes and history.
+    await loadBecauseYouRecommendations(forceRefresh: true);
   }
 
   @override
