@@ -30,6 +30,9 @@ class MediaDetailSaga extends StatelessWidget {
     required this.onOpen,
   });
 
+  /// « n films vus sur m » counter.
+  static const Key sagaSeenCountKey = Key('media_detail_saga_seen_count');
+
   final MediaItem currentItem;
   final List<MediaItem>? collection;
   final ValueChanged<MediaItem> onOpen;
@@ -90,6 +93,7 @@ class MediaDetailSaga extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               l10n.sagaSeenCount(seenCount, totalCount),
+              key: sagaSeenCountKey,
               style: theme.textTheme.bodySmall?.copyWith(color: colors.text2),
             ),
           ],

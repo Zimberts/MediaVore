@@ -44,6 +44,9 @@ class _MainPageState extends State<MainPage> {
   bool _isProcessingQueue = false;
   OverlayEntry? _currentNotification;
 
+  /// Completes when the banner on screen goes away; the queue waits on it.
+  Completer<void>? _notificationDone;
+
   List<AppTab> get _tabs => widget.tabs ?? AppTab.visibleTabs;
 
   /// Provisional content of each tab; every epic then replaces its own.
@@ -83,7 +86,8 @@ class _MainPageState extends State<MainPage> {
   void dispose() {
     _linkSubscription?.cancel();
     _achievementSubscription?.cancel();
-    _currentNotification?.remove();
+    _achievementQueue.clear();
+    _closeNotification();
     super.dispose();
   }
 
@@ -114,33 +118,31 @@ class _MainPageState extends State<MainPage> {
   Future<void> _showTopNotification(Achievement achievement) async {
     if (!mounted) return;
 
-    final completer = Completer<void>();
+    final completer = _notificationDone = Completer<void>();
     final mainPageContext = context;
 
     _currentNotification = OverlayEntry(
       builder: (context) => _AchievementTopBanner(
+        key: ValueKey('achievement_banner_${achievement.id}'),
         achievement: achievement,
         mainPageContext: mainPageContext,
-        onDismiss: () {
-          _currentNotification?.remove();
-          _currentNotification = null;
-          if (!completer.isCompleted) completer.complete();
-        },
+        onDismiss: _closeNotification,
       ),
     );
 
     Overlay.of(context).insert(_currentNotification!);
 
-    // Auto-dismiss after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
-      if (_currentNotification != null && !completer.isCompleted) {
-        _currentNotification?.remove();
-        _currentNotification = null;
-        completer.complete();
-      }
-    });
-
     return completer.future;
+  }
+
+  /// Removes the banner on screen, if any, and releases the queue. Runs once
+  /// per banner whatever closes it first (its dismissal, page disposed).
+  void _closeNotification() {
+    _currentNotification?.remove();
+    _currentNotification = null;
+    final done = _notificationDone;
+    _notificationDone = null;
+    if (done != null && !done.isCompleted) done.complete();
   }
 
   void _initDeepLinks() async {
@@ -232,6 +234,7 @@ class _AchievementTopBanner extends StatefulWidget {
   final VoidCallback onDismiss;
 
   const _AchievementTopBanner({
+    super.key,
     required this.achievement,
     required this.mainPageContext,
     required this.onDismiss,
@@ -246,6 +249,12 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
 
+  /// Dismisses the banner after 4 s.
+  Timer? _autoDismiss;
+
+  /// Set by the first dismissal (tap, swipe, timer); later ones are ignored.
+  bool _dismissing = false;
+
   @override
   void initState() {
     super.initState();
@@ -259,16 +268,22 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     _controller.forward();
+    _autoDismiss = Timer(const Duration(seconds: 4), _handleDismiss);
   }
 
   @override
   void dispose() {
+    _autoDismiss?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  void _handleDismiss() async {
+  Future<void> _handleDismiss() async {
+    if (_dismissing) return;
+    _dismissing = true;
+    _autoDismiss?.cancel();
     await _controller.reverse();
+    if (!mounted) return;
     widget.onDismiss();
   }
 
@@ -319,15 +334,16 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
           color: Colors.transparent,
           child: GestureDetector(
             onTap: () {
+              if (_dismissing) return;
               AchievementsPage.showAchievement(
                 Navigator.of(context),
                 widget.achievement.id,
               );
-              _handleDismiss();
+              unawaited(_handleDismiss());
             },
             onVerticalDragUpdate: (details) {
               if (details.primaryDelta! < -10) {
-                _handleDismiss();
+                unawaited(_handleDismiss());
               }
             },
             child: Container(
@@ -378,7 +394,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                       size: 20,
                     ),
                     tooltip: context.l10n.commonClose,
-                    onPressed: _handleDismiss,
+                    onPressed: () => unawaited(_handleDismiss()),
                   ),
                 ],
               ),

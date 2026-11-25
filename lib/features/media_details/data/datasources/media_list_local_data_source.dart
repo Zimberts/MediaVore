@@ -240,6 +240,8 @@ class MediaListLocalDataSource {
             seenDate: item.seenDate,
             seasonNumber: item.seasonNumber,
             episodeNumber: item.episodeNumber,
+            runtime: item.runtime,
+            genres: item.genres,
           );
           updated.isarId = item.isarId;
           await _isar.seenItemModels.put(updated);

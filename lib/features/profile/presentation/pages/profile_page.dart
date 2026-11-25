@@ -108,6 +108,7 @@ class ProfilePage extends StatelessWidget {
             children: [
               Expanded(
                 child: _MetricTile(
+                  key: const Key('profile_metric_movies'),
                   icon: Icons.movie_outlined,
                   color: colors.primary,
                   value: '$movieCount',
@@ -117,6 +118,7 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _MetricTile(
+                  key: const Key('profile_metric_series'),
                   icon: Icons.tv_outlined,
                   color: colors.series,
                   value: '$tvCount',
@@ -287,6 +289,7 @@ class _MetricTile extends StatelessWidget {
   final String? subtitle;
 
   const _MetricTile({
+    super.key,
     required this.icon,
     required this.color,
     required this.value,

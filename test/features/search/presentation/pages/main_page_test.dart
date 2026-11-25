@@ -13,6 +13,7 @@ import 'package:mediavore/core/utils/list_share_codec.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
+import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
 import 'package:mediavore/features/home/presentation/pages/home_page.dart';
@@ -620,12 +621,35 @@ void main() {
         );
         expect(tester.takeException(), isNull);
 
-        // Auto-dismissed after 4 s.
+        // Auto-dismissed after 4 s, sliding out.
         await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 1));
         await tester.pump(const Duration(seconds: 1));
         expect(find.text('First steps'), findsNothing);
       });
     }
+
+    testWidgets('should open the achievement once when the banner is tapped '
+        'twice', (tester) async {
+      when(() => mockAchievementProvider.families).thenReturn([]);
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      achievements.add(achievement);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      await tester.tap(find.text('First steps'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('First steps'), warnIfMissed: false);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(AchievementsPage), findsOneWidget);
+      expect(find.text('Achievement Unlocked!'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('TMDB credential', () {

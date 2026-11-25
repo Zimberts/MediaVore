@@ -95,6 +95,15 @@ class SearchProvider
   bool _isDiscoverMode = false;
 
   List<SeenItem> _seenItems = [];
+
+  /// Viewings shown optimistically whose write is still running: a reload
+  /// of the stored history keeps them (see [loadAllSeenStatus]).
+  final List<SeenItem> _pendingSeen = [];
+
+  /// Identity of one viewing: title, episode and instant.
+  static String _seenEntryKey(SeenItem item) =>
+      '${item.tmdbId}:${item.type.name}:${item.seasonNumber}:'
+      '${item.episodeNumber}:${item.seenDate.millisecondsSinceEpoch}';
   Map<String, int> _seenCounts = {}; // "id:type" -> count
   List<QuickAddItem> _quickAddItems = [];
   List<InProgressItem> _inProgressItems = [];
@@ -294,7 +303,16 @@ class SearchProvider
   Future<void> loadLikedStatus() => _libraryProvider.loadLikedStatus();
 
   Future<void> loadAllSeenStatus() async {
-    _seenItems = await repository.getSeenItems();
+    final stored = await repository.getSeenItems();
+    // A pending viewing already stored (its write ended just before this
+    // read) is listed once, from the database.
+    final storedKeys = stored.map(_seenEntryKey).toSet();
+    _seenItems = [
+      ..._pendingSeen.reversed.where(
+        (item) => !storedKeys.contains(_seenEntryKey(item)),
+      ),
+      ...stored,
+    ];
     final Map<String, int> counts = {};
 
     final Map<String, List<SeenItem>> grouped = {};
@@ -1138,6 +1156,7 @@ class SearchProvider
     // Immediate optimistic update (< 100 ms) so the UI icon and counters flip
     // instantly without waiting for network or disk operations.
     _recordSeenItemInMemory(item);
+    _pendingSeen.add(item);
     notifyListeners();
 
     try {
@@ -1146,8 +1165,14 @@ class SearchProvider
       _revertSeenItemInMemory(item);
       notifyListeners();
       rethrow;
+    } finally {
+      _pendingSeen.removeWhere((pending) => identical(pending, item));
     }
 
+    // Swap the optimistic entry for the stored one: it carries the database
+    // id (needed to edit or delete the viewing) and the runtime and genres
+    // resolved from TMDB (statistics).
+    await loadAllSeenStatus();
     await _postMarkAsSeen(item);
   }
 
@@ -1270,6 +1295,7 @@ class SearchProvider
   Future<void> markManyAsSeen(List<SeenItem> items) async {
     if (items.isEmpty) return;
     _recordManySeenItemsInMemory(items);
+    _pendingSeen.addAll(items);
     notifyListeners();
 
     try {
@@ -1278,11 +1304,17 @@ class SearchProvider
       _revertManySeenItemsInMemory(items);
       notifyListeners();
       rethrow;
+    } finally {
+      _pendingSeen.removeWhere(
+        (pending) => items.any((item) => identical(item, pending)),
+      );
     }
 
+    // Stored entries replace the optimistic ones (see [markAsSeen]); the
+    // reload also refreshes Quick Add.
+    await loadAllSeenStatus();
     await loadNotifiedItems();
     await updateSeenDbSize();
-    await loadQuickAddItems();
   }
 
   /// Finds anterior unseen episodes for a series before [targetSeason] / [targetEpisode].

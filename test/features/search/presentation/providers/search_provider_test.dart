@@ -838,6 +838,9 @@ void main() {
         expect(provider.seenItems.any((s) => s.tmdbId == 555), isTrue);
         expect(notified, isTrue);
 
+        when(
+          () => mockRepository.getSeenItems(),
+        ).thenAnswer((_) async => [_stored(seenMovie, 1)]);
         completer.complete();
         await future;
 
@@ -900,12 +903,128 @@ void main() {
         expect(provider.getSeenCount(tvItem), 2);
         expect(provider.seenItems.where((s) => s.tmdbId == 888).length, 2);
 
+        when(() => mockRepository.getSeenItems()).thenAnswer(
+          (_) async => [
+            for (var i = 0; i < episodes.length; i++)
+              _stored(episodes[i], i + 1),
+          ],
+        );
         completer.complete();
         await future;
 
         expect(provider.getSeenCount(tvItem), 2);
       },
     );
+
+    test('should swap the optimistic entry for the stored one (id, runtime) '
+        'when markAsSeen completes', () async {
+      when(() => mockRepository.markAsSeen(any())).thenAnswer((_) async {});
+      final stored = _stored(seenMovie, 42, runtime: 110);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => [stored]);
+
+      await provider.markAsSeen(seenMovie);
+
+      final entries = provider.seenItems.where((s) => s.tmdbId == 555);
+      expect(entries, hasLength(1));
+      expect(entries.single.id, 42);
+      expect(entries.single.runtime, 110);
+      expect(provider.getSeenCount(movieItem), 1);
+    });
+
+    test('should keep a viewing still being stored when another one reloads '
+        'the history', () async {
+      const other = MediaItem(
+        id: 556,
+        title: 'Other Movie',
+        overview: '',
+        releaseDate: '',
+      );
+      final seenOther = SeenItem(
+        tmdbId: 556,
+        type: MediaType.movie,
+        title: 'Other Movie',
+        seenDate: DateTime(2026, 1, 2),
+      );
+      final slowWrite = Completer<void>();
+      when(() => mockRepository.markAsSeen(any())).thenAnswer(
+        (invocation) =>
+            (invocation.positionalArguments.single as SeenItem).tmdbId == 556
+            ? slowWrite.future
+            : Future.value(),
+      );
+      // Only the first viewing is stored when it reloads the history.
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => [_stored(seenMovie, 1)]);
+
+      final pending = provider.markAsSeen(seenOther);
+      await provider.markAsSeen(seenMovie);
+
+      expect(provider.getSeenCount(other), 1);
+      expect(provider.getSeenCount(movieItem), 1);
+
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => [_stored(seenMovie, 1), _stored(seenOther, 2)]);
+      slowWrite.complete();
+      await pending;
+
+      expect(provider.getSeenCount(other), 1);
+      expect(provider.seenItems.singleWhere((s) => s.tmdbId == 556).id, 2);
+    });
+
+    test('should list a viewing once when a reload reads it stored before '
+        'its own write returns', () async {
+      final slowWrite = Completer<void>();
+      when(
+        () => mockRepository.markAsSeen(any()),
+      ).thenAnswer((_) => slowWrite.future);
+      when(
+        () => mockRepository.getSeenItems(),
+      ).thenAnswer((_) async => [_stored(seenMovie, 1)]);
+
+      final pending = provider.markAsSeen(seenMovie);
+      // Another reload reads the row already written, the write not yet
+      // returned.
+      await provider.loadAllSeenStatus();
+
+      expect(provider.seenItems.where((s) => s.tmdbId == 555), hasLength(1));
+      expect(provider.getSeenCount(movieItem), 1);
+
+      slowWrite.complete();
+      await pending;
+      expect(provider.getSeenCount(movieItem), 1);
+    });
+
+    test('should swap the optimistic entries for the stored ones when '
+        'markManyAsSeen completes', () async {
+      when(() => mockRepository.markManyAsSeen(any())).thenAnswer((_) async {});
+      final batch = [
+        for (final episode in [1, 2])
+          SeenItem(
+            tmdbId: 888,
+            type: MediaType.tv,
+            title: 'TV Show',
+            seasonNumber: 1,
+            episodeNumber: episode,
+            seenDate: DateTime(2026, 1, 1, 20, episode),
+          ),
+      ];
+      when(() => mockRepository.getSeenItems()).thenAnswer(
+        (_) async => [
+          for (final item in batch)
+            _stored(item, item.episodeNumber!, runtime: 45),
+        ],
+      );
+
+      await provider.markManyAsSeen(batch);
+
+      final entries = provider.seenItems.where((s) => s.tmdbId == 888);
+      expect(entries.map((s) => s.id), unorderedEquals([1, 2]));
+      expect(entries.every((s) => s.runtime == 45), isTrue);
+    });
 
     test(
       'loadSeenStatusForItem returns in-memory items when DB is pending',
@@ -933,3 +1052,18 @@ void main() {
     );
   });
 }
+
+/// [item] as the database returns it once stored: with its [id] and the
+/// [runtime] resolved from TMDB.
+SeenItem _stored(SeenItem item, int id, {int? runtime}) => SeenItem(
+  id: id,
+  tmdbId: item.tmdbId,
+  type: item.type,
+  title: item.title,
+  posterPath: item.posterPath,
+  seenDate: item.seenDate,
+  seasonNumber: item.seasonNumber,
+  episodeNumber: item.episodeNumber,
+  runtime: runtime ?? item.runtime,
+  genres: item.genres,
+);
