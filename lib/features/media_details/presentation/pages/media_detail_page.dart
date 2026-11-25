@@ -84,7 +84,9 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   final Map<int, List<dynamic>> _episodesBySeason = {};
   final Map<int, bool> _loadingSeasons = {};
   List<SeenItem> _seenStatus = [];
-  bool _isOffline = false;
+
+  /// Why the last details load failed; null when it did not.
+  SearchErrorType? _loadError;
 
   // The seen counters are derived from [_seenStatus], a per-item snapshot.
   // Every seen-history mutation in [SearchProvider] (markAsSeen,
@@ -124,7 +126,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
     if (!mounted) return;
     setState(() {
       _isLoading = true;
-      _isOffline = false;
+      _loadError = null;
     });
 
     try {
@@ -137,7 +139,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
         setState(() {
           _mediaDetails = details;
           _isLoading = false;
-          _isOffline = false;
+          _loadError = null;
         });
 
         if (details.item.mediaType == MediaType.tv &&
@@ -165,10 +167,9 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _isOffline =
-              e.toString().contains('SocketException') ||
-              e.toString().contains('Network error') ||
-              e.toString().contains('connectionError');
+          // Any failure (offline, rejected key, rate limit, server) gets a
+          // message and a retry, not only a lost connection.
+          _loadError = classifySearchError(e);
         });
       }
     }
@@ -429,6 +430,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
   Widget build(BuildContext context) {
     final item = _mediaDetails?.item ?? widget.item;
     final details = _mediaDetails;
+    final loadError = _loadError;
     final l10n = context.l10n;
     final isTv = item.mediaType == MediaType.tv;
     final provider = context.watch<SearchProvider>();
@@ -463,18 +465,29 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                   MediaDetailHeader(
                     item: item,
                     seenStatus: _seenStatus,
-                    showDetails: !_isOffline,
+                    showDetails: loadError == null,
                     onMore: () => _showMoreMenu(item),
                   ),
-                  if (_isOffline) ...[
+                  if (loadError != null) ...[
                     gap,
-                    OfflineBanner(
-                      title: l10n.detailOfflineMode,
-                      message: l10n.detailOfflineMessage,
-                    ),
+                    if (loadError == SearchErrorType.offline)
+                      OfflineBanner(
+                        title: l10n.detailOfflineMode,
+                        message: l10n.detailOfflineMessage,
+                      )
+                    else
+                      OfflineBanner(
+                        icon: switch (loadError) {
+                          SearchErrorType.missingApiKey ||
+                          SearchErrorType.invalidApiKey => Icons.key_off,
+                          _ => Icons.cloud_off,
+                        },
+                        title: searchErrorMessage(loadError, l10n),
+                      ),
                     Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: TextButton.icon(
+                        key: const Key('detail_retry'),
                         onPressed: _fetchMediaDetails,
                         icon: const Icon(Icons.refresh),
                         label: Text(l10n.commonTryAgain),
@@ -508,7 +521,7 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                   else ...[
                     // A series shows its seasons before anything else.
                     ?seasons,
-                    if (!_isOffline) ...[
+                    if (loadError == null) ...[
                       if (item.genres != null && item.genres!.isNotEmpty) ...[
                         gap,
                         Wrap(

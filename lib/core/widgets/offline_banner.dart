@@ -3,9 +3,18 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 
 /// Banner telling that the app is offline, with what it means on the screen
-/// that shows it.
+/// that shows it. With another [icon] and [title], it reports another
+/// failure to reach TMDB the same way.
 class OfflineBanner extends StatelessWidget {
-  const OfflineBanner({super.key, this.title, this.message});
+  const OfflineBanner({
+    super.key,
+    this.title,
+    this.message,
+    this.icon = Icons.wifi_off,
+  });
+
+  /// Leading icon; the "no network" one by default.
+  final IconData icon;
 
   /// Bold lead; "Offline" by default.
   final String? title;
@@ -34,7 +43,7 @@ class OfflineBanner extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.wifi_off, size: 18, color: colors.text),
+            Icon(icon, size: 18, color: colors.text),
             const SizedBox(width: 10),
             Expanded(
               child: Text.rich(

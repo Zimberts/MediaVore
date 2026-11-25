@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/utils/json_maps.dart';
 import 'package:mediavore/core/utils/watch_tail.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
@@ -91,24 +92,52 @@ class NotificationRefreshService {
     ];
   }
 
+  /// Refreshes the notified titles one at a time. A failure on one title is
+  /// logged and skipped, except one that every other title would hit too: a
+  /// lost connection ([NetworkException]) or a rejected key (401/403). Such a
+  /// failure ends the pass at once, instead of retrying it for every title,
+  /// and a manual refresh ([force]) rethrows it so the caller can report it.
   Future<void> refreshNotifiedItems({bool force = false}) async {
     final notifiedItems = await localDataSource.getNotifiedItems();
-    final now = DateTime.now();
 
     // Refresh one series at a time (never all at once) so the device is not
     // overloaded; yield between items to keep the UI responsive.
     for (final notified in notifiedItems) {
       final type = notified.type == 'movie' ? MediaType.movie : MediaType.tv;
-      if (!force && !await _shouldRefreshNotification(notified, now)) continue;
-      await refreshNotificationForSeries(notified.tmdbId, type, force: force);
+      try {
+        await _refreshNotification(notified.tmdbId, type, force: force);
+      } catch (e) {
+        debugPrint('[Repo] refreshNotificationForSeries failed: $e');
+        if (_failsEveryTitle(e)) {
+          if (force) rethrow;
+          return;
+        }
+      }
       await Future<void>.delayed(Duration.zero);
     }
   }
+
+  static bool _failsEveryTitle(Object e) =>
+      e is NetworkException ||
+      (e is ServerException && (e.statusCode == 401 || e.statusCode == 403));
 
   Future<void> refreshNotificationForSeries(
     int tmdbId,
     MediaType type, {
     bool force = false,
+  }) async {
+    try {
+      await _refreshNotification(tmdbId, type, force: force);
+    } catch (e) {
+      debugPrint('[Repo] refreshNotificationForSeries failed: $e');
+    }
+  }
+
+  /// [refreshNotificationForSeries], failures included.
+  Future<void> _refreshNotification(
+    int tmdbId,
+    MediaType type, {
+    required bool force,
   }) async {
     final notified = await localDataSource.getNotifiedItem(tmdbId, type.name);
     if (notified == null) return;
@@ -116,28 +145,24 @@ class NotificationRefreshService {
     final now = DateTime.now();
     if (!force && !await _shouldRefreshNotification(notified, now)) return;
 
-    try {
-      final item = await remoteDataSource.getMediaItem(tmdbId, type: type);
-      await cache.cacheItem(item);
+    final item = await remoteDataSource.getMediaItem(tmdbId, type: type);
+    await cache.cacheItem(item);
 
-      // TV seasons are cached without expiry, so bypass them here (already
-      // throttled to once a day) to discover newly published episodes.
-      await refreshNotificationDate(
-        item,
-        forceRemoteSeasons: force || type == MediaType.tv,
-      );
+    // TV seasons are cached without expiry, so bypass them here (already
+    // throttled to once a day) to discover newly published episodes.
+    await refreshNotificationDate(
+      item,
+      forceRemoteSeasons: force || type == MediaType.tv,
+    );
 
-      // Keep Quick Add in sync in the same pass. populateFromSeenHistory is
-      // cache-first and reuses the seasons just fetched above, so returning
-      // series pick up newly aired episodes without any extra network work.
-      if (type == MediaType.tv) {
-        await quickAdd.populateFromSeenHistory(tmdbId: tmdbId);
-      }
-
-      await localDataSource.markNotifiedRefreshed(tmdbId, type.name, now);
-    } catch (e) {
-      debugPrint('[Repo] refreshNotificationForSeries failed: $e');
+    // Keep Quick Add in sync in the same pass. populateFromSeenHistory is
+    // cache-first and reuses the seasons just fetched above, so returning
+    // series pick up newly aired episodes without any extra network work.
+    if (type == MediaType.tv) {
+      await quickAdd.populateFromSeenHistory(tmdbId: tmdbId);
     }
+
+    await localDataSource.markNotifiedRefreshed(tmdbId, type.name, now);
   }
 
   /// Re-fetches a returning series (details, latest season) bypassing the

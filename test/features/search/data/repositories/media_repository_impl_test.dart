@@ -1447,6 +1447,86 @@ void main() {
         );
       },
     );
+
+    group('manual refresh offline (#471)', () {
+      setUp(() {
+        stubNotified();
+        final film = NotifiedItemModel(
+          tmdbId: 2,
+          type: 'movie',
+          title: 'Film',
+          releaseDate: DateTime(2024),
+        );
+        when(() => mockLocalDataSource.getNotifiedItems()).thenAnswer(
+          (_) async => [
+            NotifiedItemModel(
+              tmdbId: 1,
+              type: 'tv',
+              title: 'Show',
+              releaseDate: DateTime(2024),
+            ),
+            film,
+          ],
+        );
+        when(
+          () => mockLocalDataSource.getNotifiedItem(2, 'movie'),
+        ).thenAnswer((_) async => film);
+      });
+
+      void stubFailure(AppException error) => when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenThrow(error);
+
+      test(
+        'should stop at a lost connection and rethrow it when forced',
+        () async {
+          stubFailure(const NetworkException('Network error'));
+
+          await expectLater(
+            repository.refreshNotifiedItems(force: true),
+            throwsA(isA<NetworkException>()),
+          );
+          // Every title would fail the same way: the film is never tried.
+          verifyNever(() => mockRemoteDataSource.getMediaItem(2));
+        },
+      );
+
+      test(
+        'should stop at a rejected key and rethrow it when forced',
+        () async {
+          stubFailure(const ServerException('Unauthorized', 401));
+
+          await expectLater(
+            repository.refreshNotifiedItems(force: true),
+            throwsA(
+              isA<ServerException>().having((e) => e.statusCode, 'status', 401),
+            ),
+          );
+          verifyNever(() => mockRemoteDataSource.getMediaItem(2));
+        },
+      );
+
+      test('should stop silently when not forced', () async {
+        stubFailure(const NetworkException('Network error'));
+
+        await expectLater(repository.refreshNotifiedItems(), completes);
+        verifyNever(() => mockRemoteDataSource.getMediaItem(2));
+      });
+
+      test('should skip a title-specific failure and go on', () async {
+        stubFailure(const ServerException('Internal error', 500));
+        when(
+          () => mockRemoteDataSource.getMediaItem(2),
+        ).thenThrow(const ServerException('Internal error', 500));
+
+        await expectLater(
+          repository.refreshNotifiedItems(force: true),
+          completes,
+        );
+        // Tried by the startup warm-up and by the manual refresh.
+        verify(() => mockRemoteDataSource.getMediaItem(2)).called(2);
+      });
+    });
   });
 
   group('markAsSeen next Quick Add', () {

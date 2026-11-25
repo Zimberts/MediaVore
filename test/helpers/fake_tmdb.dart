@@ -79,6 +79,7 @@ class FakeTmdb implements HttpClientAdapter {
   final Map<String, Object> _overrides = {};
   FakeTmdbFailure? _failure;
   String? _failurePrefix;
+  int? _failuresLeft;
 
   /// Number of requests received.
   int get requestCount => requests.length;
@@ -92,16 +93,20 @@ class FakeTmdb implements HttpClientAdapter {
   void respond(String path, Object json) => _overrides[path] = json;
 
   /// Makes every request fail with [failure], or only those whose path
-  /// (after `/3/`) starts with [pathPrefix].
-  void fail(FakeTmdbFailure failure, {String? pathPrefix}) {
+  /// (after `/3/`) starts with [pathPrefix]; only the next [times] of them
+  /// when given, then [recover]s.
+  void fail(FakeTmdbFailure failure, {String? pathPrefix, int? times}) {
+    assert(times == null || times > 0);
     _failure = failure;
     _failurePrefix = pathPrefix;
+    _failuresLeft = times;
   }
 
   /// Stops the failure set by [fail].
   void recover() {
     _failure = null;
     _failurePrefix = null;
+    _failuresLeft = null;
   }
 
   @override
@@ -123,6 +128,9 @@ class FakeTmdb implements HttpClientAdapter {
       final failure = _failure;
       if (failure != null &&
           (_failurePrefix == null || path.startsWith(_failurePrefix!))) {
+        final left = _failuresLeft;
+        if (left != null && left <= 1) recover();
+        if (left != null && left > 1) _failuresLeft = left - 1;
         return _failWith(failure, options);
       }
       final segments = uri.pathSegments.skip(1).toList();

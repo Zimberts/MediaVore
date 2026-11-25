@@ -81,27 +81,34 @@ class _HomePageState extends State<HomePage> {
     final provider = context.read<SearchProvider>();
     if (_isRefreshing || provider.isNotifiedRefreshing) return;
     setState(() => _isRefreshing = true);
+    Object? failure;
     try {
       final hasTmdbKey = context.read<SettingsProvider>().tmdbApiKey.isNotEmpty;
       if (hasTmdbKey) {
-        await provider.refreshNotifiedItems(force: true);
+        try {
+          await provider.refreshNotifiedItems(force: true);
+        } catch (e) {
+          failure = e;
+        }
       }
+      // Local data is reloaded even when TMDB failed (#471); Quick Add's
+      // network pass is skipped then, it would fail the same way.
       await provider.reloadSavedTitles();
-      await provider.refreshQuickAddItems();
+      if (failure == null) await provider.refreshQuickAddItems();
     } catch (e) {
-      debugPrint('[HomePage] refresh failed: $e');
-      if (mounted) {
-        showAppMessage(
-          provider.isOffline
-              ? context.l10n.searchErrorOffline
-              : context.l10n.searchErrorUnknown,
-        );
-      }
+      failure ??= e;
     } finally {
       if (mounted) {
         setState(() => _isRefreshing = false);
       }
     }
+    if (failure == null) return;
+    debugPrint('[HomePage] refresh failed: $failure');
+    final type = classifySearchError(failure);
+    // The offline banner follows the last known network state.
+    if (type == SearchErrorType.offline) provider.notifyNetworkError();
+    if (!mounted) return;
+    showAppMessage(searchErrorMessage(type, context.l10n));
   }
 
   Future<void> _markSeen(InProgressItem item) async {
