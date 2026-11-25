@@ -477,9 +477,11 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                       )
                     else
                       OfflineBanner(
-                        icon: loadError == SearchErrorType.invalidApiKey
-                            ? Icons.key_off
-                            : Icons.cloud_off,
+                        icon: switch (loadError) {
+                          SearchErrorType.missingApiKey ||
+                          SearchErrorType.invalidApiKey => Icons.key_off,
+                          _ => Icons.cloud_off,
+                        },
                         title: searchErrorMessage(loadError, l10n),
                       ),
                     Align(

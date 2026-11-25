@@ -1473,54 +1473,58 @@ void main() {
         ).thenAnswer((_) async => film);
       });
 
+      void stubFailure(AppException error) => when(
+        () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
+      ).thenThrow(error);
+
       test(
-        'should rethrow a lost connection after trying every title when forced',
+        'should stop at a lost connection and rethrow it when forced',
         () async {
-          when(
-            () => mockRemoteDataSource.getMediaItem(
-              any(),
-              type: any(named: 'type'),
-            ),
-          ).thenThrow(const NetworkException('Network error'));
+          stubFailure(const NetworkException('Network error'));
 
           await expectLater(
             repository.refreshNotifiedItems(force: true),
             throwsA(isA<NetworkException>()),
           );
-          // The film is still tried after the series failed (the startup
-          // warm-up may have tried them once more).
-          verify(
-            () => mockRemoteDataSource.getMediaItem(1, type: MediaType.tv),
-          ).called(greaterThanOrEqualTo(1));
-          verify(
-            () => mockRemoteDataSource.getMediaItem(2),
-          ).called(greaterThanOrEqualTo(1));
+          // Every title would fail the same way: the film is never tried.
+          verifyNever(() => mockRemoteDataSource.getMediaItem(2));
         },
       );
 
-      test('should stay silent when not forced', () async {
-        when(
-          () => mockRemoteDataSource.getMediaItem(
-            any(),
-            type: any(named: 'type'),
-          ),
-        ).thenThrow(const NetworkException('Network error'));
+      test(
+        'should stop at a rejected key and rethrow it when forced',
+        () async {
+          stubFailure(const ServerException('Unauthorized', 401));
+
+          await expectLater(
+            repository.refreshNotifiedItems(force: true),
+            throwsA(
+              isA<ServerException>().having((e) => e.statusCode, 'status', 401),
+            ),
+          );
+          verifyNever(() => mockRemoteDataSource.getMediaItem(2));
+        },
+      );
+
+      test('should stop silently when not forced', () async {
+        stubFailure(const NetworkException('Network error'));
 
         await expectLater(repository.refreshNotifiedItems(), completes);
+        verifyNever(() => mockRemoteDataSource.getMediaItem(2));
       });
 
-      test('should stay silent on another failure even when forced', () async {
+      test('should skip a title-specific failure and go on', () async {
+        stubFailure(const ServerException('Internal error', 500));
         when(
-          () => mockRemoteDataSource.getMediaItem(
-            any(),
-            type: any(named: 'type'),
-          ),
-        ).thenThrow(const ServerException('Unauthorized', 401));
+          () => mockRemoteDataSource.getMediaItem(2),
+        ).thenThrow(const ServerException('Internal error', 500));
 
         await expectLater(
           repository.refreshNotifiedItems(force: true),
           completes,
         );
+        // Tried by the startup warm-up and by the manual refresh.
+        verify(() => mockRemoteDataSource.getMediaItem(2)).called(2);
       });
     });
   });

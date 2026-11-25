@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
+import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/offline_banner.dart';
@@ -296,11 +297,9 @@ void main() {
       await _settleRetries(tester, app);
 
       expect(app.tmdb.countFor('tv/$followedShowId'), greaterThan(before));
-      expect(
-        reported?.text,
-        'You\'re offline. Check your connection and try again.',
-      );
+      expect(reported?.text, fallbackLocalizations.searchErrorOffline);
       expect(tonight, findsOneWidget);
+      expect(find.byType(OfflineBanner), findsOneWidget);
       expect(tester.takeException(), isNull);
     }, seed: _library);
   });

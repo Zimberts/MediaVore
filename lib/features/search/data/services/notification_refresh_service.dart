@@ -92,32 +92,34 @@ class NotificationRefreshService {
     ];
   }
 
-  /// Refreshes the notified titles one at a time. Failures are logged and
-  /// skipped, except that a manual refresh ([force]) rethrows the first
-  /// [NetworkException] once every title was tried, so that the caller can
-  /// tell the user the network is unreachable.
+  /// Refreshes the notified titles one at a time. A failure on one title is
+  /// logged and skipped, except one that every other title would hit too: a
+  /// lost connection ([NetworkException]) or a rejected key (401/403). Such a
+  /// failure ends the pass at once, instead of retrying it for every title,
+  /// and a manual refresh ([force]) rethrows it so the caller can report it.
   Future<void> refreshNotifiedItems({bool force = false}) async {
     final notifiedItems = await localDataSource.getNotifiedItems();
-    final now = DateTime.now();
-    NetworkException? networkError;
 
     // Refresh one series at a time (never all at once) so the device is not
     // overloaded; yield between items to keep the UI responsive.
     for (final notified in notifiedItems) {
       final type = notified.type == 'movie' ? MediaType.movie : MediaType.tv;
-      if (!force && !await _shouldRefreshNotification(notified, now)) continue;
       try {
         await _refreshNotification(notified.tmdbId, type, force: force);
-      } on NetworkException catch (e) {
-        networkError ??= e;
-        debugPrint('[Repo] refreshNotificationForSeries failed: $e');
       } catch (e) {
         debugPrint('[Repo] refreshNotificationForSeries failed: $e');
+        if (_failsEveryTitle(e)) {
+          if (force) rethrow;
+          return;
+        }
       }
       await Future<void>.delayed(Duration.zero);
     }
-    if (force && networkError != null) throw networkError;
   }
+
+  static bool _failsEveryTitle(Object e) =>
+      e is NetworkException ||
+      (e is ServerException && (e.statusCode == 401 || e.statusCode == 403));
 
   Future<void> refreshNotificationForSeries(
     int tmdbId,
