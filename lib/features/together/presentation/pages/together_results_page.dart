@@ -268,15 +268,14 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Filter row
-                        Row(
-                          children: [
-                            FilterChip(
-                              key: const Key('together_hide_seen_chip'),
-                              selected: session.hideSeen,
-                              label: Text(l10n.togetherHideSeen),
-                              onSelected: session.setHideSeen,
-                            ),
-                          ],
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: FilterChip(
+                            key: const Key('together_hide_seen_chip'),
+                            selected: session.hideSeen,
+                            label: Text(l10n.togetherHideSeen),
+                            onSelected: session.setHideSeen,
+                          ),
                         ),
 
                         // If more than 6 common titles, announce limit for voting

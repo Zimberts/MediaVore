@@ -119,11 +119,13 @@ class MediaDetailWatchProviders extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        l10n.detailWatchJustWatchAttribution,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.text2,
-                          fontSize: 11,
+                      Flexible(
+                        child: Text(
+                          l10n.detailWatchJustWatchAttribution,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.text2,
+                            fontSize: 11,
+                          ),
                         ),
                       ),
                       if (link != null && link.isNotEmpty) ...[

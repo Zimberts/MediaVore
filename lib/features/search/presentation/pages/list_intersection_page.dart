@@ -239,7 +239,11 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -258,7 +262,6 @@ class _ListIntersectionPageState extends State<ListIntersectionPage> {
                   ),
                 ),
               ),
-              const Spacer(),
               if (intersection.seenCount > 0)
                 FilterChip(
                   key: const Key('hide_seen_toggle_chip'),

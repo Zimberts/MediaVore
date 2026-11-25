@@ -22,7 +22,11 @@ class SummaryMiniCard extends StatelessWidget {
           value,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
       ],
     );
   }

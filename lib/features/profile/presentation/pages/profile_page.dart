@@ -148,15 +148,16 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Achievements section header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Wraps the link under the title when both don't fit (narrow
+          // screen, large text) instead of truncating either.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Expanded(
-                child: Text(
-                  l10n.profileAchievements,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              Text(
+                l10n.profileAchievements,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               TextButton(
