@@ -105,13 +105,14 @@ SearchProvider _search(WidgetTester tester) =>
     _context(tester).read<SearchProvider>();
 
 Future<void> _seedExtras(WidgetTester tester, TestApp app) async {
-  await tester.runAsync(() async {
-    final repository = app.repository;
-    await repository.toggleLike(_movie(_rewatched));
-    await repository.toggleNotification(_show(_excluded));
-    await repository.populateQuickAddFromSeenHistory();
-    await repository.optOutSeries(_excluded, seasonNumber: 1, episodeNumber: 2);
-  });
+  final repository = app.repository;
+  await _settle(tester, repository.toggleLike(_movie(_rewatched)));
+  await _settle(tester, repository.toggleNotification(_show(_excluded)));
+  await _settle(tester, repository.populateQuickAddFromSeenHistory());
+  await _settle(
+    tester,
+    repository.optOutSeries(_excluded, seasonNumber: 1, episodeNumber: 2),
+  );
   // What a user action would have reloaded (it may fetch TMDB: fake time).
   await _settle(tester, _search(tester).reloadSavedTitles());
   await pumpUntilSettled(tester);
