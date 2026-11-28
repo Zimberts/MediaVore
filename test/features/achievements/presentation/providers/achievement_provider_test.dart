@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
@@ -7,6 +9,26 @@ import '../../../../helpers/mocks.dart';
 void main() {
   late MockAchievementRepository mockRepository;
   late AchievementProvider provider;
+  const batchWindow = Duration(milliseconds: 30);
+
+  Achievement unlocked(
+    String id, {
+    String? group,
+    int? tier,
+    bool isPersisted = false,
+    DateTime? unlockedAt,
+  }) => Achievement(
+    id: id,
+    title: id,
+    description: 'D',
+    iconPath: 'I',
+    group: group,
+    tier: tier,
+    isUnlocked: true,
+    isPersisted: isPersisted,
+    unlockedAt: unlockedAt ?? DateTime(2023),
+    progress: 1.0,
+  );
 
   setUp(() {
     mockRepository = MockAchievementRepository();
@@ -15,8 +37,15 @@ void main() {
       () => mockRepository.watchAchievements(),
     ).thenAnswer((_) => const Stream.empty());
     when(() => mockRepository.getAchievements()).thenAnswer((_) async => []);
+    when(
+      () => mockRepository.unlockAchievement(any(), any()),
+    ).thenAnswer((_) async {});
 
-    provider = AchievementProvider(mockRepository);
+    provider = AchievementProvider(mockRepository, batchWindow: batchWindow);
+  });
+
+  tearDown(() {
+    provider.dispose();
   });
 
   group('AchievementProvider', () {
@@ -133,12 +162,12 @@ void main() {
           () => mockRepository.unlockAchievement(any(), any()),
         ).thenAnswer((_) async {});
 
-        final notified = <String>[];
+        final notified = <List<String>>[];
         final sub = provider.onAchievementUnlocked.listen(
-          (a) => notified.add(a.id),
+          (batch) => notified.add(batch.map((a) => a.id).toList()),
         );
         await provider.refresh();
-        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(batchWindow * 2);
         await sub.cancel();
 
         verify(
@@ -151,22 +180,164 @@ void main() {
           () => mockRepository.unlockAchievement('tv_1', unlockedAt),
         ).called(1);
         verifyNever(() => mockRepository.unlockAchievement('tv_10', any()));
-        expect(notified, unorderedEquals(['movie_10', 'tv_1']));
+        expect(notified, hasLength(2));
+        expect(
+          notified.expand((e) => e),
+          unorderedEquals(['movie_10', 'tv_1']),
+        );
         expect(provider.families.map((f) => f.id), ['movies', 'episodes']);
       },
     );
 
     test(
-      'clearAchievements should reset notified set and call repository',
+      'should emit individual events when <= 3 achievement families unlock',
       () async {
+        when(() => mockRepository.getAchievements()).thenAnswer(
+          (_) async => [
+            unlocked('a1', group: 'g1', tier: 1),
+            unlocked('a2', group: 'g2', tier: 1),
+            unlocked('a3', group: 'g3', tier: 1),
+          ],
+        );
+
+        final batches = <List<String>>[];
+        final sub = provider.onAchievementUnlocked.listen(
+          (batch) => batches.add(batch.map((a) => a.id).toList()),
+        );
+        await provider.refresh();
+        await Future<void>.delayed(batchWindow * 2);
+        await sub.cancel();
+
+        expect(batches, [
+          ['a1'],
+          ['a2'],
+          ['a3'],
+        ]);
+      },
+    );
+
+    test(
+      'should emit one grouped event when > 3 achievement families unlock',
+      () async {
+        when(() => mockRepository.getAchievements()).thenAnswer(
+          (_) async => [
+            unlocked('a1', group: 'g1', tier: 1),
+            unlocked('a2', group: 'g2', tier: 1),
+            unlocked('a3', group: 'g3', tier: 1),
+            unlocked('a4', group: 'g4', tier: 1),
+          ],
+        );
+
+        final batches = <List<String>>[];
+        final sub = provider.onAchievementUnlocked.listen(
+          (batch) => batches.add(batch.map((a) => a.id).toList()),
+        );
+        await provider.refresh();
+        await Future<void>.delayed(batchWindow * 2);
+        await sub.cancel();
+
+        expect(batches, hasLength(1));
+        expect(batches.single, unorderedEquals(['a1', 'a2', 'a3', 'a4']));
+      },
+    );
+
+    test(
+      'should group unlocks spread across multiple watchAchievements emissions within the batch window',
+      () async {
+        final watchController = StreamController<List<Achievement>>();
+        when(
+          () => mockRepository.watchAchievements(),
+        ).thenAnswer((_) => watchController.stream);
+
+        final watchedProvider = AchievementProvider(
+          mockRepository,
+          batchWindow: const Duration(milliseconds: 50),
+        );
+        final batches = <List<String>>[];
+        final sub = watchedProvider.onAchievementUnlocked.listen(
+          (batch) => batches.add(batch.map((a) => a.id).toList()),
+        );
+
+        watchController.add([
+          unlocked('a1', group: 'g1', tier: 1),
+          unlocked('a2', group: 'g2', tier: 1),
+        ]);
+        await Future<void>.delayed(const Duration(milliseconds: 15));
+        watchController.add([
+          unlocked('a1', group: 'g1', tier: 1),
+          unlocked('a2', group: 'g2', tier: 1),
+          unlocked('a3', group: 'g3', tier: 1),
+          unlocked('a4', group: 'g4', tier: 1),
+        ]);
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await sub.cancel();
+        await watchController.close();
+        watchedProvider.dispose();
+
+        expect(batches, hasLength(1));
+        expect(batches.single, unorderedEquals(['a1', 'a2', 'a3', 'a4']));
+      },
+    );
+
+    test(
+      'should collapse same-family tiers across multiple watchAchievements emissions within the batch window',
+      () async {
+        final watchController = StreamController<List<Achievement>>();
+        when(
+          () => mockRepository.watchAchievements(),
+        ).thenAnswer((_) => watchController.stream);
+
+        final watchedProvider = AchievementProvider(
+          mockRepository,
+          batchWindow: const Duration(milliseconds: 50),
+        );
+        final batches = <List<String>>[];
+        final sub = watchedProvider.onAchievementUnlocked.listen(
+          (batch) => batches.add(batch.map((a) => a.id).toList()),
+        );
+
+        watchController.add([unlocked('movie_1', group: 'movies', tier: 1)]);
+        await Future<void>.delayed(const Duration(milliseconds: 15));
+        watchController.add([
+          unlocked('movie_1', group: 'movies', tier: 1),
+          unlocked('movie_10', group: 'movies', tier: 2),
+        ]);
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await sub.cancel();
+        await watchController.close();
+        watchedProvider.dispose();
+
+        expect(batches, [
+          ['movie_10'],
+        ]);
+      },
+    );
+
+    test(
+      'clearAchievements should reset notified set, cancel pending batch, and call repository',
+      () async {
+        when(
+          () => mockRepository.getAchievements(),
+        ).thenAnswer((_) async => [unlocked('a1')]);
         when(() => mockRepository.clearAchievements()).thenAnswer((_) async {});
+
+        final batches = <List<String>>[];
+        final sub = provider.onAchievementUnlocked.listen(
+          (batch) => batches.add(batch.map((a) => a.id).toList()),
+        );
+
+        await provider.refresh();
         when(
           () => mockRepository.getAchievements(),
         ).thenAnswer((_) async => []);
-
         await provider.clearAchievements();
+        await Future<void>.delayed(batchWindow * 2);
+        await sub.cancel();
 
         verify(() => mockRepository.clearAchievements()).called(1);
+        expect(batches, isEmpty);
       },
     );
   });

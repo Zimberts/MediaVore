@@ -68,6 +68,19 @@ void main() {
       expect(find.text('Achievement 0'), findsOneWidget);
     });
 
+    testWidgets(
+      'should push the page without focusing a specific item when id is null',
+      (tester) async {
+        await pumpApp(tester);
+
+        AchievementsPage.showAchievement(nav());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AchievementsPage), findsOneWidget);
+        expect(find.text('Achievement 0'), findsOneWidget);
+      },
+    );
+
     testWidgets('should scroll the open page instead of pushing a second one', (
       tester,
     ) async {

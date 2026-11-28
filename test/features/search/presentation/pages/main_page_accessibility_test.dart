@@ -106,7 +106,7 @@ void main() {
     when(() => mockAchievementProvider.achievements).thenReturn([]);
     when(
       () => mockAchievementProvider.onAchievementUnlocked,
-    ).thenAnswer((_) => const Stream<Achievement>.empty());
+    ).thenAnswer((_) => const Stream<List<Achievement>>.empty());
 
     searchProvider = SearchProvider(mockRepository);
     settingsProvider = SettingsProvider(

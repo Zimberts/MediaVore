@@ -40,7 +40,7 @@ class _MainPageState extends State<MainPage> {
   StreamSubscription<void>? _achievementSubscription;
 
   // Achievement queue logic
-  final Queue<Achievement> _achievementQueue = Queue<Achievement>();
+  final Queue<List<Achievement>> _achievementQueue = Queue<List<Achievement>>();
   bool _isProcessingQueue = false;
   OverlayEntry? _currentNotification;
 
@@ -91,8 +91,18 @@ class _MainPageState extends State<MainPage> {
     super.dispose();
   }
 
-  void _queueAchievementNotification(Achievement achievement) {
-    _achievementQueue.add(achievement);
+  void _queueAchievementNotification(List<Achievement> batch) {
+    if (batch.isEmpty) return;
+    final pending = _achievementQueue.expand((e) => e).toList()..addAll(batch);
+    if (pending.length > AchievementProvider.groupThreshold) {
+      _achievementQueue
+        ..clear()
+        ..add(pending);
+    } else {
+      for (final achievement in batch) {
+        _achievementQueue.add([achievement]);
+      }
+    }
     if (!_isProcessingQueue) {
       _processAchievementQueue();
     }
@@ -105,9 +115,9 @@ class _MainPageState extends State<MainPage> {
     }
 
     _isProcessingQueue = true;
-    final achievement = _achievementQueue.removeFirst();
+    final batch = _achievementQueue.removeFirst();
 
-    await _showTopNotification(achievement);
+    await _showTopNotification(batch);
 
     if (mounted) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -115,16 +125,19 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  Future<void> _showTopNotification(Achievement achievement) async {
-    if (!mounted) return;
+  Future<void> _showTopNotification(List<Achievement> batch) async {
+    if (!mounted || batch.isEmpty) return;
 
     final completer = _notificationDone = Completer<void>();
     final mainPageContext = context;
+    final key = batch.length > 1
+        ? const ValueKey('achievement_banner_grouped')
+        : ValueKey('achievement_banner_${batch.single.id}');
 
     _currentNotification = OverlayEntry(
       builder: (context) => _AchievementTopBanner(
-        key: ValueKey('achievement_banner_${achievement.id}'),
-        achievement: achievement,
+        key: key,
+        achievements: batch,
         mainPageContext: mainPageContext,
         onDismiss: _closeNotification,
       ),
@@ -229,13 +242,13 @@ class _MainPageState extends State<MainPage> {
 }
 
 class _AchievementTopBanner extends StatefulWidget {
-  final Achievement achievement;
+  final List<Achievement> achievements;
   final BuildContext mainPageContext;
   final VoidCallback onDismiss;
 
   const _AchievementTopBanner({
     super.key,
-    required this.achievement,
+    required this.achievements,
     required this.mainPageContext,
     required this.onDismiss,
   });
@@ -287,6 +300,8 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
     widget.onDismiss();
   }
 
+  bool get _isGrouped => widget.achievements.length > 1;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -337,7 +352,7 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
               if (_dismissing) return;
               AchievementsPage.showAchievement(
                 Navigator.of(context),
-                widget.achievement.id,
+                _isGrouped ? null : widget.achievements.single.id,
               );
               unawaited(_handleDismiss());
             },
@@ -369,9 +384,13 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.achievement.tier != null
+                          _isGrouped
+                              ? context.l10n.achievementsGroupedUnlockedTitle(
+                                  widget.achievements.length,
+                                )
+                              : widget.achievements.single.tier != null
                               ? context.l10n.achievementLevelUnlocked(
-                                  widget.achievement.tier!,
+                                  widget.achievements.single.tier!,
                                 )
                               : context.l10n.achievementUnlocked,
                           style: TextStyle(
@@ -381,7 +400,11 @@ class _AchievementTopBannerState extends State<_AchievementTopBanner>
                           ),
                         ),
                         Text(
-                          widget.achievement.titleFor(context.l10n.localeName),
+                          _isGrouped
+                              ? context.l10n.achievementsGroupedUnlockedSubtitle
+                              : widget.achievements.single.titleFor(
+                                  context.l10n.localeName,
+                                ),
                           style: TextStyle(color: onToast, fontSize: 16),
                         ),
                       ],

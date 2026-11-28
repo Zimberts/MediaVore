@@ -348,6 +348,8 @@
   "achievementsNextLevel": "Suivant : {title} · {progress}",
   "achievementsAllLevelsCompleted": "Tous les niveaux terminés",
   "achievementLevelUnlocked": "Niveau {level} débloqué !",
+  "achievementsGroupedUnlockedTitle": "{count, plural, =1{1 succès débloqué !} other{Vous avez débloqué {count} succès !}}",
+  "achievementsGroupedUnlockedSubtitle": "Appuyez pour les voir.",
   "progressImportingAll": "Import de toutes les données...",
   "progressDone": "Terminé !",
   "progressError": "Erreur : {error}",

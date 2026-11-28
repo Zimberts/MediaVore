@@ -7,7 +7,16 @@ import 'package:mediavore/features/achievements/domain/repositories/achievement_
 
 @lazySingleton
 class AchievementProvider with ChangeNotifier {
+  /// Maximum number of achievement families announced individually before
+  /// collapsing into a single grouped notification.
+  static const int groupThreshold = 3;
+
+  /// Debounce window used to collect unlocks across rapid DB emissions (e.g.
+  /// multi-transaction imports) into a single batch.
+  static const Duration defaultBatchWindow = Duration(milliseconds: 500);
+
   final AchievementRepository _repository;
+  final Duration _batchWindow;
   List<Achievement> _achievements = [];
   List<AchievementFamily> _families = [];
   StreamSubscription<void>? _subscription;
@@ -15,11 +24,17 @@ class AchievementProvider with ChangeNotifier {
   // Track IDs we've already sent a notification for in this session
   // to avoid redundant triggers while persistence is in progress.
   final Set<String> _notifiedIds = {};
+  final Map<String, Achievement> _pendingBatch = {};
+  Timer? _batchTimer;
 
-  final _unlockController = StreamController<Achievement>.broadcast();
-  Stream<Achievement> get onAchievementUnlocked => _unlockController.stream;
+  final _unlockController = StreamController<List<Achievement>>.broadcast();
+  Stream<List<Achievement>> get onAchievementUnlocked =>
+      _unlockController.stream;
 
-  AchievementProvider(this._repository) {
+  AchievementProvider(
+    this._repository, {
+    @ignoreParam Duration batchWindow = defaultBatchWindow,
+  }) : _batchWindow = batchWindow {
     _init();
   }
 
@@ -56,6 +71,9 @@ class AchievementProvider with ChangeNotifier {
   }
 
   Future<void> clearAchievements() async {
+    _batchTimer?.cancel();
+    _batchTimer = null;
+    _pendingBatch.clear();
     _notifiedIds.clear();
     await _repository.clearAchievements();
     await refresh();
@@ -65,7 +83,7 @@ class AchievementProvider with ChangeNotifier {
     // Newly unlocked tiers of the same family are all persisted, but only the
     // highest one is announced, so reaching several levels at once (or new
     // lower tiers added by an update) produces a single notification.
-    final toAnnounce = <String, Achievement>{};
+    var added = false;
     for (final achievement in _achievements) {
       // If it's unlocked in history but not yet persisted in DB
       if (achievement.isUnlocked &&
@@ -78,11 +96,12 @@ class AchievementProvider with ChangeNotifier {
             achievement.unlockedAt!,
           );
           final key = achievement.group ?? achievement.id;
-          final previous = toAnnounce[key];
+          final previous = _pendingBatch[key];
           if (previous == null ||
               (achievement.tier ?? 0) > (previous.tier ?? 0)) {
-            toAnnounce[key] = achievement;
+            _pendingBatch[key] = achievement;
           }
+          added = true;
         }
       } else if (achievement.isPersisted) {
         // Once it is confirmed persisted, we can keep it in notified set
@@ -90,11 +109,34 @@ class AchievementProvider with ChangeNotifier {
         _notifiedIds.add(achievement.id);
       }
     }
-    toAnnounce.values.forEach(_unlockController.add);
+    if (added) {
+      _batchTimer?.cancel();
+      if (_batchWindow == Duration.zero) {
+        _flushBatch();
+      } else {
+        _batchTimer = Timer(_batchWindow, _flushBatch);
+      }
+    }
+  }
+
+  void _flushBatch() {
+    _batchTimer?.cancel();
+    _batchTimer = null;
+    if (_pendingBatch.isEmpty || _unlockController.isClosed) return;
+    final batch = _pendingBatch.values.toList();
+    _pendingBatch.clear();
+    if (batch.length > groupThreshold) {
+      _unlockController.add(batch);
+    } else {
+      for (final achievement in batch) {
+        _unlockController.add([achievement]);
+      }
+    }
   }
 
   @override
   void dispose() {
+    _batchTimer?.cancel();
     _subscription?.cancel();
     _unlockController.close();
     super.dispose();
