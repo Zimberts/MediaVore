@@ -13,6 +13,7 @@ category:
 - `quickadd.csv` — quick-add entries (next unseen episodes).
 - `lists.csv` — user lists (watchlist and named lists).
 - `optouts.csv` — series streaks excluded from quick add.
+- `manualmedia.csv` — manually added media items (negative local IDs).
 
 > The `.mdv` extension is the app's own naming for this archive. The import
 > dialog also accepts `.zip` files with identical contents as a convenience.
@@ -27,7 +28,8 @@ export.mdv
 ├── notifications.csv
 ├── quickadd.csv
 ├── lists.csv
-└── optouts.csv
+├── optouts.csv
+└── manualmedia.csv
 ```
 
 ## CSV files rules
@@ -66,7 +68,7 @@ Columns: `version`, `exportedAt`, `source`
 
 Columns: `tmdbId`, `type`, `title`, `posterPath`, `seenDate`, `seasonNumber`, `episodeNumber`, `runtime`, `genres`
 
-- `tmdbId` — int (TMDB id).
+- `tmdbId` — int (TMDB id, or negative local id for manual media).
 - `type` — `movie` | `tv`.
 - `title` — string.
 - `posterPath` — nullable string.
@@ -128,6 +130,26 @@ Columns: `tmdbId`, `seasonNumber`, `episodeNumber`, `optedOutAt`
 
 Added without a version bump: older apps skip the unknown entry, and archives
 without it import no opt-out.
+
+### `manualmedia.csv`
+
+Columns: `localId`, `kind`, `title`, `originalTitle`, `overview`, `releaseDate`, `runtime`, `seasons`, `posterPath`, `genres`, `originCountries`, `sourceUrl`, `sourceProvider`, `createdAt`, `updatedAt`
+
+- `localId` — negative integer (`< 0`). On append/merge import, colliding IDs
+  are reassigned to unused negative IDs and all references in `seen.csv`,
+  `likes.csv`, `lists.csv`, `quickadd.csv`, `notifications.csv`, and
+  `optouts.csv` are updated accordingly.
+- `kind` — `movie` | `tv` | `video` | `videoSeries`.
+- `title` — string.
+- `originalTitle`, `overview`, `releaseDate`, `sourceUrl`, `sourceProvider` — nullable strings.
+- `runtime` — nullable int, minutes.
+- `seasons` — nullable pipe-separated list of positive episode counts per season.
+- `posterPath` — nullable HTTP(S) URL (local device file paths are omitted on export).
+- `genres`, `originCountries` — nullable pipe-separated lists of strings.
+- `createdAt`, `updatedAt` — ISO8601 strings.
+
+Added without a version bump: older apps skip the unknown entry, and archives
+without it import no manual media.
 
 ## Validation
 

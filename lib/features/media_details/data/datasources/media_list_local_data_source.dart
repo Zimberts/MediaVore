@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/manual_media_model.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
@@ -909,8 +910,22 @@ class MediaListLocalDataSource {
     List<QuickAddItemModel> quickAdd = const [],
     Map<String, List<MediaListItem>> lists = const {},
     List<QuickAddOptOutModel> optOuts = const [],
+    List<ManualMediaModel> manualMedia = const [],
   }) async {
     await _isar.writeTxn(() async {
+      if (manualMedia.isNotEmpty) {
+        await _importItemsInTxn(
+          _isar.manualMediaModels,
+          manualMedia,
+          mode: mode,
+          writeStatus: 'Importing manual media...',
+          exists: (m) => _isar.manualMediaModels
+              .where()
+              .localIdEqualTo(m.localId)
+              .findFirst()
+              .then((e) => e != null),
+        );
+      }
       if (seen.isNotEmpty) await _importSeenInTxn(seen, mode);
       if (likes.isNotEmpty) await _importLikedInTxn(likes, mode, null);
       if (notifications.isNotEmpty) {
@@ -922,6 +937,39 @@ class MediaListLocalDataSource {
       if (quickAdd.isNotEmpty || optOuts.isNotEmpty) {
         await _dropOptedOutQuickAddInTxn();
       }
+    });
+  }
+
+  /// Removes all user references (seen history, lists, likes, notifications,
+  /// quick add, opt-outs) for a single `(id, type)` media item.
+  Future<void> deleteAllReferencesForMedia(int id, String type) async {
+    await _isar.writeTxn(() async {
+      await _isar.seenItemModels
+          .filter()
+          .tmdbIdEqualTo(id)
+          .typeEqualTo(type)
+          .deleteAll();
+      await _isar.mediaListItems
+          .filter()
+          .idEqualTo(id)
+          .typeEqualTo(type)
+          .deleteAll();
+      await _isar.likedItems
+          .filter()
+          .tmdbIdEqualTo(id)
+          .typeEqualTo(type)
+          .deleteAll();
+      await _isar.notifiedItemModels
+          .filter()
+          .tmdbIdEqualTo(id)
+          .typeEqualTo(type)
+          .deleteAll();
+      await _isar.quickAddItemModels
+          .filter()
+          .tmdbIdEqualTo(id)
+          .typeEqualTo(type)
+          .deleteAll();
+      await _isar.quickAddOptOutModels.filter().tmdbIdEqualTo(id).deleteAll();
     });
   }
 

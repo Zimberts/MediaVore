@@ -65,11 +65,18 @@ class QuickAddService {
       MediaItem? detailsItem = await cache.getItem(item.tmdbId, MediaType.tv);
       if (detailsItem == null) {
         try {
-          detailsItem = await remoteDataSource.getMediaItem(
-            item.tmdbId,
-            type: MediaType.tv,
-          );
-          await cache.cacheItem(detailsItem);
+          if (item.tmdbId < 0) {
+            detailsItem = (await details.getMediaDetails(
+              item.tmdbId,
+              type: MediaType.tv,
+            )).item;
+          } else {
+            detailsItem = await remoteDataSource.getMediaItem(
+              item.tmdbId,
+              type: MediaType.tv,
+            );
+            await cache.cacheItem(detailsItem);
+          }
         } catch (_) {
           return;
         }
@@ -276,13 +283,20 @@ class QuickAddService {
         if (seen.isEmpty) continue;
 
         MediaItem? resolved = await cache.getItem(tmdbId, MediaType.tv);
-        if (resolved?.seasons == null && allowFetch) {
+        if (resolved?.seasons == null && (allowFetch || tmdbId < 0)) {
           try {
-            resolved = await remoteDataSource.getMediaItem(
-              tmdbId,
-              type: MediaType.tv,
-            );
-            await cache.cacheItem(resolved);
+            if (tmdbId < 0) {
+              resolved = (await details.getMediaDetails(
+                tmdbId,
+                type: MediaType.tv,
+              )).item;
+            } else {
+              resolved = await remoteDataSource.getMediaItem(
+                tmdbId,
+                type: MediaType.tv,
+              );
+              await cache.cacheItem(resolved);
+            }
           } catch (e) {
             debugPrint('[Repo] getQuickAddOmissions item resolve failed: $e');
           }
@@ -605,11 +619,18 @@ class QuickAddService {
         MediaItem? detailsItem = await cache.getItem(tmdbId, MediaType.tv);
         if (detailsItem == null) {
           try {
-            detailsItem = await remoteDataSource.getMediaItem(
-              tmdbId,
-              type: MediaType.tv,
-            );
-            await cache.cacheItem(detailsItem);
+            if (tmdbId < 0) {
+              detailsItem = (await details.getMediaDetails(
+                tmdbId,
+                type: MediaType.tv,
+              )).item;
+            } else {
+              detailsItem = await remoteDataSource.getMediaItem(
+                tmdbId,
+                type: MediaType.tv,
+              );
+              await cache.cacheItem(detailsItem);
+            }
           } catch (_) {
             detailsItem = null;
           }

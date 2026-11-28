@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/features/media_details/data/datasources/manual_media_local_data_source.dart';
 
 /// Airing state of a series, as needed by the collection achievements.
 class ShowInfo {
@@ -93,11 +94,16 @@ class TitleInfo {
       originalLanguage != null;
 }
 
-/// TMDB data the history alone cannot provide (season sizes, sagas, title
-/// metadata, air dates).
+/// TMDB and manual-media data the history alone cannot provide (season sizes,
+/// sagas, title metadata, air dates).
 ///
 /// Only local data is read: achievements never trigger network calls, so a
 /// title missing from the cache simply does not count yet.
+///
+/// For manual media (`id < 0`), counts, runtime, genres (from `SeenItemModel`),
+/// seasons/episodes, release date, and origin countries (when populated) are
+/// counted; TMDB-only fields (`voteAverage`, `voteCount`, `originalLanguage`,
+/// `collectionId`, `episodeAirDates`) remain null and are safely skipped.
 abstract class AchievementMediaSource {
   /// Known series among [tvIds].
   Future<Map<int, ShowInfo>> shows(Set<int> tvIds);
@@ -126,6 +132,7 @@ class SagaPart {
 @LazySingleton(as: AchievementMediaSource)
 class CachedAchievementMediaSource implements AchievementMediaSource {
   final MediaCache _cache;
+  final ManualMediaLocalDataSource? _manualMedia;
 
   /// Saga membership never changes; decoded once per session per movie.
   final Map<int, List<SagaPart>> _sagaMemo = {};
@@ -134,13 +141,24 @@ class CachedAchievementMediaSource implements AchievementMediaSource {
   /// the sticky unlocks make a stale value harmless.
   final Map<(int, String), TitleInfo> _titleMemo = {};
 
-  CachedAchievementMediaSource(this._cache);
+  CachedAchievementMediaSource(this._cache, [this._manualMedia]);
 
   @override
   Future<Map<int, ShowInfo>> shows(Set<int> tvIds) async {
-    final keys = [for (final id in tvIds) (id, MediaType.tv)];
-    final items = await _cache.getItems(keys);
     final result = <int, ShowInfo>{};
+    final tmdbIds = <int>[];
+    for (final id in tvIds) {
+      if (id < 0) {
+        final manual = await _manualMedia?.getByLocalId(id);
+        final item = manual?.toMediaItem();
+        if (item?.seasons != null) result[id] = ShowInfo.fromItem(item!);
+      } else {
+        tmdbIds.add(id);
+      }
+    }
+    if (tmdbIds.isEmpty) return result;
+    final keys = [for (final id in tmdbIds) (id, MediaType.tv)];
+    final items = await _cache.getItems(keys);
     for (var i = 0; i < keys.length; i++) {
       var item = items[i];
       // A list row (search, discover) has no seasons: use the details.
@@ -159,22 +177,37 @@ class CachedAchievementMediaSource implements AchievementMediaSource {
         if (!_titleMemo.containsKey(k)) k,
     ];
     if (missing.isEmpty) return {for (final k in keys) k: _titleMemo[k]!};
-    final items = await _cache.getItems([
-      for (final (id, type) in missing) (id, _mediaType(type)),
-    ]);
+    final tmdbMissing = <(int, String)>[];
     final partial = <(int, String), TitleInfo>{};
-    for (var i = 0; i < missing.length; i++) {
-      var info = items[i] == null ? null : TitleInfo.fromItem(items[i]!);
-      // A list row (discover movies) lacks the countries: use the details.
-      if (info == null || !info.isComplete) {
-        final (id, type) = missing[i];
-        final details = (await _cache.getDetails(id, _mediaType(type)))?.item;
-        if (details != null) info = TitleInfo.fromItem(details);
+    for (final k in missing) {
+      if (k.$1 < 0) {
+        final manual = await _manualMedia?.getByLocalId(k.$1);
+        if (manual != null) {
+          partial[k] = TitleInfo.fromItem(manual.toMediaItem());
+        }
+      } else {
+        tmdbMissing.add(k);
       }
-      if (info == null) continue;
-      partial[missing[i]] = info;
+    }
+    if (tmdbMissing.isNotEmpty) {
+      final items = await _cache.getItems([
+        for (final (id, type) in tmdbMissing) (id, _mediaType(type)),
+      ]);
+      for (var i = 0; i < tmdbMissing.length; i++) {
+        var info = items[i] == null ? null : TitleInfo.fromItem(items[i]!);
+        // A list row (discover movies) lacks the countries: use the details.
+        if (info == null || !info.isComplete) {
+          final (id, type) = tmdbMissing[i];
+          final details = (await _cache.getDetails(id, _mediaType(type)))?.item;
+          if (details != null) info = TitleInfo.fromItem(details);
+        }
+        if (info == null) continue;
+        partial[tmdbMissing[i]] = info;
+      }
+    }
+    for (final e in partial.entries) {
       // Incomplete entries are re-read: a later refresh may fill them.
-      if (info.isComplete) _titleMemo[missing[i]] = info;
+      if (e.value.isComplete) _titleMemo[e.key] = e.value;
     }
     return {
       for (final k in keys)
@@ -184,6 +217,7 @@ class CachedAchievementMediaSource implements AchievementMediaSource {
 
   @override
   Future<Map<int, String>?> episodeAirDates(int tvId, int season) async {
+    if (tvId < 0) return null;
     final json = await _cache.getSeason(tvId, season);
     final episodes = json?['episodes'];
     if (episodes is! List) return null;
@@ -204,6 +238,7 @@ class CachedAchievementMediaSource implements AchievementMediaSource {
   Future<Map<int, List<SagaPart>>> sagas(Set<int> movieIds) async {
     final result = <int, List<SagaPart>>{};
     for (final id in movieIds) {
+      if (id < 0) continue;
       var parts = _sagaMemo[id];
       if (parts == null) {
         final items = await _cache.getCollectionParts(id);

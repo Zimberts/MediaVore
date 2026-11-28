@@ -2860,4 +2860,118 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'Ce produit utilise l\'API TMDB mais n\'est ni approuvé ni certifié par TMDB.';
+
+  @override
+  String get manualMediaAddTitle => 'Ajouter à la main';
+
+  @override
+  String get manualMediaEditTitle => 'Modifier le média';
+
+  @override
+  String get manualMediaNotFoundAdd => 'Introuvable ? Ajoutez-le';
+
+  @override
+  String get manualMediaBadge => 'Ajouté à la main';
+
+  @override
+  String get manualMediaOpenLink => 'Ouvrir le lien';
+
+  @override
+  String get manualMediaEditAction => 'Modifier';
+
+  @override
+  String get manualMediaDeleteAction => 'Supprimer';
+
+  @override
+  String get manualMediaDeleteTitle => 'Supprimer ce média ?';
+
+  @override
+  String manualMediaDeleteMessage(String title) {
+    return 'Supprimer « $title » ainsi que tout son historique, ses listes et ses favoris ? Cette action est irréversible.';
+  }
+
+  @override
+  String get manualMediaKindLabel => 'Type';
+
+  @override
+  String get manualMediaKindMovie => 'Film';
+
+  @override
+  String get manualMediaKindTv => 'Série';
+
+  @override
+  String get manualMediaKindVideo => 'Vidéo';
+
+  @override
+  String get manualMediaKindVideoSeries => 'Série de vidéos';
+
+  @override
+  String get manualMediaFillFromTitle => 'Remplir depuis…';
+
+  @override
+  String get manualMediaTitleLabel => 'Titre *';
+
+  @override
+  String get manualMediaTitleRequired => 'Le titre est obligatoire';
+
+  @override
+  String get manualMediaOriginalTitleLabel => 'Titre original';
+
+  @override
+  String get manualMediaOverviewLabel => 'Synopsis';
+
+  @override
+  String get manualMediaReleaseDateLabel =>
+      'Date de sortie (AAAA ou AAAA-MM-JJ)';
+
+  @override
+  String get manualMediaRuntimeLabel => 'Durée (minutes)';
+
+  @override
+  String get manualMediaEpisodeRuntimeLabel => 'Durée par épisode (minutes)';
+
+  @override
+  String get manualMediaInvalidNumber => 'Saisissez un nombre positif';
+
+  @override
+  String get manualMediaSeasonsSection => 'Saisons et épisodes';
+
+  @override
+  String manualMediaSeasonLabel(int number) {
+    return 'Saison $number';
+  }
+
+  @override
+  String get manualMediaEpisodesLabel => 'Épisodes';
+
+  @override
+  String get manualMediaAddSeason => 'Ajouter une saison';
+
+  @override
+  String get manualMediaRemoveSeason => 'Supprimer la saison';
+
+  @override
+  String get manualMediaPosterSection => 'Image';
+
+  @override
+  String get manualMediaPickImage => 'Choisir dans la galerie';
+
+  @override
+  String get manualMediaPosterUrlLabel => 'URL de l\'image';
+
+  @override
+  String get manualMediaClearImage => 'Retirer l\'image';
+
+  @override
+  String get manualMediaGenresLabel => 'Genres (séparés par des virgules)';
+
+  @override
+  String get manualMediaCountriesLabel =>
+      'Pays d\'origine (séparés par des virgules, ex. FR, US)';
+
+  @override
+  String get manualMediaSourceUrlLabel => 'Lien d\'origine (URL)';
+
+  @override
+  String get manualMediaSave => 'Enregistrer';
 }

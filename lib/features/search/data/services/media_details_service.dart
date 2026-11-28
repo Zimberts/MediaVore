@@ -6,8 +6,10 @@ import 'package:mediavore/core/domain/entities/cast_member.dart';
 import 'package:mediavore/core/domain/entities/crew_member.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/utils/bounded_concurrency.dart';
 import 'package:mediavore/core/utils/json_maps.dart';
+import 'package:mediavore/features/media_details/data/datasources/manual_media_local_data_source.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
 
 /// Cache-first loading of TMDB data: media details, seasons, actors and the
@@ -18,6 +20,7 @@ import 'package:mediavore/features/search/data/datasources/media_remote_data_sou
 class MediaDetailsService {
   final MediaRemoteDataSource remoteDataSource;
   final MediaCache cache;
+  final ManualMediaLocalDataSource? manualMediaDataSource;
 
   /// Max concurrent `/movie|tv/{id}` requests when enriching a result page.
   static const int enrichmentConcurrency = 4;
@@ -30,7 +33,11 @@ class MediaDetailsService {
   /// films of the same saga share one collection lookup.
   final Map<int, Future<List<MediaItem>?>> _inFlightCollections = {};
 
-  MediaDetailsService({required this.remoteDataSource, required this.cache});
+  MediaDetailsService({
+    required this.remoteDataSource,
+    required this.cache,
+    this.manualMediaDataSource,
+  });
 
   /// Replaces search/discover rows by their full `/movie|tv/{id}` item
   /// (runtime, seasons, genres). Cached details are used first; misses are
@@ -38,6 +45,7 @@ class MediaDetailsService {
   /// failed fetch keeps the original row.
   Future<List<MediaItem>> enrichItems(List<MediaItem> items) {
     return mapWithConcurrency(items, enrichmentConcurrency, (item) async {
+      if (item.id < 0) return item;
       final cached = (await cache.getDetails(item.id, item.mediaType))?.item;
       if (cached != null) return cached;
       try {
@@ -65,6 +73,13 @@ class MediaDetailsService {
     MediaType type = MediaType.movie,
     bool forceRefresh = false,
   }) async {
+    if (id < 0) {
+      final manual = await manualMediaDataSource?.getByLocalId(id);
+      if (manual != null) {
+        return manual.toMediaDetails();
+      }
+      throw InvalidMediaIdException('Manual media not found (id=$id)');
+    }
     final cachedDetails = await cache.getDetails(id, type);
     if (cachedDetails != null && !forceRefresh) {
       if (cachedDetails.item.isComplete) {
@@ -173,6 +188,31 @@ class MediaDetailsService {
     int tvId,
     int seasonNumber,
   ) async {
+    if (tvId < 0) {
+      final manual = await manualMediaDataSource?.getByLocalId(tvId);
+      final seasons = manual?.seasons;
+      if (manual == null ||
+          seasons == null ||
+          seasonNumber < 1 ||
+          seasonNumber > seasons.length) {
+        return <String, dynamic>{
+          'season_number': seasonNumber,
+          'episodes': const <Map<String, dynamic>>[],
+        };
+      }
+      final episodeCount = seasons[seasonNumber - 1];
+      return <String, dynamic>{
+        'season_number': seasonNumber,
+        'episodes': [
+          for (var ep = 1; ep <= episodeCount; ep++)
+            <String, dynamic>{
+              'episode_number': ep,
+              'season_number': seasonNumber,
+              if (manual.runtime != null) 'runtime': manual.runtime,
+            },
+        ],
+      };
+    }
     final cachedSeason = await cache.getSeason(tvId, seasonNumber);
     if (cachedSeason != null &&
         !await _isOngoingSeasonStale(tvId, seasonNumber)) {
@@ -196,6 +236,7 @@ class MediaDetailsService {
   /// [MediaRemoteDataSource.getSeasonsDetails]). Used by the cache warm-up;
   /// throws on a network failure.
   Future<void> prefetchSeasons(int tvId, Iterable<int> seasonNumbers) async {
+    if (tvId < 0) return;
     final missing = <int>[];
     for (final n in seasonNumbers) {
       final cached = await cache.getSeason(tvId, n);

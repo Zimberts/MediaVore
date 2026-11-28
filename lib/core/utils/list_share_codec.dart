@@ -54,10 +54,12 @@ class ListShareCodec {
   static const int currentVersion = 2;
 
   /// Encodes [entries] into a compact v2 base64url string.
+  ///
+  /// Manual media (`id < 0`) are excluded because they are local-only.
   static String encodeV2(List<SharedMediaEntry> entries) {
     final movieIds =
         entries
-            .where((e) => e.type == MediaType.movie)
+            .where((e) => e.id > 0 && e.type == MediaType.movie)
             .map((e) => e.id)
             .toSet()
             .toList()
@@ -65,7 +67,7 @@ class ListShareCodec {
 
     final tvIds =
         entries
-            .where((e) => e.type == MediaType.tv)
+            .where((e) => e.id > 0 && e.type == MediaType.tv)
             .map((e) => e.id)
             .toSet()
             .toList()

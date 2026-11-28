@@ -84,6 +84,7 @@ class CacheWarmupService {
     // 1. Every saved list item, with all its seasons.
     for (final listName in await localDataSource.getAllListNames()) {
       for (final item in await localDataSource.getListItems(listName)) {
+        if (item.id < 0) continue;
         final t = task(item.id, item.type);
         keysToKeep.add('${t.type.name}:${item.id}');
         t.allSeasons = true;
@@ -95,6 +96,7 @@ class CacheWarmupService {
     final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
     final checkedSeenTitles = <String>{};
     for (final seen in await localDataSource.getAllSeenItems()) {
+      if (seen.tmdbId < 0) continue;
       keysToKeep.add('${seen.type}:${seen.tmdbId}');
       final isRecent = seen.seenDate.isAfter(thirtyDaysAgo);
       final isMissingPoster = seen.posterPath == null;
@@ -115,6 +117,7 @@ class CacheWarmupService {
 
     // 3. Liked items.
     for (final liked in await localDataSource.getLikedItems()) {
+      if (liked.tmdbId < 0) continue;
       keysToKeep.add('${liked.type}:${liked.tmdbId}');
       task(liked.tmdbId, liked.type);
     }

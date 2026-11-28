@@ -52,6 +52,7 @@ void callbackDispatcher() {
 
         for (final entry in tvWatches.entries) {
           final tmdbId = entry.key;
+          if (tmdbId < 0) continue;
           final watches = entry.value;
 
           int maxSeason = 0;

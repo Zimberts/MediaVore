@@ -6,12 +6,14 @@ import 'package:mediavore/core/cache/cache_warmup_policy.dart';
 import 'package:mediavore/core/cache/media_cache.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/liked_item_info.dart';
+import 'package:mediavore/core/domain/entities/manual_media.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
+import 'package:mediavore/features/media_details/data/datasources/manual_media_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 import 'package:mediavore/features/search/data/datasources/media_remote_data_source.dart';
@@ -39,6 +41,7 @@ class MediaRepositoryImpl implements MediaRepository {
   final MediaRemoteDataSource remoteDataSource;
   final MediaListLocalDataSource localDataSource;
   final MediaCache cache;
+  final ManualMediaLocalDataSource? manualMediaDataSource;
 
   /// Gates the automatic warm-up started on creation. `null` = always run.
   final CacheWarmupPolicy? warmupPolicy;
@@ -70,6 +73,7 @@ class MediaRepositoryImpl implements MediaRepository {
     required this.remoteDataSource,
     required this.localDataSource,
     required this.cache,
+    this.manualMediaDataSource,
     this.warmupPolicy,
     this.localeService,
     this.credentialStore,
@@ -79,6 +83,7 @@ class MediaRepositoryImpl implements MediaRepository {
     _details = MediaDetailsService(
       remoteDataSource: remoteDataSource,
       cache: cache,
+      manualMediaDataSource: manualMediaDataSource,
     );
     final scanner = NextEpisodeScanner(_details);
     _quickAdd = QuickAddService(
@@ -120,6 +125,7 @@ class MediaRepositoryImpl implements MediaRepository {
     _importExport = ImportExportService(
       localDataSource: localDataSource,
       details: _details,
+      manualMediaDataSource: manualMediaDataSource,
       localeService: localeService,
     );
     _lifecycle = RepositoryLifecycle(
@@ -806,5 +812,79 @@ class MediaRepositoryImpl implements MediaRepository {
   @override
   Future<void> clearSeriesRewatchStart(int tmdbId) async {
     await prefs?.remove('series_rewatch_start_$tmdbId');
+  }
+
+  @override
+  Future<ManualMedia> createManualMedia({
+    required ManualMediaKind kind,
+    required String title,
+    String? originalTitle,
+    String? overview,
+    String? releaseDate,
+    int? runtime,
+    List<int>? seasons,
+    String? posterPath,
+    List<String>? genres,
+    List<String>? originCountries,
+    String? sourceUrl,
+    String? sourceProvider,
+  }) async {
+    await _ensureInitialized();
+    final ds = manualMediaDataSource;
+    if (ds == null) {
+      throw StateError('ManualMediaLocalDataSource is not configured');
+    }
+    return ds.createManualMedia(
+      kind: kind,
+      title: title,
+      originalTitle: originalTitle,
+      overview: overview,
+      releaseDate: releaseDate,
+      runtime: runtime,
+      seasons: seasons,
+      posterPath: posterPath,
+      genres: genres,
+      originCountries: originCountries,
+      sourceUrl: sourceUrl,
+      sourceProvider: sourceProvider,
+    );
+  }
+
+  @override
+  Future<ManualMedia> updateManualMedia(ManualMedia media) async {
+    await _ensureInitialized();
+    final ds = manualMediaDataSource;
+    if (ds == null) {
+      throw StateError('ManualMediaLocalDataSource is not configured');
+    }
+    return ds.updateManualMedia(media);
+  }
+
+  @override
+  Future<ManualMedia?> getManualMedia(int localId) async {
+    await _ensureInitialized();
+    return manualMediaDataSource?.getByLocalId(localId);
+  }
+
+  @override
+  Future<List<ManualMedia>> getAllManualMedia() async {
+    await _ensureInitialized();
+    return await manualMediaDataSource?.getAll() ?? const [];
+  }
+
+  @override
+  Future<void> deleteManualMedia(int localId) async {
+    await _ensureInitialized();
+    final ds = manualMediaDataSource;
+    if (ds == null) return;
+    final existing = await ds.getByLocalId(localId);
+    if (existing != null) {
+      await localDataSource.deleteAllReferencesForMedia(
+        localId,
+        existing.kind.mediaType.name,
+      );
+      await prefs?.remove('series_rewatch_start_$localId');
+    }
+    await ds.deleteByLocalId(localId);
   }
 }

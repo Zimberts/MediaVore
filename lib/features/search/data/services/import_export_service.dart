@@ -4,8 +4,14 @@ import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/utils/export_import_serializer.dart';
+import 'package:mediavore/features/media_details/data/datasources/manual_media_local_data_source.dart';
 import 'package:mediavore/features/media_details/data/datasources/media_list_local_data_source.dart';
+import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/manual_media_model.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
+import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
+import 'package:mediavore/features/media_details/data/models/quick_add_opt_out_model.dart';
 import 'package:mediavore/features/media_details/data/models/seen_item_model.dart';
 import 'package:mediavore/features/search/data/services/media_details_service.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
@@ -17,6 +23,7 @@ import 'package:mediavore/features/search/domain/repositories/media_repository.d
 class ImportExportService {
   final MediaListLocalDataSource localDataSource;
   final MediaDetailsService details;
+  final ManualMediaLocalDataSource? manualMediaDataSource;
 
   /// Language of the progress messages; `null` uses the fallback language.
   final LocaleService? localeService;
@@ -24,6 +31,7 @@ class ImportExportService {
   ImportExportService({
     required this.localDataSource,
     required this.details,
+    this.manualMediaDataSource,
     this.localeService,
   });
 
@@ -38,6 +46,8 @@ class ImportExportService {
     final notifiedModels = await localDataSource.getNotifiedItems();
     final quickAddModels = await localDataSource.getQuickAddItems();
     final optOutModels = await localDataSource.getOptOuts();
+    final manualModels =
+        await manualMediaDataSource?.getAllModels() ?? const [];
 
     final names = await localDataSource.getAllListNames();
     final Map<String, List<MediaListItem>> lists = {};
@@ -54,6 +64,7 @@ class ImportExportService {
       quickAdd: quickAddModels,
       lists: lists,
       optOuts: optOutModels,
+      manualMedia: manualModels,
     );
 
     return envelope.toZipBytesAsync();
@@ -74,8 +85,9 @@ class ImportExportService {
     );
 
     onProgress?.call(0.9, _l10n.progressSavingEntries);
-    await localDataSource.importAll(
+    final remapped = await _remapManualIdsIfNeeded(
       mode: mode,
+      manualMedia: envelope.manualMedia,
       seen: seenItems,
       likes: envelope.likes,
       notifications: envelope.notifications,
@@ -83,7 +95,175 @@ class ImportExportService {
       lists: envelope.lists,
       optOuts: envelope.optOuts,
     );
+
+    await localDataSource.importAll(
+      mode: mode,
+      seen: remapped.seen,
+      likes: remapped.likes,
+      notifications: remapped.notifications,
+      quickAdd: remapped.quickAdd,
+      lists: remapped.lists,
+      optOuts: remapped.optOuts,
+      manualMedia: remapped.manualMedia,
+    );
+    await manualMediaDataSource?.syncCounter();
     onProgress?.call(1.0, _l10n.progressImportComplete);
+  }
+
+  Future<
+    ({
+      List<ManualMediaModel> manualMedia,
+      List<SeenItemModel> seen,
+      List<LikedItem> likes,
+      List<NotifiedItemModel> notifications,
+      List<QuickAddItemModel> quickAdd,
+      Map<String, List<MediaListItem>> lists,
+      List<QuickAddOptOutModel> optOuts,
+    })
+  >
+  _remapManualIdsIfNeeded({
+    required ImportMode mode,
+    required List<ManualMediaModel> manualMedia,
+    required List<SeenItemModel> seen,
+    required List<LikedItem> likes,
+    required List<NotifiedItemModel> notifications,
+    required List<QuickAddItemModel> quickAdd,
+    required Map<String, List<MediaListItem>> lists,
+    required List<QuickAddOptOutModel> optOuts,
+  }) async {
+    if (mode == ImportMode.replace ||
+        manualMedia.isEmpty ||
+        manualMediaDataSource == null) {
+      return (
+        manualMedia: manualMedia,
+        seen: seen,
+        likes: likes,
+        notifications: notifications,
+        quickAdd: quickAdd,
+        lists: lists,
+        optOuts: optOuts,
+      );
+    }
+
+    final existing = await manualMediaDataSource!.getAllModels();
+    final existingIds = {for (final m in existing) m.localId};
+    final idMap = <int, int>{};
+    final remappedManual = <ManualMediaModel>[];
+
+    for (final m in manualMedia) {
+      if (existingIds.contains(m.localId)) {
+        final newId = await manualMediaDataSource!.allocateNextId();
+        idMap[m.localId] = newId;
+        existingIds.add(newId);
+        remappedManual.add(
+          ManualMediaModel(
+            localId: newId,
+            kind: m.kind,
+            title: m.title,
+            originalTitle: m.originalTitle,
+            overview: m.overview,
+            releaseDate: m.releaseDate,
+            runtime: m.runtime,
+            seasons: m.seasons,
+            posterPath: m.posterPath,
+            genres: m.genres,
+            originCountries: m.originCountries,
+            sourceUrl: m.sourceUrl,
+            sourceProvider: m.sourceProvider,
+            createdAt: m.createdAt,
+            updatedAt: m.updatedAt,
+          ),
+        );
+      } else {
+        existingIds.add(m.localId);
+        remappedManual.add(m);
+      }
+    }
+
+    if (idMap.isEmpty) {
+      return (
+        manualMedia: remappedManual,
+        seen: seen,
+        likes: likes,
+        notifications: notifications,
+        quickAdd: quickAdd,
+        lists: lists,
+        optOuts: optOuts,
+      );
+    }
+
+    int remap(int id) => id < 0 ? (idMap[id] ?? id) : id;
+
+    return (
+      manualMedia: remappedManual,
+      seen: [
+        for (final s in seen)
+          SeenItemModel(
+            tmdbId: remap(s.tmdbId),
+            type: s.type,
+            title: s.title,
+            posterPath: s.posterPath,
+            seenDate: s.seenDate,
+            seasonNumber: s.seasonNumber,
+            episodeNumber: s.episodeNumber,
+            runtime: s.runtime,
+            genres: s.genres,
+          ),
+      ],
+      likes: [
+        for (final l in likes)
+          LikedItem(tmdbId: remap(l.tmdbId), type: l.type, title: l.title),
+      ],
+      notifications: [
+        for (final n in notifications)
+          NotifiedItemModel(
+            tmdbId: remap(n.tmdbId),
+            type: n.type,
+            title: n.title,
+            posterPath: n.posterPath,
+            releaseDate: n.releaseDate,
+            seasonNumber: n.seasonNumber,
+            episodeNumber: n.episodeNumber,
+            runtime: n.runtime,
+            autoNotify: n.autoNotify,
+          ),
+      ],
+      quickAdd: [
+        for (final q in quickAdd)
+          QuickAddItemModel(
+            tmdbId: remap(q.tmdbId),
+            type: q.type,
+            seasonNumber: q.seasonNumber,
+            episodeNumber: q.episodeNumber,
+            insertedAt: q.insertedAt,
+            airDate: q.airDate,
+            title: q.title,
+            posterPath: q.posterPath,
+          ),
+      ],
+      lists: {
+        for (final entry in lists.entries)
+          entry.key: [
+            for (final item in entry.value)
+              MediaListItem(
+                id: remap(item.id),
+                type: item.type,
+                title: item.title,
+                listName: item.listName,
+                position: item.position,
+              ),
+          ],
+      },
+      optOuts: [
+        for (final o in optOuts)
+          QuickAddOptOutModel(
+            tmdbId: remap(o.tmdbId),
+            seasonNumber: o.seasonNumber,
+            episodeNumber: o.episodeNumber,
+            optedOutAt: o.optedOutAt,
+          ),
+      ],
+    );
   }
 
   /// Fills missing runtime/genres from TMDB. Network only: writes nothing, so
@@ -125,6 +305,11 @@ class ImportExportService {
 
       if (onProgress != null) {
         onProgress(i / total, _l10n.progressProcessingItem(title));
+      }
+
+      if (tmdbId < 0) {
+        items.add(model);
+        continue;
       }
 
       final enriched = await details.resolveRuntimeAndGenres(

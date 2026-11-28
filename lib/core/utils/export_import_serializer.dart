@@ -5,12 +5,15 @@ import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../features/media_details/data/models/liked_item.dart';
+import '../../features/media_details/data/models/manual_media_model.dart';
 import '../../features/media_details/data/models/media_list_item.dart';
 import '../../features/media_details/data/models/notified_item_model.dart';
 import '../../features/media_details/data/models/quick_add_item_model.dart';
 import '../../features/media_details/data/models/quick_add_opt_out_model.dart';
 import '../../features/media_details/data/models/seen_item_model.dart';
+import '../domain/entities/manual_media.dart';
 import '../error/exceptions.dart';
+import 'tmdb_image_utils.dart';
 
 class ExportEnvelope {
   final int version;
@@ -25,6 +28,9 @@ class ExportEnvelope {
 
   /// Series streaks the user excluded from Quick Add.
   final List<QuickAddOptOutModel> optOuts;
+
+  /// Manually added media items (negative local IDs).
+  final List<ManualMediaModel> manualMedia;
 
   /// Non-fatal problems found while parsing (e.g. skipped invalid rows).
   /// Always empty for envelopes built in memory.
@@ -52,6 +58,7 @@ class ExportEnvelope {
     List<QuickAddItemModel>? quickAdd,
     Map<String, List<MediaListItem>>? lists,
     List<QuickAddOptOutModel>? optOuts,
+    List<ManualMediaModel>? manualMedia,
     List<String>? warnings,
   }) : seen = seen ?? [],
        likes = likes ?? [],
@@ -59,6 +66,7 @@ class ExportEnvelope {
        quickAdd = quickAdd ?? [],
        lists = lists ?? {},
        optOuts = optOuts ?? [],
+       manualMedia = manualMedia ?? [],
        warnings = warnings ?? [];
 
   /// Serializes this envelope into a ZIP archive.
@@ -204,6 +212,52 @@ class ExportEnvelope {
         ]);
       }
       _addCsv(archive, 'optouts.csv', optOutRows);
+    }
+
+    // manualmedia.csv
+    if (manualMedia.isNotEmpty) {
+      final manualRows = <List<dynamic>>[
+        [
+          'localId',
+          'kind',
+          'title',
+          'originalTitle',
+          'overview',
+          'releaseDate',
+          'runtime',
+          'seasons',
+          'posterPath',
+          'genres',
+          'originCountries',
+          'sourceUrl',
+          'sourceProvider',
+          'createdAt',
+          'updatedAt',
+        ],
+      ];
+      for (final m in manualMedia) {
+        final exportPoster = TmdbImageUtils.isLocalPath(m.posterPath)
+            ? ''
+            : (m.posterPath ?? '');
+        manualRows.add([
+          m.localId,
+          m.kind.name,
+          _text(m.title),
+          _text(m.originalTitle ?? ''),
+          _text(m.overview ?? ''),
+          _text(m.releaseDate ?? ''),
+          m.runtime?.toString() ?? '',
+          m.seasons?.join('|') ?? '',
+          _text(exportPoster),
+          _text(m.genres?.join('|') ?? ''),
+          _text(m.originCountries?.join('|') ?? ''),
+          _text(m.sourceUrl ?? ''),
+          _text(m.sourceProvider ?? ''),
+          _date(m.createdAt),
+          _date(m.updatedAt),
+        ]);
+      }
+      _addCsv(archive, 'manualmedia.csv', manualRows);
     }
 
     return ZipEncoder().encode(archive);
@@ -420,6 +474,63 @@ class ExportEnvelope {
       );
     }
 
+    final manualMedia = <ManualMediaModel>[];
+    for (final r in _RowReader.rowsOf('manualmedia.csv', tables, warnings)) {
+      final localId = r.optInt('localId');
+      final kindName = r.optText('kind');
+      final kind = ManualMediaKind.values
+          .where((k) => k.name == kindName)
+          .firstOrNull;
+      final title = r.optText('title');
+      if (localId == null || localId >= 0) {
+        r.warn('invalid localId "${r.raw('localId') ?? ''}"');
+        continue;
+      }
+      if (kind == null) {
+        r.warn('invalid kind "${kindName ?? ''}"');
+        continue;
+      }
+      if (title == null) {
+        r.warn('missing title');
+        continue;
+      }
+      final seasonsStr = r.optText('seasons');
+      final seasons = seasonsStr
+          ?.split('|')
+          .map((s) => int.tryParse(s.trim()))
+          .whereType<int>()
+          .where((n) => n > 0)
+          .toList();
+      final genresStr = r.optText('genres');
+      final genres = genresStr?.split('|').where((g) => g.isNotEmpty).toList();
+      final countriesStr = r.optText('originCountries');
+      final countries = countriesStr
+          ?.split('|')
+          .where((c) => c.isNotEmpty)
+          .toList();
+      manualMedia.add(
+        ManualMediaModel(
+          localId: localId,
+          kind: kind,
+          title: title,
+          originalTitle: r.optText('originalTitle'),
+          overview: r.optText('overview'),
+          releaseDate: r.optText('releaseDate'),
+          runtime: r.optInt('runtime'),
+          seasons: seasons != null && seasons.isNotEmpty ? seasons : null,
+          posterPath: r.optText('posterPath'),
+          genres: genres != null && genres.isNotEmpty ? genres : null,
+          originCountries: countries != null && countries.isNotEmpty
+              ? countries
+              : null,
+          sourceUrl: r.optText('sourceUrl'),
+          sourceProvider: r.optText('sourceProvider'),
+          createdAt: r.optDate('createdAt') ?? exportedAt,
+          updatedAt: r.optDate('updatedAt') ?? exportedAt,
+        ),
+      );
+    }
+
     return ExportEnvelope(
       version: version,
       exportedAt: exportedAt,
@@ -430,6 +541,7 @@ class ExportEnvelope {
       quickAdd: quickAdd,
       lists: lists,
       optOuts: optOuts,
+      manualMedia: manualMedia,
       warnings: warnings,
     );
   }
@@ -442,6 +554,7 @@ class ExportEnvelope {
     'quickadd.csv',
     'lists.csv',
     'optouts.csv',
+    'manualmedia.csv',
   };
 
   /// Dates are written in UTC with an explicit `Z` so that an export read on a
@@ -542,11 +655,11 @@ class _RowReader {
     return v == null ? null : DateTime.tryParse(v);
   }
 
-  /// Returns the row's TMDB id, or null (with a warning) when it is missing or
-  /// not a positive integer.
+  /// Returns the row's media id (positive TMDB id or negative manual id), or
+  /// null (with a warning) when it is missing or zero.
   int? tmdbId() {
     final id = optInt('tmdbId');
-    if (id == null || id <= 0) {
+    if (id == null || id == 0) {
       warn('invalid tmdbId "${raw('tmdbId') ?? ''}"');
       return null;
     }

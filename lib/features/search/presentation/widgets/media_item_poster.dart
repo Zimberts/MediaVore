@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/poster_image_provider.dart';
 import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
@@ -44,6 +45,7 @@ MediaPosterData mediaItemPosterData(
   return MediaPosterData(
     title: item.title,
     kind: MediaKind.fromMediaType(item.mediaType),
+    image: localPosterImageProvider(item.posterPath),
     imageUrl: TmdbImageUtils.buildUrlWithSizeString(
       item.posterPath,
       size: imageSize,

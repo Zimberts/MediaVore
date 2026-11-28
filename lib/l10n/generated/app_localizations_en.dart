@@ -2840,4 +2840,117 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'This product uses the TMDB API but is not endorsed or certified by TMDB.';
+
+  @override
+  String get manualMediaAddTitle => 'Add manually';
+
+  @override
+  String get manualMediaEditTitle => 'Edit media';
+
+  @override
+  String get manualMediaNotFoundAdd => 'Not found? Add it';
+
+  @override
+  String get manualMediaBadge => 'Added manually';
+
+  @override
+  String get manualMediaOpenLink => 'Open link';
+
+  @override
+  String get manualMediaEditAction => 'Edit';
+
+  @override
+  String get manualMediaDeleteAction => 'Delete';
+
+  @override
+  String get manualMediaDeleteTitle => 'Delete manual media?';
+
+  @override
+  String manualMediaDeleteMessage(String title) {
+    return 'Delete \"$title\" and all its history, lists, and likes? This cannot be undone.';
+  }
+
+  @override
+  String get manualMediaKindLabel => 'Type';
+
+  @override
+  String get manualMediaKindMovie => 'Film';
+
+  @override
+  String get manualMediaKindTv => 'Series';
+
+  @override
+  String get manualMediaKindVideo => 'Video';
+
+  @override
+  String get manualMediaKindVideoSeries => 'Video series';
+
+  @override
+  String get manualMediaFillFromTitle => 'Fill from…';
+
+  @override
+  String get manualMediaTitleLabel => 'Title *';
+
+  @override
+  String get manualMediaTitleRequired => 'Title is required';
+
+  @override
+  String get manualMediaOriginalTitleLabel => 'Original title';
+
+  @override
+  String get manualMediaOverviewLabel => 'Overview';
+
+  @override
+  String get manualMediaReleaseDateLabel => 'Release date (YYYY or YYYY-MM-DD)';
+
+  @override
+  String get manualMediaRuntimeLabel => 'Runtime (minutes)';
+
+  @override
+  String get manualMediaEpisodeRuntimeLabel => 'Episode runtime (minutes)';
+
+  @override
+  String get manualMediaInvalidNumber => 'Enter a positive number';
+
+  @override
+  String get manualMediaSeasonsSection => 'Seasons & episodes';
+
+  @override
+  String manualMediaSeasonLabel(int number) {
+    return 'Season $number';
+  }
+
+  @override
+  String get manualMediaEpisodesLabel => 'Episodes';
+
+  @override
+  String get manualMediaAddSeason => 'Add season';
+
+  @override
+  String get manualMediaRemoveSeason => 'Remove season';
+
+  @override
+  String get manualMediaPosterSection => 'Image';
+
+  @override
+  String get manualMediaPickImage => 'Choose from gallery';
+
+  @override
+  String get manualMediaPosterUrlLabel => 'Image URL';
+
+  @override
+  String get manualMediaClearImage => 'Remove image';
+
+  @override
+  String get manualMediaGenresLabel => 'Genres (comma-separated)';
+
+  @override
+  String get manualMediaCountriesLabel =>
+      'Origin countries (comma-separated, e.g. FR, US)';
+
+  @override
+  String get manualMediaSourceUrlLabel => 'Source link (URL)';
+
+  @override
+  String get manualMediaSave => 'Save';
 }
