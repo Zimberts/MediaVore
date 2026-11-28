@@ -13,6 +13,7 @@ import 'package:mediavore/features/media_details/data/models/swipe_decision_mode
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/settings/presentation/widgets/palette_picker_grid.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
@@ -81,7 +82,7 @@ void main() {
     ),
   );
 
-  testWidgets('SettingsPage renders a segmented ThemeMode and palette chips', (
+  testWidgets('SettingsPage renders a segmented ThemeMode and palette cards', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(800, 1600));
@@ -92,7 +93,10 @@ void main() {
 
     expect(find.byType(AppSegmented<ThemeMode>), findsOneWidget);
     expect(find.byType(AppSegmented<AppPaletteId>), findsNothing);
-    expect(find.byType(ChoiceChip), findsNWidgets(AppPalette.values.length));
+    expect(
+      find.byType(PaletteSwatchCard),
+      findsNWidgets(AppPalette.values.length),
+    );
 
     // Tap dark mode in segmented control
     await tester.tap(find.text('Dark'));

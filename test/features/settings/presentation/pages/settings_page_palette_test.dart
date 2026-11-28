@@ -6,6 +6,7 @@ import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/features/settings/presentation/pages/settings_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/settings/presentation/widgets/palette_picker_grid.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -96,23 +97,19 @@ void main() {
       await tester.pumpWidget(app(const Locale('en')));
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.byKey(const Key('settings_light_palette_dropdown')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Paper'), findsWidgets);
-      expect(find.text('Sand'), findsWidgets);
-      expect(find.text('Mist'), findsWidgets);
+      final lightGrid = find.byKey(const Key('settings_light_palette_grid'));
+      expect(lightGrid, findsOneWidget);
+      expect(find.text('Paper'), findsOneWidget);
+      expect(find.text('Sand'), findsOneWidget);
+      expect(find.text('Mist'), findsOneWidget);
       expect(
-        find.descendant(
-          of: find.byKey(const Key('settings_light_palette_dropdown')),
-          matching: find.text('Night'),
-        ),
+        find.descendant(of: lightGrid, matching: find.text('Night')),
         findsNothing,
       );
 
-      await tester.tap(find.text('Sand').last);
+      final sandCard = find.byKey(const Key('settings_palette_sand'));
+      await tester.ensureVisible(sandCard);
+      await tester.tap(sandCard);
       await tester.pumpAndSettle();
 
       expect(settings.lightPalette, AppPalette.sand);
@@ -120,6 +117,7 @@ void main() {
       expect(prefs.getString('lightPalette'), 'sand');
       final context = tester.element(find.byType(SettingsPage));
       expect(Theme.of(context).scaffoldBackgroundColor, AppPalette.sand.bg);
+      expect(tester.widget<PaletteSwatchCard>(sandCard).selected, isTrue);
     });
 
     testWidgets('should offer every light and dark palette, legacy ones '
@@ -130,12 +128,12 @@ void main() {
       await tester.pumpAndSettle();
 
       for (final (key, palettes) in [
-        ('settings_light_palette_dropdown', AppPalette.lightPalettes),
-        ('settings_dark_palette_dropdown', AppPalette.darkPalettes),
+        ('settings_light_palette_grid', AppPalette.lightPalettes),
+        ('settings_dark_palette_grid', AppPalette.darkPalettes),
       ]) {
         final picker = find.byKey(Key(key));
         expect(
-          find.descendant(of: picker, matching: find.byType(ChoiceChip)),
+          find.descendant(of: picker, matching: find.byType(PaletteSwatchCard)),
           findsNWidgets(palettes.length),
         );
         for (final palette in palettes) {
@@ -161,9 +159,14 @@ void main() {
       await tester.pumpWidget(app(const Locale('fr')));
       await tester.pumpAndSettle();
 
-      final chip = find.byKey(const Key('settings_palette_espresso'));
-      await tester.ensureVisible(chip);
-      await tester.tap(chip);
+      final card = find.byKey(const Key('settings_palette_espresso'));
+      await tester.scrollUntilVisible(
+        card,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(card);
       await tester.pumpAndSettle();
 
       expect(settings.darkPalette, AppPalette.espresso);
@@ -171,7 +174,7 @@ void main() {
       expect(prefs.getString('darkPalette'), 'espresso');
       final context = tester.element(find.byType(SettingsPage));
       expect(Theme.of(context).scaffoldBackgroundColor, AppPalette.espresso.bg);
-      expect(tester.widget<ChoiceChip>(chip).selected, isTrue);
+      expect(tester.widget<PaletteSwatchCard>(card).selected, isTrue);
     });
 
     testWidgets('should mark a stored legacy palette as selected', (
@@ -184,7 +187,7 @@ void main() {
 
       expect(
         tester
-            .widget<ChoiceChip>(
+            .widget<PaletteSwatchCard>(
               find.byKey(const Key('settings_palette_parchment')),
             )
             .selected,
@@ -192,7 +195,9 @@ void main() {
       );
       expect(
         tester
-            .widget<ChoiceChip>(find.byKey(const Key('settings_palette_paper')))
+            .widget<PaletteSwatchCard>(
+              find.byKey(const Key('settings_palette_paper')),
+            )
             .selected,
         isFalse,
       );
@@ -205,19 +210,21 @@ void main() {
       await tester.pumpWidget(app(const Locale('fr')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('settings_dark_palette_dropdown')));
-      await tester.pumpAndSettle();
+      final darkGrid = find.byKey(const Key('settings_dark_palette_grid'));
+      expect(darkGrid, findsOneWidget);
+      expect(find.text('Encre'), findsOneWidget);
+      expect(find.text('Nuit'), findsOneWidget);
+      expect(find.text('Noir OLED'), findsOneWidget);
 
-      expect(find.text('Encre'), findsWidgets);
-      expect(find.text('Nuit'), findsWidgets);
-      expect(find.text('Noir OLED'), findsWidgets);
-
-      await tester.tap(find.text('Noir OLED').last);
+      final oledCard = find.byKey(const Key('settings_palette_oled'));
+      await tester.ensureVisible(oledCard);
+      await tester.tap(oledCard);
       await tester.pumpAndSettle();
 
       expect(settings.darkPalette, AppPalette.oled);
       final context = tester.element(find.byType(SettingsPage));
       expect(Theme.of(context).scaffoldBackgroundColor, AppPalette.oled.bg);
+      expect(tester.widget<PaletteSwatchCard>(oledCard).selected, isTrue);
     });
   });
 }
