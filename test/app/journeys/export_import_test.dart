@@ -22,6 +22,7 @@ import 'package:mediavore/features/settings/presentation/pages/data_cache_settin
 import 'package:provider/provider.dart';
 
 import '../../helpers/fake_file_picker.dart';
+import '../../helpers/fixture_reader.dart';
 import '../harness.dart';
 
 /// Movie seen twice (rewatch), then liked.
@@ -104,13 +105,14 @@ SearchProvider _search(WidgetTester tester) =>
     _context(tester).read<SearchProvider>();
 
 Future<void> _seedExtras(WidgetTester tester, TestApp app) async {
-  await tester.runAsync(() async {
-    final repository = app.repository;
-    await repository.toggleLike(_movie(_rewatched));
-    await repository.toggleNotification(_show(_excluded));
-    await repository.populateQuickAddFromSeenHistory();
-    await repository.optOutSeries(_excluded, seasonNumber: 1, episodeNumber: 2);
-  });
+  final repository = app.repository;
+  await _settle(tester, repository.toggleLike(_movie(_rewatched)));
+  await _settle(tester, repository.toggleNotification(_show(_excluded)));
+  await _settle(tester, repository.populateQuickAddFromSeenHistory());
+  await _settle(
+    tester,
+    repository.optOutSeries(_excluded, seasonNumber: 1, episodeNumber: 2),
+  );
   // What a user action would have reloaded (it may fetch TMDB: fake time).
   await _settle(tester, _search(tester).reloadSavedTitles());
   await pumpUntilSettled(tester);
@@ -353,7 +355,10 @@ File _file(String name, List<int> bytes) {
   return File('${dir.path}/$name')..writeAsBytesSync(bytes);
 }
 
-void main() {
+void main() => registerExportImportJourney();
+
+/// Registers the #469 export and import journey.
+void registerExportImportJourney() {
   group('export and import journey', () {
     testApp(
       'should restore the library, history, series in progress, exclusions, '
@@ -428,13 +433,12 @@ void main() {
       app,
     ) async {
       final picker = _fakeFilePicker();
-      final legacy = File('test/fixtures/export_v1.4.4.mdv');
       await _import(
         tester,
         picker,
         _file(
           'mediavore_export_2026-11-22_10-00-00.mdv',
-          legacy.readAsBytesSync(),
+          fixtureBytes('export_v1.4.4.mdv'),
         ),
       );
 
