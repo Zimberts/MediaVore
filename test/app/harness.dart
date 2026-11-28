@@ -96,6 +96,8 @@ Future<TestApp> bootTestApp(
   WidgetTester tester, {
   AppSeed seed = const AppSeed(),
   FakeTmdb? tmdb,
+  FakeImageService? imageService,
+  Widget Function(Widget)? wrapApp,
 }) async {
   final server = tmdb ?? FakeTmdb();
   final dir = Directory(
@@ -115,7 +117,7 @@ Future<TestApp> bootTestApp(
   });
   final workmanager = FakeWorkmanager();
   WorkmanagerPlatform.instance = workmanager;
-  final images = FakeImageService();
+  final images = imageService ?? FakeImageService();
   CachedNetworkImageProvider.defaultCacheManager = fakeImageCacheManager(
     images,
     Directory('${dir.path}/images'),
@@ -134,7 +136,9 @@ Future<TestApp> bootTestApp(
       await bootstrapServices(tmdbHttpClientAdapter: server);
       await _applySeed(seed);
     });
-    await tester.pumpWidget(const MediaVoreApp());
+    await tester.pumpWidget(
+      wrapApp?.call(const MediaVoreApp()) ?? const MediaVoreApp(),
+    );
     await pumpUntilSettled(tester);
   } catch (_) {
     // Close what the failed boot opened before reporting it.
@@ -255,10 +259,18 @@ void testApp(
   Future<void> Function(WidgetTester tester, TestApp app) body, {
   AppSeed seed = const AppSeed(),
   FakeTmdb Function()? tmdb,
+  FakeImageService Function()? imageService,
+  Widget Function(Widget)? wrapApp,
   Timeout? timeout,
 }) {
   testWidgets(description, (tester) async {
-    final app = await bootTestApp(tester, seed: seed, tmdb: tmdb?.call());
+    final app = await bootTestApp(
+      tester,
+      seed: seed,
+      tmdb: tmdb?.call(),
+      imageService: imageService?.call(),
+      wrapApp: wrapApp,
+    );
     try {
       await body(tester, app);
     } catch (_) {
