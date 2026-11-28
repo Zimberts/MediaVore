@@ -34,6 +34,7 @@ const List<int> _sagaParts = [9000, 9001, 9002];
 
 const _discard = Key('swiper_discard_button');
 const _undo = Key('swiper_undo_button');
+const _seen = Key('swiper_seen_button');
 const _add = Key('swiper_add_button');
 
 FakeTmdb _tmdb() =>
@@ -100,7 +101,9 @@ Future<void> _until(WidgetTester tester, bool Function() done) async {
 /// Number of decisions of the swipe session.
 int _decisions(WidgetTester tester) {
   final swiper = _swiper(tester);
-  return swiper.sessionAddedCount + swiper.sessionDiscardedCount;
+  return swiper.sessionAddedCount +
+      swiper.sessionSeenCount +
+      swiper.sessionDiscardedCount;
 }
 
 /// Taps a swipe button, after checking nothing covers it (#379), and waits
@@ -211,7 +214,22 @@ void main() {
 
         // The deck goes on with the rest of the discover page: its first
         // load stopped after the first title of page 2.
-        await _press(tester, _discard, top: _next + 1);
+        await _press(tester, _seen, top: _next + 1);
+        expect(_search(tester).seenItems.map((s) => s.tmdbId), contains(_next));
+        expect(swiper.sessionSeenCount, 1);
+
+        // Undo seen: viewing is removed and card returns on top.
+        await _press(tester, _undo, top: _next);
+        expect(
+          _search(tester).seenItems.map((s) => s.tmdbId),
+          isNot(contains(_next)),
+        );
+        expect(swiper.sessionSeenCount, 0);
+
+        // Mark seen again and advance to the next card.
+        await _press(tester, _seen, top: _next + 1);
+        expect(_search(tester).seenItems.map((s) => s.tmdbId), contains(_next));
+        expect(swiper.sessionSeenCount, 1);
 
         // A new session (back to Explore then Swipe) reloads the deck from
         // the decision journal: no decided title is proposed again.
@@ -230,7 +248,7 @@ void main() {
         expect(deck, isNotEmpty);
         expect(
           deck.map((c) => c.item.id),
-          isNot(anyOf(contains(_liked), contains(_passed))),
+          isNot(anyOf(contains(_liked), contains(_passed), contains(_next))),
         );
         expect(deck.where((c) => c.collectionId == _sagaId), isEmpty);
       },

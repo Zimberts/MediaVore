@@ -809,10 +809,13 @@
   "swiperUndo": "Undo",
   "swiperEmptyTitle": "No more movies",
   "swiperEmptyMessage": "You've gone through all available movies for now.",
-  "swiperSessionStats": "{added} added · {discarded} discarded",
+  "swiperSessionStats": "{added} added · {seen} seen · {discarded} discarded",
   "@swiperSessionStats": {
     "placeholders": {
       "added": {
+        "type": "int"
+      },
+      "seen": {
         "type": "int"
       },
       "discarded": {

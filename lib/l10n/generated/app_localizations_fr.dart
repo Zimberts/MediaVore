@@ -1349,8 +1349,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous avez passé en revue tous les films disponibles pour le moment.';
 
   @override
-  String swiperSessionStats(int added, int discarded) {
-    return '$added ajoutés · $discarded écartés';
+  String swiperSessionStats(int added, int seen, int discarded) {
+    return '$added ajoutés · $seen vus · $discarded écartés';
   }
 
   @override

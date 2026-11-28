@@ -1325,8 +1325,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'You\'ve gone through all available movies for now.';
 
   @override
-  String swiperSessionStats(int added, int discarded) {
-    return '$added added · $discarded discarded';
+  String swiperSessionStats(int added, int seen, int discarded) {
+    return '$added added · $seen seen · $discarded discarded';
   }
 
   @override

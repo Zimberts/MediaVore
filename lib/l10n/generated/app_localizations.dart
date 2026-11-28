@@ -2303,8 +2303,8 @@ abstract class AppLocalizations {
   /// No description provided for @swiperSessionStats.
   ///
   /// In en, this message translates to:
-  /// **'{added} added · {discarded} discarded'**
-  String swiperSessionStats(int added, int discarded);
+  /// **'{added} added · {seen} seen · {discarded} discarded'**
+  String swiperSessionStats(int added, int seen, int discarded);
 
   /// No description provided for @swiperSettingTitle.
   ///

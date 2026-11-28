@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/swiper_provider.dart';
@@ -50,6 +51,15 @@ void main() {
     registerFallbackValue(MediaType.movie);
     registerFallbackValue(movie1);
     registerFallbackValue(
+      SeenItem(
+        tmdbId: 0,
+        type: MediaType.movie,
+        title: '',
+        seenDate: DateTime(2024),
+      ),
+    );
+    registerFallbackValue(<SeenItem>[]);
+    registerFallbackValue(
       SwipeDecisionModel(
         tmdbId: 0,
         title: '',
@@ -90,6 +100,16 @@ void main() {
     when(() => repo.addToList(any(), any())).thenAnswer((_) async {});
     when(
       () => repo.removeFromList(any(), any(), any()),
+    ).thenAnswer((_) async {});
+    when(() => repo.markAsSeen(any())).thenAnswer((_) async {});
+    when(() => repo.markManyAsSeen(any())).thenAnswer((_) async {});
+    when(
+      () => repo.removeFromSeen(
+        any(),
+        any(),
+        seasonNumber: any(named: 'seasonNumber'),
+        episodeNumber: any(named: 'episodeNumber'),
+      ),
     ).thenAnswer((_) async {});
     when(() => repo.recordSwipeDecision(any())).thenAnswer((_) async {});
     when(() => repo.recordSwipeDecisions(any())).thenAnswer((_) async {});
@@ -422,6 +442,208 @@ void main() {
           searchProvider.tonightCandidates().map((m) => m.id),
           contains(101),
         );
+      },
+    );
+  });
+
+  group('swipeSeen', () {
+    test(
+      'should advance candidate immediately and persist seen viewing and decision',
+      () async {
+        final markCompleter = Completer<void>();
+        when(
+          () => repo.markAsSeen(any()),
+        ).thenAnswer((_) => markCompleter.future);
+
+        await provider.init();
+        expect(provider.currentCandidate?.item.id, 101);
+
+        final customDate = DateTime(2024, 5, 10, 20, 30);
+        final future = provider.swipeSeen(seenDate: customDate);
+
+        // Observable order: card advances and session counter increments before
+        // persistence finishes.
+        expect(provider.currentCandidate?.item.id, 102);
+        expect(provider.sessionSeenCount, 1);
+        expect(provider.canUndo, isTrue);
+
+        markCompleter.complete();
+        await future;
+
+        verify(
+          () => repo.markAsSeen(
+            any(
+              that: isA<SeenItem>()
+                  .having((s) => s.tmdbId, 'tmdbId', 101)
+                  .having((s) => s.type, 'type', MediaType.movie)
+                  .having((s) => s.seenDate, 'seenDate', customDate),
+            ),
+          ),
+        ).called(1);
+        verify(
+          () => repo.recordSwipeDecision(
+            any(
+              that: isA<SwipeDecisionModel>()
+                  .having((d) => d.tmdbId, 'tmdbId', 101)
+                  .having((d) => d.decision, 'decision', 'seen'),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'should mark all unseen saga parts as seen and skip already seen ones',
+      () async {
+        when(
+          () => repo.getDecidedTmdbIds(),
+        ).thenAnswer((_) async => {101, 102});
+        await provider.init(seenIds: {202});
+
+        expect(provider.currentCandidate?.isSaga, isTrue);
+
+        await provider.swipeSeen();
+
+        verify(
+          () => repo.markAsSeen(
+            any(that: isA<SeenItem>().having((s) => s.tmdbId, 'tmdbId', 201)),
+          ),
+        ).called(1);
+        verifyNever(() => repo.markManyAsSeen(any()));
+        verify(
+          () => repo.recordSwipeDecisions(any(that: hasLength(2))),
+        ).called(1);
+        expect(provider.sessionSeenCount, 1);
+        expect(provider.candidates, isEmpty);
+      },
+    );
+
+    test(
+      'should mark all parts of an unseen saga via markManyAsSeen',
+      () async {
+        when(
+          () => repo.getDecidedTmdbIds(),
+        ).thenAnswer((_) async => {101, 102});
+        await provider.init();
+
+        await provider.swipeSeen();
+
+        verify(
+          () => repo.markManyAsSeen(
+            any(
+              that: isA<List<SeenItem>>()
+                  .having((l) => l.length, 'length', 2)
+                  .having((l) => l.map((s) => s.tmdbId).toList(), 'ids', [
+                    201,
+                    202,
+                  ]),
+            ),
+          ),
+        ).called(1);
+        verify(
+          () => repo.recordSwipeDecisions(any(that: hasLength(2))),
+        ).called(1);
+        expect(provider.sessionSeenCount, 1);
+      },
+    );
+
+    test(
+      'should revert seen movie on undoLastDecision and remove viewing',
+      () async {
+        await provider.init();
+        await provider.swipeSeen();
+        expect(provider.currentCandidate?.item.id, 102);
+
+        when(() => repo.undoLastSwipeDecision()).thenAnswer(
+          (_) async => SwipeDecisionModel(
+            isarId: 1,
+            tmdbId: 101,
+            title: 'Movie 101',
+            decision: 'seen',
+            decidedAt: DateTime.now(),
+          ),
+        );
+
+        final undoResult = await provider.undoLastDecision();
+
+        expect(undoResult, isNotNull);
+        expect(undoResult!.decision, 'seen');
+        expect(undoResult.restoredCandidate.item.id, 101);
+        expect(provider.sessionSeenCount, 0);
+        expect(provider.currentCandidate?.item.id, 101);
+        verify(() => repo.removeFromSeen(101, MediaType.movie)).called(1);
+      },
+    );
+
+    test(
+      'should revert only newly marked saga parts on undoLastDecision',
+      () async {
+        when(
+          () => repo.getDecidedTmdbIds(),
+        ).thenAnswer((_) async => {101, 102});
+        await provider.init(seenIds: {202});
+        await provider.swipeSeen();
+
+        when(() => repo.undoLastSwipeDecision()).thenAnswer(
+          (_) async => SwipeDecisionModel(
+            isarId: 1,
+            tmdbId: 201,
+            title: 'Saga Part 1',
+            decision: 'seen',
+            decidedAt: DateTime.now(),
+            collectionId: 999,
+          ),
+        );
+
+        await provider.undoLastDecision();
+
+        verify(() => repo.removeFromSeen(201, MediaType.movie)).called(1);
+        verifyNever(() => repo.removeFromSeen(202, MediaType.movie));
+        expect(provider.sessionSeenCount, 0);
+        expect(provider.currentCandidate?.collectionId, 999);
+      },
+    );
+
+    test(
+      'should update SearchProvider seenItems immediately and revert on undo',
+      () async {
+        when(
+          () => repo.getAllListNames(),
+        ).thenAnswer((_) async => ['watchlist']);
+        when(() => repo.getListEntries(any())).thenAnswer((_) async => []);
+        when(() => repo.getListPreviews(any())).thenAnswer((_) async => []);
+        when(() => repo.getWatchlistEntries()).thenAnswer((_) async => []);
+        when(() => repo.getLikedEntries()).thenAnswer((_) async => []);
+        when(() => repo.getSeenItems()).thenAnswer((_) async => []);
+        when(() => repo.getNotifiedItems()).thenAnswer((_) async => []);
+        when(
+          () => repo.watchNotifiedItems(),
+        ).thenAnswer((_) => const Stream.empty());
+        when(() => repo.getQuickAddItems()).thenAnswer((_) async => []);
+        when(() => repo.getCacheSize()).thenAnswer((_) async => 0);
+        when(() => repo.getSeenDbSize()).thenAnswer((_) async => 0);
+
+        final searchProvider = SearchProvider(repo);
+        provider = SwiperProvider(repo, searchProvider: searchProvider);
+
+        await provider.init();
+        await provider.swipeSeen();
+
+        verify(() => repo.markAsSeen(any())).called(1);
+
+        when(() => repo.undoLastSwipeDecision()).thenAnswer(
+          (_) async => SwipeDecisionModel(
+            isarId: 1,
+            tmdbId: 101,
+            title: 'Movie 101',
+            decision: 'seen',
+            decidedAt: DateTime.now(),
+          ),
+        );
+
+        await provider.undoLastDecision();
+        verify(() => repo.removeFromSeen(101, MediaType.movie)).called(1);
+        expect(searchProvider.seenItems, isEmpty);
       },
     );
   });
