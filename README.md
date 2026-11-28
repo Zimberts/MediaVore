@@ -35,6 +35,39 @@
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="DOCS/screenshots/home.png" alt="Home screen" width="220" /><br />
+      <sub><strong>Home</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/discover.png" alt="Discover screen" width="220" /><br />
+      <sub><strong>Discover</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/detail.png" alt="Media Details screen" width="220" /><br />
+      <sub><strong>Media Details</strong></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="DOCS/screenshots/library.png" alt="Library screen" width="220" /><br />
+      <sub><strong>Library</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/together.png" alt="Together screen" width="220" /><br />
+      <sub><strong>Together</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/stats.png" alt="Media Stats screen" width="220" /><br />
+      <sub><strong>Stats</strong></sub>
+    </td>
+  </tr>
+</table>
+
 ## Features
 
 - **Home**: *Tonight* watchlist picks, *In Progress* series tracker with next-episode suggestions, and *Upcoming* movie and episode releases grouped by period.
@@ -83,6 +116,7 @@ touch .env                                              # required asset, not co
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter test
+./tool/screenshots.sh                                   # regenerate DOCS/screenshots/*.png offline
 ```
 
 Install the git hooks once per clone (enforces Conventional Commits and `dart format`):

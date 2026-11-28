@@ -35,6 +35,39 @@
 
 ---
 
+## Captures d'écran
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="DOCS/screenshots/home.png" alt="Écran Accueil" width="220" /><br />
+      <sub><strong>Accueil</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/discover.png" alt="Écran Découvrir" width="220" /><br />
+      <sub><strong>Découvrir</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/detail.png" alt="Écran Fiche média" width="220" /><br />
+      <sub><strong>Fiche média</strong></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="DOCS/screenshots/library.png" alt="Écran Bibliothèque" width="220" /><br />
+      <sub><strong>Bibliothèque</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/together.png" alt="Écran Ensemble" width="220" /><br />
+      <sub><strong>Ensemble</strong></sub>
+    </td>
+    <td align="center">
+      <img src="DOCS/screenshots/stats.png" alt="Écran Statistiques" width="220" /><br />
+      <sub><strong>Statistiques</strong></sub>
+    </td>
+  </tr>
+</table>
+
 ## Fonctionnalités
 
 - **Accueil** : sélections « À regarder ce soir », suivi des séries en cours avec suggestion du prochain épisode, et sorties à venir (films et épisodes) groupées par période.
@@ -83,6 +116,7 @@ touch .env                                              # asset requis, non vers
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter test
+./tool/screenshots.sh                                   # régénère DOCS/screenshots/*.png hors ligne
 ```
 
 Installez les hooks git une fois par clone (vérifient Conventional Commits et `dart format`) :
