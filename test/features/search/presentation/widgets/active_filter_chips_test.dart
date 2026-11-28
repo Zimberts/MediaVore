@@ -82,4 +82,41 @@ void main() {
     await tester.tap(find.byType(ActionChip));
     expect(clearAllCalled, isTrue);
   });
+
+  testWidgets(
+    'renders and deletes excludedGenreIds, originalLanguage and hideUnreleased chips',
+    (tester) async {
+      final changes = <SearchFilters>[];
+      const filters = SearchFilters(
+        excludedGenreIds: {27},
+        originalLanguage: 'fr',
+        hideUnreleased: true,
+      );
+
+      await tester.pumpWidget(
+        createWidget(
+          filters: filters,
+          onFilterChanged: changes.add,
+          onClearAll: () {},
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(InputChip), findsNWidgets(3));
+      expect(find.text('No Horror'), findsOneWidget);
+      expect(find.text('French'), findsOneWidget);
+      expect(find.text('Released only'), findsOneWidget);
+
+      final chips = tester
+          .widgetList<InputChip>(find.byType(InputChip))
+          .toList();
+      chips[0].onDeleted?.call();
+      chips[1].onDeleted?.call();
+      chips[2].onDeleted?.call();
+
+      expect(changes[0].excludedGenreIds, isEmpty);
+      expect(changes[1].originalLanguage, isNull);
+      expect(changes[2].hideUnreleased, isFalse);
+    },
+  );
 }

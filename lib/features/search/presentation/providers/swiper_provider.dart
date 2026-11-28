@@ -7,6 +7,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/utils/saga_sort.dart';
 import 'package:mediavore/features/library/presentation/providers/library_provider.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 
 /// Represents a candidate presented on the Swiper screen.
@@ -71,10 +72,14 @@ class SwiperProvider extends ChangeNotifier {
   Set<int> _existingListIds = {};
   Set<int> _seenIds = {};
 
+  SearchFilters _filters = const SearchFilters();
+  int _loadGeneration = 0;
+
   List<SwipeCardCandidate> get candidates => List.unmodifiable(_candidates);
   SwipeCardCandidate? get currentCandidate =>
       _candidates.isNotEmpty ? _candidates.first : null;
 
+  SearchFilters get filters => _filters;
   bool get isLoading => _isLoading;
   bool get hasMore => _hasMore || _pendingItems.isNotEmpty;
   bool get canUndo => _historyStack.isNotEmpty;
@@ -86,19 +91,28 @@ class SwiperProvider extends ChangeNotifier {
   Future<void> init({
     Set<int> existingListIds = const {},
     Set<int> seenIds = const {},
+    SearchFilters? filters,
   }) async {
     _existingListIds = Set.from(existingListIds);
     _seenIds = Set.from(seenIds);
+    if (filters != null) {
+      _filters = filters;
+    }
 
+    _loadGeneration++;
+    final generation = _loadGeneration;
+    _isFetchingMore = false;
     _isLoading = true;
     notifyListeners();
 
     try {
       final decided = await repository.getDecidedTmdbIds();
+      if (generation != _loadGeneration) return;
       _decidedTmdbIds.clear();
       _decidedTmdbIds.addAll(decided);
 
       final pastDecisions = await repository.getSwipeDecisions();
+      if (generation != _loadGeneration) return;
       _seenSagaCollectionIds.clear();
       for (final d in pastDecisions) {
         if (d.collectionId != null) {
@@ -116,8 +130,36 @@ class SwiperProvider extends ChangeNotifier {
 
       await _loadCandidatesUntilThreshold();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (generation == _loadGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  /// Applies new discovery [newFilters] and reloads the deck from page 1,
+  /// preserving session decisions and undo history.
+  Future<void> setFilters(SearchFilters newFilters) async {
+    if (_filters == newFilters) return;
+    _filters = newFilters;
+    _loadGeneration++;
+    final generation = _loadGeneration;
+
+    _candidates.clear();
+    _pendingItems.clear();
+    _currentPage = 1;
+    _hasMore = true;
+    _isFetchingMore = false;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _loadCandidatesUntilThreshold();
+    } finally {
+      if (generation == _loadGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -332,16 +374,26 @@ class SwiperProvider extends ChangeNotifier {
   Future<void> _loadCandidatesUntilThreshold({int targetCount = 4}) async {
     if (_isFetchingMore || !hasMore) return;
     _isFetchingMore = true;
+    final generation = _loadGeneration;
+    final activeFilters = _filters;
 
     try {
       while (_candidates.length < targetCount) {
+        if (generation != _loadGeneration) return;
         if (_pendingItems.isEmpty) {
           if (!_hasMore) break;
           if (_currentPage > _maxPages) {
             _hasMore = false;
             break;
           }
-          final pageItems = await repository.discoverMedia(page: _currentPage);
+          final pageItems = activeFilters.isEmpty
+              ? await repository.discoverMedia(page: _currentPage)
+              : await repository.discoverMedia(
+                  page: _currentPage,
+                  filters: activeFilters,
+                  genresMatchAny: true,
+                );
+          if (generation != _loadGeneration) return;
           _currentPage++;
 
           if (pageItems.isEmpty) {
@@ -360,6 +412,7 @@ class SwiperProvider extends ChangeNotifier {
         // Enrich with details to detect collections/sagas
         try {
           final details = await repository.getMediaDetails(item.id);
+          if (generation != _loadGeneration) return;
           final collId = details.item.collectionId;
           final collName = details.item.collectionName;
 
@@ -383,14 +436,17 @@ class SwiperProvider extends ChangeNotifier {
             _candidates.add(SwipeCardCandidate(item: details.item));
           }
         } catch (_) {
+          if (generation != _loadGeneration) return;
           _candidates.add(SwipeCardCandidate(item: item));
         }
       }
     } catch (_) {
       // In case of network errors, preserve existing candidates
     } finally {
-      _isFetchingMore = false;
-      notifyListeners();
+      if (generation == _loadGeneration) {
+        _isFetchingMore = false;
+        notifyListeners();
+      }
     }
   }
 }

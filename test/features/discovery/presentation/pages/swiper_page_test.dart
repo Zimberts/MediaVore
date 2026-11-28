@@ -99,6 +99,8 @@ void main() {
       () => repo.discoverMedia(
         type: any(named: 'type'),
         page: any(named: 'page'),
+        filters: any(named: 'filters'),
+        genresMatchAny: any(named: 'genresMatchAny'),
       ),
     ).thenAnswer((_) async => [movie1, movie2]);
 
@@ -254,10 +256,13 @@ void main() {
   testWidgets('displays empty state when all candidates are swiped', (
     tester,
   ) async {
+    await settingsProvider.setSwiperFilters(const SearchFilters());
     when(
       () => repo.discoverMedia(
         type: any(named: 'type'),
         page: any(named: 'page'),
+        filters: any(named: 'filters'),
+        genresMatchAny: any(named: 'genresMatchAny'),
       ),
     ).thenAnswer((_) async => []);
 
@@ -267,6 +272,76 @@ void main() {
     expect(find.byType(EmptyState), findsOneWidget);
     expect(find.text('Plus de films'), findsOneWidget);
   });
+
+  testWidgets(
+    'displays filtered empty state with widen filters button when filters are active',
+    (tester) async {
+      await settingsProvider.setSwiperFilters(
+        const SearchFilters(genreIds: {35}, hideUnreleased: true),
+      );
+      when(
+        () => repo.discoverMedia(
+          type: any(named: 'type'),
+          page: any(named: 'page'),
+          filters: any(named: 'filters'),
+          genresMatchAny: any(named: 'genresMatchAny'),
+        ),
+      ).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EmptyState), findsOneWidget);
+      expect(
+        find.text('Aucun film ne correspond à ces filtres'),
+        findsOneWidget,
+      );
+      expect(find.text('Élargir les filtres'), findsOneWidget);
+
+      await tester.tap(find.text('Élargir les filtres'));
+      await tester.pumpAndSettle();
+      expect(find.text('Filtres'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'displays filter badge, active chips, and updates filters from sheet',
+    (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      // Default hideUnreleased=true gives badge count 1 and chip "Déjà sortis"
+      expect(find.byKey(const Key('swiper_filter_button')), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('Déjà sortis'), findsOneWidget);
+
+      // Open filter sheet, select 7+, and apply
+      await tester.tap(find.byKey(const Key('swiper_filter_button')));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('7+'),
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.ensureVisible(find.text('7+'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('7+'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Afficher les résultats'));
+      await tester.pumpAndSettle();
+
+      expect(settingsProvider.swiperFilters.minRating, 7.0);
+      expect(find.text('Note 7+'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'SwiperPage does not dispose injected customSwiperProvider when unmounted',

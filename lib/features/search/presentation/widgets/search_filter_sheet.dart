@@ -9,12 +9,24 @@ class SearchFilterSheet extends StatefulWidget {
   final SearchFilters initialFilters;
   final ValueChanged<SearchFilters> onApply;
   final int? resultCount;
+  final bool showTypeFilter;
+  final bool showHideSeen;
+  final bool showExcludedGenres;
+  final bool showLanguageFilter;
+  final bool showHideUnreleased;
+  final bool moviesOnly;
 
   const SearchFilterSheet({
     super.key,
     required this.initialFilters,
     required this.onApply,
     this.resultCount,
+    this.showTypeFilter = true,
+    this.showHideSeen = true,
+    this.showExcludedGenres = false,
+    this.showLanguageFilter = false,
+    this.showHideUnreleased = false,
+    this.moviesOnly = false,
   });
 
   /// Displays the filter bottom sheet as a modal bottom sheet.
@@ -23,6 +35,12 @@ class SearchFilterSheet extends StatefulWidget {
     required SearchFilters initialFilters,
     required ValueChanged<SearchFilters> onApply,
     int? resultCount,
+    bool showTypeFilter = true,
+    bool showHideSeen = true,
+    bool showExcludedGenres = false,
+    bool showLanguageFilter = false,
+    bool showHideUnreleased = false,
+    bool moviesOnly = false,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -35,6 +53,12 @@ class SearchFilterSheet extends StatefulWidget {
         initialFilters: initialFilters,
         onApply: onApply,
         resultCount: resultCount,
+        showTypeFilter: showTypeFilter,
+        showHideSeen: showHideSeen,
+        showExcludedGenres: showExcludedGenres,
+        showLanguageFilter: showLanguageFilter,
+        showHideUnreleased: showHideUnreleased,
+        moviesOnly: moviesOnly,
       ),
     );
   }
@@ -78,19 +102,35 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
                   vertical: 12,
                 ),
                 children: [
-                  _buildTypeSection(theme, l10n),
-                  const SizedBox(height: 16),
+                  if (widget.showTypeFilter) ...[
+                    _buildTypeSection(theme, l10n),
+                    const SizedBox(height: 16),
+                  ],
                   _buildSortSection(theme, l10n),
                   const SizedBox(height: 16),
                   _buildPeriodSection(theme, l10n),
                   const SizedBox(height: 16),
                   _buildGenresSection(theme, l10n),
+                  if (widget.showExcludedGenres) ...[
+                    const SizedBox(height: 16),
+                    _buildExcludedGenresSection(theme, l10n),
+                  ],
                   const SizedBox(height: 16),
                   _buildRatingSection(theme, l10n),
                   const SizedBox(height: 16),
                   _buildDurationSection(theme, l10n),
-                  const SizedBox(height: 16),
-                  _buildHideSeenSection(theme, l10n),
+                  if (widget.showLanguageFilter) ...[
+                    const SizedBox(height: 16),
+                    _buildLanguageSection(theme, l10n),
+                  ],
+                  if (widget.showHideSeen) ...[
+                    const SizedBox(height: 16),
+                    _buildHideSeenSection(theme, l10n),
+                  ],
+                  if (widget.showHideUnreleased) ...[
+                    const SizedBox(height: 8),
+                    _buildHideUnreleasedSection(theme, l10n),
+                  ],
                   const SizedBox(height: 24),
                 ],
               ),
@@ -387,9 +427,9 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
-  Widget _buildGenresSection(ThemeData theme, AppLocalizations l10n) {
-    Map<int, String> availableGenres;
-    if (_currentFilters.type == MediaType.movie) {
+  List<MapEntry<int, String>> _sortedGenreEntries(AppLocalizations l10n) {
+    final Map<int, String> availableGenres;
+    if (widget.moviesOnly || _currentFilters.type == MediaType.movie) {
       availableGenres = GenreUtils.movieGenres;
     } else if (_currentFilters.type == MediaType.tv) {
       availableGenres = GenreUtils.tvGenres;
@@ -397,13 +437,16 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
       availableGenres = GenreUtils.getAllGenres();
     }
 
-    final sortedEntries = availableGenres.entries.toList()
-      ..sort(
-        (a, b) => GenreUtils.localizedName(
-          l10n,
-          a.key,
-        ).compareTo(GenreUtils.localizedName(l10n, b.key)),
-      );
+    return availableGenres.entries.toList()..sort(
+      (a, b) => GenreUtils.localizedName(
+        l10n,
+        a.key,
+      ).compareTo(GenreUtils.localizedName(l10n, b.key)),
+    );
+  }
+
+  Widget _buildGenresSection(ThemeData theme, AppLocalizations l10n) {
+    final sortedEntries = _sortedGenreEntries(l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,12 +469,67 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
               onSelected: (selected) {
                 setState(() {
                   final newSet = Set<int>.from(_currentFilters.genreIds);
+                  final newExcluded = Set<int>.from(
+                    _currentFilters.excludedGenreIds,
+                  );
                   if (selected) {
                     newSet.add(entry.key);
+                    newExcluded.remove(entry.key);
                   } else {
                     newSet.remove(entry.key);
                   }
-                  _currentFilters = _currentFilters.copyWith(genreIds: newSet);
+                  _currentFilters = _currentFilters.copyWith(
+                    genreIds: newSet,
+                    excludedGenreIds: newExcluded,
+                  );
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExcludedGenresSection(ThemeData theme, AppLocalizations l10n) {
+    final sortedEntries = _sortedGenreEntries(l10n);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.filtersExcludeGenres,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: sortedEntries.map((entry) {
+            final isSelected = _currentFilters.excludedGenreIds.contains(
+              entry.key,
+            );
+            return FilterChip(
+              label: Text(GenreUtils.localizedName(l10n, entry.key)),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  final newExcluded = Set<int>.from(
+                    _currentFilters.excludedGenreIds,
+                  );
+                  final newIncluded = Set<int>.from(_currentFilters.genreIds);
+                  if (selected) {
+                    newExcluded.add(entry.key);
+                    newIncluded.remove(entry.key);
+                  } else {
+                    newExcluded.remove(entry.key);
+                  }
+                  _currentFilters = _currentFilters.copyWith(
+                    genreIds: newIncluded,
+                    excludedGenreIds: newExcluded,
+                  );
                 });
               },
             );
@@ -508,7 +606,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
   }
 
   Widget _buildDurationSection(ThemeData theme, AppLocalizations l10n) {
-    final isTv = _currentFilters.type == MediaType.tv;
+    final isTv = !widget.moviesOnly && _currentFilters.type == MediaType.tv;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -606,6 +704,65 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
     );
   }
 
+  static const List<String> _commonLanguages = [
+    'en',
+    'fr',
+    'ja',
+    'ko',
+    'es',
+    'de',
+    'it',
+    'pt',
+    'zh',
+    'hi',
+  ];
+
+  Widget _buildLanguageSection(ThemeData theme, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.filtersLanguageTitle,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            ChoiceChip(
+              label: Text(l10n.filtersLanguageAll),
+              selected: _currentFilters.originalLanguage == null,
+              onSelected: (selected) {
+                if (selected) {
+                  setState(() {
+                    _currentFilters = _currentFilters.copyWith(
+                      originalLanguage: () => null,
+                    );
+                  });
+                }
+              },
+            ),
+            for (final code in _commonLanguages)
+              ChoiceChip(
+                label: Text(l10n.detailLanguageName(code)),
+                selected: _currentFilters.originalLanguage == code,
+                onSelected: (selected) {
+                  setState(() {
+                    _currentFilters = _currentFilters.copyWith(
+                      originalLanguage: () => selected ? code : null,
+                    );
+                  });
+                },
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildHideSeenSection(ThemeData theme, AppLocalizations l10n) {
     return SwitchListTile.adaptive(
       contentPadding: EdgeInsets.zero,
@@ -619,6 +776,24 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
       onChanged: (val) {
         setState(() {
           _currentFilters = _currentFilters.copyWith(hideSeen: val);
+        });
+      },
+    );
+  }
+
+  Widget _buildHideUnreleasedSection(ThemeData theme, AppLocalizations l10n) {
+    return SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        l10n.filtersHideUnreleased,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      value: _currentFilters.hideUnreleased,
+      onChanged: (val) {
+        setState(() {
+          _currentFilters = _currentFilters.copyWith(hideUnreleased: val);
         });
       },
     );

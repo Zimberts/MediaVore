@@ -121,6 +121,39 @@ class ActiveFilterChips extends StatelessWidget {
       );
     }
 
+    // Excluded Genre Chips
+    final sortedExcludedGenreIds = filters.excludedGenreIds.toList()..sort();
+    for (final genreId in sortedExcludedGenreIds) {
+      chips.add(
+        InputChip(
+          label: Text(
+            l10n.filtersChipExcludeGenre(
+              GenreUtils.localizedName(l10n, genreId),
+            ),
+          ),
+          onDeleted: () {
+            final newExcluded = Set<int>.from(filters.excludedGenreIds)
+              ..remove(genreId);
+            onFilterChanged(filters.copyWith(excludedGenreIds: newExcluded));
+          },
+        ),
+      );
+    }
+
+    // Language Chip
+    if (filters.originalLanguage != null &&
+        filters.originalLanguage!.isNotEmpty) {
+      chips.add(
+        InputChip(
+          label: Text(
+            l10n.detailLanguageName(filters.originalLanguage!.toLowerCase()),
+          ),
+          onDeleted: () =>
+              onFilterChanged(filters.copyWith(originalLanguage: () => null)),
+        ),
+      );
+    }
+
     // Rating Chip
     if (filters.minRating != null) {
       chips.add(
@@ -164,6 +197,17 @@ class ActiveFilterChips extends StatelessWidget {
         InputChip(
           label: Text(l10n.filtersChipHideSeen),
           onDeleted: () => onFilterChanged(filters.copyWith(hideSeen: false)),
+        ),
+      );
+    }
+
+    // Hide Unreleased Chip
+    if (filters.hideUnreleased) {
+      chips.add(
+        InputChip(
+          label: Text(l10n.filtersChipHideUnreleased),
+          onDeleted: () =>
+              onFilterChanged(filters.copyWith(hideUnreleased: false)),
         ),
       );
     }

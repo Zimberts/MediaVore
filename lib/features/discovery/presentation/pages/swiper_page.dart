@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
@@ -6,6 +8,8 @@ import 'package:mediavore/features/discovery/presentation/widgets/swipe_card.dar
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/swiper_provider.dart';
+import 'package:mediavore/features/search/presentation/widgets/active_filter_chips.dart';
+import 'package:mediavore/features/search/presentation/widgets/search_filter_sheet.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -57,6 +61,7 @@ class _SwiperPageState extends State<SwiperPage> {
 
   void _initSwiper() {
     final searchProvider = context.read<SearchProvider>();
+    final settingsProvider = context.read<SettingsProvider>();
     final existingListIds = searchProvider.listEntries.values
         .expand((list) => list)
         .map((entry) => int.tryParse(entry.split(':').first))
@@ -65,7 +70,30 @@ class _SwiperPageState extends State<SwiperPage> {
 
     final seenIds = searchProvider.seenItems.map((s) => s.tmdbId).toSet();
 
-    _swiper.init(existingListIds: existingListIds, seenIds: seenIds);
+    _swiper.init(
+      existingListIds: existingListIds,
+      seenIds: seenIds,
+      filters: settingsProvider.swiperFilters,
+    );
+  }
+
+  void _applyFilters(SearchFilters newFilters) {
+    unawaited(context.read<SettingsProvider>().setSwiperFilters(newFilters));
+    unawaited(_swiper.setFilters(newFilters));
+  }
+
+  Future<void> _openFilterSheet() async {
+    await SearchFilterSheet.show(
+      context,
+      initialFilters: _swiper.filters,
+      showTypeFilter: false,
+      showHideSeen: false,
+      showExcludedGenres: true,
+      showLanguageFilter: true,
+      showHideUnreleased: true,
+      moviesOnly: true,
+      onApply: _applyFilters,
+    );
   }
 
   void _handleSwipeRight(
@@ -111,7 +139,7 @@ class _SwiperPageState extends State<SwiperPage> {
                 if (swiper.sessionAddedCount > 0 ||
                     swiper.sessionDiscardedCount > 0)
                   Padding(
-                    padding: const EdgeInsets.only(right: 16.0),
+                    padding: const EdgeInsets.only(right: 8.0),
                     child: Center(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -135,6 +163,16 @@ class _SwiperPageState extends State<SwiperPage> {
                       ),
                     ),
                   ),
+                IconButton(
+                  key: const Key('swiper_filter_button'),
+                  icon: Badge(
+                    isLabelVisible: swiper.filters.activeCount > 0,
+                    label: Text('${swiper.filters.activeCount}'),
+                    child: const Icon(Icons.tune),
+                  ),
+                  tooltip: context.l10n.discoveryFiltersTitle,
+                  onPressed: _openFilterSheet,
+                ),
               ],
             ),
             body: Column(
@@ -199,6 +237,13 @@ class _SwiperPageState extends State<SwiperPage> {
                   ),
                 ),
 
+                // Active Filter Chips
+                ActiveFilterChips(
+                  filters: swiper.filters,
+                  onFilterChanged: _applyFilters,
+                  onClearAll: () => _applyFilters(const SearchFilters()),
+                ),
+
                 // Card Area
                 Expanded(
                   child: swiper.isLoading
@@ -207,11 +252,23 @@ class _SwiperPageState extends State<SwiperPage> {
                       ? Center(
                           child: Padding(
                             padding: const EdgeInsets.all(24.0),
-                            child: EmptyState(
-                              icon: Icons.movie_filter_outlined,
-                              title: context.l10n.swiperEmptyTitle,
-                              message: context.l10n.swiperEmptyMessage,
-                            ),
+                            child: swiper.filters.hasActiveFilters
+                                ? EmptyState(
+                                    icon: Icons.filter_alt_off_outlined,
+                                    title:
+                                        context.l10n.swiperFilteredEmptyTitle,
+                                    message:
+                                        context.l10n.swiperFilteredEmptyMessage,
+                                    actionLabel:
+                                        context.l10n.swiperWidenFilters,
+                                    actionIcon: Icons.tune,
+                                    onAction: _openFilterSheet,
+                                  )
+                                : EmptyState(
+                                    icon: Icons.movie_filter_outlined,
+                                    title: context.l10n.swiperEmptyTitle,
+                                    message: context.l10n.swiperEmptyMessage,
+                                  ),
                           ),
                         )
                       : Padding(

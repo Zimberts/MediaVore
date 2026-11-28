@@ -750,5 +750,14 @@
   "swiperResetConfirmTitle": "Réinitialiser les choix de swipe ?",
   "swiperResetConfirmMessage": "Les titres que vous aviez écartés pourront réapparaître dans le mode swipe. Les succès déjà obtenus sont conservés.",
   "swiperResetSuccessToast": "Choix de swipe réinitialisés",
-  "settingsAboutTmdb": "Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB."
+  "settingsAboutTmdb": "Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.",
+  "filtersExcludeGenres": "Exclure des genres",
+  "filtersLanguageTitle": "Langue originale",
+  "filtersLanguageAll": "Toutes les langues",
+  "filtersHideUnreleased": "Masquer les films non sortis",
+  "filtersChipExcludeGenre": "Sans {genre}",
+  "filtersChipHideUnreleased": "Déjà sortis",
+  "swiperFilteredEmptyTitle": "Aucun film ne correspond à ces filtres",
+  "swiperFilteredEmptyMessage": "Essayez d'élargir vos filtres pour découvrir plus de films.",
+  "swiperWidenFilters": "Élargir les filtres"
 }

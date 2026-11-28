@@ -1965,5 +1965,21 @@
   "swiperResetConfirmTitle": "Reset swipe choices?",
   "swiperResetConfirmMessage": "Titles you previously discarded will be able to appear again in swipe mode. Your earned achievements remain unlocked.",
   "swiperResetSuccessToast": "Swipe choices reset",
-  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB."
+  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+  "filtersExcludeGenres": "Exclude genres",
+  "filtersLanguageTitle": "Original language",
+  "filtersLanguageAll": "All languages",
+  "filtersHideUnreleased": "Hide unreleased movies",
+  "filtersChipExcludeGenre": "No {genre}",
+  "@filtersChipExcludeGenre": {
+    "placeholders": {
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "filtersChipHideUnreleased": "Released only",
+  "swiperFilteredEmptyTitle": "No movies match these filters",
+  "swiperFilteredEmptyMessage": "Try broadening your filters to discover more movies.",
+  "swiperWidenFilters": "Broaden filters"
 }
