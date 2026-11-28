@@ -74,6 +74,8 @@ flutter test                                              # tests
   never hardcoded strings in code.
 - **Branches** — readable, referencing the issue: `<type>/<issue>-<slug>`, e.g.
   `feat/233-readable-export-filename`.
+- **Documentation** — Keep `README.md` (English) and `README.fr.md` (French) in sync when
+  updating user-facing project documentation.
 - **Tests** — mirror source path + `_test.dart`; `group('...', () { test('should ...', ...) })`.
   Mock with `mocktail`; shared mocks in `test/helpers/mocks.dart`; load fixtures with
   `fixture(name)` from `test/helpers/fixture_reader.dart`. Real Isar tests use `test/tmp_*`

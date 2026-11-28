@@ -1,136 +1,117 @@
-# MediaVore
+[Français](README.fr.md)
 
-An app to keep track of movies/series/books seen/read or to watch/to read
+<p align="center">
+  <img src="assets/icon/app_icon.png" alt="MediaVore icon" width="96" />
+</p>
 
-## Deep Linking Configuration
+<h1 align="center">MediaVore</h1>
 
-To enable shared links (`https://mediavore.app/share`) to open the app directly on Android without opening the browser first, you must host a configuration file on your domain.
+<p align="center">
+  A local-first Flutter app to track movies and TV series you have watched or want to watch.
+</p>
 
-### Android App Links
-Host a file at: `https://mediavore.app/.well-known/assetlinks.json`
+<p align="center">
+  <a href="https://github.com/Zimberts/MediaVore/releases/latest">
+    <img src="https://img.shields.io/github/v/release/Zimberts/MediaVore" alt="Latest release" />
+  </a>
+  <a href="https://github.com/Zimberts/MediaVore/actions/workflows/ci.yml">
+    <img src="https://github.com/Zimberts/MediaVore/actions/workflows/ci.yml/badge.svg" alt="CI" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/Zimberts/MediaVore" alt="MIT License" />
+  </a>
+  <img src="https://img.shields.io/badge/platform-Android%20%7C%20iOS%20(source)-blue" alt="Platforms" />
+</p>
 
-Content:
-```json
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "fr.zimberts.mediavore",
-      "sha256_cert_fingerprints": [
-        "YOUR_APP_SHA256_FINGERPRINT"
-      ]
-    }
-  }
-]
+<p align="center">
+  <a href="https://github.com/Zimberts/MediaVore/releases/latest/download/mediavore.apk">
+    <strong>Download Android APK (latest)</strong>
+  </a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/Zimberts/MediaVore/releases">All releases</a>
+  &nbsp;·&nbsp;
+  <a href="https://zimberts.github.io/MediaVore/">Website</a>
+</p>
+
+---
+
+## Features
+
+- **Home**: *Tonight* watchlist picks, *In Progress* series tracker with next-episode suggestions, and *Upcoming* movie and episode releases grouped by period.
+- **Discover**: Search movies, TV series, and people on TMDB with filters (sort, decade, genres, rating, runtime, hide seen), trending titles, personalized *Because you watched* rows, and an optional swipe mode.
+- **Media Details**: Ratings, *Where to Watch* streaming availability (JustWatch via TMDB), clickable cast and person pages, saga/collection tracking, collapsible seasons with episode checklists, rewatch cycles, and editable watch dates/counts (Advanced Mode).
+- **Library**: Custom lists with sorting, filtering, multi-select, and sharing, alongside a daily-grouped watch history.
+- **Together**: Find what to watch with friends offline — exchange watchlists via QR code, view common titles, and vote pass-the-phone style.
+- **Me, Stats & Achievements**: Watch-time statistics, gamified achievements with tiers and hidden badges, 6 theme palettes (light & dark), English & French localization, and full ZIP/CSV backup & restore (append, replace, merge).
+
+For planned features and upcoming milestones, see [GitHub Issues](https://github.com/Zimberts/MediaVore/issues) (including the [`v1.5.0`](https://github.com/Zimberts/MediaVore/labels/v1.5.0) label).
+
+## Installation
+
+### Android
+
+1. Download [`mediavore.apk`](https://github.com/Zimberts/MediaVore/releases/latest/download/mediavore.apk) (and optionally [`mediavore.apk.sha256`](https://github.com/Zimberts/MediaVore/releases/latest/download/mediavore.apk.sha256)).
+2. *(Optional)* Verify the download integrity:
+   ```sh
+   sha256sum -c mediavore.apk.sha256
+   ```
+   *(Versioned releases also publish `mediavore-vX.Y.Z.apk` and `mediavore-vX.Y.Z.apk.sha256`.)*
+3. Allow installing apps from unknown sources if prompted by Android, then open the APK to install.
+
+### iOS
+
+There is no public iOS distribution at this time. Building for iOS requires Xcode and an Apple Developer account; see [DOCS/ios-release.md](DOCS/ios-release.md).
+
+### TMDB API Key
+
+MediaVore fetches movie and series metadata (posters, synopses, release dates, streaming providers) from The Movie Database (TMDB) using your own free personal key.
+
+On first launch, the onboarding screen guides you to [TMDB API Settings](https://www.themoviedb.org/settings/api) to create and paste your v3 API key or v4 Read Access Token. You can also skip this step and configure it later in **Me › Settings › TMDB API Credential**.
+
+## Development
+
+### Prerequisites
+
+- Flutter `3.47.6` (pinned in [`.github/workflows/ci.yml`](.github/workflows/ci.yml))
+- Dart `^3.10.4` (see [`pubspec.yaml`](pubspec.yaml))
+
+### Setup
+
+```sh
+flutter doctor
+touch .env                                              # required asset, not committed
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter test
 ```
-Replace `YOUR_APP_SHA256_FINGERPRINT` with your actual release/debug certificate fingerprint.
 
-## Participate
+Install the git hooks once per clone (enforces Conventional Commits and `dart format`):
 
-Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+```sh
+pip install pre-commit
+pre-commit install
+```
 
-\<type>(\<scope>): \<description>
+### Documentation
 
-The main types are `feat`, `fix`, `chore`, `bump`
+- [AGENTS.md](AGENTS.md) — architecture, conventions, and development workflow
+- [DOCS/deep-links.md](DOCS/deep-links.md) — Android App Links (`assetlinks.json`) configuration
+- [DOCS/i18n.md](DOCS/i18n.md) — localization guide
+- [DOCS/export-format.md](DOCS/export-format.md) — ZIP/CSV backup & import format
+- [DOCS/releasing.md](DOCS/releasing.md) — release process
 
-The main scopes at the moment are `README`, `back`, `front`
+## Contributing
 
-## Product description
+Commit messages and pull request titles must follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) (`<type>(<scope>)!: <description>`). See [.ai/rules/commits.md](.ai/rules/commits.md) for the allowed types, scope conventions, and branch naming rules.
 
-The aim of MediaVore is to record movies/series/books read/seen or which you want to.
+When updating documentation, please keep `README.md` and [`README.fr.md`](README.fr.md) in sync.
 
-At first the app will be stand alone (no server) but might evolve in the end.
+## Attributions & License
 
-For more details, the app will be split between books and movies/series (will start by the movies part, then series and will end with books).
+<a href="https://www.themoviedb.org/">
+  <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" alt="TMDB" width="120" />
+</a>
 
-### Movies/Series
-
-- [ ] You'll have the possibility to fetch movies you want based on their name and year (at first).
-
-- [ ] Then add them to your main watchlist (ordered by date added, but can be changed in front)
-
-- [ ] Or add them to another Named list ordered by choice (not date added)
-
-- [ ] Once you have seen them you enter manually with date seen, rating
-
-- [ ] Possibility to import through csv
-
-- [ ] get the platform where you can whatch it
-
-- [ ] add a movie that is not published, send a notification / reminder when it'll be publish
-  (same for series when a new episode gets out)
-
-### Books
-
-- [ ] Just like the movies and series, you have the possibility to record a book you have read or you want to read
-
-Books data:
-
-- Time of finish (if set as read)
-- Rating on how you liked the book
-- Number of the books (for series) (example 0 and number / -1 and 0 based number)
-
-Additional features:
-
-- [ ] (might add possibility to enter the time it took to read the book)
-- [ ] Add a book by scanning its barcode
-
-## Achievements
-
-MediaVore includes a gamified achievement system to track your viewing habits and milestones. Check out the [Achievements documentation](ACHIEVEMENTS.md) for a full list of available badges.
-
-## Key Features
-
-### Notification Center
-- **Releases Tab**: Track upcoming movie releases and TV episode air dates. Releases are sorted by air date, with unplanned/future releases grouped at the bottom. A notified series points at the first episode you have not seen, considering only episodes that have already aired; the next announced episode is shown only once you are caught up on everything aired. TV episodes older than 30 days are hidden from view to reduce clutter while remaining tracked for notifications.
-- **Quick Add Tab**: Get AI-suggested next episodes for your favorite TV series based on your watch history. Easily add new series to track with a single tap.
-
-### Data Management
-- **Export/Import**: Full backup and restore of your media library including seen history, likes, notifications, quick add items, and custom lists. Supports three import modes: append, replace, and merge.
-- **Auto-population**: Quick Add is automatically populated from your seen history after importing data, ensuring you don't lose tracking of your viewing streaks.
-
-### Gamification
-- **Achievements**: Unlock badges as you progress through your media journey. Track genre milestones, viewing streaks, runtime records, and more.
-
-## Project Setup on a New Machine
-
-If you have cloned this project on a new machine, you may encounter errors when trying to run it for the first time. This is often due to missing dependencies or stale auto-generated files that are specific to the previous development environment (like Windows).
-
-Follow these steps in your terminal to set up the project correctly on your new machine (macOS):
-
-1. **Check your Flutter environment:**
-    Run this command to check that your Flutter installation is correct and that you have the necessary tools (like Xcode and Android Studio) to build the app.
-
-    ```sh
-    flutter doctor
-    ```
-
-2. **Get dependencies:**
-    This command downloads all the project's dependencies and links them for your current platform.
-
-    ```sh
-    flutter pub get
-    ```
-
-3. **Regenerate auto-generated files:**
-    Your project uses code generation. This command will delete old files and create new ones that are compatible with your current setup. This is a crucial step.
-
-    ```sh
-    dart run build_runner build
-    ```
-
-After completing these three steps, the project should build and run correctly.
-
-4. **Install the git hooks (once per clone):**
-    Commit messages and PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) (`<type>(<scope>): <description>`, see `.ai/rules/commits.md`), and Dart files must be formatted with `dart format`. These hooks reject non-conforming commits locally, as CI does.
-
-    ```sh
-    pip install pre-commit
-    pre-commit install
-    ```
-
-## Attributions & Data Sources
-
-- Media metadata and images provided by [The Movie Database (TMDB)](https://www.themoviedb.org/).
+- This product uses the TMDB API but is not endorsed or certified by TMDB.
 - Streaming availability data provided by [JustWatch](https://www.justwatch.com/) via TMDB.
+- Licensed under the [MIT License](LICENSE).
