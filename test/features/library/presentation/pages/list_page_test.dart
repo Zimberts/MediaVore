@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/features/library/presentation/pages/list_page.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_media_tile.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_saga_grid_item.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_saga_tile.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/l10n/generated/app_localizations.dart';
@@ -345,6 +349,191 @@ void main() {
           expect(renderBox.size.height, greaterThanOrEqualTo(48.0));
         }
       }
+    });
+
+    group('saga stacking', () {
+      const lotr2 = MediaItem(
+        id: 121,
+        title: 'The Two Towers',
+        overview: '',
+        releaseDate: '2002-12-18',
+        collectionId: 119,
+        collectionName: 'Le Seigneur des Anneaux',
+      );
+      const lotr1 = MediaItem(
+        id: 120,
+        title: 'The Fellowship of the Ring',
+        overview: '',
+        releaseDate: '2001-12-19',
+        collectionId: 119,
+        collectionName: 'Le Seigneur des Anneaux',
+      );
+      const singleSaga = MediaItem(
+        id: 603,
+        title: 'The Matrix',
+        overview: '',
+        releaseDate: '1999-03-31',
+        collectionId: 2344,
+        collectionName: 'Matrix Collection',
+      );
+      const tvShow = MediaItem(
+        id: 1399,
+        title: 'Game of Thrones',
+        overview: '',
+        releaseDate: '2011-04-17',
+        mediaType: MediaType.tv,
+      );
+
+      void stubMixedList() {
+        when(() => mockRepo.getListEntries('watchlist')).thenAnswer(
+          (_) async => ['121:movie', '603:movie', '1399:tv', '120:movie'],
+        );
+        when(
+          () => mockRepo.getMediaDetails(121),
+        ).thenAnswer((_) async => MediaDetails(item: lotr2, cast: []));
+        when(
+          () => mockRepo.getMediaDetails(120),
+        ).thenAnswer((_) async => MediaDetails(item: lotr1, cast: []));
+        when(
+          () => mockRepo.getMediaDetails(603),
+        ).thenAnswer((_) async => MediaDetails(item: singleSaga, cast: []));
+        when(
+          () => mockRepo.getMediaDetails(1399, type: MediaType.tv),
+        ).thenAnswer((_) async => MediaDetails(item: tvShow, cast: []));
+        when(() => mockRepo.getSeenItems()).thenAnswer(
+          (_) async => [
+            SeenItem(
+              id: 1,
+              tmdbId: 120,
+              type: MediaType.movie,
+              title: 'The Fellowship of the Ring',
+              seenDate: DateTime(2024),
+            ),
+          ],
+        );
+      }
+
+      testWidgets(
+        'stacks >= 2 movies in list view, keeps single-movie saga and TV individual, and expands chronologically',
+        (tester) async {
+          await settingsProvider.setDisplayMode(DisplayMode.list);
+          stubMixedList();
+
+          await tester.pumpWidget(buildTestWidget());
+          await tester.pumpAndSettle();
+
+          // Saga is stacked, single-movie saga & TV stay individual.
+          expect(find.byType(ListSagaTile), findsOneWidget);
+          expect(find.text('Le Seigneur des Anneaux'), findsOneWidget);
+          expect(find.text('2 films · 1/2 vus'), findsOneWidget);
+          expect(find.text('The Matrix'), findsOneWidget);
+          expect(find.text('Game of Thrones'), findsOneWidget);
+          expect(find.text('The Fellowship of the Ring'), findsNothing);
+          expect(find.text('The Two Towers'), findsNothing);
+
+          // Tap stack to expand inline.
+          await tester.tap(find.text('Le Seigneur des Anneaux'));
+          await tester.pumpAndSettle();
+
+          expect(find.text('The Fellowship of the Ring'), findsOneWidget);
+          expect(find.text('The Two Towers'), findsOneWidget);
+
+          // Verify chronological order (Fellowship 2001 before Two Towers 2002).
+          final fellowshipY = tester
+              .getTopLeft(find.text('The Fellowship of the Ring'))
+              .dy;
+          final twoTowersY = tester.getTopLeft(find.text('The Two Towers')).dy;
+          expect(fellowshipY, lessThan(twoTowersY));
+
+          // Tap header again to collapse.
+          await tester.tap(find.text('Le Seigneur des Anneaux'));
+          await tester.pumpAndSettle();
+          expect(find.text('The Fellowship of the Ring'), findsNothing);
+          expect(find.text('The Two Towers'), findsNothing);
+        },
+      );
+
+      testWidgets('stacks movies in grid view and expands/collapses inline', (
+        tester,
+      ) async {
+        await settingsProvider.setDisplayMode(DisplayMode.grid);
+        stubMixedList();
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ListSagaGridItem), findsOneWidget);
+        expect(find.text('Le Seigneur des Anneaux'), findsOneWidget);
+        expect(find.text('1/2 vus'), findsOneWidget);
+
+        // Tap collapsed stack to expand.
+        await tester.tap(find.byType(ListSagaGridItem));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ListSagaGridHeader), findsOneWidget);
+        expect(find.byType(ListSagaGridItem), findsNothing);
+        expect(find.text('2 films · 1/2 vus'), findsOneWidget);
+
+        // Tap expanded header to collapse back.
+        await tester.tap(find.byType(ListSagaGridHeader));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ListSagaGridHeader), findsNothing);
+        expect(find.byType(ListSagaGridItem), findsOneWidget);
+      });
+
+      testWidgets(
+        'display mode sheet toggle disables and re-enables saga stacking',
+        (tester) async {
+          await settingsProvider.setDisplayMode(DisplayMode.list);
+          stubMixedList();
+
+          await tester.pumpWidget(buildTestWidget());
+          await tester.pumpAndSettle();
+
+          expect(find.byType(ListSagaTile), findsOneWidget);
+
+          // Open display mode sheet and disable stacking.
+          await tester.tap(find.byIcon(Icons.view_list));
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(const Key('list_display_stack_sagas')));
+          await tester.pumpAndSettle();
+          // Close bottom sheet.
+          await tester.tapAt(const Offset(10, 10));
+          await tester.pumpAndSettle();
+
+          expect(settingsProvider.stackSagas, isFalse);
+          expect(find.byType(ListSagaTile), findsNothing);
+          expect(find.byType(ListMediaTile), findsNWidgets(4));
+        },
+      );
+
+      testWidgets(
+        'selection mode on a saga stack selects all movies in the saga',
+        (tester) async {
+          await settingsProvider.setDisplayMode(DisplayMode.list);
+          stubMixedList();
+
+          await tester.pumpWidget(buildTestWidget());
+          await tester.pumpAndSettle();
+
+          // Enter selection mode.
+          await tester.tap(find.byKey(const Key('lists_more_actions')));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Sélectionner'));
+          await tester.pumpAndSettle();
+
+          // Tap the saga stack -> selects both movies (2 sélectionnés).
+          await tester.tap(find.text('Le Seigneur des Anneaux'));
+          await tester.pumpAndSettle();
+          expect(find.text('2 sélectionnés'), findsOneWidget);
+
+          // Tap again -> deselects both (0 sélectionné).
+          await tester.tap(find.text('Le Seigneur des Anneaux'));
+          await tester.pumpAndSettle();
+          expect(find.text('0 sélectionné'), findsOneWidget);
+        },
+      );
     });
   });
 }

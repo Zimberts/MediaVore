@@ -3470,6 +3470,42 @@ abstract class AppLocalizations {
   /// **'Fill by swiping'**
   String get listsFillBySwiping;
 
+  /// No description provided for @listsStackSagas.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack sagas'**
+  String get listsStackSagas;
+
+  /// No description provided for @listsStackSagasHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Group movies from the same saga into one entry'**
+  String get listsStackSagasHint;
+
+  /// No description provided for @listsSagaMovieCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 movie} other{{count} movies}}'**
+  String listsSagaMovieCount(int count);
+
+  /// No description provided for @listsSagaSeenProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{seen}/{total} seen'**
+  String listsSagaSeenProgress(int seen, int total);
+
+  /// No description provided for @listsSagaExpandTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand saga'**
+  String get listsSagaExpandTooltip;
+
+  /// No description provided for @listsSagaCollapseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse saga'**
+  String get listsSagaCollapseTooltip;
+
   /// No description provided for @filtersTitle.
   ///
   /// In en, this message translates to:

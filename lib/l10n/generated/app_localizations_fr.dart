@@ -2261,6 +2261,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listsFillBySwiping => 'Remplir en swipant';
 
   @override
+  String get listsStackSagas => 'Empiler les sagas';
+
+  @override
+  String get listsStackSagasHint =>
+      'Regrouper les films d\'une même saga en une entrée';
+
+  @override
+  String listsSagaMovieCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count films',
+      one: '1 film',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listsSagaSeenProgress(int seen, int total) {
+    return '$seen/$total vus';
+  }
+
+  @override
+  String get listsSagaExpandTooltip => 'Déplier la saga';
+
+  @override
+  String get listsSagaCollapseTooltip => 'Replier la saga';
+
+  @override
   String get filtersTitle => 'Filtres';
 
   @override

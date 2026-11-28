@@ -2244,6 +2244,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listsFillBySwiping => 'Fill by swiping';
 
   @override
+  String get listsStackSagas => 'Stack sagas';
+
+  @override
+  String get listsStackSagasHint =>
+      'Group movies from the same saga into one entry';
+
+  @override
+  String listsSagaMovieCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count movies',
+      one: '1 movie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listsSagaSeenProgress(int seen, int total) {
+    return '$seen/$total seen';
+  }
+
+  @override
+  String get listsSagaExpandTooltip => 'Expand saga';
+
+  @override
+  String get listsSagaCollapseTooltip => 'Collapse saga';
+
+  @override
   String get filtersTitle => 'Filters';
 
   @override

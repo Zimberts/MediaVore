@@ -5,12 +5,15 @@ import 'package:mediavore/core/widgets/app_sheet.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 
-/// Shows the display options sheet for a list: Grid 2, 3, 4 columns or Detailed List.
+/// Shows the display options sheet for a list: Grid 2, 3, 4 columns, Detailed List,
+/// and whether to stack movies of the same saga.
 Future<void> showListDisplayModeSheet(
   BuildContext context, {
   required DisplayMode currentMode,
   required int currentGridSize,
   required void Function(DisplayMode mode, int gridSize) onChanged,
+  bool stackSagas = true,
+  ValueChanged<bool>? onStackSagasChanged,
 }) {
   return showAppSheet<void>(
     context: context,
@@ -18,20 +21,35 @@ Future<void> showListDisplayModeSheet(
       currentMode: currentMode,
       currentGridSize: currentGridSize,
       onChanged: onChanged,
+      stackSagas: stackSagas,
+      onStackSagasChanged: onStackSagasChanged,
     ),
   );
 }
 
-class _ListDisplayModeSheetContent extends StatelessWidget {
+class _ListDisplayModeSheetContent extends StatefulWidget {
   const _ListDisplayModeSheetContent({
     required this.currentMode,
     required this.currentGridSize,
     required this.onChanged,
+    required this.stackSagas,
+    this.onStackSagasChanged,
   });
 
   final DisplayMode currentMode;
   final int currentGridSize;
   final void Function(DisplayMode mode, int gridSize) onChanged;
+  final bool stackSagas;
+  final ValueChanged<bool>? onStackSagasChanged;
+
+  @override
+  State<_ListDisplayModeSheetContent> createState() =>
+      _ListDisplayModeSheetContentState();
+}
+
+class _ListDisplayModeSheetContentState
+    extends State<_ListDisplayModeSheetContent> {
+  late bool _stackSagas = widget.stackSagas;
 
   Widget _buildOption({
     required BuildContext context,
@@ -65,8 +83,8 @@ class _ListDisplayModeSheetContent extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.appColors;
 
-    final isList = currentMode == DisplayMode.list;
-    final isGrid = currentMode == DisplayMode.grid;
+    final isList = widget.currentMode == DisplayMode.list;
+    final isGrid = widget.currentMode == DisplayMode.grid;
 
     return SafeArea(
       child: Padding(
@@ -89,9 +107,9 @@ class _ListDisplayModeSheetContent extends StatelessWidget {
               context: context,
               label: l10n.listsDisplayGrid2,
               icon: Icons.grid_view,
-              isSelected: isGrid && currentGridSize == 2,
+              isSelected: isGrid && widget.currentGridSize == 2,
               onTap: () {
-                onChanged(DisplayMode.grid, 2);
+                widget.onChanged(DisplayMode.grid, 2);
                 Navigator.pop(context);
               },
             ),
@@ -99,9 +117,9 @@ class _ListDisplayModeSheetContent extends StatelessWidget {
               context: context,
               label: l10n.listsDisplayGrid3,
               icon: Icons.grid_view,
-              isSelected: isGrid && currentGridSize == 3,
+              isSelected: isGrid && widget.currentGridSize == 3,
               onTap: () {
-                onChanged(DisplayMode.grid, 3);
+                widget.onChanged(DisplayMode.grid, 3);
                 Navigator.pop(context);
               },
             ),
@@ -109,9 +127,9 @@ class _ListDisplayModeSheetContent extends StatelessWidget {
               context: context,
               label: l10n.listsDisplayGrid4,
               icon: Icons.grid_view,
-              isSelected: isGrid && currentGridSize == 4,
+              isSelected: isGrid && widget.currentGridSize == 4,
               onTap: () {
-                onChanged(DisplayMode.grid, 4);
+                widget.onChanged(DisplayMode.grid, 4);
                 Navigator.pop(context);
               },
             ),
@@ -121,10 +139,24 @@ class _ListDisplayModeSheetContent extends StatelessWidget {
               icon: Icons.view_list,
               isSelected: isList,
               onTap: () {
-                onChanged(DisplayMode.list, currentGridSize);
+                widget.onChanged(DisplayMode.list, widget.currentGridSize);
                 Navigator.pop(context);
               },
             ),
+            if (widget.onStackSagasChanged != null) ...[
+              const Divider(height: 16),
+              SwitchListTile(
+                key: const Key('list_display_stack_sagas'),
+                secondary: const Icon(Icons.collections_bookmark_outlined),
+                title: Text(l10n.listsStackSagas),
+                subtitle: Text(l10n.listsStackSagasHint),
+                value: _stackSagas,
+                onChanged: (value) {
+                  setState(() => _stackSagas = value);
+                  widget.onStackSagasChanged!(value);
+                },
+              ),
+            ],
           ],
         ),
       ),

@@ -192,6 +192,13 @@ class SettingsPage extends StatelessWidget {
             value: settings.hideNonReleased,
             onChanged: settings.setHideNonReleased,
           ),
+          SwitchListTile(
+            key: const Key('settings_stack_sagas'),
+            title: Text(l10n.listsStackSagas),
+            subtitle: Text(l10n.listsStackSagasHint),
+            value: settings.stackSagas,
+            onChanged: settings.setStackSagas,
+          ),
           ListTile(
             key: const Key('settings_watch_providers_country_tile'),
             leading: const Icon(Icons.public),
