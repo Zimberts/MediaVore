@@ -1,0 +1,300 @@
+---
+import { Image } from 'astro:assets';
+import appIcon from '../assets/app_icon.png';
+import Layout from '../layouts/Layout.astro';
+import { LOCALES, getLocaleConfig, getLocalePath } from '../i18n';
+import {
+  REPO_SLUG,
+  REPO_URL,
+  fetchLatestRelease,
+  formatFileSize,
+  formatReleaseDate,
+} from '../lib/release';
+
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+const { translations: t } = getLocaleConfig(locale);
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+
+const release = await fetchLatestRelease();
+const formattedDate = formatReleaseDate(release.publishedAt, locale);
+const formattedSize = formatFileSize(release.sizeBytes, locale);
+---
+
+<Layout locale={locale} title={t.meta.title} description={t.meta.description}>
+  <a href="#main-content" class="skip-link visually-hidden">{t.nav.skipToContent}</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href={getLocalePath(locale, base)} class="brand">
+        <Image src={appIcon} alt="" width={64} height={64} class="brand-icon" />
+        <span>MediaVore</span>
+      </a>
+
+      <nav class="header-nav" aria-label={t.nav.primaryLabel}>
+        <ul class="nav-links">
+          <li><a href="#screens">{t.nav.screens}</a></li>
+          <li><a href="#features">{t.nav.features}</a></li>
+          <li><a href="#install">{t.nav.install}</a></li>
+        </ul>
+
+        <div class="lang-switcher" role="group" aria-label={t.nav.languageLabel}>
+          {
+            LOCALES.map((entry) => (
+              <a
+                href={getLocalePath(entry.code, base)}
+                hreflang={entry.hreflang}
+                lang={entry.code}
+                aria-current={entry.code === locale ? 'page' : undefined}
+              >
+                {entry.label}
+              </a>
+            ))
+          }
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <Image
+          src={appIcon}
+          alt="MediaVore"
+          width={176}
+          height={176}
+          class="hero-icon"
+          loading="eager"
+          fetchpriority="high"
+        />
+
+        <h1 id="main-content" tabindex="-1" class="hero-title">MediaVore</h1>
+        <p class="hero-tagline">{t.hero.tagline}</p>
+
+        <div class="hero-badge">
+          <img
+            src={`https://img.shields.io/github/v/release/${REPO_SLUG}?style=flat-square&color=1B1A17&labelColor=ECE8DF`}
+            alt={t.hero.badgeAlt}
+            height="20"
+            loading="eager"
+          />
+        </div>
+
+        <div class="hero-actions">
+          <a href={release.apkUrl} class="btn-primary">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>{t.hero.downloadCta}</span>
+          </a>
+          <a href={release.releasesUrl} class="btn-secondary">
+            {t.hero.allReleases}
+          </a>
+        </div>
+
+        {
+          release.version || formattedDate || formattedSize ? (
+            <div class="release-meta">
+              {release.version && (
+                <span>
+                  {t.hero.versionLabel}: <strong>{release.version}</strong>
+                </span>
+              )}
+              {formattedDate && (
+                <span>
+                  {t.hero.releasedOn}: <strong>{formattedDate}</strong>
+                </span>
+              )}
+              {formattedSize && (
+                <span>
+                  {t.hero.sizeLabel}: <strong>{formattedSize}</strong>
+                </span>
+              )}
+            </div>
+          ) : (
+            <p class="release-meta">{t.hero.fallbackNote}</p>
+          )
+        }
+      </div>
+    </section>
+
+    <section id="screens" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>{t.screens.heading}</h2>
+          <p>{t.screens.subtitle}</p>
+          <p class="section-note">{t.screens.themeNote}</p>
+        </div>
+
+        <div class="screens-grid">
+          {
+            t.screens.items.map((screen) => (
+              <article class="screen-card">
+                <div class="phone-mock" aria-hidden="true">
+                  <div class="phone-topbar">
+                    <span>{screen.mockTitle}</span>
+                    <span class="phone-count">{screen.mockCount}</span>
+                  </div>
+                  <div class="mock-list">
+                    {screen.mockEntries.map((entry) => (
+                      <div class={`mock-entry accent-${entry.accent}`}>
+                        <span class="mock-entry-title">
+                          <span class="accent-dot" />
+                          {entry.title}
+                        </span>
+                        <span class="mock-entry-meta">{entry.meta}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <span class="screen-tag">{screen.tag}</span>
+                <h3>{screen.title}</h3>
+                <p>{screen.caption}</p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>{t.features.heading}</h2>
+          <p>{t.features.subtitle}</p>
+        </div>
+
+        <div class="features-grid">
+          {
+            t.features.items.map((feature) => (
+              <article class="feature-card">
+                <div class={`feature-pill ${feature.accent}`} aria-hidden="true" />
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section id="install" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>{t.install.heading}</h2>
+          <p>{t.install.subtitle}</p>
+        </div>
+
+        <ol class="install-steps">
+          {
+            t.install.steps.map((step, index) => (
+              <li class="install-step">
+                <span class="step-number">{index + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+              </li>
+            ))
+          }
+        </ol>
+
+        <div class="sha-box">
+          <div class="sha-header">
+            <span>{t.install.shaLabel}</span>
+            {
+              release.sha256 && (
+                <button
+                  type="button"
+                  class="copy-btn"
+                  data-copy-sha={release.sha256}
+                  data-label-copy={t.install.copyButton}
+                  data-label-copied={t.install.copiedButton}
+                >
+                  {t.install.copyButton}
+                </button>
+              )
+            }
+          </div>
+          {
+            release.sha256 ? (
+              <code class="sha-code">{release.sha256}</code>
+            ) : (
+              <p>{t.install.shaUnavailable}</p>
+            )
+          }
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <ul class="footer-links">
+          <li><a href={REPO_URL}>{t.footer.sourceCode}</a></li>
+          <li><a href={`${REPO_URL}/blob/main/LICENSE`}>{t.footer.license}</a></li>
+        </ul>
+
+        <div class="tmdb-box">
+          <svg
+            class="tmdb-logo"
+            role="img"
+            aria-label={t.footer.tmdbAlt}
+            viewBox="0 0 185.04 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="tmdb-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#90cea1" />
+                <stop offset="56%" stop-color="#3cbec9" />
+                <stop offset="100%" stop-color="#00b3e5" />
+              </linearGradient>
+            </defs>
+            <text
+              x="0"
+              y="18"
+              fill="url(#tmdb-grad)"
+              font-family="Bricolage Grotesque, Inter, sans-serif"
+              font-weight="700"
+              font-size="20"
+              letter-spacing="1"
+            >
+              TMDB
+            </text>
+            <rect x="74" y="5" width="44" height="14" rx="7" fill="url(#tmdb-grad)" />
+          </svg>
+          <span>{t.footer.tmdbAttribution}</span>
+        </div>
+      </div>
+      <p class="footer-privacy">{t.footer.privacy}</p>
+    </div>
+  </footer>
+
+  <script>
+    const copyButton = document.querySelector<HTMLButtonElement>('[data-copy-sha]');
+    if (copyButton) {
+      copyButton.addEventListener('click', async () => {
+        const value = copyButton.dataset.copySha;
+        if (!value || !navigator.clipboard) return;
+        try {
+          await navigator.clipboard.writeText(value);
+          const copiedLabel = copyButton.dataset.labelCopied ?? 'Copied';
+          const defaultLabel = copyButton.dataset.labelCopy ?? 'Copy';
+          copyButton.textContent = copiedLabel;
+          window.setTimeout(() => {
+            copyButton.textContent = defaultLabel;
+          }, 2000);
+        } catch {
+          // Clipboard write may be blocked in non-secure contexts; keep button silent.
+        }
+      });
+    }
+  </script>
+</Layout>
