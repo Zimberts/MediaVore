@@ -194,6 +194,7 @@ class MediaRepositoryImpl implements MediaRepository {
     String? originalLanguage,
     MediaType type = MediaType.movie,
     String sortBy = 'popularity.desc',
+    bool genresMatchAny = false,
   }) async {
     await _ensureInitialized();
     final results = await remoteDataSource.discoverMedia(
@@ -205,6 +206,7 @@ class MediaRepositoryImpl implements MediaRepository {
       originalLanguage: originalLanguage,
       type: type,
       sortBy: sortBy,
+      genresMatchAny: genresMatchAny,
     );
     final enriched = await _details.enrichItems(results);
     await _details.cacheItemsBestEffort(enriched, 'discoverMedia');

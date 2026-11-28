@@ -2860,4 +2860,35 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'Ce produit utilise l\'API TMDB mais n\'est ni approuvé ni certifié par TMDB.';
+
+  @override
+  String get filtersExcludeGenres => 'Exclure des genres';
+
+  @override
+  String get filtersLanguageTitle => 'Langue originale';
+
+  @override
+  String get filtersLanguageAll => 'Toutes les langues';
+
+  @override
+  String get filtersHideUnreleased => 'Masquer les films non sortis';
+
+  @override
+  String filtersChipExcludeGenre(String genre) {
+    return 'Sans $genre';
+  }
+
+  @override
+  String get filtersChipHideUnreleased => 'Déjà sortis';
+
+  @override
+  String get swiperFilteredEmptyTitle =>
+      'Aucun film ne correspond à ces filtres';
+
+  @override
+  String get swiperFilteredEmptyMessage =>
+      'Essayez d\'élargir vos filtres pour découvrir plus de films.';
+
+  @override
+  String get swiperWidenFilters => 'Élargir les filtres';
 }

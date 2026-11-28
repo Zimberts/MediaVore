@@ -574,6 +574,7 @@ class MediaRemoteDataSource {
     String? originalLanguage,
     MediaType type = MediaType.movie,
     String sortBy = 'popularity.desc',
+    bool genresMatchAny = false,
   }) async {
     final mediaType = type == MediaType.tv ? 'tv' : 'movie';
     if (filters != null) {
@@ -581,6 +582,7 @@ class MediaRemoteDataSource {
         type,
         page: page,
         originalLanguage: originalLanguage,
+        genresMatchAny: genresMatchAny,
       );
       return _guard('discovering', () async {
         final response = await _tmdbGet(

@@ -4339,6 +4339,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This product uses the TMDB API but is not endorsed or certified by TMDB.'**
   String get settingsAboutTmdb;
+
+  /// No description provided for @filtersExcludeGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude genres'**
+  String get filtersExcludeGenres;
+
+  /// No description provided for @filtersLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Original language'**
+  String get filtersLanguageTitle;
+
+  /// No description provided for @filtersLanguageAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All languages'**
+  String get filtersLanguageAll;
+
+  /// No description provided for @filtersHideUnreleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide unreleased movies'**
+  String get filtersHideUnreleased;
+
+  /// No description provided for @filtersChipExcludeGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'No {genre}'**
+  String filtersChipExcludeGenre(String genre);
+
+  /// No description provided for @filtersChipHideUnreleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Released only'**
+  String get filtersChipHideUnreleased;
+
+  /// No description provided for @swiperFilteredEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No movies match these filters'**
+  String get swiperFilteredEmptyTitle;
+
+  /// No description provided for @swiperFilteredEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try broadening your filters to discover more movies.'**
+  String get swiperFilteredEmptyMessage;
+
+  /// No description provided for @swiperWidenFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Broaden filters'**
+  String get swiperWidenFilters;
 }
 
 class _AppLocalizationsDelegate

@@ -169,4 +169,76 @@ void main() {
 
     expect(find.text('(Not applicable to TV shows)'), findsOneWidget);
   });
+
+  testWidgets(
+    'Swiper mode shows excluded genres, language and hideUnreleased',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      SearchFilters? applied;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: const DefaultLightPalette().toThemeData(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              height: 1200,
+              width: 800,
+              child: SearchFilterSheet(
+                initialFilters: const SearchFilters(),
+                showTypeFilter: false,
+                showHideSeen: false,
+                showExcludedGenres: true,
+                showLanguageFilter: true,
+                showHideUnreleased: true,
+                moviesOnly: true,
+                onApply: (f) => applied = f,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Type & HideSeen are hidden
+      expect(find.text('Media type'), findsNothing);
+      expect(find.text("Hide what I've already seen or read"), findsNothing);
+
+      // Excluded genres, language and hideUnreleased are visible
+      expect(find.text('Exclude genres'), findsOneWidget);
+
+      final sheetScrollable = find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.text('Hide unreleased movies'),
+        300,
+        scrollable: sheetScrollable,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Original language'), findsOneWidget);
+      expect(find.text('Hide unreleased movies'), findsOneWidget);
+
+      await tester.tap(find.text('Japanese'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Show results'));
+      await tester.pumpAndSettle();
+
+      expect(applied, isNotNull);
+      expect(applied!.originalLanguage, 'ja');
+      expect(applied!.hideUnreleased, isTrue);
+    },
+  );
 }

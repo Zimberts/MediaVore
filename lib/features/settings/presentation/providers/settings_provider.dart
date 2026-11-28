@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum DisplayMode { list, grid, swipe }
@@ -19,6 +21,7 @@ class SettingsProvider with ChangeNotifier {
   static const String previousEpisodesKey = 'previousEpisodes';
   static const String watchProvidersCountryKey = 'watchProvidersCountry';
   static const String swipeModeEnabledKey = 'swipeModeEnabled';
+  static const String swiperFiltersKey = 'swiperFilters';
 
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
@@ -41,6 +44,7 @@ class SettingsProvider with ChangeNotifier {
   String? _watchProvidersCountry;
   bool _swipeModeEnabled = true;
   String _swipeTargetList = 'watchlist';
+  SearchFilters _swiperFilters = const SearchFilters(hideUnreleased: true);
 
   AppPalette _lightPalette = AppPalette.defaultLight;
   AppPalette _darkPalette = AppPalette.defaultDark;
@@ -56,6 +60,7 @@ class SettingsProvider with ChangeNotifier {
   String? get watchProvidersCountry => _watchProvidersCountry;
   bool get isSwipeModeEnabled => _swipeModeEnabled;
   String get swipeTargetList => _swipeTargetList;
+  SearchFilters get swiperFilters => _swiperFilters;
 
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
@@ -103,6 +108,19 @@ class SettingsProvider with ChangeNotifier {
     }
     _swipeModeEnabled = _prefs.getBool(swipeModeEnabledKey) ?? true;
     _swipeTargetList = _prefs.getString('swipeTargetList') ?? 'watchlist';
+    final rawSwiperFilters = _prefs.getString(swiperFiltersKey);
+    if (rawSwiperFilters != null && rawSwiperFilters.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawSwiperFilters);
+        if (decoded is Map<String, dynamic>) {
+          _swiperFilters = SearchFilters.fromJson(decoded);
+        }
+      } catch (_) {
+        _swiperFilters = const SearchFilters(hideUnreleased: true);
+      }
+    } else {
+      _swiperFilters = const SearchFilters(hideUnreleased: true);
+    }
 
     // Palettes are stored by stable identifier. Up to v1.3.0 they were
     // stored as an index (`lightAppTheme` / `darkAppTheme`) into lists of
@@ -175,6 +193,12 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setSwipeTargetList(String listName) async {
     _swipeTargetList = listName;
     await _prefs.setString('swipeTargetList', listName);
+    notifyListeners();
+  }
+
+  Future<void> setSwiperFilters(SearchFilters filters) async {
+    _swiperFilters = filters;
+    await _prefs.setString(swiperFiltersKey, jsonEncode(filters.toJson()));
     notifyListeners();
   }
 

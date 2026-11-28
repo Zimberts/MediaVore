@@ -42,6 +42,7 @@ abstract class MediaRepository {
     String? originalLanguage,
     MediaType type = MediaType.movie,
     String sortBy = 'popularity.desc',
+    bool genresMatchAny = false,
   });
 
   /// Films and series trending this week, mixed.

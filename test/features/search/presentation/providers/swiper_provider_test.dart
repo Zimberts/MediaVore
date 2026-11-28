@@ -425,4 +425,111 @@ void main() {
       },
     );
   });
+
+  group('filters', () {
+    const comedyFilter = SearchFilters(genreIds: {35});
+    const filteredMovie = MediaItem(
+      id: 301,
+      title: 'Comedy 301',
+      overview: 'Funny',
+      releaseDate: '2022-05-01',
+    );
+
+    setUp(() {
+      when(
+        () => repo.getMediaDetails(301, type: any(named: 'type')),
+      ).thenAnswer((_) async => MediaDetails(item: filteredMovie, cast: []));
+    });
+
+    test(
+      'should reload deck from page 1 with new filters while preserving session decisions and undo',
+      () async {
+        await provider.init();
+        await provider.swipeRight('watchlist');
+        expect(provider.sessionAddedCount, 1);
+        expect(provider.canUndo, isTrue);
+
+        when(
+          () => repo.discoverMedia(
+            type: any(named: 'type'),
+            page: any(named: 'page'),
+            filters: comedyFilter,
+            genresMatchAny: true,
+          ),
+        ).thenAnswer((_) async => [movie1, filteredMovie]);
+
+        await provider.setFilters(comedyFilter);
+
+        expect(provider.filters, comedyFilter);
+        // movie1 (101) was already decided in this session, so only 301 appears
+        expect(provider.candidates.map((c) => c.item.id), [301]);
+        expect(provider.sessionAddedCount, 1);
+        expect(provider.canUndo, isTrue);
+
+        verify(
+          () => repo.discoverMedia(filters: comedyFilter, genresMatchAny: true),
+        ).called(1);
+      },
+    );
+
+    test(
+      'should ignore stale cards from a slow in-flight request after setFilters',
+      () async {
+        final slowOldCompleter = Completer<List<MediaItem>>();
+        const actionFilter = SearchFilters(genreIds: {28});
+
+        when(
+          () => repo.discoverMedia(
+            type: any(named: 'type'),
+            page: any(named: 'page'),
+            filters: actionFilter,
+            genresMatchAny: true,
+          ),
+        ).thenAnswer((_) => slowOldCompleter.future);
+
+        when(
+          () => repo.discoverMedia(
+            type: any(named: 'type'),
+            page: any(named: 'page'),
+            filters: comedyFilter,
+            genresMatchAny: true,
+          ),
+        ).thenAnswer((_) async => [filteredMovie]);
+
+        // Start loading with actionFilter (slow)
+        final firstLoad = provider.setFilters(actionFilter);
+        await Future<void>.delayed(Duration.zero);
+
+        // Immediately switch to comedyFilter before slow request completes
+        await provider.setFilters(comedyFilter);
+        expect(provider.candidates.map((c) => c.item.id), [301]);
+
+        // Now complete the slow request with stale movie2
+        slowOldCompleter.complete([movie2]);
+        await firstLoad;
+
+        // Deck must still only contain filteredMovie (301), not stale movie2
+        expect(provider.candidates.map((c) => c.item.id), [301]);
+      },
+    );
+
+    test(
+      'should not reload when setFilters receives identical filters',
+      () async {
+        await provider.init();
+        clearInteractions(repo);
+
+        await provider.setFilters(const SearchFilters());
+
+        verifyNever(
+          () => repo.discoverMedia(
+            type: any(named: 'type'),
+            page: any(named: 'page'),
+            filters: any(named: 'filters'),
+            genresMatchAny: any(named: 'genresMatchAny'),
+          ),
+        );
+      },
+    );
+  });
 }

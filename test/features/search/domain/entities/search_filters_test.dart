@@ -430,5 +430,168 @@ void main() {
       // type (1) + duration (0 because tv) = 1
       expect(tvWithDuration.activeCount, 1);
     });
+
+    test(
+      'should count excludedGenreIds, originalLanguage and hideUnreleased',
+      () {
+        const filters = SearchFilters(
+          excludedGenreIds: {27, 53},
+          originalLanguage: 'ja',
+          hideUnreleased: true,
+        );
+        expect(filters.activeCount, 4);
+        expect(filters.hasClientFilters, isTrue);
+      },
+    );
+  });
+
+  group('SearchFilters - swipe filters and serialization', () {
+    test('should join genres with pipe when genresMatchAny is true', () {
+      const filters = SearchFilters(genreIds: {35, 28, 12});
+      final params = filters.toDiscoverParams(
+        MediaType.movie,
+        genresMatchAny: true,
+      );
+      expect(params['with_genres'], '12|28|35');
+    });
+
+    test(
+      'should include without_genres when excludedGenreIds is non-empty',
+      () {
+        const filters = SearchFilters(excludedGenreIds: {53, 27});
+        final params = filters.toDiscoverParams(MediaType.movie);
+        expect(params['without_genres'], '27,53');
+      },
+    );
+
+    test(
+      'should cap primary_release_date.lte to today when hideUnreleased is true',
+      () {
+        const filters = SearchFilters(hideUnreleased: true);
+        final params = filters.toDiscoverParams(
+          MediaType.movie,
+          now: DateTime(2026, 6, 5),
+        );
+        expect(params['primary_release_date.lte'], '2026-06-05');
+      },
+    );
+
+    test(
+      'should keep earlier period upper bound when hideUnreleased is true',
+      () {
+        const filters = SearchFilters(
+          period: SearchReleasePeriod.d2010s,
+          hideUnreleased: true,
+        );
+        final params = filters.toDiscoverParams(
+          MediaType.movie,
+          now: DateTime(2026, 6, 5),
+        );
+        expect(params['primary_release_date.gte'], '2010-01-01');
+        expect(params['primary_release_date.lte'], '2019-12-31');
+      },
+    );
+
+    test(
+      'should use originalLanguage from SearchFilters when not overridden',
+      () {
+        const filters = SearchFilters(originalLanguage: 'fr');
+        final params = filters.toDiscoverParams(MediaType.movie);
+        expect(params['with_original_language'], 'fr');
+      },
+    );
+
+    test('should round-trip all fields through toJson and fromJson', () {
+      const original = SearchFilters(
+        type: MediaType.movie,
+        sort: SearchSort.rating,
+        period: SearchReleasePeriod.d2000s,
+        exactYear: 2005,
+        genreIds: {28, 12},
+        excludedGenreIds: {27},
+        minRating: 7.5,
+        duration: MovieDuration.between105And150,
+        originalLanguage: 'ja',
+        hideSeen: true,
+        hideUnreleased: true,
+      );
+
+      final decoded = SearchFilters.fromJson(original.toJson());
+      expect(decoded, original);
+    });
+
+    test('should fall back to defaults for unknown or missing JSON fields', () {
+      final decoded = SearchFilters.fromJson({
+        'type': 'not_a_type',
+        'sort': 'not_a_sort',
+        'period': 'not_a_period',
+        'duration': 'not_a_duration',
+      });
+      expect(decoded, const SearchFilters());
+    });
+
+    test(
+      'should match excludedGenreIds, originalLanguage and hideUnreleased client-side',
+      () {
+        const movie = MediaItem(
+          id: 1,
+          title: 'Test',
+          overview: '',
+          releaseDate: '2025-01-10',
+          genreIds: [28, 35],
+          originalLanguage: 'fr',
+        );
+        final today = DateTime(2025, 6);
+
+        expect(
+          matchesSearchFilters(
+            movie,
+            const SearchFilters(excludedGenreIds: {27}),
+            now: today,
+          ),
+          isTrue,
+        );
+        expect(
+          matchesSearchFilters(
+            movie,
+            const SearchFilters(excludedGenreIds: {28}),
+            now: today,
+          ),
+          isFalse,
+        );
+        expect(
+          matchesSearchFilters(
+            movie,
+            const SearchFilters(originalLanguage: 'fr'),
+            now: today,
+          ),
+          isTrue,
+        );
+        expect(
+          matchesSearchFilters(
+            movie,
+            const SearchFilters(originalLanguage: 'en'),
+            now: today,
+          ),
+          isFalse,
+        );
+        expect(
+          matchesSearchFilters(
+            movie,
+            const SearchFilters(hideUnreleased: true),
+            now: DateTime(2024, 12, 31),
+          ),
+          isFalse,
+        );
+        expect(
+          matchesSearchFilters(
+            movie,
+            const SearchFilters(hideUnreleased: true),
+            now: today,
+          ),
+          isTrue,
+        );
+      },
+    );
   });
 }

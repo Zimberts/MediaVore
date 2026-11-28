@@ -18,9 +18,12 @@ class SearchFilters extends Equatable {
   final SearchReleasePeriod period;
   final int? exactYear;
   final Set<int> genreIds;
+  final Set<int> excludedGenreIds;
   final double? minRating;
   final MovieDuration duration;
+  final String? originalLanguage;
   final bool hideSeen;
+  final bool hideUnreleased;
 
   const SearchFilters({
     this.type,
@@ -28,9 +31,12 @@ class SearchFilters extends Equatable {
     this.period = SearchReleasePeriod.all,
     this.exactYear,
     this.genreIds = const {},
+    this.excludedGenreIds = const {},
     this.minRating,
     this.duration = MovieDuration.all,
+    this.originalLanguage,
     this.hideSeen = false,
+    this.hideUnreleased = false,
   });
 
   /// Total count of active filters.
@@ -40,9 +46,12 @@ class SearchFilters extends Equatable {
     if (sort != SearchSort.relevance) count++;
     if (period != SearchReleasePeriod.all || exactYear != null) count++;
     count += genreIds.length;
+    count += excludedGenreIds.length;
     if (minRating != null) count++;
     if (duration != MovieDuration.all && type != MediaType.tv) count++;
+    if (originalLanguage != null && originalLanguage!.isNotEmpty) count++;
     if (hideSeen) count++;
+    if (hideUnreleased) count++;
     return count;
   }
 
@@ -56,9 +65,12 @@ class SearchFilters extends Equatable {
       period != SearchReleasePeriod.all ||
       exactYear != null ||
       genreIds.isNotEmpty ||
+      excludedGenreIds.isNotEmpty ||
       minRating != null ||
       (duration != MovieDuration.all && type != MediaType.tv) ||
-      hideSeen;
+      (originalLanguage != null && originalLanguage!.isNotEmpty) ||
+      hideSeen ||
+      hideUnreleased;
 
   SearchFilters copyWith({
     MediaType? Function()? type,
@@ -66,9 +78,12 @@ class SearchFilters extends Equatable {
     SearchReleasePeriod? period,
     int? Function()? exactYear,
     Set<int>? genreIds,
+    Set<int>? excludedGenreIds,
     double? Function()? minRating,
     MovieDuration? duration,
+    String? Function()? originalLanguage,
     bool? hideSeen,
+    bool? hideUnreleased,
   }) {
     return SearchFilters(
       type: type != null ? type() : this.type,
@@ -76,9 +91,87 @@ class SearchFilters extends Equatable {
       period: period ?? this.period,
       exactYear: exactYear != null ? exactYear() : this.exactYear,
       genreIds: genreIds ?? this.genreIds,
+      excludedGenreIds: excludedGenreIds ?? this.excludedGenreIds,
       minRating: minRating != null ? minRating() : this.minRating,
       duration: duration ?? this.duration,
+      originalLanguage: originalLanguage != null
+          ? originalLanguage()
+          : this.originalLanguage,
       hideSeen: hideSeen ?? this.hideSeen,
+      hideUnreleased: hideUnreleased ?? this.hideUnreleased,
+    );
+  }
+
+  /// Serializes this filter state into a JSON-compatible map.
+  Map<String, dynamic> toJson() {
+    final sortedGenres = genreIds.toList()..sort();
+    final sortedExcluded = excludedGenreIds.toList()..sort();
+    return {
+      if (type != null) 'type': type!.name,
+      'sort': sort.name,
+      'period': period.name,
+      if (exactYear != null) 'exactYear': exactYear,
+      'genreIds': sortedGenres,
+      'excludedGenreIds': sortedExcluded,
+      if (minRating != null) 'minRating': minRating,
+      'duration': duration.name,
+      if (originalLanguage != null && originalLanguage!.isNotEmpty)
+        'originalLanguage': originalLanguage,
+      'hideSeen': hideSeen,
+      'hideUnreleased': hideUnreleased,
+    };
+  }
+
+  /// Restores a [SearchFilters] instance from a JSON map.
+  factory SearchFilters.fromJson(Map<String, dynamic> json) {
+    final typeName = json['type'] as String?;
+    final parsedType = typeName == null
+        ? null
+        : MediaType.values.where((t) => t.name == typeName).firstOrNull;
+
+    final sortName = json['sort'] as String?;
+    final parsedSort = SearchSort.values.firstWhere(
+      (s) => s.name == sortName,
+      orElse: () => SearchSort.relevance,
+    );
+
+    final periodName = json['period'] as String?;
+    final parsedPeriod = SearchReleasePeriod.values.firstWhere(
+      (p) => p.name == periodName,
+      orElse: () => SearchReleasePeriod.all,
+    );
+
+    final durationName = json['duration'] as String?;
+    final parsedDuration = MovieDuration.values.firstWhere(
+      (d) => d.name == durationName,
+      orElse: () => MovieDuration.all,
+    );
+
+    final rawGenres = json['genreIds'] as List<dynamic>?;
+    final parsedGenres =
+        rawGenres?.whereType<num>().map((e) => e.toInt()).toSet() ?? const {};
+
+    final rawExcluded = json['excludedGenreIds'] as List<dynamic>?;
+    final parsedExcluded =
+        rawExcluded?.whereType<num>().map((e) => e.toInt()).toSet() ?? const {};
+
+    final rawRating = json['minRating'] as num?;
+    final rawLang = json['originalLanguage'] as String?;
+
+    return SearchFilters(
+      type: parsedType,
+      sort: parsedSort,
+      period: parsedPeriod,
+      exactYear: (json['exactYear'] as num?)?.toInt(),
+      genreIds: parsedGenres,
+      excludedGenreIds: parsedExcluded,
+      minRating: rawRating?.toDouble(),
+      duration: parsedDuration,
+      originalLanguage: (rawLang != null && rawLang.isNotEmpty)
+          ? rawLang
+          : null,
+      hideSeen: json['hideSeen'] as bool? ?? false,
+      hideUnreleased: json['hideUnreleased'] as bool? ?? false,
     );
   }
 
@@ -87,6 +180,8 @@ class SearchFilters extends Equatable {
     MediaType mediaType, {
     int page = 1,
     String? originalLanguage,
+    bool genresMatchAny = false,
+    DateTime? now,
   }) {
     final params = <String, dynamic>{'page': page};
 
@@ -161,7 +256,25 @@ class SearchFilters extends Equatable {
     // Genres
     if (genreIds.isNotEmpty) {
       final sortedIds = genreIds.toList()..sort();
-      params['with_genres'] = sortedIds.join(',');
+      params['with_genres'] = sortedIds.join(genresMatchAny ? '|' : ',');
+    }
+    if (excludedGenreIds.isNotEmpty) {
+      final sortedExcluded = excludedGenreIds.toList()..sort();
+      params['without_genres'] = sortedExcluded.join(',');
+    }
+
+    // Hide unreleased
+    if (hideUnreleased) {
+      final ref = now ?? DateTime.now();
+      final todayStr =
+          '${ref.year.toString().padLeft(4, '0')}-${ref.month.toString().padLeft(2, '0')}-${ref.day.toString().padLeft(2, '0')}';
+      final lteKey = mediaType == MediaType.movie
+          ? 'primary_release_date.lte'
+          : 'first_air_date.lte';
+      final existingLte = params[lteKey] as String?;
+      if (existingLte == null || todayStr.compareTo(existingLte) < 0) {
+        params[lteKey] = todayStr;
+      }
     }
 
     // Runtime (movies only)
@@ -183,8 +296,9 @@ class SearchFilters extends Equatable {
     }
 
     // Language
-    if (originalLanguage != null && originalLanguage.isNotEmpty) {
-      params['with_original_language'] = originalLanguage;
+    final effectiveLanguage = originalLanguage ?? this.originalLanguage;
+    if (effectiveLanguage != null && effectiveLanguage.isNotEmpty) {
+      params['with_original_language'] = effectiveLanguage;
     }
 
     return params;
@@ -197,9 +311,12 @@ class SearchFilters extends Equatable {
     period,
     exactYear,
     genreIds,
+    excludedGenreIds,
     minRating,
     duration,
+    originalLanguage,
     hideSeen,
+    hideUnreleased,
   ];
 }
 
@@ -208,6 +325,7 @@ bool matchesSearchFilters(
   MediaItem item,
   SearchFilters filters, {
   bool Function(MediaItem item)? isSeen,
+  DateTime? now,
 }) {
   if (filters.type != null && item.mediaType != filters.type) {
     return false;
@@ -272,6 +390,30 @@ bool matchesSearchFilters(
     for (final gid in filters.genreIds) {
       if (!itemGenreIds.contains(gid)) return false;
     }
+  }
+
+  if (filters.excludedGenreIds.isNotEmpty) {
+    final itemGenreIds = item.resolvedGenreIds;
+    for (final gid in filters.excludedGenreIds) {
+      if (itemGenreIds.contains(gid)) return false;
+    }
+  }
+
+  if (filters.originalLanguage != null &&
+      filters.originalLanguage!.isNotEmpty) {
+    if (item.originalLanguage?.toLowerCase() !=
+        filters.originalLanguage!.toLowerCase()) {
+      return false;
+    }
+  }
+
+  if (filters.hideUnreleased) {
+    if (item.releaseDate.isEmpty) return false;
+    final parsed = DateTime.tryParse(item.releaseDate);
+    if (parsed == null) return false;
+    final ref = now ?? DateTime.now();
+    final today = DateTime(ref.year, ref.month, ref.day);
+    if (parsed.isAfter(today)) return false;
   }
 
   return true;

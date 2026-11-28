@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -469,6 +470,51 @@ void main() {
         expect(
           provider.resolveWatchProvidersCountry(const Locale('en', 'GB')),
           equals('GB'),
+        );
+      },
+    );
+  });
+
+  group('SettingsProvider - swiperFilters', () {
+    test('should default to hideUnreleased enabled', () {
+      expect(provider.swiperFilters, const SearchFilters(hideUnreleased: true));
+    });
+
+    test(
+      'should persist and restore swiperFilters via SharedPreferences',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final instance = SettingsProvider(prefs, FakeTmdbCredentialStore());
+
+        const custom = SearchFilters(
+          sort: SearchSort.rating,
+          genreIds: {35},
+          excludedGenreIds: {27},
+          minRating: 7.0,
+          originalLanguage: 'fr',
+        );
+
+        await instance.setSwiperFilters(custom);
+        expect(instance.swiperFilters, custom);
+
+        final reloaded = SettingsProvider(prefs, FakeTmdbCredentialStore());
+        expect(reloaded.swiperFilters, custom);
+      },
+    );
+
+    test(
+      'should fall back to default when stored swiperFilters JSON is invalid',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          SettingsProvider.swiperFiltersKey: '{invalid-json',
+        });
+        final prefs = await SharedPreferences.getInstance();
+        final instance = SettingsProvider(prefs, FakeTmdbCredentialStore());
+
+        expect(
+          instance.swiperFilters,
+          const SearchFilters(hideUnreleased: true),
         );
       },
     );
