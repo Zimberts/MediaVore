@@ -10,6 +10,7 @@ import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
+import 'package:mediavore/core/services/app_update_service.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/theme/font_licenses.dart';
@@ -19,6 +20,7 @@ import 'package:mediavore/features/discovery/presentation/providers/swipe_sessio
 import 'package:mediavore/features/home/presentation/providers/home_session_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
+import 'package:mediavore/features/settings/presentation/providers/app_update_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:provider/provider.dart';
@@ -313,6 +315,9 @@ class _MediaVoreAppState extends State<MediaVoreApp>
         ),
         ChangeNotifierProvider(
           create: (context) => locator<AchievementProvider>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => AppUpdateProvider(locator<AppUpdateService>()),
         ),
         // Session states live above the tabs so that they survive a change
         // of tab.

@@ -7,7 +7,9 @@ import 'package:mediavore/core/utils/app_version.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/settings/presentation/providers/app_update_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/settings/presentation/widgets/app_update_dialog.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -247,6 +249,14 @@ class SettingsPage extends StatelessWidget {
 
           // 3. À propos
           _SectionHeader(title: l10n.settingsSectionAbout),
+          SwitchListTile(
+            key: const Key('settings_auto_check_updates_switch'),
+            title: Text(l10n.settingsAutoCheckUpdates),
+            subtitle: Text(l10n.settingsAutoCheckUpdatesSubtitle),
+            value: settings.autoCheckUpdates,
+            onChanged: settings.setAutoCheckUpdates,
+          ),
+          const _AppUpdateTile(),
           AboutListTile(
             icon: const Icon(Icons.info_outline),
             applicationName: l10n.appTitle,
@@ -454,6 +464,82 @@ class _SwipeResetTileState extends State<_SwipeResetTile> {
         onPressed: () => _confirmReset(context),
         child: Text(l10n.swiperResetButton),
       ),
+    );
+  }
+}
+
+class _AppUpdateTile extends StatelessWidget {
+  const _AppUpdateTile();
+
+  Future<void> _onTap(BuildContext context, AppUpdateProvider provider) async {
+    final l10n = context.l10n;
+    if (provider.availableRelease != null &&
+        (provider.status == AppUpdateStatus.available ||
+            provider.status == AppUpdateStatus.readyToInstall)) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => ChangeNotifierProvider.value(
+          value: provider,
+          child: AppUpdateDialog(release: provider.availableRelease!),
+        ),
+      );
+      return;
+    }
+
+    final hasUpdate = await provider.checkForUpdate();
+    if (!context.mounted) return;
+
+    if (hasUpdate && provider.availableRelease != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => ChangeNotifierProvider.value(
+          value: provider,
+          child: AppUpdateDialog(release: provider.availableRelease!),
+        ),
+      );
+    } else if (provider.status == AppUpdateStatus.upToDate) {
+      showAppMessage(l10n.updateUpToDate(appVersion));
+    } else if (provider.status == AppUpdateStatus.error) {
+      showAppMessage(appUpdateErrorMessage(l10n, provider.errorKind));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final updateProvider = context.watch<AppUpdateProvider?>();
+    final isChecking = updateProvider?.status == AppUpdateStatus.checking;
+    final availableRelease = updateProvider?.availableRelease;
+
+    final String subtitle;
+    if (isChecking) {
+      subtitle = l10n.updateChecking;
+    } else if (availableRelease != null) {
+      subtitle = l10n.updateAvailableTitle(availableRelease.tagName);
+    } else {
+      subtitle = l10n.settingsCurrentVersion(appVersion);
+    }
+
+    return ListTile(
+      key: const Key('settings_check_updates_tile'),
+      leading: const Icon(Icons.system_update_outlined),
+      title: Text(l10n.settingsCheckForUpdates),
+      subtitle: Text(subtitle),
+      trailing: isChecking
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : availableRelease != null
+          ? Icon(
+              Icons.new_releases_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            )
+          : null,
+      onTap: updateProvider == null || updateProvider.isBusy
+          ? null
+          : () => _onTap(context, updateProvider),
     );
   }
 }

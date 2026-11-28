@@ -1965,5 +1965,65 @@
   "swiperResetConfirmTitle": "Reset swipe choices?",
   "swiperResetConfirmMessage": "Titles you previously discarded will be able to appear again in swipe mode. Your earned achievements remain unlocked.",
   "swiperResetSuccessToast": "Swipe choices reset",
-  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB."
+  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+  "settingsCheckForUpdates": "Check for updates",
+  "settingsCurrentVersion": "Current version: v{version}",
+  "@settingsCurrentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAutoCheckUpdates": "Check for updates on startup",
+  "settingsAutoCheckUpdatesSubtitle": "Notify when a new GitHub release is available",
+  "updateChecking": "Checking for updates…",
+  "updateUpToDate": "You are up to date (v{version})",
+  "@updateUpToDate": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateAvailableTitle": "Update available: {tag}",
+  "@updateAvailableTitle": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "updateAvailableBanner": "MediaVore {tag} is available",
+  "@updateAvailableBanner": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "updateViewAction": "View",
+  "updateNoChangelog": "No release notes provided.",
+  "updateDownloadAndInstall": "Download & install",
+  "updateInstallButton": "Install",
+  "updateOpenReleasePage": "Open release page",
+  "updateLater": "Later",
+  "updateDownloading": "Downloading… {percent}%",
+  "@updateDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "updateVerifyingSha256": "Verifying SHA-256 checksum…",
+  "updateIosNotice": "Direct installation is not supported on this platform. Open the release page in your browser to update.",
+  "updateErrorNetwork": "Network error while checking for updates.",
+  "updateErrorRateLimit": "GitHub API rate limit reached. Try again later.",
+  "updateErrorServer": "Could not reach GitHub Releases.",
+  "updateErrorParsing": "Unexpected response from GitHub.",
+  "updateErrorChecksum": "SHA-256 verification failed. The downloaded file was deleted for safety.",
+  "updateErrorNoApk": "No APK asset found in this release.",
+  "updateErrorInstallFailed": "Could not launch the system installer (for example if the app signature differs). You can open the release page in your browser instead.",
+  "updateErrorUnknown": "An unexpected error occurred."
 }

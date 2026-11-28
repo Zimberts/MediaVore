@@ -19,6 +19,7 @@ class SettingsProvider with ChangeNotifier {
   static const String previousEpisodesKey = 'previousEpisodes';
   static const String watchProvidersCountryKey = 'watchProvidersCountry';
   static const String swipeModeEnabledKey = 'swipeModeEnabled';
+  static const String autoCheckUpdatesKey = 'autoCheckUpdates';
 
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
@@ -41,6 +42,7 @@ class SettingsProvider with ChangeNotifier {
   String? _watchProvidersCountry;
   bool _swipeModeEnabled = true;
   String _swipeTargetList = 'watchlist';
+  bool _autoCheckUpdates = true;
 
   AppPalette _lightPalette = AppPalette.defaultLight;
   AppPalette _darkPalette = AppPalette.defaultDark;
@@ -56,6 +58,7 @@ class SettingsProvider with ChangeNotifier {
   String? get watchProvidersCountry => _watchProvidersCountry;
   bool get isSwipeModeEnabled => _swipeModeEnabled;
   String get swipeTargetList => _swipeTargetList;
+  bool get autoCheckUpdates => _autoCheckUpdates;
 
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
@@ -103,6 +106,7 @@ class SettingsProvider with ChangeNotifier {
     }
     _swipeModeEnabled = _prefs.getBool(swipeModeEnabledKey) ?? true;
     _swipeTargetList = _prefs.getString('swipeTargetList') ?? 'watchlist';
+    _autoCheckUpdates = _prefs.getBool(autoCheckUpdatesKey) ?? true;
 
     // Palettes are stored by stable identifier. Up to v1.3.0 they were
     // stored as an index (`lightAppTheme` / `darkAppTheme`) into lists of
@@ -175,6 +179,12 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setSwipeTargetList(String listName) async {
     _swipeTargetList = listName;
     await _prefs.setString('swipeTargetList', listName);
+    notifyListeners();
+  }
+
+  Future<void> setAutoCheckUpdates(bool enabled) async {
+    _autoCheckUpdates = enabled;
+    await _prefs.setBool(autoCheckUpdatesKey, enabled);
     notifyListeners();
   }
 
