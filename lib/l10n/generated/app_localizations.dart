@@ -2192,6 +2192,18 @@ abstract class AppLocalizations {
   /// **'Level {level} Unlocked!'**
   String achievementLevelUnlocked(int level);
 
+  /// No description provided for @achievementsGroupedUnlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 achievement unlocked!} other{You unlocked {count} achievements!}}'**
+  String achievementsGroupedUnlockedTitle(int count);
+
+  /// No description provided for @achievementsGroupedUnlockedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see them.'**
+  String get achievementsGroupedUnlockedSubtitle;
+
   /// No description provided for @progressImportingAll.
   ///
   /// In en, this message translates to:

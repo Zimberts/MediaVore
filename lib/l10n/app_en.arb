@@ -770,6 +770,15 @@
       }
     }
   },
+  "achievementsGroupedUnlockedTitle": "{count, plural, =1{1 achievement unlocked!} other{You unlocked {count} achievements!}}",
+  "@achievementsGroupedUnlockedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsGroupedUnlockedSubtitle": "Tap to see them.",
   "progressImportingAll": "Importing all data...",
   "progressDone": "Done!",
   "progressError": "Error: {error}",

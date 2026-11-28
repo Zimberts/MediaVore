@@ -1287,6 +1287,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String achievementsGroupedUnlockedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vous avez débloqué $count succès !',
+      one: '1 succès débloqué !',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get achievementsGroupedUnlockedSubtitle => 'Appuyez pour les voir.';
+
+  @override
   String get progressImportingAll => 'Import de toutes les données...';
 
   @override

@@ -43,7 +43,7 @@ void main() {
   late SettingsProvider settingsProvider;
   late SwipeSessionProvider swipeSession;
   late TogetherSessionProvider togetherSession;
-  late StreamController<Achievement> achievements;
+  late StreamController<List<Achievement>> achievements;
 
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
@@ -87,7 +87,7 @@ void main() {
 
     // Achievement Provider mocks
     when(() => mockAchievementProvider.achievements).thenReturn([]);
-    achievements = StreamController<Achievement>.broadcast();
+    achievements = StreamController<List<Achievement>>.broadcast();
     when(
       () => mockAchievementProvider.onAchievementUnlocked,
     ).thenAnswer((_) => achievements.stream);
@@ -615,7 +615,7 @@ void main() {
         await tester.pumpAndSettle();
         await goTo(tester, tab);
 
-        achievements.add(achievement);
+        achievements.add([achievement]);
         await tester.pump();
         // Let the banner slide in.
         await tester.pump();
@@ -646,7 +646,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      achievements.add(achievement);
+      achievements.add([achievement]);
       await tester.pump();
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
@@ -666,7 +666,7 @@ void main() {
         'is shown and its auto-dismiss fires later', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
-      achievements.add(achievement);
+      achievements.add([achievement]);
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       expect(find.text('First steps'), findsOneWidget);
@@ -681,7 +681,7 @@ void main() {
         'while the banner is shown', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
-      achievements.add(achievement);
+      achievements.add([achievement]);
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       expect(find.text('First steps'), findsOneWidget);
@@ -691,6 +691,149 @@ void main() {
       // still pending once it ends.
       expect(tester.takeException(), isNull);
     });
+
+    Achievement makeAchievement(String id, String title) => Achievement(
+      id: id,
+      title: title,
+      description: 'Desc $id',
+      iconPath: '',
+    );
+
+    testWidgets(
+      'should show individual banners when <= 3 achievements unlock',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
+
+        achievements.add([makeAchievement('a1', 'First')]);
+        achievements.add([makeAchievement('a2', 'Second')]);
+        achievements.add([makeAchievement('a3', 'Third')]);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(find.text('First'), findsOneWidget);
+        expect(find.text('You unlocked 3 achievements!'), findsNothing);
+
+        // Dismiss first -> second appears -> dismiss -> third appears.
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('Second'), findsOneWidget);
+
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('Third'), findsOneWidget);
+
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('Third'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'should show one grouped banner when > 3 achievements unlock and open '
+      'AchievementsPage on tap',
+      (tester) async {
+        when(() => mockAchievementProvider.families).thenReturn([]);
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
+
+        achievements.add([
+          makeAchievement('a1', 'One'),
+          makeAchievement('a2', 'Two'),
+          makeAchievement('a3', 'Three'),
+          makeAchievement('a4', 'Four'),
+        ]);
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(
+          find.byKey(const ValueKey('achievement_banner_grouped')),
+          findsOneWidget,
+        );
+        expect(find.text('You unlocked 4 achievements!'), findsOneWidget);
+        expect(find.text('Tap to see them.'), findsOneWidget);
+
+        await tester.tap(find.text('You unlocked 4 achievements!'));
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(find.byType(AchievementsPage), findsOneWidget);
+        expect(find.text('You unlocked 4 achievements!'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('should show grouped banner in French when locale is fr', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(locale: const Locale('fr')),
+      );
+      await tester.pumpAndSettle();
+
+      achievements.add([
+        makeAchievement('a1', 'One'),
+        makeAchievement('a2', 'Two'),
+        makeAchievement('a3', 'Three'),
+        makeAchievement('a4', 'Four'),
+      ]);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Vous avez débloqué 4 succès !'), findsOneWidget);
+      expect(find.text('Appuyez pour les voir.'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets(
+      'should merge pending queued banners into a grouped banner when a '
+      'large batch arrives',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
+
+        // First banner is shown immediately; second stays pending in the queue.
+        achievements.add([makeAchievement('a1', 'First')]);
+        achievements.add([makeAchievement('a2', 'Pending')]);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('First'), findsOneWidget);
+
+        // Large batch arrives while 'Pending' is still in the queue.
+        achievements.add([
+          makeAchievement('a3', 'Three'),
+          makeAchievement('a4', 'Four'),
+          makeAchievement('a5', 'Five'),
+          makeAchievement('a6', 'Six'),
+        ]);
+        await tester.pump();
+
+        // Let 'First' auto-dismiss; the next banner must be a single grouped
+        // banner of 5 (Pending + 4 new), not 'Pending' individually.
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(find.text('Pending'), findsNothing);
+        expect(find.text('You unlocked 5 achievements!'), findsOneWidget);
+
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+      },
+    );
   });
 
   group('TMDB credential', () {

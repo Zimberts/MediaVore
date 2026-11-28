@@ -88,9 +88,12 @@ class AchievementsPage extends StatefulWidget {
 
   /// Shows [achievementId] without stacking a second page: if an
   /// [AchievementsPage] is already in [navigator]'s stack, pops back to it and
-  /// scrolls to (and highlights) the achievement's family; otherwise pushes a
-  /// new page.
-  static void showAchievement(NavigatorState navigator, String achievementId) {
+  /// scrolls to (and highlights) the achievement's family when [achievementId]
+  /// is non-null; otherwise pushes a new page.
+  static void showAchievement(
+    NavigatorState navigator, [
+    String? achievementId,
+  ]) {
     if (_mounted.isEmpty) {
       navigator.push(route(initialAchievementId: achievementId));
       return;
@@ -98,7 +101,9 @@ class AchievementsPage extends StatefulWidget {
     navigator.popUntil(
       (route) => route.settings.name == routeName || route.isFirst,
     );
-    _mounted.last.focusAchievement(achievementId);
+    if (achievementId != null) {
+      _mounted.last.focusAchievement(achievementId);
+    }
   }
 
   @override
