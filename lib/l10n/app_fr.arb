@@ -347,6 +347,7 @@
   "achievementsLevelTitle": "Niveau {level} · {title}",
   "achievementsNextLevel": "Suivant : {title} · {progress}",
   "achievementsAllLevelsCompleted": "Tous les niveaux terminés",
+  "achievementsHiddenMask": "???",
   "achievementLevelUnlocked": "Niveau {level} débloqué !",
   "progressImportingAll": "Import de toutes les données...",
   "progressDone": "Terminé !",

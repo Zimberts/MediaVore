@@ -20,6 +20,9 @@ class AchievementFamily extends Equatable {
 
   bool get isCompleted => tiers.every((a) => a.isUnlocked);
 
+  /// Whether every tier in this family is hidden and still locked.
+  bool get isMasked => tiers.every((a) => a.isMasked);
+
   /// Highest unlocked tier, or null when nothing is unlocked yet.
   Achievement? get highestUnlocked {
     for (final a in tiers.reversed) {

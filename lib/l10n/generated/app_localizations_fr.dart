@@ -1282,6 +1282,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get achievementsAllLevelsCompleted => 'Tous les niveaux terminés';
 
   @override
+  String get achievementsHiddenMask => '???';
+
+  @override
   String achievementLevelUnlocked(int level) {
     return 'Niveau $level débloqué !';
   }

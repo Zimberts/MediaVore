@@ -3078,7 +3078,8 @@
                 "description": "Regarder un titre le 24 ou le 25 décembre"
             }
         },
-        "category": "regularity"
+        "category": "regularity",
+        "hidden": true
     },
     {
         "id": "christmas_3",
@@ -3088,6 +3089,7 @@
         "type": "calendar_date",
         "group": "christmas",
         "tier": 2,
+        "hidden": true,
         "params": {
             "dates": [
                 "12-24",
@@ -3110,6 +3112,7 @@
         "type": "calendar_date",
         "group": "christmas",
         "tier": 3,
+        "hidden": true,
         "params": {
             "dates": [
                 "12-24",
@@ -3146,7 +3149,8 @@
                 "description": "Regarder un titre le 31 octobre"
             }
         },
-        "category": "regularity"
+        "category": "regularity",
+        "hidden": true
     },
     {
         "id": "halloween_3",
@@ -3156,6 +3160,7 @@
         "type": "calendar_date",
         "group": "halloween",
         "tier": 2,
+        "hidden": true,
         "params": {
             "dates": [
                 "10-31"
@@ -3177,6 +3182,7 @@
         "type": "calendar_date",
         "group": "halloween",
         "tier": 3,
+        "hidden": true,
         "params": {
             "dates": [
                 "10-31"
@@ -3212,7 +3218,8 @@
                 "description": "Regarder un titre le 31 décembre"
             }
         },
-        "category": "regularity"
+        "category": "regularity",
+        "hidden": true
     },
     {
         "id": "new_years_eve_3",
@@ -3222,6 +3229,7 @@
         "type": "calendar_date",
         "group": "new_years_eve",
         "tier": 2,
+        "hidden": true,
         "params": {
             "dates": [
                 "12-31"
@@ -3243,6 +3251,7 @@
         "type": "calendar_date",
         "group": "new_years_eve",
         "tier": 3,
+        "hidden": true,
         "params": {
             "dates": [
                 "12-31"

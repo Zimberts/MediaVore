@@ -126,6 +126,43 @@ void main() {
     );
 
     test(
+      'selectPreviewAchievements excludes locked hidden achievements but keeps unlocked hidden ones',
+      () {
+        const hiddenUnlocked = Achievement(
+          id: 'hu',
+          title: 'Hidden Unlocked',
+          description: 'D',
+          iconPath: '',
+          isHidden: true,
+          isUnlocked: true,
+        );
+        const hiddenLockedHighProgress = Achievement(
+          id: 'hl',
+          title: 'Hidden Locked',
+          description: 'D',
+          iconPath: '',
+          isHidden: true,
+          progress: 0.99,
+        );
+        const visibleLocked = Achievement(
+          id: 'vl',
+          title: 'Visible Locked',
+          description: 'D',
+          iconPath: '',
+          progress: 0.1,
+        );
+
+        final selected = selectPreviewAchievements([
+          hiddenUnlocked,
+          hiddenLockedHighProgress,
+          visibleLocked,
+        ]);
+
+        expect(selected.map((a) => a.id), ['hu', 'vl']);
+      },
+    );
+
+    test(
       'selectPreviewAchievements fills with locked when fewer than 3 unlocked',
       () {
         const u1 = Achievement(

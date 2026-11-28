@@ -128,6 +128,7 @@ class AchievementRepositoryImpl implements AchievementRepository {
         tier: def['tier'] as int?,
         groupTitle: def['groupTitle'] as String?,
         category: def['category'] as String?,
+        isHidden: def['hidden'] as bool? ?? false,
       );
     }).toList();
   }

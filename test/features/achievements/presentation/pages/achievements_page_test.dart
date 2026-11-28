@@ -255,5 +255,162 @@ void main() {
         expect(find.text('Niveau 3 · Tier Three'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'should mask locked hidden achievements as ??? and exclude them from visible totals',
+      (tester) async {
+        final unlockedDate = DateTime(2026, 4);
+        final mixed = [
+          Achievement(
+            id: 'vis_unlocked',
+            title: 'Visible Unlocked',
+            description: 'Done',
+            iconPath: 'I',
+            category: 'movies',
+            isUnlocked: true,
+            unlockedAt: unlockedDate,
+          ),
+          const Achievement(
+            id: 'vis_locked',
+            title: 'Visible Locked',
+            description: 'Not done yet',
+            iconPath: 'I',
+            category: 'movies',
+            progress: 0.4,
+            progressLabel: '4 / 10',
+          ),
+          const Achievement(
+            id: 'hid_locked',
+            title: 'Secret Title',
+            description: 'Secret Description',
+            iconPath: 'I',
+            category: 'regularity',
+            isHidden: true,
+            progress: 0.8,
+            progressLabel: '8 / 10 secret',
+          ),
+        ];
+
+        when(() => provider.achievements).thenReturn(mixed);
+        when(() => provider.families).thenReturn(groupAchievements(mixed));
+
+        await pumpApp(tester);
+        nav().push(AchievementsPage.route());
+        await tester.pumpAndSettle();
+
+        // Visible totals exclude the locked hidden achievement: 1 of 2 badges, 1 / 2 challenges
+        expect(find.text('Vous avez débloqué 1 badges sur 2'), findsOneWidget);
+        expect(find.text('1 / 2 défis terminés'), findsOneWidget);
+
+        // Hidden locked achievement shows ??? for title & description, masks progress
+        expect(find.text('Secret Title'), findsNothing);
+        expect(find.text('Secret Description'), findsNothing);
+        expect(find.text('8 / 10 secret'), findsNothing);
+        expect(find.text('???'), findsNWidgets(2));
+        expect(find.byIcon(Icons.help_outline), findsOneWidget);
+
+        // Visible achievements remain unaffected
+        expect(find.text('Visible Unlocked'), findsOneWidget);
+        expect(find.text('Visible Locked'), findsOneWidget);
+        expect(find.text('4 / 10'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should display unlocked hidden achievements normally and count them in totals',
+      (tester) async {
+        final unlockedDate = DateTime(2026, 12, 25);
+        final list = [
+          const Achievement(
+            id: 'vis_locked',
+            title: 'Visible Locked',
+            description: 'Not done',
+            iconPath: 'I',
+            category: 'movies',
+          ),
+          Achievement(
+            id: 'hid_unlocked',
+            title: 'Christmas Movie',
+            description: 'Watch on Dec 25',
+            iconPath: 'I',
+            category: 'regularity',
+            isHidden: true,
+            isUnlocked: true,
+            unlockedAt: unlockedDate,
+          ),
+        ];
+
+        when(() => provider.achievements).thenReturn(list);
+        when(() => provider.families).thenReturn(groupAchievements(list));
+
+        await pumpApp(tester);
+        nav().push(AchievementsPage.route());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Vous avez débloqué 1 badges sur 2'), findsOneWidget);
+        expect(find.text('1 / 2 défis terminés'), findsOneWidget);
+        expect(find.text('Christmas Movie'), findsOneWidget);
+        expect(find.text('Watch on Dec 25'), findsOneWidget);
+        expect(find.text('???'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'should mask locked hidden tiers in a partially unlocked tiered family',
+      (tester) async {
+        final unlockedDate = DateTime(2026, 12, 25);
+        final tieredSecret = [
+          Achievement(
+            id: 's1',
+            title: 'Secret One',
+            description: 'First secret',
+            iconPath: 'I',
+            group: 'secret_fam',
+            groupTitle: 'Secret Family',
+            category: 'regularity',
+            tier: 1,
+            isHidden: true,
+            isUnlocked: true,
+            unlockedAt: unlockedDate,
+          ),
+          const Achievement(
+            id: 's2',
+            title: 'Secret Two',
+            description: 'Second secret',
+            iconPath: 'I',
+            group: 'secret_fam',
+            category: 'regularity',
+            tier: 2,
+            isHidden: true,
+            progress: 0.5,
+            progressLabel: '1 / 2 years',
+          ),
+        ];
+
+        when(() => provider.achievements).thenReturn(tieredSecret);
+        when(
+          () => provider.families,
+        ).thenReturn(groupAchievements(tieredSecret));
+
+        await pumpApp(tester);
+        nav().push(AchievementsPage.route());
+        await tester.pumpAndSettle();
+
+        // Card shows unlocked tier 1, does not leak tier 2 title or progress
+        expect(find.text('Niveau 1 · Secret Family'), findsOneWidget);
+        expect(find.textContaining('Secret Two'), findsNothing);
+        expect(find.text('1 / 2 years'), findsNothing);
+
+        // Open tiers bottom sheet
+        await tester.tap(find.text('Niveau 1 · Secret Family'));
+        await tester.pumpAndSettle();
+
+        // Tier 1 is visible, Tier 2 is masked as ??? without progress
+        expect(find.text('Niveau 1 · Secret One'), findsOneWidget);
+        expect(find.text('Niveau 2 · Secret Two'), findsNothing);
+        expect(find.text('1 / 2 years'), findsNothing);
+        expect(find.text('???'), findsNWidgets(2));
+      },
+    );
   });
 }
