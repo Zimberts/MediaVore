@@ -25,6 +25,11 @@ import '../../features/achievements/domain/repositories/achievement_repository.d
     as _i282;
 import '../../features/achievements/presentation/providers/achievement_provider.dart'
     as _i393;
+import '../../features/books/data/datasources/book_remote_data_source.dart'
+    as _i906;
+import '../../features/books/data/repositories/book_repository_impl.dart'
+    as _i661;
+import '../../features/books/domain/repositories/book_repository.dart' as _i674;
 import '../../features/media_details/data/datasources/media_list_local_data_source.dart'
     as _i801;
 import '../../features/search/data/datasources/media_remote_data_source.dart'
@@ -88,6 +93,9 @@ Future<_i174.GetIt> init(
       prefs: gh<_i460.SharedPreferences>(),
     ),
   );
+  gh.lazySingleton<_i906.BookRemoteDataSource>(
+    () => _i906.BookRemoteDataSource(gh<_i361.Dio>()),
+  );
   await gh.singletonAsync<_i1033.TmdbCredentialStore>(
     () => registerModule.tmdbCredentialStore(
       gh<_i558.FlutterSecureStorage>(),
@@ -104,6 +112,11 @@ Future<_i174.GetIt> init(
   );
   gh.lazySingleton<_i393.AchievementProvider>(
     () => _i393.AchievementProvider(gh<_i282.AchievementRepository>()),
+  );
+  gh.lazySingleton<_i674.BookRepository>(
+    () => _i661.BookRepositoryImpl(
+      remoteDataSource: gh<_i906.BookRemoteDataSource>(),
+    ),
   );
   gh.lazySingleton<_i248.AchievementMediaSource>(
     () => _i248.CachedAchievementMediaSource(gh<_i384.MediaCache>()),

@@ -7,6 +7,7 @@ import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/app_language.dart';
 import 'package:mediavore/core/l10n/locale_service.dart';
+import 'package:mediavore/core/network/dio_error_mapper.dart' as dio_mapper;
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/features/search/domain/entities/search_filters.dart';
 
@@ -98,39 +99,15 @@ class MediaRemoteDataSource {
   /// responses become [ServerException] with the status code; anything else
   /// (cancel, bad certificate, unknown) becomes [ServerException] without one.
   @visibleForTesting
-  static AppException mapDioException(DioException e, String action) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        return NetworkException('Network error while $action', e);
-      case DioExceptionType.badResponse:
-        return ServerException(
-          'Server error while $action',
-          e.response?.statusCode,
-          e,
-        );
-      default:
-        return ServerException('Request failed while $action', null, e);
-    }
-  }
+  static AppException mapDioException(DioException e, String action) =>
+      dio_mapper.mapDioException(e, action);
 
   /// Runs [request] and normalizes failures into [AppException]s.
   ///
   /// [DioException]s go through [mapDioException]; [AppException]s are
   /// rethrown unchanged; any other error is a [ParsingException].
-  Future<T> _guard<T>(String action, Future<T> Function() request) async {
-    try {
-      return await request();
-    } on DioException catch (e) {
-      throw mapDioException(e, action);
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw ParsingException('Failed to parse response while $action', e);
-    }
-  }
+  Future<T> _guard<T>(String action, Future<T> Function() request) =>
+      dio_mapper.guardDioRequest(action, request);
 
   /// Checks [credential] (v3 API key or v4 read token) against TMDB's
   /// `/authentication` endpoint without storing it.
