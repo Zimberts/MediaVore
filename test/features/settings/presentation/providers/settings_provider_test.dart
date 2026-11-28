@@ -241,6 +241,20 @@ void main() {
         () => mockPrefs.setString(SettingsProvider.previousEpisodesKey, 'one'),
       ).called(1);
     });
+
+    test(
+      'setStackSagas should default to true, update state, and save to prefs',
+      () async {
+        expect(provider.stackSagas, isTrue);
+
+        await provider.setStackSagas(false);
+
+        expect(provider.stackSagas, isFalse);
+        verify(
+          () => mockPrefs.setBool(SettingsProvider.stackSagasKey, false),
+        ).called(1);
+      },
+    );
   });
 
   group('SettingsProvider - Palettes', () {

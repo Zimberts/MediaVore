@@ -15,9 +15,12 @@ import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
+import 'package:mediavore/features/library/presentation/utils/list_entry.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_display_mode_sheet.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_media_grid_item.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_media_tile.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_saga_grid_item.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_saga_tile.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_share_sheet.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_sort_sheet.dart';
 import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
@@ -73,6 +76,7 @@ class ListPageState extends State<ListPage> {
 
   bool _isEditMode = false;
   final Set<String> _selectedItems = <String>{};
+  final Set<int> _expandedSagaIds = <int>{};
 
   List<MediaItem> _currentItems = [];
   String? _currentItemsList;
@@ -105,6 +109,7 @@ class ListPageState extends State<ListPage> {
         _isReversed = false;
         _isEditMode = false;
         _selectedItems.clear();
+        _expandedSagaIds.clear();
       });
       loadSavedMedia();
     }
@@ -337,6 +342,67 @@ class ListPageState extends State<ListPage> {
     });
   }
 
+  void _toggleSagaExpanded(int collectionId) {
+    setState(() {
+      if (!_expandedSagaIds.remove(collectionId)) {
+        _expandedSagaIds.add(collectionId);
+      }
+    });
+  }
+
+  void _toggleEntrySelection(ListEntry entry) {
+    switch (entry) {
+      case SingleListEntry(:final item):
+        _toggleItemSelection(item);
+      case SagaListEntry(:final movies):
+        final keys = movies
+            .map((m) => '${m.id}:${m.mediaType.name}')
+            .toList(growable: false);
+        setState(() {
+          if (_selectedItems.containsAll(keys)) {
+            _selectedItems.removeAll(keys);
+          } else {
+            _selectedItems.addAll(keys);
+          }
+        });
+    }
+  }
+
+  void _enterEditModeWithEntry(ListEntry entry) {
+    setState(() {
+      _isEditMode = true;
+      for (final item in entry.items) {
+        _selectedItems.add('${item.id}:${item.mediaType.name}');
+      }
+    });
+  }
+
+  Future<void> _openMediaDetail(MediaItem item) async {
+    await MediaDetailPage.show(context, item);
+    unawaited(loadSavedMedia());
+  }
+
+  Future<void> _onReorderEntries(
+    List<ListEntry> entries,
+    SearchProvider provider,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    setState(() {
+      _currentItems = reorderCurrentItemsByEntry(
+        allItems: _currentItems,
+        visibleEntries: entries,
+        oldIndex: oldIndex,
+        newIndex: newIndex,
+      );
+    });
+
+    final orderedEntries = _currentItems
+        .map((e) => '${e.id}:${e.mediaType.name}')
+        .toList();
+    await provider.updateListOrder(_selectedList, orderedEntries);
+  }
+
   String _getOrderText(AppLocalizations l10n) {
     final base = switch (_sortMethod) {
       ListSortMethod.manual => l10n.listsSortOrderManual,
@@ -560,10 +626,12 @@ class ListPageState extends State<ListPage> {
                   context,
                   currentMode: settings.displayMode,
                   currentGridSize: settings.gridSize.round(),
+                  stackSagas: settings.stackSagas,
                   onChanged: (mode, size) {
                     settings.setDisplayMode(mode);
                     settings.setGridSize(size.toDouble());
                   },
+                  onStackSagasChanged: settings.setStackSagas,
                 );
               },
               child: SizedBox(
@@ -664,8 +732,55 @@ class ListPageState extends State<ListPage> {
     );
   }
 
+  Widget _buildGridEntry(ListEntry entry, SearchProvider provider) {
+    switch (entry) {
+      case SingleListEntry(:final item):
+        final isSelected = _selectedItems.contains(
+          '${item.id}:${item.mediaType.name}',
+        );
+        return ListMediaGridItem(
+          key: ValueKey(entry.key),
+          item: item,
+          provider: provider,
+          isSelected: isSelected,
+          isEditMode: _isEditMode,
+          onTap: () {
+            if (_isEditMode) {
+              _toggleItemSelection(item);
+            } else {
+              unawaited(_openMediaDetail(item));
+            }
+          },
+          onLongPress: _isEditMode
+              ? null
+              : () => _enterEditModeWithEntry(entry),
+        );
+      case SagaListEntry():
+        final allSelected = entry.movies.every(
+          (m) => _selectedItems.contains('${m.id}:${m.mediaType.name}'),
+        );
+        return ListSagaGridItem(
+          key: ValueKey(entry.key),
+          entry: entry,
+          provider: provider,
+          isSelected: allSelected,
+          isEditMode: _isEditMode,
+          onTap: () {
+            if (_isEditMode) {
+              _toggleEntrySelection(entry);
+            } else {
+              _toggleSagaExpanded(entry.collectionId);
+            }
+          },
+          onLongPress: _isEditMode
+              ? null
+              : () => _enterEditModeWithEntry(entry),
+        );
+    }
+  }
+
   Widget _buildGridView(
-    List<MediaItem> items,
+    List<ListEntry> entries,
     SearchProvider provider,
     SettingsProvider settings,
   ) {
@@ -679,45 +794,99 @@ class ListPageState extends State<ListPage> {
           crossAxisCount: columns,
         );
 
-        if (_sortMethod != ListSortMethod.manual || _isReversed) {
-          return GridView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(_gridPadding),
-            clipBehavior: Clip.none,
-            gridDelegate: gridDelegate,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final isSelected = _selectedItems.contains(
-                '${item.id}:${item.mediaType.name}',
-              );
+        final canReorder =
+            _sortMethod == ListSortMethod.manual &&
+            !_isReversed &&
+            !_isEditMode &&
+            _expandedSagaIds.isEmpty;
 
-              return ListMediaGridItem(
-                key: ValueKey('${item.id}_${item.mediaType.name}'),
-                item: item,
-                provider: provider,
-                isSelected: isSelected,
-                isEditMode: _isEditMode,
-                onTap: () async {
-                  if (_isEditMode) {
-                    _toggleItemSelection(item);
-                  } else {
-                    await MediaDetailPage.show(context, item);
-                    unawaited(loadSavedMedia());
-                  }
-                },
-                onLongPress: _isEditMode
-                    ? null
-                    : () {
-                        setState(() {
-                          _isEditMode = true;
-                          _selectedItems.add(
-                            '${item.id}:${item.mediaType.name}',
-                          );
-                        });
-                      },
+        if (!canReorder) {
+          final slivers = <Widget>[];
+          final collapsedBatch = <ListEntry>[];
+
+          void flushCollapsedBatch() {
+            if (collapsedBatch.isEmpty) return;
+            final batch = List<ListEntry>.from(collapsedBatch);
+            collapsedBatch.clear();
+            slivers.add(
+              SliverGrid(
+                gridDelegate: gridDelegate,
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _buildGridEntry(batch[index], provider),
+                  childCount: batch.length,
+                ),
+              ),
+            );
+          }
+
+          for (final entry in entries) {
+            if (entry is SagaListEntry &&
+                _expandedSagaIds.contains(entry.collectionId)) {
+              flushCollapsedBatch();
+              slivers.add(
+                SliverToBoxAdapter(
+                  child: ListSagaGridHeader(
+                    key: ValueKey('${entry.key}_header'),
+                    entry: entry,
+                    provider: provider,
+                    isEditMode: _isEditMode,
+                    selectedItems: _selectedItems,
+                    onCollapse: () => _toggleSagaExpanded(entry.collectionId),
+                    onToggleSelectEntry: () => _toggleEntrySelection(entry),
+                  ),
+                ),
               );
-            },
+              slivers.add(
+                SliverGrid(
+                  gridDelegate: gridDelegate,
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final movie = entry.movies[index];
+                    final isSelected = _selectedItems.contains(
+                      '${movie.id}:${movie.mediaType.name}',
+                    );
+                    return ListMediaGridItem(
+                      key: ValueKey(
+                        '${entry.key}_${movie.id}_${movie.mediaType.name}',
+                      ),
+                      item: movie,
+                      provider: provider,
+                      isSelected: isSelected,
+                      isEditMode: _isEditMode,
+                      onTap: () {
+                        if (_isEditMode) {
+                          _toggleItemSelection(movie);
+                        } else {
+                          unawaited(_openMediaDetail(movie));
+                        }
+                      },
+                      onLongPress: _isEditMode
+                          ? null
+                          : () =>
+                                _enterEditModeWithEntry(SingleListEntry(movie)),
+                    );
+                  }, childCount: entry.movies.length),
+                ),
+              );
+            } else {
+              collapsedBatch.add(entry);
+            }
+          }
+          flushCollapsedBatch();
+
+          return CustomScrollView(
+            controller: _scrollController,
+            clipBehavior: Clip.none,
+            slivers: [
+              for (final sliver in slivers)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _gridPadding,
+                    vertical: 6,
+                  ),
+                  sliver: sliver,
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: _gridPadding)),
+            ],
           );
         }
 
@@ -728,206 +897,97 @@ class ListPageState extends State<ListPage> {
           scrollSpeedController: (elapsed, overSize, itemSize) =>
               _gridDragDistance < 12 ? 0 : 5,
           gridDelegate: gridDelegate,
-          itemCount: items.length,
+          itemCount: entries.length,
           onDragStart: (_) => _gridDragDistance = 0,
           onDragUpdate: (_, _, delta) => _gridDragDistance += delta.distance,
           onReorder: (oldIndex, newIndex) async {
             if (_gridDragDistance < 12) {
-              final pressed = items[oldIndex];
-              setState(() {
-                _isEditMode = true;
-                _selectedItems.add('${pressed.id}:${pressed.mediaType.name}');
-              });
+              _enterEditModeWithEntry(entries[oldIndex]);
               return;
             }
-
-            setState(() {
-              final item = items.removeAt(oldIndex);
-              items.insert(newIndex, item);
-
-              final oldPersistentIndex = _currentItems.indexOf(item);
-              if (oldPersistentIndex != -1) {
-                _currentItems.removeAt(oldPersistentIndex);
-              }
-
-              if (newIndex < items.length - 1) {
-                final nextItemInFiltered = items[newIndex + 1];
-                final nextPersistentIndex = _currentItems.indexOf(
-                  nextItemInFiltered,
-                );
-                if (nextPersistentIndex != -1) {
-                  _currentItems.insert(nextPersistentIndex, item);
-                } else {
-                  _currentItems.add(item);
-                }
-              } else {
-                if (items.length > 1 && newIndex > 0) {
-                  final previousItemInFiltered = items[newIndex - 1];
-                  final prevPersistentIndex = _currentItems.indexOf(
-                    previousItemInFiltered,
-                  );
-                  if (prevPersistentIndex != -1) {
-                    _currentItems.insert(prevPersistentIndex + 1, item);
-                  } else {
-                    _currentItems.add(item);
-                  }
-                } else {
-                  _currentItems.add(item);
-                }
-              }
-            });
-
-            final orderedEntries = _currentItems
-                .map((e) => '${e.id}:${e.mediaType.name}')
-                .toList();
-            await provider.updateListOrder(_selectedList, orderedEntries);
+            await _onReorderEntries(entries, provider, oldIndex, newIndex);
           },
-          itemBuilder: (context, index) {
-            final item = items[index];
-            final isSelected = _selectedItems.contains(
-              '${item.id}:${item.mediaType.name}',
-            );
-
-            return ListMediaGridItem(
-              key: ValueKey('${item.id}_${item.mediaType.name}'),
-              item: item,
-              provider: provider,
-              isSelected: isSelected,
-              isEditMode: _isEditMode,
-              onTap: () async {
-                if (_isEditMode) {
-                  _toggleItemSelection(item);
-                } else {
-                  await MediaDetailPage.show(context, item);
-                  unawaited(loadSavedMedia());
-                }
-              },
-            );
-          },
+          itemBuilder: (context, index) =>
+              _buildGridEntry(entries[index], provider),
         );
       },
     );
   }
 
-  Widget _buildListView(List<MediaItem> items, SearchProvider provider) {
-    if (_sortMethod != ListSortMethod.manual || _isReversed || _isEditMode) {
-      return ListView.builder(
-        controller: _scrollController,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          final isSelected = _selectedItems.contains(
-            '${item.id}:${item.mediaType.name}',
-          );
-
-          return ListMediaTile(
-            key: ValueKey('${item.id}_${item.mediaType.name}'),
-            index: index,
-            item: item,
-            provider: provider,
-            isEditMode: _isEditMode,
-            isSelected: isSelected,
-            isManualSort: false,
-            onTap: () async {
-              if (_isEditMode) {
-                _toggleItemSelection(item);
-              } else {
-                await MediaDetailPage.show(context, item);
-                unawaited(loadSavedMedia());
-              }
-            },
-            onLongPress: () {
-              if (!_isEditMode) {
-                setState(() {
-                  _isEditMode = true;
-                  _selectedItems.add('${item.id}:${item.mediaType.name}');
-                });
-              }
-            },
-          );
-        },
-      );
-    }
-
-    return ReorderableListView.builder(
-      scrollController: _scrollController,
-      itemCount: items.length,
-      clipBehavior: Clip.none,
-      buildDefaultDragHandles: false,
-      onReorderItem: (oldIndex, newIndex) async {
-        setState(() {
-          final item = items.removeAt(oldIndex);
-          items.insert(newIndex, item);
-
-          final oldPersistentIndex = _currentItems.indexOf(item);
-          if (oldPersistentIndex != -1) {
-            _currentItems.removeAt(oldPersistentIndex);
-          }
-
-          if (newIndex < items.length - 1) {
-            final nextItemInFiltered = items[newIndex + 1];
-            final nextPersistentIndex = _currentItems.indexOf(
-              nextItemInFiltered,
-            );
-            if (nextPersistentIndex != -1) {
-              _currentItems.insert(nextPersistentIndex, item);
-            } else {
-              _currentItems.add(item);
-            }
-          } else {
-            if (items.length > 1 && newIndex > 0) {
-              final previousItemInFiltered = items[newIndex - 1];
-              final prevPersistentIndex = _currentItems.indexOf(
-                previousItemInFiltered,
-              );
-              if (prevPersistentIndex != -1) {
-                _currentItems.insert(prevPersistentIndex + 1, item);
-              } else {
-                _currentItems.add(item);
-              }
-            } else {
-              _currentItems.add(item);
-            }
-          }
-        });
-
-        final orderedEntries = _currentItems
-            .map((e) => '${e.id}:${e.mediaType.name}')
-            .toList();
-        await provider.updateListOrder(_selectedList, orderedEntries);
-      },
-      itemBuilder: (context, index) {
-        final item = items[index];
+  Widget _buildListEntry(
+    ListEntry entry,
+    int index,
+    SearchProvider provider, {
+    required bool isManualSort,
+  }) {
+    switch (entry) {
+      case SingleListEntry(:final item):
         final isSelected = _selectedItems.contains(
           '${item.id}:${item.mediaType.name}',
         );
-
         return ListMediaTile(
-          key: ValueKey('${item.id}_${item.mediaType.name}'),
+          key: ValueKey(entry.key),
           index: index,
           item: item,
           provider: provider,
           isEditMode: _isEditMode,
           isSelected: isSelected,
-          isManualSort: true,
-          onTap: () async {
+          isManualSort: isManualSort,
+          onTap: () {
             if (_isEditMode) {
               _toggleItemSelection(item);
             } else {
-              await MediaDetailPage.show(context, item);
-              unawaited(loadSavedMedia());
+              unawaited(_openMediaDetail(item));
             }
           },
-          onLongPress: () {
-            if (!_isEditMode) {
-              setState(() {
-                _isEditMode = true;
-                _selectedItems.add('${item.id}:${item.mediaType.name}');
-              });
-            }
-          },
+          onLongPress: _isEditMode
+              ? null
+              : () => _enterEditModeWithEntry(entry),
         );
-      },
+      case SagaListEntry():
+        return ListSagaTile(
+          key: ValueKey(entry.key),
+          index: index,
+          entry: entry,
+          provider: provider,
+          isExpanded: _expandedSagaIds.contains(entry.collectionId),
+          isEditMode: _isEditMode,
+          selectedItems: _selectedItems,
+          isManualSort: isManualSort,
+          onToggleExpand: () => _toggleSagaExpanded(entry.collectionId),
+          onToggleSelectEntry: () => _toggleEntrySelection(entry),
+          onToggleSelectItem: _toggleItemSelection,
+          onTapMovie: _openMediaDetail,
+          onLongPress: _isEditMode
+              ? null
+              : () => _enterEditModeWithEntry(entry),
+        );
+    }
+  }
+
+  Widget _buildListView(List<ListEntry> entries, SearchProvider provider) {
+    if (_sortMethod != ListSortMethod.manual || _isReversed || _isEditMode) {
+      return ListView.builder(
+        controller: _scrollController,
+        itemCount: entries.length,
+        itemBuilder: (context, index) => _buildListEntry(
+          entries[index],
+          index,
+          provider,
+          isManualSort: false,
+        ),
+      );
+    }
+
+    return ReorderableListView.builder(
+      scrollController: _scrollController,
+      itemCount: entries.length,
+      clipBehavior: Clip.none,
+      buildDefaultDragHandles: false,
+      onReorderItem: (oldIndex, newIndex) =>
+          _onReorderEntries(entries, provider, oldIndex, newIndex),
+      itemBuilder: (context, index) =>
+          _buildListEntry(entries[index], index, provider, isManualSort: true),
     );
   }
 
@@ -952,6 +1012,10 @@ class ListPageState extends State<ListPage> {
           itemsToDisplay,
           settings,
         );
+        final entries = groupMoviesBySaga(
+          filteredItems,
+          enabled: settings.stackSagas,
+        );
 
         return Scaffold(
           appBar: _buildAppBar(context, itemsToDisplay.length, filteredItems),
@@ -974,8 +1038,8 @@ class ListPageState extends State<ListPage> {
                               ),
                         ))
                 : (settings.displayMode == DisplayMode.list
-                      ? _buildListView(filteredItems, provider)
-                      : _buildGridView(filteredItems, provider, settings)),
+                      ? _buildListView(entries, provider)
+                      : _buildGridView(entries, provider, settings)),
           ),
         );
       },

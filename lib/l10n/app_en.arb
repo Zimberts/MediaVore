@@ -1575,6 +1575,29 @@
     }
   },
   "listsFillBySwiping": "Fill by swiping",
+  "listsStackSagas": "Stack sagas",
+  "listsStackSagasHint": "Group movies from the same saga into one entry",
+  "listsSagaMovieCount": "{count, plural, =1{1 movie} other{{count} movies}}",
+  "@listsSagaMovieCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsSagaSeenProgress": "{seen}/{total} seen",
+  "@listsSagaSeenProgress": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "listsSagaExpandTooltip": "Expand saga",
+  "listsSagaCollapseTooltip": "Collapse saga",
   "filtersTitle": "Filters",
   "filtersSortBy": "Sort by",
   "filtersSortRelevance": "Relevance",
