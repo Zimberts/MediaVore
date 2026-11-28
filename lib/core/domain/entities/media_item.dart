@@ -362,7 +362,11 @@ class MediaItem extends Equatable {
   bool get isComplete =>
       originCountries != null && voteCount != null && originalLanguage != null;
 
+  /// True when this item was added manually by the user (negative local ID).
+  bool get isManual => id < 0;
+
   bool get canBeNotified {
+    if (isManual) return false;
     if (mediaType == MediaType.tv) {
       return status != 'Ended' && status != 'Canceled';
     } else if (mediaType == MediaType.movie) {

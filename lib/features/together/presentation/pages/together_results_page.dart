@@ -42,7 +42,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
 
     final hostListEntries = ListShareCodec.parseEntries(
       searchProvider.listEntries[session.selectedListName] ?? const [],
-    );
+    ).where((e) => e.id > 0).toList();
 
     final allEntries = <SharedMediaEntry>{
       ...hostListEntries,
@@ -184,7 +184,7 @@ class _TogetherResultsPageState extends State<TogetherResultsPage> {
 
     final hostListEntries = ListShareCodec.parseEntries(
       searchProvider.listEntries[session.selectedListName] ?? const [],
-    );
+    ).where((e) => e.id > 0).toList();
 
     final seenKeys = {
       for (final s in searchProvider.seenItems) (s.tmdbId, s.type),

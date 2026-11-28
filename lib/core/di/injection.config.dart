@@ -25,6 +25,8 @@ import '../../features/achievements/domain/repositories/achievement_repository.d
     as _i282;
 import '../../features/achievements/presentation/providers/achievement_provider.dart'
     as _i393;
+import '../../features/media_details/data/datasources/manual_media_local_data_source.dart'
+    as _i642;
 import '../../features/media_details/data/datasources/media_list_local_data_source.dart'
     as _i801;
 import '../../features/search/data/datasources/media_remote_data_source.dart'
@@ -100,6 +102,12 @@ Future<_i174.GetIt> init(
       dio: gh<_i361.Dio>(),
       credentials: gh<_i1033.TmdbCredentialStore>(),
       locale: gh<_i903.LocaleService>(),
+    ),
+  );
+  gh.lazySingleton<_i642.ManualMediaLocalDataSource>(
+    () => _i642.ManualMediaLocalDataSource(
+      gh<_i214.Isar>(),
+      gh<_i460.SharedPreferences>(),
     ),
   );
   gh.lazySingleton<_i393.AchievementProvider>(

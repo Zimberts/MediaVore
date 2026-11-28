@@ -38,8 +38,8 @@ void main() {
 
       final env = ExportEnvelope.fromZipBytes(bytes);
 
-      expect(env.likes.map((l) => l.tmdbId), [10]);
-      expect(env.warnings, hasLength(4));
+      expect(env.likes.map((l) => l.tmdbId), [10, -3]);
+      expect(env.warnings, hasLength(3));
       expect(env.warnings.first, 'likes.csv row 3: invalid tmdbId ""');
     });
 

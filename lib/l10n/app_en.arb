@@ -1965,5 +1965,55 @@
   "swiperResetConfirmTitle": "Reset swipe choices?",
   "swiperResetConfirmMessage": "Titles you previously discarded will be able to appear again in swipe mode. Your earned achievements remain unlocked.",
   "swiperResetSuccessToast": "Swipe choices reset",
-  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB."
+  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+  "manualMediaAddTitle": "Add manually",
+  "manualMediaEditTitle": "Edit media",
+  "manualMediaNotFoundAdd": "Not found? Add it",
+  "manualMediaBadge": "Added manually",
+  "manualMediaOpenLink": "Open link",
+  "manualMediaEditAction": "Edit",
+  "manualMediaDeleteAction": "Delete",
+  "manualMediaDeleteTitle": "Delete manual media?",
+  "manualMediaDeleteMessage": "Delete \"{title}\" and all its history, lists, and likes? This cannot be undone.",
+  "@manualMediaDeleteMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "manualMediaKindLabel": "Type",
+  "manualMediaKindMovie": "Film",
+  "manualMediaKindTv": "Series",
+  "manualMediaKindVideo": "Video",
+  "manualMediaKindVideoSeries": "Video series",
+  "manualMediaFillFromTitle": "Fill from…",
+  "manualMediaTitleLabel": "Title *",
+  "manualMediaTitleRequired": "Title is required",
+  "manualMediaOriginalTitleLabel": "Original title",
+  "manualMediaOverviewLabel": "Overview",
+  "manualMediaReleaseDateLabel": "Release date (YYYY or YYYY-MM-DD)",
+  "manualMediaRuntimeLabel": "Runtime (minutes)",
+  "manualMediaEpisodeRuntimeLabel": "Episode runtime (minutes)",
+  "manualMediaInvalidNumber": "Enter a positive number",
+  "manualMediaSeasonsSection": "Seasons & episodes",
+  "manualMediaSeasonLabel": "Season {number}",
+  "@manualMediaSeasonLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "manualMediaEpisodesLabel": "Episodes",
+  "manualMediaAddSeason": "Add season",
+  "manualMediaRemoveSeason": "Remove season",
+  "manualMediaPosterSection": "Image",
+  "manualMediaPickImage": "Choose from gallery",
+  "manualMediaPosterUrlLabel": "Image URL",
+  "manualMediaClearImage": "Remove image",
+  "manualMediaGenresLabel": "Genres (comma-separated)",
+  "manualMediaCountriesLabel": "Origin countries (comma-separated, e.g. FR, US)",
+  "manualMediaSourceUrlLabel": "Source link (URL)",
+  "manualMediaSave": "Save"
 }

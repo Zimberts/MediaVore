@@ -44,6 +44,7 @@ class NotificationRefreshService {
     MediaItem item, {
     bool autoNotify = false,
   }) async {
+    if (item.id < 0) return;
     final isNotified = await localDataSource.isNotified(
       item.id,
       item.mediaType.name,
@@ -139,6 +140,7 @@ class NotificationRefreshService {
     MediaType type, {
     required bool force,
   }) async {
+    if (tmdbId < 0) return;
     final notified = await localDataSource.getNotifiedItem(tmdbId, type.name);
     if (notified == null) return;
 
@@ -168,6 +170,7 @@ class NotificationRefreshService {
   /// Re-fetches a returning series (details, latest season) bypassing the
   /// cache, then resyncs its Quick Add and Releases entries.
   Future<void> refreshReturningSeries(int tmdbId) async {
+    if (tmdbId < 0) return;
     try {
       const type = MediaType.tv;
 
@@ -290,6 +293,7 @@ class NotificationRefreshService {
     int tmdbId,
     MediaType type,
   ) async {
+    if (tmdbId < 0) return;
     try {
       final item = await cache.getItem(tmdbId, type);
       if (item != null) {
@@ -599,6 +603,7 @@ class NotificationRefreshService {
   /// A missing cache entry is fetched once so the check stays reliable; the
   /// once-a-day throttle in [_shouldRefreshNotification] bounds the cost.
   Future<bool> _hasAiredUnseenBacklog(NotifiedItemModel notified) async {
+    if (notified.tmdbId < 0) return false;
     try {
       var item = await cache.getItem(notified.tmdbId, MediaType.tv);
       if (item == null) {

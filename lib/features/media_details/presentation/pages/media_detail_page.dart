@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/domain/entities/manual_media.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/seen_item.dart';
@@ -14,6 +15,7 @@ import 'package:mediavore/core/utils/genres.dart';
 import 'package:mediavore/core/widgets/app_dialog.dart';
 import 'package:mediavore/core/widgets/offline_banner.dart';
 import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
+import 'package:mediavore/features/media_details/presentation/pages/manual_media_form_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_actions.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_cast.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/detail/media_detail_header.dart';
@@ -31,6 +33,7 @@ import 'package:mediavore/features/search/presentation/providers/search_provider
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Shares a piece of text (a link) through the system sheet.
 typedef MediaTextShare = Future<void> Function(String text);
@@ -39,7 +42,13 @@ Future<void> _shareWithSystem(String text) =>
     SharePlus.instance.share(ShareParams(text: text));
 
 /// Actions of the "more" menu of the detail page.
-enum _MoreAction { share, exportHistory, clearHistory }
+enum _MoreAction {
+  share,
+  exportHistory,
+  clearHistory,
+  editManual,
+  deleteManual,
+}
 
 /// Detail page of a film or a series.
 ///
@@ -79,6 +88,7 @@ class MediaDetailPage extends StatefulWidget {
 
 class _MediaDetailPageState extends State<MediaDetailPage> {
   MediaDetails? _mediaDetails;
+  ManualMedia? _manualMedia;
   bool _isLoading = true;
   int? _expandedSeason;
   final Map<int, List<dynamic>> _episodesBySeason = {};
@@ -135,9 +145,13 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
         widget.item.id,
         widget.item.mediaType,
       );
+      final manual = widget.item.isManual
+          ? await provider.getManualMedia(widget.item.id)
+          : null;
       if (mounted) {
         setState(() {
           _mediaDetails = details;
+          _manualMedia = manual;
           _isLoading = false;
           _loadError = null;
         });
@@ -371,16 +385,30 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
 
   Future<void> _showMoreMenu(MediaItem item) async {
     final l10n = context.l10n;
+    final manualSourceUrl = _manualMedia?.sourceUrl;
     final action = await showAppMenu<_MoreAction>(
       context: context,
       title: item.title,
       items: [
-        AppMenuItem(
-          value: _MoreAction.share,
-          label: l10n.detailShare,
-          subtitle: l10n.detailShareHint,
-          icon: Icons.share,
-        ),
+        if (item.isManual) ...[
+          AppMenuItem(
+            value: _MoreAction.editManual,
+            label: l10n.manualMediaEditAction,
+            icon: Icons.edit_outlined,
+          ),
+          if (manualSourceUrl != null && manualSourceUrl.isNotEmpty)
+            AppMenuItem(
+              value: _MoreAction.share,
+              label: l10n.detailShare,
+              icon: Icons.share,
+            ),
+        ] else
+          AppMenuItem(
+            value: _MoreAction.share,
+            label: l10n.detailShare,
+            subtitle: l10n.detailShareHint,
+            icon: Icons.share,
+          ),
         AppMenuItem(
           value: _MoreAction.exportHistory,
           label: l10n.detailExportHistory,
@@ -393,19 +421,75 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
             icon: Icons.delete_outline,
             danger: true,
           ),
+        if (item.isManual)
+          AppMenuItem(
+            value: _MoreAction.deleteManual,
+            label: l10n.manualMediaDeleteAction,
+            icon: Icons.delete_forever_outlined,
+            danger: true,
+          ),
       ],
     );
     if (action == null || !mounted) return;
     switch (action) {
       case _MoreAction.share:
-        await (widget.onShare ?? _shareWithSystem)(
-          MediaDetailPage.tmdbLink(item),
-        );
+        final shareText = item.isManual
+            ? (manualSourceUrl ?? '')
+            : MediaDetailPage.tmdbLink(item);
+        if (shareText.isNotEmpty) {
+          await (widget.onShare ?? _shareWithSystem)(shareText);
+        }
       case _MoreAction.exportHistory:
         await _exportHistory();
       case _MoreAction.clearHistory:
         await _confirmClearHistory(item);
+      case _MoreAction.editManual:
+        await _editManualMedia();
+      case _MoreAction.deleteManual:
+        await _confirmDeleteManualMedia(item);
     }
+  }
+
+  Future<void> _editManualMedia() async {
+    final manual = _manualMedia;
+    if (manual == null) return;
+    final updated = await Navigator.of(context).push<ManualMedia>(
+      MaterialPageRoute<ManualMedia>(
+        builder: (context) => ManualMediaFormPage(initialMedia: manual),
+      ),
+    );
+    if (updated != null && mounted) {
+      _episodesBySeason.clear();
+      await _fetchMediaDetails();
+    }
+  }
+
+  Future<void> _confirmDeleteManualMedia(MediaItem item) async {
+    final l10n = context.l10n;
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      title: l10n.manualMediaDeleteTitle,
+      message: l10n.manualMediaDeleteMessage(item.title),
+      actions: [
+        AppDialogAction(label: l10n.commonCancel),
+        AppDialogAction(
+          label: l10n.manualMediaDeleteAction,
+          value: true,
+          danger: true,
+        ),
+      ],
+    );
+    if (confirmed != true || !mounted) return;
+    await _searchProvider.deleteManualMedia(item.id);
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _openSourceUrl(String rawUrl) async {
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   /// Removing viewings is never a single gesture: menu, then confirmation.
@@ -511,6 +595,21 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                       item: item,
                       onSeenChanged: _fetchSeenStatus,
                     ),
+                  if (item.isManual &&
+                      _manualMedia?.sourceUrl != null &&
+                      _manualMedia!.sourceUrl!.isNotEmpty) ...[
+                    gap,
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: OutlinedButton.icon(
+                        key: const Key('media_detail_open_link'),
+                        onPressed: () =>
+                            _openSourceUrl(_manualMedia!.sourceUrl!),
+                        icon: const Icon(Icons.open_in_new),
+                        label: Text(l10n.manualMediaOpenLink),
+                      ),
+                    ),
+                  ],
                   if (_isLoading)
                     const Center(
                       child: Padding(
@@ -540,12 +639,13 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           ],
                         ),
                       ],
-                      if (details?.watchProviders != null)
+                      if (!item.isManual && details?.watchProviders != null)
                         MediaDetailWatchProviders(
                           watchProviders: details!.watchProviders,
                         ),
                       MediaDetailSynopsis(text: item.overview),
-                      if (details?.collection != null &&
+                      if (!item.isManual &&
+                          details?.collection != null &&
                           details!.collection!.isNotEmpty) ...[
                         gap,
                         MediaDetailSaga(
@@ -554,17 +654,18 @@ class _MediaDetailPageState extends State<MediaDetailPage> {
                           onOpen: _openRelated,
                         ),
                       ],
-                      MediaDetailTrailers(
-                        videos: details?.videos,
-                        onOpen: widget.onShare ?? _shareWithSystem,
-                      ),
+                      if (!item.isManual)
+                        MediaDetailTrailers(
+                          videos: details?.videos,
+                          onOpen: widget.onShare ?? _shareWithSystem,
+                        ),
                       MediaDetailInfos(
                         item: item,
                         director: details?.director,
                         directorName: details?.director?.name,
                       ),
                     ],
-                    if (details != null) ...[
+                    if (!item.isManual && details != null) ...[
                       MediaDetailCast(cast: details.cast),
                       MediaDetailRelated(
                         title: l10n.detailSimilar,

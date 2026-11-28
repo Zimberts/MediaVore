@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/because_you_data.dart';
+import 'package:mediavore/core/domain/entities/manual_media.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
@@ -2040,4 +2041,54 @@ class SearchProvider
       repository.getWatchProviders(id, type);
   Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type) =>
       repository.getVideos(id, type);
+
+  Future<ManualMedia> createManualMedia({
+    required ManualMediaKind kind,
+    required String title,
+    String? originalTitle,
+    String? overview,
+    String? releaseDate,
+    int? runtime,
+    List<int>? seasons,
+    String? posterPath,
+    List<String>? genres,
+    List<String>? originCountries,
+    String? sourceUrl,
+    String? sourceProvider,
+  }) async {
+    final created = await repository.createManualMedia(
+      kind: kind,
+      title: title,
+      originalTitle: originalTitle,
+      overview: overview,
+      releaseDate: releaseDate,
+      runtime: runtime,
+      seasons: seasons,
+      posterPath: posterPath,
+      genres: genres,
+      originCountries: originCountries,
+      sourceUrl: sourceUrl,
+      sourceProvider: sourceProvider,
+    );
+    notifyListeners();
+    return created;
+  }
+
+  Future<ManualMedia> updateManualMedia(ManualMedia media) async {
+    final updated = await repository.updateManualMedia(media);
+    notifyListeners();
+    return updated;
+  }
+
+  Future<ManualMedia?> getManualMedia(int localId) =>
+      repository.getManualMedia(localId);
+
+  Future<void> deleteManualMedia(int localId) async {
+    await repository.deleteManualMedia(localId);
+    await _libraryProvider.init();
+    await loadAllSeenStatus();
+    await loadQuickAddItems();
+    await loadNotifiedItems();
+    notifyListeners();
+  }
 }

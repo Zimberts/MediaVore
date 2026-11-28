@@ -32,9 +32,24 @@ abstract final class TmdbImageUtils {
   /// Base URL of the TMDB image CDN.
   static const String baseUrl = 'https://image.tmdb.org/t/p';
 
+  /// True when [path] points to a local file rather than a TMDB relative path
+  /// or an HTTP(S) URL.
+  static bool isLocalPath(String? path) {
+    if (path == null) return false;
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return false;
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return false;
+    }
+    if (trimmed.startsWith('file://')) return true;
+    // TMDB relative paths are single-segment (`/hash.jpg`). Any path with
+    // nested directories or a Windows separator/drive letter is a local file.
+    return trimmed.indexOf('/', 1) != -1 || trimmed.contains('\\');
+  }
+
   /// Constructs a full TMDB image URL from a relative image [path] and [size].
   ///
-  /// Returns `null` if [path] is `null` or whitespace-only.
+  /// Returns `null` if [path] is `null`, whitespace-only, or a local file path.
   /// Automatically ensures [path] has a leading slash.
   static String? buildUrl(
     String? path, {
@@ -43,6 +58,7 @@ abstract final class TmdbImageUtils {
     if (path == null) return null;
     final trimmed = path.trim();
     if (trimmed.isEmpty) return null;
+    if (isLocalPath(trimmed)) return null;
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       return trimmed;
     }

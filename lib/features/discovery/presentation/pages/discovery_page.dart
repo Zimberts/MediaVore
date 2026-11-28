@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:mediavore/core/domain/entities/manual_media.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -13,6 +14,7 @@ import 'package:mediavore/core/widgets/section_header.dart';
 import 'package:mediavore/features/discovery/presentation/pages/swiper_page.dart';
 import 'package:mediavore/features/discovery/presentation/providers/discovery_provider.dart';
 import 'package:mediavore/features/discovery/presentation/widgets/because_you_row.dart';
+import 'package:mediavore/features/media_details/presentation/pages/manual_media_form_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/media_details/presentation/widgets/watchlist_icon_button.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -127,6 +129,17 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     _debounce?.cancel();
     _controller.clear();
     _refreshDiscovery('');
+  }
+
+  Future<void> _openManualAdd([String? initialTitle]) async {
+    final created = await Navigator.of(context).push<ManualMedia>(
+      MaterialPageRoute<ManualMedia>(
+        builder: (context) => ManualMediaFormPage(initialTitle: initialTitle),
+      ),
+    );
+    if (created != null && mounted) {
+      await MediaDetailPage.show(context, created.toMediaItem());
+    }
   }
 
   /// State shown instead of the grid when the first page failed to load.
@@ -271,6 +284,24 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
             );
           },
         ),
+        const SizedBox(width: 8),
+        IconButton.outlined(
+          key: const Key('discovery_add_manual'),
+          constraints: const BoxConstraints(
+            minWidth: kMinTapTarget,
+            minHeight: kMinTapTarget,
+          ),
+          style: IconButton.styleFrom(
+            backgroundColor: colors.surface,
+            side: BorderSide(color: colors.border),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          icon: const Icon(Icons.add, size: 20),
+          tooltip: l10n.manualMediaAddTitle,
+          onPressed: _openManualAdd,
+        ),
       ],
     );
   }
@@ -392,6 +423,14 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
                     child: Text(l10n.discoveryClearFilters),
                   ),
                 ],
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  key: const Key('discovery_empty_add_manual'),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.manualMediaNotFoundAdd),
+                  onPressed: () =>
+                      _openManualAdd(query.isNotEmpty ? query : null),
+                ),
               ],
             ),
           ),

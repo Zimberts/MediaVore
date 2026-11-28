@@ -31,3 +31,9 @@ class ParsingException extends AppException {
 class ConfigurationException extends AppException {
   const ConfigurationException(super.message, [super.cause]);
 }
+
+/// Exception thrown when a TMDB-only operation is called with a manual media
+/// ID (`id < 0`).
+class InvalidMediaIdException extends AppException {
+  const InvalidMediaIdException(super.message, [super.cause]);
+}

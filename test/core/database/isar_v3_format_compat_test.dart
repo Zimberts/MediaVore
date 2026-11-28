@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mediavore/core/cache/cached_media.dart';
+import 'package:mediavore/core/domain/entities/manual_media.dart';
 import 'package:mediavore/features/achievements/data/models/achievement_model.dart';
 import 'package:mediavore/features/media_details/data/models/liked_item.dart';
+import 'package:mediavore/features/media_details/data/models/manual_media_model.dart';
 import 'package:mediavore/features/media_details/data/models/media_list_item.dart';
 import 'package:mediavore/features/media_details/data/models/notified_item_model.dart';
 import 'package:mediavore/features/media_details/data/models/quick_add_item_model.dart';
@@ -85,6 +87,7 @@ void main() {
       CachedActorProfileSchema,
       CachedSeasonSchema,
       AchievementModelSchema,
+      ManualMediaModelSchema,
     ], directory: runtimeDir);
   });
 
@@ -167,5 +170,30 @@ void main() {
       expect(written, isNotNull);
       expect(written!.title, 'Inception');
     });
+
+    test(
+      'should read and write ManualMediaModel on a legacy database',
+      () async {
+        expect(await isar.manualMediaModels.count(), 0);
+        final now = DateTime.utc(2026, 11, 28);
+        await isar.writeTxn(() async {
+          await isar.manualMediaModels.putByLocalId(
+            ManualMediaModel(
+              localId: -1,
+              kind: ManualMediaKind.video,
+              title: 'Local Short Film',
+              runtime: 14,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+        });
+
+        final saved = await isar.manualMediaModels.getByLocalId(-1);
+        expect(saved, isNotNull);
+        expect(saved!.title, 'Local Short Film');
+        expect(saved.kind, ManualMediaKind.video);
+      },
+    );
   });
 }

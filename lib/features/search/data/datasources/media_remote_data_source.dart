@@ -211,8 +211,18 @@ class MediaRemoteDataSource {
     });
   }
 
+  /// Centralized guard ensuring manual media IDs (`id < 0`) never reach TMDB.
+  static void _assertTmdbId(int id, String action) {
+    if (id < 0) {
+      throw InvalidMediaIdException(
+        'Cannot $action on TMDB for manual media (id=$id)',
+      );
+    }
+  }
+
   /// Fetches the details for a single media item from the TMDB API.
   Future<MediaItem> getMediaItem(int id, {MediaType type = MediaType.movie}) {
+    _assertTmdbId(id, 'fetching details');
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching details', () async {
       final url = 'https://api.themoviedb.org/3/$path/$id';
@@ -247,6 +257,7 @@ class MediaRemoteDataSource {
     int id, {
     MediaType type = MediaType.movie,
   }) {
+    _assertTmdbId(id, 'fetching details bundle');
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching details', () async {
       final url = 'https://api.themoviedb.org/3/$path/$id';
@@ -332,6 +343,7 @@ class MediaRemoteDataSource {
     int tvId,
     List<int> seasonNumbers,
   ) {
+    _assertTmdbId(tvId, 'fetching season details');
     return _guard('fetching season details', () async {
       final seasons = <int, Map<String, dynamic>>{};
       for (var i = 0; i < seasonNumbers.length; i += maxAppendedResponses) {
@@ -407,6 +419,7 @@ class MediaRemoteDataSource {
 
   /// Fetches the details for a TV season from the TMDB API.
   Future<Map<String, dynamic>> getSeasonDetails(int tvId, int seasonNumber) {
+    _assertTmdbId(tvId, 'fetching season details');
     return _guard('fetching season details', () async {
       final response = await _tmdbGet(
         'https://api.themoviedb.org/3/tv/$tvId/season/$seasonNumber',
@@ -420,6 +433,7 @@ class MediaRemoteDataSource {
     int id, {
     MediaType type = MediaType.movie,
   }) {
+    _assertTmdbId(id, 'fetching credits');
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching credits', () async {
       final response = await _tmdbGet(
@@ -616,6 +630,7 @@ class MediaRemoteDataSource {
   }
 
   Future<List<MediaItem>> getSimilarMedia(int id, MediaType type) {
+    _assertTmdbId(id, 'fetching similar media');
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching similar media', () async {
       final response = await _tmdbGet(
@@ -642,6 +657,7 @@ class MediaRemoteDataSource {
   }
 
   Future<List<MediaItem>> getRecommendedMedia(int id, MediaType type) {
+    _assertTmdbId(id, 'fetching recommendations');
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching recommendations', () async {
       final response = await _tmdbGet(
@@ -652,6 +668,7 @@ class MediaRemoteDataSource {
   }
 
   Future<Map<String, dynamic>> getWatchProviders(int id, MediaType type) {
+    _assertTmdbId(id, 'fetching watch providers');
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching watch providers', () async {
       final response = await _tmdbGet(
@@ -662,6 +679,7 @@ class MediaRemoteDataSource {
   }
 
   Future<List<Map<String, dynamic>>> getVideos(int id, MediaType type) {
+    _assertTmdbId(id, 'fetching videos');
     final path = type == MediaType.tv ? 'tv' : 'movie';
     return _guard('fetching videos', () async {
       final response = await _tmdbGet(

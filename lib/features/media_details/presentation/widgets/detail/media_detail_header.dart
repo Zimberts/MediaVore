@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/formatters.dart';
+import 'package:mediavore/core/utils/poster_image_provider.dart';
 import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
@@ -182,6 +183,7 @@ class MediaDetailHeader extends StatelessWidget {
             data: MediaPosterData(
               title: item.title,
               kind: kind,
+              image: localPosterImageProvider(item.posterPath),
               imageUrl: TmdbImageUtils.buildUrl(
                 item.posterPath,
                 size: TmdbImageSize.w342,
@@ -194,7 +196,33 @@ class MediaDetailHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TypeChip(kind: kind),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  TypeChip(kind: kind),
+                  if (item.isManual)
+                    Container(
+                      key: const Key('media_detail_manual_badge'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Text(
+                        l10n.manualMediaBadge,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colors.text2,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 6),
               Semantics(
                 header: true,

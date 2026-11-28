@@ -4339,6 +4339,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This product uses the TMDB API but is not endorsed or certified by TMDB.'**
   String get settingsAboutTmdb;
+
+  /// No description provided for @manualMediaAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add manually'**
+  String get manualMediaAddTitle;
+
+  /// No description provided for @manualMediaEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit media'**
+  String get manualMediaEditTitle;
+
+  /// No description provided for @manualMediaNotFoundAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found? Add it'**
+  String get manualMediaNotFoundAdd;
+
+  /// No description provided for @manualMediaBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Added manually'**
+  String get manualMediaBadge;
+
+  /// No description provided for @manualMediaOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get manualMediaOpenLink;
+
+  /// No description provided for @manualMediaEditAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get manualMediaEditAction;
+
+  /// No description provided for @manualMediaDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get manualMediaDeleteAction;
+
+  /// No description provided for @manualMediaDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete manual media?'**
+  String get manualMediaDeleteTitle;
+
+  /// No description provided for @manualMediaDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{title}\" and all its history, lists, and likes? This cannot be undone.'**
+  String manualMediaDeleteMessage(String title);
+
+  /// No description provided for @manualMediaKindLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get manualMediaKindLabel;
+
+  /// No description provided for @manualMediaKindMovie.
+  ///
+  /// In en, this message translates to:
+  /// **'Film'**
+  String get manualMediaKindMovie;
+
+  /// No description provided for @manualMediaKindTv.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get manualMediaKindTv;
+
+  /// No description provided for @manualMediaKindVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get manualMediaKindVideo;
+
+  /// No description provided for @manualMediaKindVideoSeries.
+  ///
+  /// In en, this message translates to:
+  /// **'Video series'**
+  String get manualMediaKindVideoSeries;
+
+  /// No description provided for @manualMediaFillFromTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill from…'**
+  String get manualMediaFillFromTitle;
+
+  /// No description provided for @manualMediaTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title *'**
+  String get manualMediaTitleLabel;
+
+  /// No description provided for @manualMediaTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required'**
+  String get manualMediaTitleRequired;
+
+  /// No description provided for @manualMediaOriginalTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Original title'**
+  String get manualMediaOriginalTitleLabel;
+
+  /// No description provided for @manualMediaOverviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get manualMediaOverviewLabel;
+
+  /// No description provided for @manualMediaReleaseDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Release date (YYYY or YYYY-MM-DD)'**
+  String get manualMediaReleaseDateLabel;
+
+  /// No description provided for @manualMediaRuntimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime (minutes)'**
+  String get manualMediaRuntimeLabel;
+
+  /// No description provided for @manualMediaEpisodeRuntimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode runtime (minutes)'**
+  String get manualMediaEpisodeRuntimeLabel;
+
+  /// No description provided for @manualMediaInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a positive number'**
+  String get manualMediaInvalidNumber;
+
+  /// No description provided for @manualMediaSeasonsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Seasons & episodes'**
+  String get manualMediaSeasonsSection;
+
+  /// No description provided for @manualMediaSeasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Season {number}'**
+  String manualMediaSeasonLabel(int number);
+
+  /// No description provided for @manualMediaEpisodesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get manualMediaEpisodesLabel;
+
+  /// No description provided for @manualMediaAddSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Add season'**
+  String get manualMediaAddSeason;
+
+  /// No description provided for @manualMediaRemoveSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove season'**
+  String get manualMediaRemoveSeason;
+
+  /// No description provided for @manualMediaPosterSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get manualMediaPosterSection;
+
+  /// No description provided for @manualMediaPickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get manualMediaPickImage;
+
+  /// No description provided for @manualMediaPosterUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Image URL'**
+  String get manualMediaPosterUrlLabel;
+
+  /// No description provided for @manualMediaClearImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image'**
+  String get manualMediaClearImage;
+
+  /// No description provided for @manualMediaGenresLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres (comma-separated)'**
+  String get manualMediaGenresLabel;
+
+  /// No description provided for @manualMediaCountriesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Origin countries (comma-separated, e.g. FR, US)'**
+  String get manualMediaCountriesLabel;
+
+  /// No description provided for @manualMediaSourceUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source link (URL)'**
+  String get manualMediaSourceUrlLabel;
+
+  /// No description provided for @manualMediaSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get manualMediaSave;
 }
 
 class _AppLocalizationsDelegate

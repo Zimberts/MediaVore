@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/actor_details.dart';
 import 'package:mediavore/core/domain/entities/liked_item_info.dart';
+import 'package:mediavore/core/domain/entities/manual_media.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
@@ -329,6 +330,35 @@ abstract class MediaRepository {
 
   /// Clear any active series rewatch cycle.
   Future<void> clearSeriesRewatchStart(int tmdbId);
+
+  /// Creates a new manual media item with an auto-generated negative ID.
+  Future<ManualMedia> createManualMedia({
+    required ManualMediaKind kind,
+    required String title,
+    String? originalTitle,
+    String? overview,
+    String? releaseDate,
+    int? runtime,
+    List<int>? seasons,
+    String? posterPath,
+    List<String>? genres,
+    List<String>? originCountries,
+    String? sourceUrl,
+    String? sourceProvider,
+  });
+
+  /// Updates an existing manual media item.
+  Future<ManualMedia> updateManualMedia(ManualMedia media);
+
+  /// Returns a manual media item by its negative [localId], or `null`.
+  Future<ManualMedia?> getManualMedia(int localId);
+
+  /// Returns all manual media items.
+  Future<List<ManualMedia>> getAllManualMedia();
+
+  /// Deletes a manual media item and all its references (seen history, lists,
+  /// likes, quick add, opt-outs).
+  Future<void> deleteManualMedia(int localId);
 }
 
 class NotifiedItem {
