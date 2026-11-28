@@ -532,6 +532,25 @@ class SearchProvider
     }
   }
 
+  /// Moves (or copies when [keepSource] is true) [items] from [fromList] to
+  /// [toList], preserving their order and skipping duplicates in [toList].
+  Future<void> moveItems(
+    List<MediaItem> items,
+    String fromList,
+    String toList, {
+    bool keepSource = false,
+  }) async {
+    await _libraryProvider.moveItems(
+      items,
+      fromList,
+      toList,
+      keepSource: keepSource,
+    );
+    if (fromList == tonightListName || toList == tonightListName) {
+      await _loadTonightListItems(notify: false);
+    }
+  }
+
   Future<void> toggleWatchlist(MediaItem item) =>
       _libraryProvider.toggleWatchlist(item);
 

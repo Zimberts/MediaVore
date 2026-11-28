@@ -18,6 +18,7 @@ import 'package:mediavore/core/widgets/media_poster_card.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_display_mode_sheet.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_media_grid_item.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_media_tile.dart';
+import 'package:mediavore/features/library/presentation/widgets/list_move_copy_sheet.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_share_sheet.dart';
 import 'package:mediavore/features/library/presentation/widgets/list_sort_sheet.dart';
 import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
@@ -312,6 +313,86 @@ class ListPageState extends State<ListPage> {
     );
   }
 
+  Future<void> _moveOrCopySelectedItems() async {
+    final provider = context.read<SearchProvider>();
+    final l10n = context.l10n;
+    final sourceList = _selectedList;
+
+    final selectedKeys = Set<String>.from(_selectedItems);
+    if (selectedKeys.isEmpty) return;
+
+    final result = await showListMoveCopySheet(
+      context,
+      currentList: sourceList,
+      listNames: provider.listNames,
+    );
+    if (result == null || !mounted) return;
+
+    final selectedItems = <MediaItem>[
+      for (final item in _currentItems)
+        if (selectedKeys.contains('${item.id}:${item.mediaType.name}')) item,
+    ];
+    if (selectedItems.isEmpty) return;
+
+    final targetList = result.targetList;
+    final keepSource = result.keepSource;
+    final targetDisplayName = listDisplayName(l10n, targetList);
+    final previousSourceOrder = _currentItems
+        .map((e) => '${e.id}:${e.mediaType.name}')
+        .toList();
+    final previousTargetEntries = Set<String>.from(
+      provider.getListEntriesCached(targetList),
+    );
+    final newlyAddedItems = selectedItems
+        .where(
+          (item) => !previousTargetEntries.contains(
+            '${item.id}:${item.mediaType.name}',
+          ),
+        )
+        .toList();
+
+    setState(() {
+      if (!keepSource) {
+        _currentItems.removeWhere(
+          (item) => selectedKeys.contains('${item.id}:${item.mediaType.name}'),
+        );
+      }
+      _isEditMode = false;
+      _selectedItems.clear();
+    });
+
+    await provider.moveItems(
+      selectedItems,
+      sourceList,
+      targetList,
+      keepSource: keepSource,
+    );
+    if (!mounted) return;
+    unawaited(loadSavedMedia());
+
+    final count = selectedItems.length;
+    final message = keepSource
+        ? l10n.listsCopiedNotification(count, targetDisplayName)
+        : l10n.listsMovedNotification(count, targetDisplayName);
+
+    showAppMessage(
+      message,
+      actionLabel: l10n.commonUndo,
+      onAction: () async {
+        for (final item in newlyAddedItems) {
+          await provider.removeFromList(item, targetList);
+        }
+        if (!keepSource) {
+          await provider.addAllToList(selectedItems, sourceList);
+          await provider.updateListOrder(sourceList, previousSourceOrder);
+        }
+        if (mounted) {
+          unawaited(loadSavedMedia());
+        }
+      },
+    );
+  }
+
   void _toggleSelectAll(List<MediaItem> visibleItems) {
     final visibleKeys = visibleItems
         .map((item) => '${item.id}:${item.mediaType.name}')
@@ -452,6 +533,23 @@ class ListPageState extends State<ListPage> {
                     color: colors.primary,
                     fontWeight: FontWeight.bold,
                   ),
+                ),
+              ),
+            ),
+          ),
+          AppTapTarget(
+            tooltip: l10n.listsMoveOrCopy,
+            onTap: _selectedItems.isEmpty ? null : _moveOrCopySelectedItems,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Icon(
+                  Icons.drive_file_move,
+                  size: 22,
+                  color: _selectedItems.isEmpty
+                      ? colors.text2.withValues(alpha: 0.5)
+                      : colors.primary,
                 ),
               ),
             ),

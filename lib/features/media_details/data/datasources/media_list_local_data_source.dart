@@ -47,6 +47,32 @@ class MediaListLocalDataSource {
     });
   }
 
+  /// Atomically moves [items] from [fromList] to [toList] in order,
+  /// skipping any already present in [toList].
+  Future<void> moveItems({
+    required List<MediaItem> items,
+    required String fromList,
+    required String toList,
+  }) async {
+    if (items.isEmpty || fromList == toList) return;
+    await _isar.writeTxn(() async {
+      for (final item in items) {
+        await _addToListInTxn(
+          id: item.id,
+          type: item.mediaType.name,
+          listName: toList,
+          title: item.title,
+        );
+        await _isar.mediaListItems
+            .filter()
+            .idEqualTo(item.id)
+            .typeEqualTo(item.mediaType.name)
+            .listNameEqualTo(fromList)
+            .deleteAll();
+      }
+    });
+  }
+
   /// Must run inside a write transaction.
   Future<void> _addToListInTxn({
     required int id,

@@ -1965,5 +1965,31 @@
   "swiperResetConfirmTitle": "Reset swipe choices?",
   "swiperResetConfirmMessage": "Titles you previously discarded will be able to appear again in swipe mode. Your earned achievements remain unlocked.",
   "swiperResetSuccessToast": "Swipe choices reset",
-  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB."
+  "settingsAboutTmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+  "listsMoveOrCopy": "Move or copy to another list",
+  "listsMoveOrCopyTitle": "Move or copy to…",
+  "listsActionMove": "Move",
+  "listsActionCopy": "Copy",
+  "listsMovedNotification": "{count, plural, =1{1 item moved to {list}} other{{count} items moved to {list}}}",
+  "@listsMovedNotification": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "listsCopiedNotification": "{count, plural, =1{1 item copied to {list}} other{{count} items copied to {list}}}",
+  "@listsCopiedNotification": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  }
 }

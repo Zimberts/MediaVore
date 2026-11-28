@@ -558,4 +558,93 @@ void main() {
       expect(await dataSource.getAllSeenItems(), hasLength(2));
     });
   });
+
+  group('MediaListLocalDataSource - moveItems', () {
+    const movie1 = MediaItem(
+      id: 1,
+      title: 'Alpha',
+      overview: '',
+      releaseDate: '2020',
+    );
+    const movie2 = MediaItem(
+      id: 2,
+      title: 'Beta',
+      overview: '',
+      releaseDate: '2021',
+    );
+    const movie3 = MediaItem(
+      id: 3,
+      title: 'Gamma',
+      overview: '',
+      releaseDate: '2022',
+    );
+
+    test(
+      'should atomically move items to target end in order and remove from source',
+      () async {
+        await dataSource.addAllToList(
+          items: [movie1, movie2],
+          listName: 'source',
+        );
+        await dataSource.addAllToList(items: [movie3], listName: 'target');
+
+        await dataSource.moveItems(
+          items: [movie1, movie2],
+          fromList: 'source',
+          toList: 'target',
+        );
+
+        expect(await dataSource.getListEntries('source'), isEmpty);
+        expect(await dataSource.getListEntries('target'), [
+          '3:movie',
+          '1:movie',
+          '2:movie',
+        ]);
+      },
+    );
+
+    test(
+      'should skip duplicates in target while still removing from source',
+      () async {
+        await dataSource.addAllToList(
+          items: [movie1, movie2],
+          listName: 'source',
+        );
+        await dataSource.addAllToList(items: [movie1], listName: 'target');
+
+        await dataSource.moveItems(
+          items: [movie1, movie2],
+          fromList: 'source',
+          toList: 'target',
+        );
+
+        expect(await dataSource.getListEntries('source'), isEmpty);
+        expect(await dataSource.getListEntries('target'), [
+          '1:movie',
+          '2:movie',
+        ]);
+      },
+    );
+
+    test(
+      'should be a no-op when items is empty or lists are identical',
+      () async {
+        await dataSource.addAllToList(items: [movie1], listName: 'source');
+
+        await dataSource.moveItems(
+          items: const [],
+          fromList: 'source',
+          toList: 'target',
+        );
+        await dataSource.moveItems(
+          items: [movie1],
+          fromList: 'source',
+          toList: 'source',
+        );
+
+        expect(await dataSource.getListEntries('source'), ['1:movie']);
+        expect(await dataSource.getListEntries('target'), isEmpty);
+      },
+    );
+  });
 }

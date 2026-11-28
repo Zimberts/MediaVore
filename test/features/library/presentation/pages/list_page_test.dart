@@ -4,6 +4,7 @@ import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/features/library/presentation/pages/list_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -346,5 +347,277 @@ void main() {
         }
       }
     });
+
+    testWidgets(
+      'move/copy action is disabled when selection is empty and enabled when selected',
+      (tester) async {
+        const item = MediaItem(
+          id: 1,
+          title: 'Movie 1',
+          overview: '',
+          releaseDate: '2020',
+        );
+        when(
+          () => mockRepo.getListEntries('watchlist'),
+        ).thenAnswer((_) async => ['1:movie']);
+        when(
+          () => mockRepo.getWatchlistEntries(),
+        ).thenAnswer((_) async => ['1:movie']);
+        when(
+          () => mockRepo.getMediaDetails(1),
+        ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
+        await searchProvider.loadWatchlist();
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('lists_more_actions')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Sélectionner'));
+        await tester.pumpAndSettle();
+
+        final moveFinder = find.ancestor(
+          of: find.byIcon(Icons.drive_file_move),
+          matching: find.byType(AppTapTarget),
+        );
+        expect(tester.widget<AppTapTarget>(moveFinder).onTap, isNull);
+
+        await tester.tap(find.text('Tout'));
+        await tester.pumpAndSettle();
+
+        expect(tester.widget<AppTapTarget>(moveFinder).onTap, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'moving items opens picker excluding current list, moves items, closes edit mode, and supports Undo',
+      (tester) async {
+        const items = [
+          MediaItem(id: 1, title: 'Movie 1', overview: '', releaseDate: '2020'),
+          MediaItem(id: 2, title: 'Movie 2', overview: '', releaseDate: '2021'),
+        ];
+        when(
+          () => mockRepo.getListEntries('watchlist'),
+        ).thenAnswer((_) async => ['1:movie', '2:movie']);
+        when(
+          () => mockRepo.getWatchlistEntries(),
+        ).thenAnswer((_) async => ['1:movie', '2:movie']);
+        when(
+          () => mockRepo.getMediaDetails(1),
+        ).thenAnswer((_) async => MediaDetails(item: items[0], cast: []));
+        when(
+          () => mockRepo.getMediaDetails(2),
+        ).thenAnswer((_) async => MediaDetails(item: items[1], cast: []));
+        when(
+          () => mockRepo.moveItems(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepo.addAllToList(any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepo.removeFromList(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepo.updateListOrder(any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepo.toggleNotification(
+            any(),
+            autoNotify: any(named: 'autoNotify'),
+          ),
+        ).thenAnswer((_) async {});
+        await searchProvider.loadWatchlist();
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider<SearchProvider>.value(
+                value: searchProvider,
+              ),
+              ChangeNotifierProvider<SettingsProvider>.value(
+                value: settingsProvider,
+              ),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('fr'),
+              theme: AppPalette.paper.toThemeData(),
+              home: const AppMessageHost(child: Scaffold(body: ListPage())),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('lists_more_actions')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Sélectionner'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Tout'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.drive_file_move));
+        await tester.pumpAndSettle();
+
+        // Current list ('À voir') is excluded; 'custom_list' is shown
+        expect(find.text('custom_list'), findsOneWidget);
+        expect(find.text('À voir'), findsNothing);
+        expect(find.text('Créer une liste'), findsOneWidget);
+
+        await tester.tap(find.text('custom_list'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => mockRepo.moveItems(items, 'watchlist', 'custom_list'),
+        ).called(1);
+        // Edit mode closed
+        expect(find.byIcon(Icons.drive_file_move), findsNothing);
+        // Confirmation SnackBar with Undo
+        expect(
+          find.text('2 éléments déplacés vers custom_list'),
+          findsOneWidget,
+        );
+        expect(find.text('Annuler'), findsOneWidget);
+
+        // Tap Undo
+        await tester.tap(find.text('Annuler'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => mockRepo.removeFromList(1, MediaType.movie, 'custom_list'),
+        ).called(1);
+        verify(
+          () => mockRepo.removeFromList(2, MediaType.movie, 'custom_list'),
+        ).called(1);
+        verify(() => mockRepo.addAllToList(items, 'watchlist')).called(1);
+        verify(
+          () => mockRepo.updateListOrder('watchlist', ['1:movie', '2:movie']),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'copying items via toggle keeps source items and calls addAllToList',
+      (tester) async {
+        const item = MediaItem(
+          id: 1,
+          title: 'Movie 1',
+          overview: '',
+          releaseDate: '2020',
+        );
+        when(
+          () => mockRepo.getListEntries('watchlist'),
+        ).thenAnswer((_) async => ['1:movie']);
+        when(
+          () => mockRepo.getWatchlistEntries(),
+        ).thenAnswer((_) async => ['1:movie']);
+        when(
+          () => mockRepo.getMediaDetails(1),
+        ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
+        when(
+          () => mockRepo.addAllToList(any(), any()),
+        ).thenAnswer((_) async {});
+        await searchProvider.loadWatchlist();
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider<SearchProvider>.value(
+                value: searchProvider,
+              ),
+              ChangeNotifierProvider<SettingsProvider>.value(
+                value: settingsProvider,
+              ),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('fr'),
+              theme: AppPalette.paper.toThemeData(),
+              home: const AppMessageHost(child: Scaffold(body: ListPage())),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('lists_more_actions')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Sélectionner'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Tout'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.drive_file_move));
+        await tester.pumpAndSettle();
+
+        // Switch to Copy
+        await tester.tap(find.text('Copier'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('custom_list'));
+        await tester.pumpAndSettle();
+
+        verify(() => mockRepo.addAllToList([item], 'custom_list')).called(1);
+        verifyNever(() => mockRepo.moveItems(any(), any(), any()));
+        expect(find.text('1 élément copié vers custom_list'), findsOneWidget);
+        // Source item remains in watchlist
+        expect(searchProvider.getListEntriesCached('watchlist'), ['1:movie']);
+      },
+    );
+
+    testWidgets(
+      'creating a new list on the fly from the move/copy sheet moves items into it',
+      (tester) async {
+        const item = MediaItem(
+          id: 1,
+          title: 'Movie 1',
+          overview: '',
+          releaseDate: '2020',
+        );
+        when(
+          () => mockRepo.getListEntries('watchlist'),
+        ).thenAnswer((_) async => ['1:movie']);
+        when(
+          () => mockRepo.getWatchlistEntries(),
+        ).thenAnswer((_) async => ['1:movie']);
+        when(
+          () => mockRepo.getMediaDetails(1),
+        ).thenAnswer((_) async => MediaDetails(item: item, cast: []));
+        when(() => mockRepo.createList('Sci-Fi')).thenAnswer((_) async {});
+        when(
+          () => mockRepo.getAllListNames(),
+        ).thenAnswer((_) async => ['watchlist', 'custom_list', 'Sci-Fi']);
+        when(
+          () => mockRepo.moveItems(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        await searchProvider.loadWatchlist();
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('lists_more_actions')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Sélectionner'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Tout'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.drive_file_move));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Créer une liste'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextField), 'Sci-Fi');
+        await tester.tap(find.text('Créer'));
+        await tester.pumpAndSettle();
+
+        verify(() => mockRepo.createList('Sci-Fi')).called(1);
+        verify(
+          () => mockRepo.moveItems([item], 'watchlist', 'Sci-Fi'),
+        ).called(1);
+      },
+    );
   });
 }

@@ -70,6 +70,9 @@ abstract class MediaRepository {
   /// Atomically adds multiple media items to a list in order.
   Future<void> addAllToList(List<MediaItem> items, String listName);
 
+  /// Atomically moves multiple media items from [fromList] to [toList] in order.
+  Future<void> moveItems(List<MediaItem> items, String fromList, String toList);
+
   /// Removes a media item from a list.
   Future<void> removeFromList(int id, MediaType type, String listName);
 

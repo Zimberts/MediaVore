@@ -2860,4 +2860,38 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'Ce produit utilise l\'API TMDB mais n\'est ni approuvé ni certifié par TMDB.';
+
+  @override
+  String get listsMoveOrCopy => 'Déplacer ou copier vers une autre liste';
+
+  @override
+  String get listsMoveOrCopyTitle => 'Déplacer ou copier vers…';
+
+  @override
+  String get listsActionMove => 'Déplacer';
+
+  @override
+  String get listsActionCopy => 'Copier';
+
+  @override
+  String listsMovedNotification(int count, String list) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count éléments déplacés vers $list',
+      one: '1 élément déplacé vers $list',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listsCopiedNotification(int count, String list) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count éléments copiés vers $list',
+      one: '1 élément copié vers $list',
+    );
+    return '$_temp0';
+  }
 }

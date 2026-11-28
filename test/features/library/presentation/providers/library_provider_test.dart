@@ -266,5 +266,158 @@ void main() {
         ]);
       });
     });
+
+    group('moveItems', () {
+      const movieA = MediaItem(
+        id: 1,
+        title: 'Alpha',
+        overview: '',
+        releaseDate: '2020-01-01',
+      );
+      const movieB = MediaItem(
+        id: 2,
+        title: 'Beta',
+        overview: '',
+        releaseDate: '2099-01-01', // future date -> canBeNotified is true
+      );
+
+      setUp(() {
+        when(
+          () => mockRepository.moveItems(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepository.addAllToList(any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepository.toggleNotification(
+            any(),
+            autoNotify: any(named: 'autoNotify'),
+          ),
+        ).thenAnswer((_) async {});
+      });
+
+      test(
+        'should move items to target, remove from source, and skip duplicates',
+        () async {
+          when(
+            () => mockRepository.getListEntries('Favorites'),
+          ).thenAnswer((_) async => ['1:movie', '2:movie']);
+          when(
+            () => mockRepository.getListEntries('Archive'),
+          ).thenAnswer((_) async => ['1:movie']);
+          when(
+            () => mockRepository.getAllListNames(),
+          ).thenAnswer((_) async => ['watchlist', 'Favorites', 'Archive']);
+          await provider.init();
+
+          await provider.moveItems([movieA, movieB], 'Favorites', 'Archive');
+
+          verify(
+            () => mockRepository.moveItems(
+              [movieA, movieB],
+              'Favorites',
+              'Archive',
+            ),
+          ).called(1);
+          expect(provider.getListEntriesCached('Favorites'), isEmpty);
+          expect(provider.getListEntriesCached('Archive'), [
+            '1:movie',
+            '2:movie',
+          ]);
+        },
+      );
+
+      test(
+        'should copy items when keepSource is true without removing from source',
+        () async {
+          when(
+            () => mockRepository.getListEntries('Favorites'),
+          ).thenAnswer((_) async => ['1:movie', '2:movie']);
+          when(
+            () => mockRepository.getListEntries('Archive'),
+          ).thenAnswer((_) async => ['1:movie']);
+          when(
+            () => mockRepository.getAllListNames(),
+          ).thenAnswer((_) async => ['watchlist', 'Favorites', 'Archive']);
+          await provider.init();
+
+          await provider.moveItems(
+            [movieA, movieB],
+            'Favorites',
+            'Archive',
+            keepSource: true,
+          );
+
+          verify(
+            () => mockRepository.addAllToList([movieA, movieB], 'Archive'),
+          ).called(1);
+          verifyNever(() => mockRepository.moveItems(any(), any(), any()));
+          expect(provider.getListEntriesCached('Favorites'), [
+            '1:movie',
+            '2:movie',
+          ]);
+          expect(provider.getListEntriesCached('Archive'), [
+            '1:movie',
+            '2:movie',
+          ]);
+        },
+      );
+
+      test(
+        'should update watchlistIds and auto-notify when moving into watchlist',
+        () async {
+          when(
+            () => mockRepository.getListEntries('Favorites'),
+          ).thenAnswer((_) async => ['1:movie', '2:movie']);
+          await provider.init();
+          expect(provider.watchlistIds, ['101']);
+
+          await provider.moveItems([movieA, movieB], 'Favorites', 'watchlist');
+
+          expect(provider.watchlistIds, ['101', '1', '2']);
+          expect(provider.getListEntriesCached('watchlist'), [
+            '101:movie',
+            '1:movie',
+            '2:movie',
+          ]);
+          verify(
+            () => mockRepository.toggleNotification(movieB, autoNotify: true),
+          ).called(1);
+          verifyNever(
+            () => mockRepository.toggleNotification(movieA, autoNotify: true),
+          );
+        },
+      );
+
+      test(
+        'should remove from watchlistIds when moving out of watchlist',
+        () async {
+          await provider.init();
+          expect(provider.watchlistIds, ['101']);
+
+          await provider.moveItems([tMovie], 'watchlist', 'Favorites');
+
+          expect(provider.watchlistIds, isEmpty);
+          expect(provider.getListEntriesCached('watchlist'), isEmpty);
+          expect(provider.getListEntriesCached('Favorites'), ['101:movie']);
+        },
+      );
+
+      test('should roll back optimistic state on repository failure', () async {
+        when(
+          () => mockRepository.moveItems(any(), any(), any()),
+        ).thenThrow(Exception('DB error'));
+        await provider.init();
+
+        await expectLater(
+          () => provider.moveItems([tMovie], 'watchlist', 'Favorites'),
+          throwsA(isA<Exception>()),
+        );
+
+        expect(provider.watchlistIds, ['101']);
+        expect(provider.getListEntriesCached('watchlist'), ['101:movie']);
+        expect(provider.getListEntriesCached('Favorites'), isEmpty);
+      });
+    });
   });
 }
