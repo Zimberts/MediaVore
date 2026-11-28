@@ -38,6 +38,7 @@ import '../cache/media_cache.dart' as _i384;
 import '../database/app_database.dart' as _i982;
 import '../l10n/locale_service.dart' as _i903;
 import '../security/tmdb_credential_store.dart' as _i1033;
+import '../services/app_update_service.dart' as _i379;
 import 'asset_definitions_loader.dart' as _i719;
 import 'definitions_loader.dart' as _i216;
 import 'injection.dart' as _i464;
@@ -87,6 +88,9 @@ Future<_i174.GetIt> init(
       exportLog: gh<_i1038.ExportLog>(),
       prefs: gh<_i460.SharedPreferences>(),
     ),
+  );
+  gh.lazySingleton<_i379.AppUpdateService>(
+    () => _i379.AppUpdateService(gh<_i361.Dio>()),
   );
   await gh.singletonAsync<_i1033.TmdbCredentialStore>(
     () => registerModule.tmdbCredentialStore(

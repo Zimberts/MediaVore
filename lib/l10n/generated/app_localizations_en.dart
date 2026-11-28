@@ -2840,4 +2840,94 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'This product uses the TMDB API but is not endorsed or certified by TMDB.';
+
+  @override
+  String get settingsCheckForUpdates => 'Check for updates';
+
+  @override
+  String settingsCurrentVersion(String version) {
+    return 'Current version: v$version';
+  }
+
+  @override
+  String get settingsAutoCheckUpdates => 'Check for updates on startup';
+
+  @override
+  String get settingsAutoCheckUpdatesSubtitle =>
+      'Notify when a new GitHub release is available';
+
+  @override
+  String get updateChecking => 'Checking for updates…';
+
+  @override
+  String updateUpToDate(String version) {
+    return 'You are up to date (v$version)';
+  }
+
+  @override
+  String updateAvailableTitle(String tag) {
+    return 'Update available: $tag';
+  }
+
+  @override
+  String updateAvailableBanner(String tag) {
+    return 'MediaVore $tag is available';
+  }
+
+  @override
+  String get updateViewAction => 'View';
+
+  @override
+  String get updateNoChangelog => 'No release notes provided.';
+
+  @override
+  String get updateDownloadAndInstall => 'Download & install';
+
+  @override
+  String get updateInstallButton => 'Install';
+
+  @override
+  String get updateOpenReleasePage => 'Open release page';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String updateDownloading(int percent) {
+    return 'Downloading… $percent%';
+  }
+
+  @override
+  String get updateVerifyingSha256 => 'Verifying SHA-256 checksum…';
+
+  @override
+  String get updateIosNotice =>
+      'Direct installation is not supported on this platform. Open the release page in your browser to update.';
+
+  @override
+  String get updateErrorNetwork => 'Network error while checking for updates.';
+
+  @override
+  String get updateErrorRateLimit =>
+      'GitHub API rate limit reached. Try again later.';
+
+  @override
+  String get updateErrorServer => 'Could not reach GitHub Releases.';
+
+  @override
+  String get updateErrorParsing => 'Unexpected response from GitHub.';
+
+  @override
+  String get updateErrorChecksum =>
+      'SHA-256 verification failed. The downloaded file was deleted for safety.';
+
+  @override
+  String get updateErrorNoApk => 'No APK asset found in this release.';
+
+  @override
+  String get updateErrorInstallFailed =>
+      'Could not launch the system installer (for example if the app signature differs). You can open the release page in your browser instead.';
+
+  @override
+  String get updateErrorUnknown => 'An unexpected error occurred.';
 }

@@ -2860,4 +2860,96 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'Ce produit utilise l\'API TMDB mais n\'est ni approuvé ni certifié par TMDB.';
+
+  @override
+  String get settingsCheckForUpdates => 'Rechercher une mise à jour';
+
+  @override
+  String settingsCurrentVersion(String version) {
+    return 'Version actuelle : v$version';
+  }
+
+  @override
+  String get settingsAutoCheckUpdates =>
+      'Vérifier les mises à jour au démarrage';
+
+  @override
+  String get settingsAutoCheckUpdatesSubtitle =>
+      'Notifier lorsqu\'une nouvelle version GitHub est disponible';
+
+  @override
+  String get updateChecking => 'Recherche de mise à jour…';
+
+  @override
+  String updateUpToDate(String version) {
+    return 'Vous utilisez déjà la dernière version (v$version)';
+  }
+
+  @override
+  String updateAvailableTitle(String tag) {
+    return 'Mise à jour disponible : $tag';
+  }
+
+  @override
+  String updateAvailableBanner(String tag) {
+    return 'MediaVore $tag est disponible';
+  }
+
+  @override
+  String get updateViewAction => 'Voir';
+
+  @override
+  String get updateNoChangelog => 'Aucune note de version fournie.';
+
+  @override
+  String get updateDownloadAndInstall => 'Télécharger et installer';
+
+  @override
+  String get updateInstallButton => 'Installer';
+
+  @override
+  String get updateOpenReleasePage => 'Ouvrir la page de la release';
+
+  @override
+  String get updateLater => 'Plus tard';
+
+  @override
+  String updateDownloading(int percent) {
+    return 'Téléchargement… $percent %';
+  }
+
+  @override
+  String get updateVerifyingSha256 => 'Vérification de l\'empreinte SHA-256…';
+
+  @override
+  String get updateIosNotice =>
+      'L\'installation directe n\'est pas disponible sur cette plateforme. Ouvrez la page de la release dans votre navigateur pour mettre à jour.';
+
+  @override
+  String get updateErrorNetwork =>
+      'Erreur réseau lors de la vérification des mises à jour.';
+
+  @override
+  String get updateErrorRateLimit =>
+      'Limite d\'appels à l\'API GitHub atteinte. Réessayez plus tard.';
+
+  @override
+  String get updateErrorServer => 'Impossible de joindre GitHub Releases.';
+
+  @override
+  String get updateErrorParsing => 'Réponse inattendue de GitHub.';
+
+  @override
+  String get updateErrorChecksum =>
+      'La vérification SHA-256 a échoué. Le fichier téléchargé a été supprimé par sécurité.';
+
+  @override
+  String get updateErrorNoApk => 'Aucun fichier APK trouvé dans cette release.';
+
+  @override
+  String get updateErrorInstallFailed =>
+      'Impossible de lancer l\'installeur système (par exemple si la signature de l\'application diffère). Vous pouvez ouvrir la page de la release dans votre navigateur.';
+
+  @override
+  String get updateErrorUnknown => 'Une erreur inattendue est survenue.';
 }

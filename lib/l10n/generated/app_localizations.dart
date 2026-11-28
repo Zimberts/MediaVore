@@ -4339,6 +4339,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This product uses the TMDB API but is not endorsed or certified by TMDB.'**
   String get settingsAboutTmdb;
+
+  /// No description provided for @settingsCheckForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get settingsCheckForUpdates;
+
+  /// No description provided for @settingsCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version: v{version}'**
+  String settingsCurrentVersion(String version);
+
+  /// No description provided for @settingsAutoCheckUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates on startup'**
+  String get settingsAutoCheckUpdates;
+
+  /// No description provided for @settingsAutoCheckUpdatesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when a new GitHub release is available'**
+  String get settingsAutoCheckUpdatesSubtitle;
+
+  /// No description provided for @updateChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get updateChecking;
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You are up to date (v{version})'**
+  String updateUpToDate(String version);
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available: {tag}'**
+  String updateAvailableTitle(String tag);
+
+  /// No description provided for @updateAvailableBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'MediaVore {tag} is available'**
+  String updateAvailableBanner(String tag);
+
+  /// No description provided for @updateViewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get updateViewAction;
+
+  /// No description provided for @updateNoChangelog.
+  ///
+  /// In en, this message translates to:
+  /// **'No release notes provided.'**
+  String get updateNoChangelog;
+
+  /// No description provided for @updateDownloadAndInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Download & install'**
+  String get updateDownloadAndInstall;
+
+  /// No description provided for @updateInstallButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get updateInstallButton;
+
+  /// No description provided for @updateOpenReleasePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open release page'**
+  String get updateOpenReleasePage;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading… {percent}%'**
+  String updateDownloading(int percent);
+
+  /// No description provided for @updateVerifyingSha256.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying SHA-256 checksum…'**
+  String get updateVerifyingSha256;
+
+  /// No description provided for @updateIosNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct installation is not supported on this platform. Open the release page in your browser to update.'**
+  String get updateIosNotice;
+
+  /// No description provided for @updateErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error while checking for updates.'**
+  String get updateErrorNetwork;
+
+  /// No description provided for @updateErrorRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub API rate limit reached. Try again later.'**
+  String get updateErrorRateLimit;
+
+  /// No description provided for @updateErrorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach GitHub Releases.'**
+  String get updateErrorServer;
+
+  /// No description provided for @updateErrorParsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected response from GitHub.'**
+  String get updateErrorParsing;
+
+  /// No description provided for @updateErrorChecksum.
+  ///
+  /// In en, this message translates to:
+  /// **'SHA-256 verification failed. The downloaded file was deleted for safety.'**
+  String get updateErrorChecksum;
+
+  /// No description provided for @updateErrorNoApk.
+  ///
+  /// In en, this message translates to:
+  /// **'No APK asset found in this release.'**
+  String get updateErrorNoApk;
+
+  /// No description provided for @updateErrorInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch the system installer (for example if the app signature differs). You can open the release page in your browser instead.'**
+  String get updateErrorInstallFailed;
+
+  /// No description provided for @updateErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred.'**
+  String get updateErrorUnknown;
 }
 
 class _AppLocalizationsDelegate

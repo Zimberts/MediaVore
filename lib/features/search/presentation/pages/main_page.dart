@@ -8,6 +8,7 @@ import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
@@ -19,7 +20,9 @@ import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/incoming_list_sheet.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
+import 'package:mediavore/features/settings/presentation/providers/app_update_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/settings/presentation/widgets/app_update_dialog.dart';
 import 'package:mediavore/features/together/presentation/pages/together_page.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
 import 'package:provider/provider.dart';
@@ -78,6 +81,11 @@ class _MainPageState extends State<MainPage> {
       final settings = context.read<SettingsProvider>();
       if (settings.tmdbApiKey.isEmpty) {
         _showCredentialOnboarding();
+      } else if (settings.autoCheckUpdates) {
+        final updateProvider = context.read<AppUpdateProvider?>();
+        if (updateProvider != null && !updateProvider.hasCheckedOnStartup) {
+          unawaited(_checkForAppUpdateOnStartup(updateProvider));
+        }
       }
     });
   }
@@ -89,6 +97,30 @@ class _MainPageState extends State<MainPage> {
     _achievementQueue.clear();
     _closeNotification();
     super.dispose();
+  }
+
+  Future<void> _checkForAppUpdateOnStartup(
+    AppUpdateProvider updateProvider,
+  ) async {
+    final hasUpdate = await updateProvider.checkForUpdate(silent: true);
+    if (!mounted || !hasUpdate) return;
+    final release = updateProvider.availableRelease;
+    if (release == null) return;
+    final l10n = context.l10n;
+    showAppMessage(
+      l10n.updateAvailableBanner(release.tagName),
+      actionLabel: l10n.updateViewAction,
+      onAction: () {
+        if (!mounted) return;
+        showDialog<void>(
+          context: context,
+          builder: (_) => ChangeNotifierProvider.value(
+            value: updateProvider,
+            child: AppUpdateDialog(release: release),
+          ),
+        );
+      },
+    );
   }
 
   void _queueAchievementNotification(Achievement achievement) {
