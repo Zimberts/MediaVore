@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "title": "MediaVore — Suivi de médias local pour Android",
+    "description": "Suivez les films, séries et livres vus, lus ou à découvrir. Sans compte, sans serveur, 100 % local sur votre appareil."
+  },
+  "nav": {
+    "skipToContent": "Aller au contenu principal",
+    "primaryLabel": "Navigation principale",
+    "features": "Fonctionnalités",
+    "screens": "Aperçus",
+    "install": "Installation",
+    "languageLabel": "Langue"
+  },
+  "hero": {
+    "badgeAlt": "Dernière version GitHub",
+    "tagline": "Votre médiathèque personnelle pour films, séries et livres — stockée localement, sans compte ni pistage.",
+    "downloadCta": "Télécharger pour Android",
+    "allReleases": "Toutes les versions",
+    "versionLabel": "Version",
+    "releasedOn": "Publiée le",
+    "sizeLabel": "Taille",
+    "fallbackNote": "Lien direct vers le dernier APK Android."
+  },
+  "screens": {
+    "heading": "Pensée comme de l'encre sur papier",
+    "subtitle": "Une interface sobre et tactile qui s'adapte automatiquement au mode clair et sombre.",
+    "themeNote": "Les aperçus suivent le thème de votre système.",
+    "items": [
+      {
+        "tag": "Bibliothèque",
+        "title": "Liste d'envies et historique",
+        "caption": "Organisez films, séries et livres dans des listes personnalisées avec notes et dates de visionnage.",
+        "mockTitle": "À voir",
+        "mockCount": "14 titres",
+        "mockEntries": [
+          { "title": "Dune : Deuxième partie", "meta": "Film · 2024 · 2h 46m", "accent": "movie" },
+          { "title": "Severance", "meta": "Série · S02E04 · Apple TV+", "accent": "series" },
+          { "title": "Projet Dernière Chance", "meta": "Livre · Andy Weir", "accent": "book" }
+        ]
+      },
+      {
+        "tag": "Découverte",
+        "title": "Swipez pour choisir à deux",
+        "caption": "Trouvez votre prochain film en solo ou en mode Duo sans défilement infini.",
+        "mockTitle": "Swipe Duo",
+        "mockCount": "92 % compatible",
+        "mockEntries": [
+          { "title": "Anatomie d'une chute", "meta": "Drame · 2023 · 2h 31m", "accent": "duo" },
+          { "title": "Past Lives", "meta": "Romance · 2023 · 1h 46m", "accent": "movie" }
+        ]
+      },
+      {
+        "tag": "Alertes",
+        "title": "Ne manquez aucune sortie",
+        "caption": "Suivez les sorties cinéma et les prochains épisodes non vus avec l'ajout rapide.",
+        "mockTitle": "Sorties",
+        "mockCount": "3 à venir",
+        "mockEntries": [
+          { "title": "The Bear — S04E01", "meta": "Dans 4 jours", "accent": "series" },
+          { "title": "Mickey 17", "meta": "Cinéma · Bientôt", "accent": "movie" }
+        ]
+      },
+      {
+        "tag": "Profil",
+        "title": "Statistiques et succès",
+        "caption": "Débloquez des badges selon vos genres, séries de visionnage et temps cumulé — calculés localement.",
+        "mockTitle": "Succès",
+        "mockCount": "28 débloqués",
+        "mockEntries": [
+          { "title": "Marathonien", "meta": "100 h vues · Débloqué", "accent": "book" },
+          { "title": "Explorateur", "meta": "12 genres · 85 %", "accent": "duo" }
+        ]
+      }
+    ]
+  },
+  "features": {
+    "heading": "L'essentiel, sans superflu",
+    "subtitle": "Conçue pour respecter votre vie privée et rester rapide hors ligne.",
+    "items": [
+      {
+        "accent": "movie",
+        "title": "Films, séries et livres",
+        "description": "Enregistrez vos visionnages et lectures, notez vos titres et gardez une liste d'envies claire."
+      },
+      {
+        "accent": "series",
+        "title": "Listes et filtres sur mesure",
+        "description": "Créez des listes ordonnées selon vos envies et filtrez par genre, langue ou plateforme."
+      },
+      {
+        "accent": "duo",
+        "title": "Alertes de sortie et ajout rapide",
+        "description": "Suivez les films à venir et les prochains épisodes non vus, avec suggestions en un geste."
+      },
+      {
+        "accent": "book",
+        "title": "Statistiques et succès",
+        "description": "Visualisez vos habitudes, vos séries en cours et débloquez des badges de progression."
+      },
+      {
+        "accent": "movie",
+        "title": "Sauvegarde locale complète",
+        "description": "Exportez et importez toute votre bibliothèque en JSON : ajout, fusion ou remplacement lors d'un changement d'appareil."
+      },
+      {
+        "accent": "series",
+        "title": "Aucun compte, aucun serveur",
+        "description": "Vos données ne quittent jamais votre téléphone : pas d'inscription, pas de télémétrie, pas d'abonnement."
+      }
+    ]
+  },
+  "install": {
+    "heading": "Installer sur Android",
+    "subtitle": "Trois étapes simples pour démarrer.",
+    "steps": [
+      {
+        "title": "Télécharger et installer l'APK",
+        "description": "Appuyez sur le bouton ci-dessus pour obtenir mediavore.apk. Ouvrez le fichier et autorisez « Installer des applis inconnues » si demandé."
+      },
+      {
+        "title": "Vérifier l'empreinte SHA-256",
+        "description": "Comparez le fichier téléchargé avec l'empreinte officielle ci-dessous avant l'installation."
+      },
+      {
+        "title": "Ajouter votre clé API TMDB",
+        "description": "Au premier lancement, collez une clé API TMDB personnelle gratuite dans les paramètres : MediaVore interroge TMDB directement depuis votre appareil."
+      }
+    ],
+    "shaLabel": "Empreinte SHA-256",
+    "shaUnavailable": "Disponible dans les notes de version sur GitHub.",
+    "copyButton": "Copier",
+    "copiedButton": "Copié",
+    "verifyCommandPrefix": "sha256sum mediavore.apk"
+  },
+  "footer": {
+    "sourceCode": "Code source sur GitHub",
+    "license": "Licence MIT",
+    "privacy": "Confidentialité : toutes vos données sont stockées localement sur votre appareil.",
+    "tmdbAttribution": "Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.",
+    "tmdbAlt": "Logo de The Movie Database (TMDB)"
+  }
+}

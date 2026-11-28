@@ -66,7 +66,10 @@ Run it locally on a build with `tool/check_16kb_alignment.sh build/app/outputs/f
 ## GitHub release (#239)
 
 release-please creates the release; the `github-release` job of the same run then attaches
-`mediavore-vX.Y.Z.apk` and `mediavore-vX.Y.Z.apk.sha256`, and appends the SHA-256 to the notes.
+`mediavore-vX.Y.Z.apk`, `mediavore-vX.Y.Z.apk.sha256`, and the stable aliases `mediavore.apk` /
+`mediavore.apk.sha256`, and appends the SHA-256 to the notes.
+The `pages` job then runs `.github/workflows/pages.yml` to rebuild and deploy the showcase website
+(`site/`) with the new version, release date, file size, and SHA-256 fingerprint.
 The release is therefore visible a few minutes before its APK. The job is idempotent
 (`--clobber`, notes edited once): re-run it if the upload failed, or dispatch the workflow on the
 tag, which rebuilds and re-attaches the APK to the existing release (it fails if the tag has no

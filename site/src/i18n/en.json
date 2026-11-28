@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "title": "MediaVore — Local-first media tracker for Android",
+    "description": "Track movies, series, and books you have seen, read, or want to discover. No account, no server, 100% local on your device."
+  },
+  "nav": {
+    "skipToContent": "Skip to main content",
+    "primaryLabel": "Primary",
+    "features": "Features",
+    "screens": "Screens",
+    "install": "Install",
+    "languageLabel": "Language"
+  },
+  "hero": {
+    "badgeAlt": "Latest GitHub release",
+    "tagline": "Your personal library for movies, series, and books — stored locally, without accounts or tracking.",
+    "downloadCta": "Download for Android",
+    "allReleases": "All releases",
+    "versionLabel": "Version",
+    "releasedOn": "Released",
+    "sizeLabel": "Size",
+    "fallbackNote": "Direct link to the latest Android APK."
+  },
+  "screens": {
+    "heading": "Designed like ink on paper",
+    "subtitle": "A calm, tactile interface that adapts automatically to light and dark mode.",
+    "themeNote": "Previews follow your system color scheme.",
+    "items": [
+      {
+        "tag": "Library",
+        "title": "Your watchlist & seen history",
+        "caption": "Organize movies, series, and books across custom lists with ratings and viewing dates.",
+        "mockTitle": "Watchlist",
+        "mockCount": "14 titles",
+        "mockEntries": [
+          { "title": "Dune: Part Two", "meta": "Movie · 2024 · 2h 46m", "accent": "movie" },
+          { "title": "Severance", "meta": "Series · S02E04 · Apple TV+", "accent": "series" },
+          { "title": "Project Hail Mary", "meta": "Book · Andy Weir", "accent": "book" }
+        ]
+      },
+      {
+        "tag": "Discovery",
+        "title": "Swipe to decide together",
+        "caption": "Pick your next movie night solo or in Duo mode without endless scrolling.",
+        "mockTitle": "Duo Swipe",
+        "mockCount": "92% match",
+        "mockEntries": [
+          { "title": "Anatomy of a Fall", "meta": "Drama · 2023 · 2h 31m", "accent": "duo" },
+          { "title": "Past Lives", "meta": "Romance · 2023 · 1h 46m", "accent": "movie" }
+        ]
+      },
+      {
+        "tag": "Alerts",
+        "title": "Never miss a release",
+        "caption": "Track upcoming movie premieres and next unwatched episodes with Quick Add.",
+        "mockTitle": "Releases",
+        "mockCount": "3 upcoming",
+        "mockEntries": [
+          { "title": "The Bear — S04E01", "meta": "Airs in 4 days", "accent": "series" },
+          { "title": "Mickey 17", "meta": "Theaters · Soon", "accent": "movie" }
+        ]
+      },
+      {
+        "tag": "Profile",
+        "title": "Stats & achievements",
+        "caption": "Unlock milestones for genres, streaks, and total watch time — all computed on-device.",
+        "mockTitle": "Milestones",
+        "mockCount": "28 unlocked",
+        "mockEntries": [
+          { "title": "Marathoner", "meta": "100h watched · Unlocked", "accent": "book" },
+          { "title": "Genre Explorer", "meta": "12 genres · 85%", "accent": "duo" }
+        ]
+      }
+    ]
+  },
+  "features": {
+    "heading": "Everything you need, nothing you don't",
+    "subtitle": "Built to respect your privacy and stay fast offline.",
+    "items": [
+      {
+        "accent": "movie",
+        "title": "Movies, series & books",
+        "description": "Log what you have watched or read, rate titles, record dates, and keep a clean watchlist."
+      },
+      {
+        "accent": "series",
+        "title": "Custom lists & filters",
+        "description": "Build ordered lists for every mood and filter by genre, language, or streaming provider."
+      },
+      {
+        "accent": "duo",
+        "title": "Release alerts & Quick Add",
+        "description": "Follow upcoming movies and next unwatched episodes, with one-tap suggestions from your history."
+      },
+      {
+        "accent": "book",
+        "title": "Stats & achievements",
+        "description": "Explore your viewing habits, streaks, and genre milestones with built-in gamification."
+      },
+      {
+        "accent": "movie",
+        "title": "Full local backup",
+        "description": "Export and import your entire library in JSON — append, merge, or replace whenever you switch devices."
+      },
+      {
+        "accent": "series",
+        "title": "No account, no server",
+        "description": "Your data never leaves your phone. No sign-up, no telemetry, and no subscription."
+      }
+    ]
+  },
+  "install": {
+    "heading": "Install on Android",
+    "subtitle": "Three quick steps to get started.",
+    "steps": [
+      {
+        "title": "Download & install the APK",
+        "description": "Tap the download button above to get mediavore.apk. Open the file and allow \"Install unknown apps\" for your browser if prompted."
+      },
+      {
+        "title": "Verify the SHA-256 checksum",
+        "description": "Compare the downloaded file against the official fingerprint below before installing."
+      },
+      {
+        "title": "Add your TMDB API key",
+        "description": "On first launch, paste a free personal TMDB API key in Settings. MediaVore talks directly to TMDB from your device with no proxy server."
+      }
+    ],
+    "shaLabel": "SHA-256 fingerprint",
+    "shaUnavailable": "Available in the release notes on GitHub.",
+    "copyButton": "Copy",
+    "copiedButton": "Copied",
+    "verifyCommandPrefix": "sha256sum mediavore.apk"
+  },
+  "footer": {
+    "sourceCode": "Source code on GitHub",
+    "license": "MIT License",
+    "privacy": "Privacy: all library data is stored locally on your device.",
+    "tmdbAttribution": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+    "tmdbAlt": "The Movie Database (TMDB) logo"
+  }
+}

@@ -12,3 +12,9 @@ updates:
       interval: weekly
     commit-message:
       prefix: "bump(back)"
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "bump(web)"

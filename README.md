@@ -1,6 +1,8 @@
 # MediaVore
 
-An app to keep track of movies/series/books seen/read or to watch/to read
+An app to keep track of movies/series/books seen/read or to watch/to read.
+
+Website & Android APK download: <https://zimberts.github.io/MediaVore/>
 
 ## Deep Linking Configuration
 

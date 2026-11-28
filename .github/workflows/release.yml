@@ -189,15 +189,19 @@ jobs:
         working-directory: dist
         run: sha256sum -c app-release.apk.sha256
 
-      # Named after the tag so downloads of different versions don't collide; the checksum file
-      # keeps the name it hashes (`sha256sum -c` needs the downloaded file name).
+      # Named after the tag so downloads of different versions don't collide; plus a stable
+      # `mediavore.apk` alias for `releases/latest/download/mediavore.apk` (#375, #376).
       - name: Upload APK and checksum
         run: |
           apk="mediavore-$RELEASE_TAG.apk"
           cp dist/app-release.apk "dist/$apk"
-          (cd dist && sha256sum "$apk" > "$apk.sha256")
+          cp dist/app-release.apk "dist/mediavore.apk"
+          (cd dist && sha256sum "$apk" > "$apk.sha256" && sha256sum mediavore.apk > mediavore.apk.sha256)
           # --clobber: a re-run replaces the assets instead of failing.
-          gh release upload "$RELEASE_TAG" "dist/$apk" "dist/$apk.sha256" --clobber
+          gh release upload "$RELEASE_TAG" \
+            "dist/$apk" "dist/$apk.sha256" \
+            "dist/mediavore.apk" "dist/mediavore.apk.sha256" \
+            --clobber
 
       # Appended once: a re-run finds the marker and leaves the notes alone.
       - name: Add checksum to release notes
@@ -479,3 +483,13 @@ jobs:
           releaseFiles: dist/app-release.aab
           track: ${{ inputs.play_track || vars.PLAY_TRACK || 'internal' }}
           status: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
+
+  pages:
+    name: Deploy GitHub Pages
+    needs: github-release
+    if: needs.github-release.result == 'success'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

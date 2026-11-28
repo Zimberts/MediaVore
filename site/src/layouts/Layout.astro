@@ -1,0 +1,92 @@
+---
+import '../styles/global.css';
+import { DEFAULT_LOCALE, LOCALES, getLocalePath } from '../i18n';
+
+interface Props {
+  locale: string;
+  title: string;
+  description: string;
+}
+
+const { locale, title, description } = Astro.props;
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') ?? 'https://zimberts.github.io';
+const canonicalUrl = `${siteOrigin}${getLocalePath(locale, base)}`;
+
+const fontCss = `
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('${base}fonts/BricolageGrotesque24pt-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('${base}fonts/BricolageGrotesque24pt-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('${base}fonts/Inter-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('${base}fonts/Inter-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('${base}fonts/Inter-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('${base}fonts/Inter-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+`;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {
+      LOCALES.map((entry) => (
+        <link
+          rel="alternate"
+          hreflang={entry.hreflang}
+          href={`${siteOrigin}${getLocalePath(entry.code, base)}`}
+        />
+      ))
+    }
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={`${siteOrigin}${getLocalePath(DEFAULT_LOCALE, base)}`}
+    />
+    <style set:html={fontCss} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
