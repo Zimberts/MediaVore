@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/tmdb_image_utils.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
 import 'package:mediavore/features/search/presentation/providers/swiper_provider.dart';
@@ -12,12 +13,14 @@ class SwipeCard extends StatefulWidget {
   final SwipeCardCandidate candidate;
   final VoidCallback onSwipeRight;
   final VoidCallback onSwipeLeft;
+  final VoidCallback? onSwipeUp;
 
   const SwipeCard({
     super.key,
     required this.candidate,
     required this.onSwipeRight,
     required this.onSwipeLeft,
+    this.onSwipeUp,
   });
 
   @override
@@ -27,8 +30,10 @@ class SwipeCard extends StatefulWidget {
 class _SwipeCardState extends State<SwipeCard>
     with SingleTickerProviderStateMixin {
   double _dragDx = 0;
+  double _dragDy = 0;
   late AnimationController _controller;
   late Animation<double> _animation;
+  bool _animatingVertical = false;
 
   static const double _swipeThreshold = 100.0;
 
@@ -41,7 +46,13 @@ class _SwipeCardState extends State<SwipeCard>
     );
     _animation = Tween<double>(begin: 0, end: 0).animate(_controller)
       ..addListener(() {
-        setState(() => _dragDx = _animation.value);
+        setState(() {
+          if (_animatingVertical) {
+            _dragDy = _animation.value;
+          } else {
+            _dragDx = _animation.value;
+          }
+        });
       });
   }
 
@@ -77,6 +88,7 @@ class _SwipeCardState extends State<SwipeCard>
       if (disableAnimations) {
         setState(() => _dragDx = 0);
       } else {
+        _animatingVertical = false;
         _animation = Tween<double>(
           begin: _dragDx,
           end: 0,
@@ -86,17 +98,86 @@ class _SwipeCardState extends State<SwipeCard>
     }
   }
 
-  void _animateOut(double targetDx, VoidCallback onComplete) {
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    if (widget.onSwipeUp == null) return;
+    setState(() {
+      _dragDy = (_dragDy + details.delta.dy).clamp(-500.0, 0.0);
+    });
+  }
+
+  void _onVerticalDragEnd(DragEndDetails details) {
+    if (widget.onSwipeUp == null) return;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+
+    if (_dragDy < -_swipeThreshold) {
+      if (disableAnimations) {
+        setState(() => _dragDy = 0);
+        widget.onSwipeUp!();
+      } else {
+        _animateOut(-500, widget.onSwipeUp!, vertical: true);
+      }
+    } else {
+      if (disableAnimations) {
+        setState(() => _dragDy = 0);
+      } else {
+        _animatingVertical = true;
+        _animation = Tween<double>(
+          begin: _dragDy,
+          end: 0,
+        ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+        _controller.forward(from: 0);
+      }
+    }
+  }
+
+  void _animateOut(
+    double target,
+    VoidCallback onComplete, {
+    bool vertical = false,
+  }) {
+    _animatingVertical = vertical;
     _animation = Tween<double>(
-      begin: _dragDx,
-      end: targetDx,
+      begin: vertical ? _dragDy : _dragDx,
+      end: target,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
     _controller.forward(from: 0).then((_) {
       onComplete();
       if (mounted) {
-        setState(() => _dragDx = 0);
+        setState(() {
+          _dragDx = 0;
+          _dragDy = 0;
+        });
       }
     });
+  }
+
+  Widget _buildSwipeBadge({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 24),
+          const SizedBox(width: 8),
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -104,17 +185,22 @@ class _SwipeCardState extends State<SwipeCard>
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final error = theme.colorScheme.error;
+    final success = context.appColors.success;
     final candidate = widget.candidate;
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     final rotation = disableAnimations
         ? 0.0
         : (_dragDx / 1000.0).clamp(-0.2, 0.2);
-    final translation = disableAnimations ? 0.0 : _dragDx;
+    final translationX = disableAnimations ? 0.0 : _dragDx;
+    final translationY = disableAnimations ? 0.0 : _dragDy;
 
     // Overlay opacities
     final acceptOpacity = (_dragDx / _swipeThreshold).clamp(0.0, 1.0);
     final discardOpacity = (-_dragDx / _swipeThreshold).clamp(0.0, 1.0);
+    final seenOpacity = widget.onSwipeUp != null
+        ? (-_dragDy / _swipeThreshold).clamp(0.0, 1.0)
+        : 0.0;
 
     return Semantics(
       label: candidate.isSaga
@@ -125,13 +211,18 @@ class _SwipeCardState extends State<SwipeCard>
             widget.onSwipeRight(),
         CustomSemanticsAction(label: context.l10n.swiperDiscard): () =>
             widget.onSwipeLeft(),
+        if (widget.onSwipeUp != null)
+          CustomSemanticsAction(label: context.l10n.commonMarkAsSeen): () =>
+              widget.onSwipeUp!(),
       },
       child: GestureDetector(
         onHorizontalDragUpdate: _onHorizontalDragUpdate,
         onHorizontalDragEnd: _onHorizontalDragEnd,
+        onVerticalDragUpdate: _onVerticalDragUpdate,
+        onVerticalDragEnd: _onVerticalDragEnd,
         onTap: () => MediaDetailPage.show(context, candidate.item),
         child: Transform.translate(
-          offset: Offset(translation, 0),
+          offset: Offset(translationX, translationY),
           child: Transform.rotate(
             angle: rotation,
             child: Card(
@@ -143,6 +234,8 @@ class _SwipeCardState extends State<SwipeCard>
                       ? primary.withValues(alpha: acceptOpacity)
                       : discardOpacity > 0
                       ? error.withValues(alpha: discardOpacity)
+                      : seenOpacity > 0
+                      ? success.withValues(alpha: seenOpacity)
                       : theme.dividerColor,
                   width: 2,
                 ),
@@ -162,34 +255,10 @@ class _SwipeCardState extends State<SwipeCard>
                       left: 24,
                       child: Opacity(
                         opacity: acceptOpacity,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: primary.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.l10n.swiperAdd.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
+                        child: _buildSwipeBadge(
+                          icon: Icons.check,
+                          label: context.l10n.swiperAdd,
+                          color: primary,
                         ),
                       ),
                     ),
@@ -200,33 +269,26 @@ class _SwipeCardState extends State<SwipeCard>
                       right: 24,
                       child: Opacity(
                         opacity: discardOpacity,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: error.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.l10n.swiperDiscard.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
+                        child: _buildSwipeBadge(
+                          icon: Icons.close,
+                          label: context.l10n.swiperDiscard,
+                          color: error,
+                        ),
+                      ),
+                    ),
+
+                  if (seenOpacity > 0)
+                    Positioned(
+                      bottom: 24,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Opacity(
+                          opacity: seenOpacity,
+                          child: _buildSwipeBadge(
+                            icon: Icons.visibility_outlined,
+                            label: context.l10n.seenSeen,
+                            color: success,
                           ),
                         ),
                       ),

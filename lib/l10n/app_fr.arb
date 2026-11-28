@@ -366,7 +366,7 @@
   "swiperUndo": "Annuler",
   "swiperEmptyTitle": "Plus de films",
   "swiperEmptyMessage": "Vous avez passé en revue tous les films disponibles pour le moment.",
-  "swiperSessionStats": "{added} ajoutés · {discarded} écartés",
+  "swiperSessionStats": "{added} ajoutés · {seen} vus · {discarded} écartés",
   "swiperSettingTitle": "Mode Swipe dans Découvrir",
   "swiperSettingSubtitle": "Afficher le mode Swipe pour découvrir des films carte par carte",
   "swiperSagaBadge": "Saga ({count} films)",

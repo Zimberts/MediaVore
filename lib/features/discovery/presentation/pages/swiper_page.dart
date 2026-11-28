@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/empty_state.dart';
 import 'package:mediavore/features/discovery/presentation/widgets/swipe_card.dart';
+import 'package:mediavore/features/media_details/presentation/widgets/seen_manager.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/providers/swiper_provider.dart';
@@ -28,18 +30,23 @@ class _SwiperPageState extends State<SwiperPage> {
     if (widget.customSwiperProvider != null) {
       _swiper = widget.customSwiperProvider!;
       _ownsSwiper = false;
+      final search = context.read<SearchProvider?>();
       _swiper.libraryProvider ??=
-          context.read<LibraryProvider?>() ??
-          context.read<SearchProvider?>()?.libraryProvider;
+          context.read<LibraryProvider?>() ?? search?.libraryProvider;
+      _swiper.searchProvider ??= search;
     } else {
       _ownsSwiper = true;
+      final search = context.read<SearchProvider>();
       final repo = locator.isRegistered<MediaRepository>()
           ? locator<MediaRepository>()
-          : context.read<SearchProvider>().repository;
+          : search.repository;
       final library =
-          context.read<LibraryProvider?>() ??
-          context.read<SearchProvider>().libraryProvider;
-      _swiper = SwiperProvider(repo, libraryProvider: library);
+          context.read<LibraryProvider?>() ?? search.libraryProvider;
+      _swiper = SwiperProvider(
+        repo,
+        libraryProvider: library,
+        searchProvider: search,
+      );
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -79,6 +86,23 @@ class _SwiperPageState extends State<SwiperPage> {
     await _swiper.swipeLeft();
   }
 
+  Future<void> _handleSwipeSeen(
+    SwipeCardCandidate candidate,
+    bool advanced,
+  ) async {
+    if (advanced) {
+      final result = await showSeenDateTimePickerDialog(
+        context,
+        item: candidate.item,
+        initialDate: DateTime.now(),
+      );
+      if (!mounted || result == null) return;
+      await _swiper.swipeSeen(seenDate: result.date);
+    } else {
+      await _swiper.swipeSeen();
+    }
+  }
+
   void _handleUndo() async {
     await _swiper.undoLastDecision();
   }
@@ -109,27 +133,37 @@ class _SwiperPageState extends State<SwiperPage> {
               title: Text(context.l10n.swiperTitle),
               actions: [
                 if (swiper.sessionAddedCount > 0 ||
+                    swiper.sessionSeenCount > 0 ||
                     swiper.sessionDiscardedCount > 0)
                   Padding(
                     padding: const EdgeInsets.only(right: 16.0),
                     child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.sizeOf(context).width * 0.52,
                         ),
-                        decoration: BoxDecoration(
-                          color: primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          context.l10n.swiperSessionStats(
-                            swiper.sessionAddedCount,
-                            swiper.sessionDiscardedCount,
-                          ),
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: primary,
-                            fontWeight: FontWeight.w600,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              context.l10n.swiperSessionStats(
+                                swiper.sessionAddedCount,
+                                swiper.sessionSeenCount,
+                                swiper.sessionDiscardedCount,
+                              ),
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -226,6 +260,10 @@ class _SwiperPageState extends State<SwiperPage> {
                             onSwipeRight: () =>
                                 _handleSwipeRight(candidate, targetList),
                             onSwipeLeft: () => _handleSwipeLeft(candidate),
+                            onSwipeUp: () => _handleSwipeSeen(
+                              candidate,
+                              settings.advancedTracking,
+                            ),
                           ),
                         ),
                 ),
@@ -254,7 +292,7 @@ class _SwiperPageState extends State<SwiperPage> {
                               : null,
                         ),
 
-                        // Undo button (center)
+                        // Undo button
                         IconButton.outlined(
                           key: const Key('swiper_undo_button'),
                           icon: const Icon(Icons.undo),
@@ -264,6 +302,28 @@ class _SwiperPageState extends State<SwiperPage> {
                           ),
                           tooltip: context.l10n.swiperUndo,
                           onPressed: swiper.canUndo ? _handleUndo : null,
+                        ),
+
+                        // Mark as seen button
+                        IconButton.filledTonal(
+                          key: const Key('swiper_seen_button'),
+                          icon: const Icon(Icons.visibility_outlined),
+                          iconSize: 24,
+                          style: IconButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                            backgroundColor: context.appColors.success
+                                .withValues(alpha: 0.15),
+                            foregroundColor: context.appColors.success,
+                          ),
+                          tooltip: settings.advancedTracking
+                              ? context.l10n.commonMarkAsSeenWithDots
+                              : context.l10n.commonMarkAsSeen,
+                          onPressed: candidate != null
+                              ? () => _handleSwipeSeen(
+                                  candidate,
+                                  settings.advancedTracking,
+                                )
+                              : null,
                         ),
 
                         // Add button (right)

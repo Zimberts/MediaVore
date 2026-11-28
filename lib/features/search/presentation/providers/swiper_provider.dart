@@ -4,10 +4,11 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/utils/saga_sort.dart';
-import 'package:mediavore/features/library/presentation/providers/library_provider.dart';
 import 'package:mediavore/features/media_details/data/models/swipe_decision_model.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
+import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 
 /// Represents a candidate presented on the Swiper screen.
 /// Can be a standalone movie or an entire saga/collection.
@@ -43,11 +44,14 @@ class UndoResult {
 class SwiperProvider extends ChangeNotifier {
   final MediaRepository repository;
   LibraryProvider? libraryProvider;
+  SearchProvider? searchProvider;
 
-  SwiperProvider(this.repository, {this.libraryProvider});
+  SwiperProvider(this.repository, {this.libraryProvider, this.searchProvider});
 
   final List<SwipeCardCandidate> _candidates = [];
-  final List<SwipeCardCandidate> _historyStack = [];
+  final List<({SwipeCardCandidate candidate, Set<int> markedSeenIds})>
+  _historyStack = [];
+  Future<void>? _pendingMutation;
 
   bool _isLoading = false;
   bool _isFetchingMore = false;
@@ -62,6 +66,7 @@ class SwiperProvider extends ChangeNotifier {
   final Queue<MediaItem> _pendingItems = Queue();
 
   int _sessionAddedCount = 0;
+  int _sessionSeenCount = 0;
   int _sessionDiscardedCount = 0;
 
   final Set<int> _decidedTmdbIds = {};
@@ -80,6 +85,7 @@ class SwiperProvider extends ChangeNotifier {
   bool get canUndo => _historyStack.isNotEmpty;
 
   int get sessionAddedCount => _sessionAddedCount;
+  int get sessionSeenCount => _sessionSeenCount;
   int get sessionDiscardedCount => _sessionDiscardedCount;
 
   /// Initializes the swiper and preloads the first candidate cards.
@@ -109,6 +115,7 @@ class SwiperProvider extends ChangeNotifier {
       _candidates.clear();
       _historyStack.clear();
       _sessionAddedCount = 0;
+      _sessionSeenCount = 0;
       _sessionDiscardedCount = 0;
       _currentPage = 1;
       _hasMore = true;
@@ -136,19 +143,31 @@ class SwiperProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<T> _enqueueMutation<T>(Future<T> Function() action) {
+    final prev = _pendingMutation;
+    final Future<T> next = prev == null ? action() : prev.then((_) => action());
+    late final Future<void> tracked;
+    tracked = next.then<void>((_) {}, onError: (_) {}).whenComplete(() {
+      if (identical(_pendingMutation, tracked)) {
+        _pendingMutation = null;
+      }
+    });
+    _pendingMutation = tracked;
+    return next;
+  }
+
   /// Swipes right (Accept / Add to list).
   Future<void> swipeRight(String targetList) async {
     if (_candidates.isEmpty) return;
 
     final candidate = _candidates.removeAt(0);
-    _historyStack.add(candidate);
+    _historyStack.add((candidate: candidate, markedSeenIds: const {}));
     final now = DateTime.now();
 
+    final toAdd = <MediaItem>[];
+    final decisions = <SwipeDecisionModel>[];
     if (candidate.isSaga) {
-      final decisions = <SwipeDecisionModel>[];
-      final toAdd = <MediaItem>[];
       for (final movie in candidate.sagaItems) {
-        // Add all movies from the saga not already in list
         if (!_existingListIds.contains(movie.id)) {
           toAdd.add(movie);
           _existingListIds.add(movie.id);
@@ -167,43 +186,124 @@ class SwiperProvider extends ChangeNotifier {
         );
         _decidedTmdbIds.add(movie.id);
       }
-      if (toAdd.isNotEmpty) {
-        if (libraryProvider != null) {
-          await libraryProvider!.addAllToList(toAdd, targetList);
-        } else {
-          for (final movie in toAdd) {
-            await repository.addToList(movie, targetList);
-          }
-        }
-      }
       if (candidate.collectionId != null) {
         _seenSagaCollectionIds.add(candidate.collectionId!);
       }
-      await repository.recordSwipeDecisions(decisions);
     } else {
-      if (libraryProvider != null) {
-        await libraryProvider!.addToList(candidate.item, targetList);
-      } else {
-        await repository.addToList(candidate.item, targetList);
-      }
       _existingListIds.add(candidate.item.id);
       _decidedTmdbIds.add(candidate.item.id);
-
-      final decision = SwipeDecisionModel(
-        tmdbId: candidate.item.id,
-        title: candidate.item.title,
-        posterPath: candidate.item.posterPath,
-        decision: 'added',
-        decidedAt: now,
-        targetList: targetList,
+      decisions.add(
+        SwipeDecisionModel(
+          tmdbId: candidate.item.id,
+          title: candidate.item.title,
+          posterPath: candidate.item.posterPath,
+          decision: 'added',
+          decidedAt: now,
+          targetList: targetList,
+        ),
       );
-      await repository.recordSwipeDecision(decision);
     }
 
     _sessionAddedCount++;
     notifyListeners();
-
     _checkPrefetch();
+
+    await _enqueueMutation(() async {
+      if (candidate.isSaga) {
+        if (toAdd.isNotEmpty) {
+          if (libraryProvider != null) {
+            await libraryProvider!.addAllToList(toAdd, targetList);
+          } else {
+            for (final movie in toAdd) {
+              await repository.addToList(movie, targetList);
+            }
+          }
+        }
+        await repository.recordSwipeDecisions(decisions);
+      } else {
+        if (libraryProvider != null) {
+          await libraryProvider!.addToList(candidate.item, targetList);
+        } else {
+          await repository.addToList(candidate.item, targetList);
+        }
+        await repository.recordSwipeDecision(decisions.first);
+      }
+    });
+  }
+
+  /// Marks the current movie (or all unseen parts of a saga) as seen.
+  Future<void> swipeSeen({DateTime? seenDate}) async {
+    if (_candidates.isEmpty) return;
+
+    final candidate = _candidates.removeAt(0);
+    final now = DateTime.now();
+    final effectiveSeenDate = seenDate ?? now;
+
+    final movies = candidate.isSaga ? candidate.sagaItems : [candidate.item];
+    final seenItemsToRecord = <SeenItem>[];
+    final markedSeenIds = <int>{};
+    final decisions = <SwipeDecisionModel>[];
+
+    for (final movie in movies) {
+      if (!_seenIds.contains(movie.id)) {
+        seenItemsToRecord.add(
+          SeenItem(
+            tmdbId: movie.id,
+            type: MediaType.movie,
+            title: movie.title,
+            posterPath: movie.posterPath,
+            seenDate: effectiveSeenDate,
+            runtime: movie.runtime,
+            genres: movie.genres,
+          ),
+        );
+        markedSeenIds.add(movie.id);
+        _seenIds.add(movie.id);
+      }
+      _decidedTmdbIds.add(movie.id);
+      decisions.add(
+        SwipeDecisionModel(
+          tmdbId: movie.id,
+          title: movie.title,
+          posterPath: movie.posterPath,
+          decision: 'seen',
+          decidedAt: now,
+          collectionId: candidate.isSaga ? candidate.collectionId : null,
+          collectionName: candidate.isSaga ? candidate.collectionName : null,
+        ),
+      );
+    }
+
+    if (candidate.isSaga && candidate.collectionId != null) {
+      _seenSagaCollectionIds.add(candidate.collectionId!);
+    }
+
+    _historyStack.add((candidate: candidate, markedSeenIds: markedSeenIds));
+    _sessionSeenCount++;
+    notifyListeners();
+    _checkPrefetch();
+
+    await _enqueueMutation(() async {
+      if (seenItemsToRecord.length == 1) {
+        if (searchProvider != null) {
+          await searchProvider!.markAsSeen(seenItemsToRecord.first);
+        } else {
+          await repository.markAsSeen(seenItemsToRecord.first);
+        }
+      } else if (seenItemsToRecord.length > 1) {
+        if (searchProvider != null) {
+          await searchProvider!.markManyAsSeen(seenItemsToRecord);
+        } else {
+          await repository.markManyAsSeen(seenItemsToRecord);
+        }
+      }
+
+      if (candidate.isSaga) {
+        await repository.recordSwipeDecisions(decisions);
+      } else {
+        await repository.recordSwipeDecision(decisions.first);
+      }
+    });
   }
 
   /// Swipes left (Pass / Discard).
@@ -211,116 +311,132 @@ class SwiperProvider extends ChangeNotifier {
     if (_candidates.isEmpty) return;
 
     final candidate = _candidates.removeAt(0);
-    _historyStack.add(candidate);
+    _historyStack.add((candidate: candidate, markedSeenIds: const {}));
     final now = DateTime.now();
 
-    if (candidate.isSaga) {
-      final decisions = <SwipeDecisionModel>[];
-      for (final movie in candidate.sagaItems) {
-        decisions.add(
-          SwipeDecisionModel(
-            tmdbId: movie.id,
-            title: movie.title,
-            posterPath: movie.posterPath,
-            decision: 'discarded',
-            decidedAt: now,
-            collectionId: candidate.collectionId,
-            collectionName: candidate.collectionName,
-          ),
-        );
-        _decidedTmdbIds.add(movie.id);
-      }
-      if (candidate.collectionId != null) {
-        _seenSagaCollectionIds.add(candidate.collectionId!);
-      }
-      await repository.recordSwipeDecisions(decisions);
-    } else {
-      _decidedTmdbIds.add(candidate.item.id);
-      final decision = SwipeDecisionModel(
-        tmdbId: candidate.item.id,
-        title: candidate.item.title,
-        posterPath: candidate.item.posterPath,
-        decision: 'discarded',
-        decidedAt: now,
+    final movies = candidate.isSaga ? candidate.sagaItems : [candidate.item];
+    final decisions = <SwipeDecisionModel>[];
+    for (final movie in movies) {
+      _decidedTmdbIds.add(movie.id);
+      decisions.add(
+        SwipeDecisionModel(
+          tmdbId: movie.id,
+          title: movie.title,
+          posterPath: movie.posterPath,
+          decision: 'discarded',
+          decidedAt: now,
+          collectionId: candidate.isSaga ? candidate.collectionId : null,
+          collectionName: candidate.isSaga ? candidate.collectionName : null,
+        ),
       );
-      await repository.recordSwipeDecision(decision);
+    }
+    if (candidate.isSaga && candidate.collectionId != null) {
+      _seenSagaCollectionIds.add(candidate.collectionId!);
     }
 
     _sessionDiscardedCount++;
     notifyListeners();
-
     _checkPrefetch();
+
+    await _enqueueMutation(() async {
+      if (candidate.isSaga) {
+        await repository.recordSwipeDecisions(decisions);
+      } else {
+        await repository.recordSwipeDecision(decisions.first);
+      }
+    });
   }
 
   /// Undoes the last swipe decision.
   Future<UndoResult?> undoLastDecision() async {
     if (_historyStack.isEmpty) return null;
 
-    final lastCandidate = _historyStack.removeLast();
-    final undone = await repository.undoLastSwipeDecision();
+    final lastEntry = _historyStack.removeLast();
+    final lastCandidate = lastEntry.candidate;
 
-    if (undone != null) {
-      if (undone.decision == 'added') {
-        _sessionAddedCount = max(0, _sessionAddedCount - 1);
-        if (undone.targetList != null) {
-          if (lastCandidate.isSaga) {
-            for (final movie in lastCandidate.sagaItems) {
+    return _enqueueMutation(() async {
+      final undone = await repository.undoLastSwipeDecision();
+
+      if (undone != null) {
+        if (undone.decision == 'added') {
+          _sessionAddedCount = max(0, _sessionAddedCount - 1);
+          if (undone.targetList != null) {
+            if (lastCandidate.isSaga) {
+              for (final movie in lastCandidate.sagaItems) {
+                if (libraryProvider != null) {
+                  await libraryProvider!.removeFromList(
+                    movie,
+                    undone.targetList!,
+                  );
+                } else {
+                  await repository.removeFromList(
+                    movie.id,
+                    MediaType.movie,
+                    undone.targetList!,
+                  );
+                }
+                _existingListIds.remove(movie.id);
+                _decidedTmdbIds.remove(movie.id);
+              }
+            } else {
               if (libraryProvider != null) {
                 await libraryProvider!.removeFromList(
-                  movie,
+                  lastCandidate.item,
                   undone.targetList!,
                 );
               } else {
                 await repository.removeFromList(
-                  movie.id,
+                  undone.tmdbId,
                   MediaType.movie,
                   undone.targetList!,
                 );
               }
-              _existingListIds.remove(movie.id);
+              _existingListIds.remove(undone.tmdbId);
+              _decidedTmdbIds.remove(undone.tmdbId);
+            }
+          }
+        } else if (undone.decision == 'seen') {
+          _sessionSeenCount = max(0, _sessionSeenCount - 1);
+          if (lastCandidate.isSaga) {
+            for (final movie in lastCandidate.sagaItems) {
               _decidedTmdbIds.remove(movie.id);
             }
           } else {
-            if (libraryProvider != null) {
-              await libraryProvider!.removeFromList(
-                lastCandidate.item,
-                undone.targetList!,
-              );
+            _decidedTmdbIds.remove(undone.tmdbId);
+          }
+          for (final seenId in lastEntry.markedSeenIds) {
+            if (searchProvider != null) {
+              await searchProvider!.removeFromSeen(seenId, MediaType.movie);
             } else {
-              await repository.removeFromList(
-                undone.tmdbId,
-                MediaType.movie,
-                undone.targetList!,
-              );
+              await repository.removeFromSeen(seenId, MediaType.movie);
             }
-            _existingListIds.remove(undone.tmdbId);
+            _seenIds.remove(seenId);
+          }
+        } else {
+          _sessionDiscardedCount = max(0, _sessionDiscardedCount - 1);
+          if (lastCandidate.isSaga) {
+            for (final movie in lastCandidate.sagaItems) {
+              _decidedTmdbIds.remove(movie.id);
+            }
+          } else {
             _decidedTmdbIds.remove(undone.tmdbId);
           }
         }
-      } else {
-        _sessionDiscardedCount = max(0, _sessionDiscardedCount - 1);
-        if (lastCandidate.isSaga) {
-          for (final movie in lastCandidate.sagaItems) {
-            _decidedTmdbIds.remove(movie.id);
-          }
-        } else {
-          _decidedTmdbIds.remove(undone.tmdbId);
-        }
+
+        // The saga stays in _seenSagaCollectionIds: its card is back in the
+        // deck, so a later load must not propose it a second time.
+        _candidates.insert(0, lastCandidate);
+        notifyListeners();
+
+        return UndoResult(
+          restoredCandidate: lastCandidate,
+          decision: undone.decision,
+          targetList: undone.targetList,
+        );
       }
 
-      // The saga stays in _seenSagaCollectionIds: its card is back in the
-      // deck, so a later load must not propose it a second time.
-      _candidates.insert(0, lastCandidate);
-      notifyListeners();
-
-      return UndoResult(
-        restoredCandidate: lastCandidate,
-        decision: undone.decision,
-        targetList: undone.targetList,
-      );
-    }
-
-    return null;
+      return null;
+    });
   }
 
   void _checkPrefetch() {

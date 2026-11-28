@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/domain/entities/media_details.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
@@ -50,6 +51,14 @@ void main() {
   setUpAll(() {
     registerFallbackValue(MediaType.movie);
     registerFallbackValue(movie1);
+    registerFallbackValue(
+      SeenItem(
+        tmdbId: 0,
+        type: MediaType.movie,
+        title: '',
+        seenDate: DateTime(2024),
+      ),
+    );
     registerFallbackValue(
       SwipeDecisionModel(
         tmdbId: 0,
@@ -115,6 +124,15 @@ void main() {
     when(
       () => repo.removeFromList(any(), any(), any()),
     ).thenAnswer((_) async {});
+    when(() => repo.markAsSeen(any())).thenAnswer((_) async {});
+    when(
+      () => repo.removeFromSeen(
+        any(),
+        any(),
+        seasonNumber: any(named: 'seasonNumber'),
+        episodeNumber: any(named: 'episodeNumber'),
+      ),
+    ).thenAnswer((_) async {});
     when(() => repo.recordSwipeDecision(any())).thenAnswer((_) async {});
     when(() => repo.recordSwipeDecisions(any())).thenAnswer((_) async {});
     when(() => repo.undoLastSwipeDecision()).thenAnswer((_) async => null);
@@ -164,6 +182,7 @@ void main() {
     expect(find.byType(SwipeCard), findsOneWidget);
     expect(find.text('Inception'), findsOneWidget);
     expect(find.byKey(const Key('swiper_add_button')), findsOneWidget);
+    expect(find.byKey(const Key('swiper_seen_button')), findsOneWidget);
     expect(find.byKey(const Key('swiper_discard_button')), findsOneWidget);
     expect(find.byKey(const Key('swiper_undo_button')), findsOneWidget);
   });
@@ -181,7 +200,7 @@ void main() {
 
     verify(() => repo.addToList(movie1, 'watchlist')).called(1);
     expect(find.text('Interstellar'), findsOneWidget);
-    expect(find.text('1 ajoutés · 0 écartés'), findsOneWidget);
+    expect(find.text('1 ajoutés · 0 vus · 0 écartés'), findsOneWidget);
   });
 
   testWidgets('tapping Discard button ignores movie and advances card', (
@@ -197,7 +216,7 @@ void main() {
 
     verifyNever(() => repo.addToList(any(), any()));
     expect(find.text('Interstellar'), findsOneWidget);
-    expect(find.text('0 ajoutés · 1 écartés'), findsOneWidget);
+    expect(find.text('0 ajoutés · 0 vus · 1 écartés'), findsOneWidget);
   });
 
   testWidgets('tapping Undo button calls undoLastDecision', (tester) async {
@@ -247,7 +266,7 @@ void main() {
 
       verify(() => repo.addToList(movie1, 'watchlist')).called(1);
       verify(() => repo.addToList(movie2, 'watchlist')).called(1);
-      expect(find.text('2 ajoutés · 0 écartés'), findsOneWidget);
+      expect(find.text('2 ajoutés · 0 vus · 0 écartés'), findsOneWidget);
     },
   );
 
@@ -295,4 +314,115 @@ void main() {
       }, returnsNormally);
     },
   );
+
+  testWidgets(
+    'tapping Seen button in simple mode marks movie as seen and advances card',
+    (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Inception'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('swiper_seen_button')));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => repo.markAsSeen(
+          any(that: isA<SeenItem>().having((s) => s.tmdbId, 'tmdbId', 101)),
+        ),
+      ).called(1);
+      verify(
+        () => repo.recordSwipeDecision(
+          any(
+            that: isA<SwipeDecisionModel>()
+                .having((d) => d.tmdbId, 'tmdbId', 101)
+                .having((d) => d.decision, 'decision', 'seen'),
+          ),
+        ),
+      ).called(1);
+      expect(find.text('Interstellar'), findsOneWidget);
+      expect(find.text('0 ajoutés · 1 vus · 0 écartés'), findsOneWidget);
+    },
+  );
+
+  testWidgets('tapping Undo after Seen removes viewing and restores movie', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildTestWidget());
+    await tester.pumpAndSettle();
+
+    when(() => repo.undoLastSwipeDecision()).thenAnswer(
+      (_) async => SwipeDecisionModel(
+        isarId: 1,
+        tmdbId: 101,
+        title: 'Inception',
+        decision: 'seen',
+        decidedAt: DateTime.now(),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('swiper_seen_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Interstellar'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('swiper_undo_button')));
+    await tester.pumpAndSettle();
+
+    verify(() => repo.undoLastSwipeDecision()).called(1);
+    verify(() => repo.removeFromSeen(101, MediaType.movie)).called(1);
+    expect(find.text('Inception'), findsOneWidget);
+  });
+
+  testWidgets(
+    'tapping Seen button in advanced mode opens date/time dialog and respects cancel/confirm',
+    (tester) async {
+      await settingsProvider.setAdvancedTracking(true);
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      // Tap Seen -> opens dialog
+      await tester.tap(find.byKey(const Key('swiper_seen_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Dialog), findsOneWidget);
+
+      // Cancel dialog -> nothing marked seen, Inception remains
+      await tester.tap(find.text('ANNULER'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repo.markAsSeen(any()));
+      expect(find.text('Inception'), findsOneWidget);
+
+      // Tap Seen again -> confirm dialog
+      await tester.tap(find.byKey(const Key('swiper_seen_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => repo.markAsSeen(
+          any(that: isA<SeenItem>().having((s) => s.tmdbId, 'tmdbId', 101)),
+        ),
+      ).called(1);
+      expect(find.text('Interstellar'), findsOneWidget);
+      expect(find.text('0 ajoutés · 1 vus · 0 écartés'), findsOneWidget);
+    },
+  );
+
+  testWidgets('swiping card up marks movie as seen', (tester) async {
+    await tester.pumpWidget(buildTestWidget());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Inception'), findsOneWidget);
+
+    await tester.drag(find.byType(SwipeCard), const Offset(0, -150));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => repo.markAsSeen(
+        any(that: isA<SeenItem>().having((s) => s.tmdbId, 'tmdbId', 101)),
+      ),
+    ).called(1);
+    expect(find.text('Interstellar'), findsOneWidget);
+  });
 }

@@ -13,7 +13,7 @@ class SwipeDecisionModel {
   final String title;
   final String? posterPath;
 
-  /// Decision: 'added' or 'discarded'.
+  /// Decision: 'added', 'discarded', or 'seen'.
   final String decision;
 
   final DateTime decidedAt;
