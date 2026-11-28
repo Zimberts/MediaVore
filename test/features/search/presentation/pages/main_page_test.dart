@@ -20,13 +20,13 @@ import 'package:mediavore/features/home/presentation/pages/home_page.dart';
 import 'package:mediavore/features/library/presentation/pages/library_page.dart';
 import 'package:mediavore/features/library/presentation/widgets/lists_overview.dart';
 import 'package:mediavore/features/media_details/presentation/pages/seen_history_page.dart';
+import 'package:mediavore/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/pages/saved_media_page.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
-import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/features/together/presentation/pages/together_page.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
@@ -694,9 +694,12 @@ void main() {
   });
 
   group('TMDB credential', () {
-    testWidgets('first launch without a key shows the TMDB onboarding', (
+    testWidgets('first launch without a key shows the onboarding', (
       WidgetTester tester,
     ) async {
+      when(
+        () => mockSharedPreferences.setBool(any(), any()),
+      ).thenAnswer((_) async => true);
       settingsProvider = SettingsProvider(
         mockSharedPreferences,
         FakeTmdbCredentialStore(),
@@ -704,16 +707,22 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.byType(TmdbCredentialPage), findsOneWidget);
+      expect(find.byType(OnboardingPage), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('tmdb_credential_skip')));
+      await tester.tap(find.byKey(const Key('onboarding_skip')));
       await tester.pumpAndSettle();
 
-      expect(find.byType(TmdbCredentialPage), findsNothing);
+      expect(find.byType(OnboardingPage), findsNothing);
       expect(
         find.text(fallbackLocalizations.tmdbCredentialLater),
         findsOneWidget,
       );
+      verify(
+        () => mockSharedPreferences.setBool(
+          SettingsProvider.onboardingCompletedKey,
+          true,
+        ),
+      ).called(1);
     });
 
     test('should point to the Me tab, not to tabs that no longer exist', () {

@@ -6,6 +6,7 @@ import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/app_version.dart';
 import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
+import 'package:mediavore/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -247,6 +248,19 @@ class SettingsPage extends StatelessWidget {
 
           // 3. À propos
           _SectionHeader(title: l10n.settingsSectionAbout),
+          ListTile(
+            key: const Key('settings_review_onboarding'),
+            leading: const Icon(Icons.waving_hand_outlined),
+            title: Text(l10n.settingsReviewOnboarding),
+            subtitle: Text(l10n.settingsReviewOnboardingSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                fullscreenDialog: true,
+                builder: (_) => const OnboardingPage(reviewOnly: true),
+              ),
+            ),
+          ),
           AboutListTile(
             icon: const Icon(Icons.info_outline),
             applicationName: l10n.appTitle,
