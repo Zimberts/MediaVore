@@ -161,7 +161,10 @@ FakeTmdb _unreleasedTmdb() {
   });
 }
 
-void main() {
+void main() => registerDiscoverAddJourney();
+
+/// Registers the #464 Discover, detail page and watchlist journey.
+void registerDiscoverAddJourney() {
   group('Discover and add journey', () {
     testApp('should show a released title in Discover, the Library and '
         '"To watch tonight", then drop it, when added then removed from its '

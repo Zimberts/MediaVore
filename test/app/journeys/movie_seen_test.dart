@@ -186,7 +186,10 @@ bool _unlocked(WidgetTester tester, String id) => _context(tester)
     .achievements
     .any((a) => a.id == id && a.isUnlocked);
 
-void main() {
+void main() => registerMovieSeenJourney();
+
+/// Registers the #465 movie seen journey.
+void registerMovieSeenJourney() {
   group('movie seen journey', () {
     testApp(
       'should flip the button at once, then show the viewing in the '

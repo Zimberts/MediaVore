@@ -22,6 +22,7 @@ import 'package:mediavore/features/settings/presentation/pages/data_cache_settin
 import 'package:provider/provider.dart';
 
 import '../../helpers/fake_file_picker.dart';
+import '../../helpers/fixture_reader.dart';
 import '../harness.dart';
 
 /// Movie seen twice (rewatch), then liked.
@@ -353,7 +354,10 @@ File _file(String name, List<int> bytes) {
   return File('${dir.path}/$name')..writeAsBytesSync(bytes);
 }
 
-void main() {
+void main() => registerExportImportJourney();
+
+/// Registers the #469 export and import journey.
+void registerExportImportJourney() {
   group('export and import journey', () {
     testApp(
       'should restore the library, history, series in progress, exclusions, '
@@ -428,13 +432,12 @@ void main() {
       app,
     ) async {
       final picker = _fakeFilePicker();
-      final legacy = File('test/fixtures/export_v1.4.4.mdv');
       await _import(
         tester,
         picker,
         _file(
           'mediavore_export_2026-11-22_10-00-00.mdv',
-          legacy.readAsBytesSync(),
+          fixtureBytes('export_v1.4.4.mdv'),
         ),
       );
 

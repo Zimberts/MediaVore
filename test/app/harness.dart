@@ -19,6 +19,7 @@ import 'package:mediavore/features/media_details/presentation/pages/media_detail
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/main.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +31,9 @@ import '../helpers/fake_tmdb.dart';
 
 /// App booted by the running test.
 TestApp? _current;
+
+bool get _isLiveBinding =>
+    WidgetsBinding.instance is LiveTestWidgetsFlutterBinding;
 
 /// Well-formed TMDB v3 key (32 hex digits) used by default.
 const String testTmdbCredential = '0123456789abcdef0123456789abcdef';
@@ -60,7 +64,7 @@ class AppSeed {
 
 /// The app booted by [bootTestApp].
 class TestApp {
-  TestApp._(this.tmdb, this.images, this.workmanager, this._links, this._dir);
+  TestApp._(this.tmdb, this.images, this._workmanager, this._links, this._dir);
 
   /// Fake TMDB server answering every API request.
   final FakeTmdb tmdb;
@@ -68,10 +72,14 @@ class TestApp {
   /// Records the images the app loaded (always a transparent PNG).
   final FakeImageService images;
 
-  /// Records the background sync registrations.
-  final FakeWorkmanager workmanager;
+  final FakeWorkmanager? _workmanager;
 
-  final StreamController<String> _links;
+  /// Records the background sync registrations (host harness only).
+  FakeWorkmanager get workmanager =>
+      _workmanager ??
+      (throw StateError('workmanager is not mocked on a live device'));
+
+  final StreamController<String>? _links;
   final Directory _dir;
 
   /// Real repository, for assertions on persisted state.
@@ -79,7 +87,11 @@ class TestApp {
 
   /// Delivers [uri] as an incoming deep link (`app_links`).
   Future<void> openLink(WidgetTester tester, Uri uri) async {
-    _links.add(uri.toString());
+    final links = _links;
+    if (links == null) {
+      throw StateError('openLink is only available with mocked app_links');
+    }
+    links.add(uri.toString());
     await pumpUntilSettled(tester);
   }
 }
@@ -98,29 +110,55 @@ Future<TestApp> bootTestApp(
   FakeTmdb? tmdb,
 }) async {
   final server = tmdb ?? FakeTmdb();
-  final dir = Directory(
-    '${Directory.current.path}/test/tmp_app_'
-    '${DateTime.now().microsecondsSinceEpoch}',
-  )..createSync(recursive: true);
+  final live = _isLiveBinding;
+  final Directory dir;
+  FakeWorkmanager? workmanager;
+  StreamController<String>? links;
 
-  _fakePlatform(dir.path);
-  // rootBundle caches asset loads across tests: a load a previous test left
-  // pending on its fake clock would never complete in this one (big assets,
-  // such as the achievement definitions, are decoded off the main isolate).
-  rootBundle.clear();
-  SharedPreferences.setMockInitialValues(seed.prefs);
-  FlutterSecureStorage.setMockInitialValues({
-    if (seed.tmdbCredential != null)
-      TmdbCredentialStore.secureStorageKey: seed.tmdbCredential!,
-  });
-  final workmanager = FakeWorkmanager();
-  WorkmanagerPlatform.instance = workmanager;
+  if (live) {
+    final tmp = await getTemporaryDirectory();
+    dir = Directory(
+      '${tmp.path}/mediavore_test_${DateTime.now().microsecondsSinceEpoch}',
+    )..createSync(recursive: true);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    for (final entry in seed.prefs.entries) {
+      await _writePref(prefs, entry.key, entry.value);
+    }
+    const storage = FlutterSecureStorage();
+    await storage.deleteAll();
+    if (seed.tmdbCredential != null) {
+      await storage.write(
+        key: TmdbCredentialStore.secureStorageKey,
+        value: seed.tmdbCredential!,
+      );
+    }
+  } else {
+    dir = Directory(
+      '${Directory.current.path}/test/tmp_app_'
+      '${DateTime.now().microsecondsSinceEpoch}',
+    )..createSync(recursive: true);
+
+    _fakePlatform(dir.path);
+    // rootBundle caches asset loads across tests: a load a previous test left
+    // pending on its fake clock would never complete in this one (big assets,
+    // such as the achievement definitions, are decoded off the main isolate).
+    rootBundle.clear();
+    SharedPreferences.setMockInitialValues(seed.prefs);
+    FlutterSecureStorage.setMockInitialValues({
+      if (seed.tmdbCredential != null)
+        TmdbCredentialStore.secureStorageKey: seed.tmdbCredential!,
+    });
+    workmanager = FakeWorkmanager();
+    WorkmanagerPlatform.instance = workmanager;
+    links = _mockAppLinks(tester);
+  }
+
   final images = FakeImageService();
   CachedNetworkImageProvider.defaultCacheManager = fakeImageCacheManager(
     images,
     Directory('${dir.path}/images'),
   );
-  final links = _mockAppLinks(tester);
 
   // Safety net when a test skips [disposeTestApp]: no scratch dir leaks.
   addTearDown(() {
@@ -130,7 +168,7 @@ Future<TestApp> bootTestApp(
   final app = _current = TestApp._(server, images, workmanager, links, dir);
   try {
     await tester.runAsync(() async {
-      await _initializeIsarCore();
+      if (!live) await _initializeIsarCore();
       await bootstrapServices(tmdbHttpClientAdapter: server);
       await _applySeed(seed);
     });
@@ -147,6 +185,20 @@ Future<TestApp> bootTestApp(
   }
   return app;
 }
+
+Future<void> _writePref(SharedPreferences prefs, String key, Object value) =>
+    switch (value) {
+      final String v => prefs.setString(key, v),
+      final bool v => prefs.setBool(key, v),
+      final int v => prefs.setInt(key, v),
+      final double v => prefs.setDouble(key, v),
+      final List<String> v => prefs.setStringList(key, v),
+      _ => throw ArgumentError.value(
+        value,
+        'seed.prefs[$key]',
+        'Unsupported SharedPreferences type',
+      ),
+    };
 
 Future<void>? _isarCore;
 
@@ -198,9 +250,13 @@ Future<void> disposeTestApp(
   // Let pending loads finish: providers notify when their I/O completes.
   await pumpUntilSettled(tester);
   // Unmount, then run out the timers left by the tree (image cache cleanup,
-  // auto-dismissed messages).
+  // auto-dismissed messages) on host fake time.
   await tester.pumpWidget(const SizedBox.shrink());
-  await tester.pump(const Duration(minutes: 1));
+  if (_isLiveBinding) {
+    await tester.pump();
+  } else {
+    await tester.pump(const Duration(minutes: 1));
+  }
   // Reads started before the unmount (e.g. an achievement evaluation) still
   // run on real I/O: closing Isar under them leaves the native store in a
   // state that breaks the next app booted in this process.
@@ -218,7 +274,12 @@ Future<void> disposeTestApp(
     }
   }
   await _realAwait(tester, Future.sync(locator.reset));
-  await app._links.close();
+  if (_isLiveBinding) {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await const FlutterSecureStorage().deleteAll();
+  }
+  await app._links?.close();
   if (app._dir.existsSync()) app._dir.deleteSync(recursive: true);
   if (!verifyTmdb) return;
   expect(
@@ -237,7 +298,11 @@ Future<void> restartTestApp(WidgetTester tester) async {
   if (app == null) throw StateError('restartTestApp: no app booted');
   await pumpUntilSettled(tester);
   await tester.pumpWidget(const SizedBox.shrink());
-  await tester.pump(const Duration(minutes: 1));
+  if (_isLiveBinding) {
+    await tester.pump();
+  } else {
+    await tester.pump(const Duration(minutes: 1));
+  }
   // bootstrapServices closes the open database (kept on disk) and resets
   // the DI before registering everything again.
   await tester.runAsync(
@@ -336,17 +401,26 @@ Future<void> _applySeed(AppSeed seed) async {
 /// (spinner, shimmer) does not block, the pump just stops at the bound.
 Future<void> pumpUntilSettled(
   WidgetTester tester, {
-  Duration step = const Duration(milliseconds: 50),
+  Duration? step,
   Duration timeout = const Duration(seconds: 10),
-  Duration realGap = const Duration(milliseconds: 5),
+  Duration? realGap,
   int quietSteps = 10,
 }) async {
+  final live = _isLiveBinding;
+  final effectiveStep = step ?? Duration(milliseconds: live ? 20 : 50);
+  final effectiveGap = realGap ?? Duration(milliseconds: live ? 0 : 5);
   final adapter = _current?.tmdb;
   var quiet = 0;
-  for (var elapsed = Duration.zero; elapsed < timeout; elapsed += step) {
+  for (
+    var elapsed = Duration.zero;
+    elapsed < timeout;
+    elapsed += effectiveStep
+  ) {
     // Isar answers on a native port, outside fake time.
-    await tester.runAsync(() => Future<void>.delayed(realGap));
-    await tester.pump(step);
+    if (effectiveGap > Duration.zero) {
+      await tester.runAsync(() => Future<void>.delayed(effectiveGap));
+    }
+    await tester.pump(effectiveStep);
     final busy =
         tester.binding.hasScheduledFrame || (adapter?.inFlight ?? 0) > 0;
     quiet = busy ? 0 : quiet + 1;
