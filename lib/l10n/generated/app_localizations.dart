@@ -2696,6 +2696,12 @@ abstract class AppLocalizations {
   /// **'Connect to TMDB'**
   String get discoverConnectTmdb;
 
+  /// No description provided for @discoverScrollToTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to top'**
+  String get discoverScrollToTop;
+
   /// No description provided for @libraryTypeAll.
   ///
   /// In en, this message translates to:

@@ -10,11 +10,13 @@ import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/media_kind.dart';
 import 'package:mediavore/features/achievements/domain/entities/achievement.dart';
 import 'package:mediavore/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
+import 'package:mediavore/features/discovery/presentation/pages/discovery_page.dart';
 import 'package:mediavore/features/discovery/presentation/providers/swipe_session_provider.dart';
 import 'package:mediavore/features/home/presentation/pages/home_page.dart';
 import 'package:mediavore/features/library/presentation/pages/library_page.dart';
@@ -756,5 +758,166 @@ void main() {
         expect(find.byIcon(Icons.settings), findsNothing, reason: tab.name);
       }
     });
+  });
+
+  group('Discover tab scroll to top', () {
+    List<MediaItem> manyItems() => [
+      for (var i = 1; i <= 45; i++)
+        MediaItem(
+          id: i,
+          title: 'Movie $i',
+          overview: '',
+          releaseDate: '2021-05-01',
+          voteAverage: 8.0,
+        ),
+    ];
+
+    testWidgets('should scroll Discover back to top when tapping the active '
+        'Discover tab', (tester) async {
+      when(
+        () => mockRepository.getTrendingMedia(page: any(named: 'page')),
+      ).thenAnswer(
+        (invocation) async =>
+            invocation.namedArguments[#page] == 1 ? manyItems() : [],
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await goTo(tester, AppTab.discover);
+
+      final controller = tester
+          .widget<CustomScrollView>(
+            find.descendant(
+              of: find.byType(DiscoveryPage),
+              matching: find.byType(CustomScrollView),
+            ),
+          )
+          .controller!;
+      controller.jumpTo(1500);
+      await tester.pump();
+      expect(controller.offset, 1500);
+
+      // Re-tap the active Discover tab.
+      await tester.tap(tabItem(AppTab.discover));
+      await tester.pumpAndSettle();
+
+      expect(controller.offset, 0);
+    });
+
+    testWidgets('should position the scroll-to-top button above AppTabBar and '
+        'AppMessageHost without overlapping', (tester) async {
+      when(
+        () => mockRepository.getTrendingMedia(page: any(named: 'page')),
+      ).thenAnswer(
+        (invocation) async =>
+            invocation.namedArguments[#page] == 1 ? manyItems() : [],
+      );
+
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(
+              value: settingsProvider,
+            ),
+            ChangeNotifierProvider<AchievementProvider>.value(
+              value: mockAchievementProvider,
+            ),
+            ChangeNotifierProvider<SwipeSessionProvider>.value(
+              value: swipeSession,
+            ),
+            ChangeNotifierProvider<TogetherSessionProvider>.value(
+              value: togetherSession,
+            ),
+          ],
+          child: MaterialApp(
+            theme: const DefaultLightPalette().toThemeData(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => AppMessageHost(child: child!),
+            home: const MainPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await goTo(tester, AppTab.discover);
+
+      final controller = tester
+          .widget<CustomScrollView>(
+            find.descendant(
+              of: find.byType(DiscoveryPage),
+              matching: find.byType(CustomScrollView),
+            ),
+          )
+          .controller!;
+      controller.jumpTo(2200);
+      await tester.pump();
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 120));
+      await tester.pumpAndSettle();
+
+      showAppMessage(
+        'Added to Watchlist',
+        actionLabel: 'Undo',
+        onAction: () {},
+      );
+      await tester.pumpAndSettle();
+
+      final buttonRect = tester.getRect(
+        find.byKey(const Key('discovery_scroll_to_top')),
+      );
+      final tabBarRect = tester.getRect(find.byType(AppTabBar));
+      final messageRect = tester.getRect(find.text('Added to Watchlist'));
+
+      expect(buttonRect.bottom, lessThanOrEqualTo(tabBarRect.top));
+      expect(buttonRect.bottom, lessThanOrEqualTo(messageRect.top));
+
+      // Dismiss the message so its auto-dismiss timer does not remain pending.
+      appMessageController.dismiss();
+      await tester.pump();
+    });
+
+    testWidgets(
+      'should scroll Discover to top on iOS status bar tap when active',
+      (tester) async {
+        when(
+          () => mockRepository.getTrendingMedia(page: any(named: 'page')),
+        ).thenAnswer(
+          (invocation) async =>
+              invocation.namedArguments[#page] == 1 ? manyItems() : [],
+        );
+
+        tester.view.padding = const FakeViewPadding(top: 44);
+        addTearDown(tester.view.resetPadding);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
+
+        await goTo(tester, AppTab.discover);
+
+        final controller = tester
+            .widget<CustomScrollView>(
+              find.descendant(
+                of: find.byType(DiscoveryPage),
+                matching: find.byType(CustomScrollView),
+              ),
+            )
+            .controller!;
+        controller.jumpTo(1500);
+        await tester.pump();
+        expect(controller.offset, 1500);
+
+        tester.simulateStatusBarTap();
+        await tester.pumpAndSettle();
+
+        expect(controller.offset, 0);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
   });
 }

@@ -1606,6 +1606,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoverConnectTmdb => 'Connexion à TMDB';
 
   @override
+  String get discoverScrollToTop => 'Revenir en haut';
+
+  @override
   String get libraryTypeAll => 'Tout';
 
   @override

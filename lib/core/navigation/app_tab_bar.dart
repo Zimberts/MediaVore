@@ -11,11 +11,13 @@ class AppTabBar extends StatelessWidget {
     required this.tabs,
     required this.selected,
     required this.onSelected,
+    this.onReselected,
   });
 
   final List<AppTab> tabs;
   final AppTab selected;
   final ValueChanged<AppTab> onSelected;
+  final ValueChanged<AppTab>? onReselected;
 
   /// Height of the bar above the bottom safe area.
   static const double height = 60;
@@ -44,7 +46,13 @@ class AppTabBar extends StatelessWidget {
                       index: i,
                       count: tabs.length,
                       selected: tabs[i] == selected,
-                      onTap: () => onSelected(tabs[i]),
+                      onTap: () {
+                        if (tabs[i] == selected) {
+                          onReselected?.call(tabs[i]);
+                        } else {
+                          onSelected(tabs[i]);
+                        }
+                      },
                     ),
                   ),
               ],

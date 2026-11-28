@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
+import 'package:mediavore/core/widgets/app_message.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/app_tap_target.dart';
 import 'package:mediavore/core/widgets/filter_chip_row.dart';
@@ -40,10 +42,14 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   static const double _gutter = 16;
 
   late final TextEditingController _controller;
+  final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounce;
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription<AppTab>? _reselectSubscription;
   late final SettingsProvider _settings;
   late String _credential;
+  bool _showScrollToTop = false;
+  double _lastScrollPixels = 0;
 
   @override
   void initState() {
@@ -53,6 +59,12 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
       text: context.read<SearchProvider>().currentQuery,
     );
     _scrollController.addListener(_onScroll);
+    _reselectSubscription = context
+        .read<SearchProvider>()
+        .onTabReselected
+        .listen((tab) {
+          if (tab == AppTab.discover) _onDiscoverReselected();
+        });
     // Reload whenever the TMDB credential is saved or removed (first-launch
     // screen or Settings), so the grid always reflects the current key.
     _settings = context.read<SettingsProvider>();
@@ -66,16 +78,61 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _reselectSubscription?.cancel();
     _controller.dispose();
+    _searchFocusNode.dispose();
     _scrollController.dispose();
     _settings.removeListener(_onSettingsChanged);
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    final pixels = position.pixels;
+    final viewport = position.viewportDimension;
+
+    if (pixels >= position.maxScrollExtent - 200) {
       context.read<SearchProvider>().fetchNextPage();
+    }
+
+    final pastThreshold = viewport > 0 && pixels > 2 * viewport;
+    final delta = pixels - _lastScrollPixels;
+    _lastScrollPixels = pixels;
+
+    final bool nextVisible;
+    if (!pastThreshold) {
+      nextVisible = false;
+    } else if (delta < -0.5) {
+      nextVisible = true;
+    } else if (delta > 0.5) {
+      nextVisible = false;
+    } else {
+      nextVisible = _showScrollToTop;
+    }
+
+    if (nextVisible != _showScrollToTop) {
+      setState(() => _showScrollToTop = nextVisible);
+    }
+  }
+
+  void _scrollToTop() {
+    if (!_scrollController.hasClients) return;
+    unawaited(
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
+
+  void _onDiscoverReselected() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.offset > 0) {
+      _scrollToTop();
+    } else {
+      _searchFocusNode.requestFocus();
     }
   }
 
@@ -209,6 +266,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
             child: TextField(
               key: const Key('discovery_search_field'),
               controller: _controller,
+              focusNode: _searchFocusNode,
               textInputAction: TextInputAction.search,
               onChanged: _onSearchChanged,
               onSubmitted: (value) {
@@ -477,9 +535,9 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
     final mode = isSwipeEnabled ? rawMode : DiscoverMode.explore;
 
     if (mode == DiscoverMode.swipe && isSwipeEnabled) {
-      return ColoredBox(
-        color: context.appColors.bg,
-        child: SafeArea(
+      return Scaffold(
+        backgroundColor: context.appColors.bg,
+        body: SafeArea(
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(_gutter, 12, _gutter, 0),
@@ -499,55 +557,127 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
 
     final provider = context.watch<SearchProvider>();
 
-    return ColoredBox(
-      color: context.appColors.bg,
-      child: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: () async => _refreshDiscovery(),
-          child: CustomScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            // Scrolling the results puts the keyboard away.
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(_gutter, 12, _gutter, 0),
-                sliver: SliverList.list(
-                  children: [
-                    _buildTitle(l10n),
-                    if (isSwipeEnabled) ...[
-                      const SizedBox(height: 8),
-                      _buildModeSegment(l10n, mode),
-                    ],
-                    if (provider.isOffline) ...[
-                      const SizedBox(height: 8),
-                      OfflineBanner(message: l10n.discoverOfflineMessage),
-                    ],
-                    const SizedBox(height: 8),
-                    _buildSearchRow(l10n),
-                    const SizedBox(height: 4),
-                    _buildTypeChips(l10n, provider.filterType),
-                    if (provider.filters.hasActiveFilters) ...[
-                      const SizedBox(height: 8),
-                      ActiveFilterChips(
-                        filters: provider.filters,
-                        onFilterChanged: (newFilters) {
-                          provider.setFilters(filters: newFilters);
-                          _refreshDiscovery();
-                        },
-                        onClearAll: () {
-                          provider.clearFilters();
-                          _controller.clear();
-                          _refreshDiscovery();
-                        },
+    return PrimaryScrollController(
+      controller: _scrollController,
+      child: Scaffold(
+        backgroundColor: context.appColors.bg,
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              RefreshIndicator(
+                onRefresh: () async => _refreshDiscovery(),
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  // Scrolling the results puts the keyboard away.
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        _gutter,
+                        12,
+                        _gutter,
+                        0,
                       ),
-                    ],
+                      sliver: SliverList.list(
+                        children: [
+                          _buildTitle(l10n),
+                          if (isSwipeEnabled) ...[
+                            const SizedBox(height: 8),
+                            _buildModeSegment(l10n, mode),
+                          ],
+                          if (provider.isOffline) ...[
+                            const SizedBox(height: 8),
+                            OfflineBanner(message: l10n.discoverOfflineMessage),
+                          ],
+                          const SizedBox(height: 8),
+                          _buildSearchRow(l10n),
+                          const SizedBox(height: 4),
+                          _buildTypeChips(l10n, provider.filterType),
+                          if (provider.filters.hasActiveFilters) ...[
+                            const SizedBox(height: 8),
+                            ActiveFilterChips(
+                              filters: provider.filters,
+                              onFilterChanged: (newFilters) {
+                                provider.setFilters(filters: newFilters);
+                                _refreshDiscovery();
+                              },
+                              onClearAll: () {
+                                provider.clearFilters();
+                                _controller.clear();
+                                _refreshDiscovery();
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    ..._buildResults(l10n, provider),
                   ],
                 ),
               ),
-              ..._buildResults(l10n, provider),
+              ListenableBuilder(
+                listenable: appMessageController,
+                builder: (context, child) {
+                  final hasMessage = appMessageController.current != null;
+                  return AnimatedPositioned(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    right: _gutter,
+                    bottom: hasMessage ? 84 : 16,
+                    child: child!,
+                  );
+                },
+                child: _ScrollToTopButton(
+                  visible: _showScrollToTop,
+                  onTap: _scrollToTop,
+                ),
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScrollToTopButton extends StatelessWidget {
+  const _ScrollToTopButton({required this.visible, required this.onTap});
+
+  final bool visible;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final label = context.l10n.discoverScrollToTop;
+
+    return IgnorePointer(
+      ignoring: !visible,
+      child: ExcludeSemantics(
+        excluding: !visible,
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: const Duration(milliseconds: 180),
+          child: Material(
+            key: const Key('discovery_scroll_to_top'),
+            color: colors.surface,
+            elevation: 4,
+            shape: CircleBorder(side: BorderSide(color: colors.border)),
+            clipBehavior: Clip.antiAlias,
+            child: AppTapTarget(
+              onTap: onTap,
+              semanticLabel: label,
+              tooltip: label,
+              borderRadius: BorderRadius.circular(24),
+              child: SizedBox(
+                width: kMinTapTarget,
+                height: kMinTapTarget,
+                child: Icon(Icons.arrow_upward, size: 20, color: colors.text),
+              ),
+            ),
           ),
         ),
       ),
