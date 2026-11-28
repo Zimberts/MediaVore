@@ -7,6 +7,7 @@ Achievement _a(
   String? group,
   int? tier,
   bool unlocked = false,
+  bool hidden = false,
   String? groupTitle,
   String? category,
   Map<String, Map<String, String>> translations = const {},
@@ -18,6 +19,7 @@ Achievement _a(
   group: group,
   tier: tier,
   isUnlocked: unlocked,
+  isHidden: hidden,
   groupTitle: groupTitle,
   category: category,
   translations: translations,
@@ -113,6 +115,24 @@ void main() {
       final family = groupAchievements([_a('solo', unlocked: true)]).single;
 
       expect(family.titleFor('en'), 'solo');
+    });
+
+    test('should be masked only when every tier is hidden and locked', () {
+      final allHiddenLocked = groupAchievements([
+        _a('s1', group: 'secret', tier: 1, hidden: true),
+        _a('s2', group: 'secret', tier: 2, hidden: true),
+      ]).single;
+      final oneUnlocked = groupAchievements([
+        _a('s1', group: 'secret', tier: 1, hidden: true, unlocked: true),
+        _a('s2', group: 'secret', tier: 2, hidden: true),
+      ]).single;
+      final visible = groupAchievements([
+        _a('v1', group: 'vis', tier: 1),
+      ]).single;
+
+      expect(allHiddenLocked.isMasked, isTrue);
+      expect(oneUnlocked.isMasked, isFalse);
+      expect(visible.isMasked, isFalse);
     });
   });
 }

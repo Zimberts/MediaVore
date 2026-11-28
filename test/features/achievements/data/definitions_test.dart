@@ -142,6 +142,9 @@ void main() {
           isA<Map<dynamic, dynamic>>(),
           reason: '${def['id']}.params',
         );
+        if (def.containsKey('hidden')) {
+          expect(def['hidden'], isA<bool>(), reason: '${def['id']}.hidden');
+        }
       }
     });
 

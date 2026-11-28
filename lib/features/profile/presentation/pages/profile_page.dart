@@ -37,9 +37,10 @@ int countActiveDaysInLast30Days(
 /// Up to 3 unlocked achievements, and the locked achievement closest to unlocking
 /// (highest progress), filling up to 4 achievements total.
 List<Achievement> selectPreviewAchievements(List<Achievement> all) {
-  if (all.isEmpty) return const [];
-  final unlocked = all.where((a) => a.isUnlocked).toList();
-  final locked = all.where((a) => !a.isUnlocked).toList();
+  final visible = all.where((a) => !a.isMasked).toList();
+  if (visible.isEmpty) return const [];
+  final unlocked = visible.where((a) => a.isUnlocked).toList();
+  final locked = visible.where((a) => !a.isUnlocked).toList();
   // Sort locked by progress descending (closest to unlock first)
   locked.sort((a, b) => b.progress.compareTo(a.progress));
 
@@ -90,8 +91,11 @@ class ProfilePage extends StatelessWidget {
 
     // Achievements preview
     final allAchievements = achievementProvider.achievements;
-    final unlockedCount = allAchievements.where((a) => a.isUnlocked).length;
-    final totalCount = allAchievements.length;
+    final visibleAchievements = allAchievements
+        .where((a) => !a.isMasked)
+        .toList();
+    final unlockedCount = visibleAchievements.where((a) => a.isUnlocked).length;
+    final totalCount = visibleAchievements.length;
     final previewAchievements = selectPreviewAchievements(allAchievements);
 
     return Scaffold(

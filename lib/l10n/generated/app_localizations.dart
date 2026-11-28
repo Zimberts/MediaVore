@@ -2186,6 +2186,12 @@ abstract class AppLocalizations {
   /// **'All levels completed'**
   String get achievementsAllLevelsCompleted;
 
+  /// Placeholder text shown for a hidden achievement before it is unlocked
+  ///
+  /// In en, this message translates to:
+  /// **'???'**
+  String get achievementsHiddenMask;
+
   /// No description provided for @achievementLevelUnlocked.
   ///
   /// In en, this message translates to:

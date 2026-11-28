@@ -762,6 +762,10 @@
     }
   },
   "achievementsAllLevelsCompleted": "All levels completed",
+  "achievementsHiddenMask": "???",
+  "@achievementsHiddenMask": {
+    "description": "Placeholder text shown for a hidden achievement before it is unlocked"
+  },
   "achievementLevelUnlocked": "Level {level} Unlocked!",
   "@achievementLevelUnlocked": {
     "placeholders": {

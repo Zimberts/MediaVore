@@ -373,5 +373,43 @@ void main() {
       expect(starter.groupTitleFor('fr'), 'Films');
       expect(starter.groupTitleFor('xx'), 'Movies');
     });
+
+    test('should parse hidden flag from definitions', () async {
+      when(() => mockDataSource.getAllSeenItems()).thenAnswer((_) async => []);
+      final repo = AchievementRepositoryImpl(
+        isar,
+        mockDataSource,
+        definitionsLoader: _TestDefinitionsLoader(
+          () async => [
+            {
+              'id': 'visible_one',
+              'title': 'Visible',
+              'description': 'Visible desc',
+              'iconPath': 'assets/achievements/v.png',
+              'type': 'count',
+              'params': {'mediaType': 'movie', 'target': 1},
+            },
+            {
+              'id': 'secret_one',
+              'title': 'Secret',
+              'description': 'Secret desc',
+              'iconPath': 'assets/achievements/s.png',
+              'type': 'count',
+              'hidden': true,
+              'params': {'mediaType': 'movie', 'target': 1},
+            },
+          ],
+        ),
+      );
+
+      final list = await repo.getAchievements();
+      final visible = list.firstWhere((a) => a.id == 'visible_one');
+      final secret = list.firstWhere((a) => a.id == 'secret_one');
+
+      expect(visible.isHidden, isFalse);
+      expect(visible.isMasked, isFalse);
+      expect(secret.isHidden, isTrue);
+      expect(secret.isMasked, isTrue);
+    });
   });
 }

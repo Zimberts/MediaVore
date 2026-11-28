@@ -1259,6 +1259,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementsAllLevelsCompleted => 'All levels completed';
 
   @override
+  String get achievementsHiddenMask => '???';
+
+  @override
   String achievementLevelUnlocked(int level) {
     return 'Level $level Unlocked!';
   }

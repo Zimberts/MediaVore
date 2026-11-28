@@ -185,11 +185,15 @@ class _AchievementsPageState extends State<AchievementsPage> {
     final provider = context.watch<AchievementProvider>();
     final families = provider.families;
 
-    final unlockedCount = provider.achievements
-        .where((a) => a.isUnlocked)
+    final visibleAchievements = provider.achievements
+        .where((a) => !a.isMasked)
+        .toList();
+    final unlockedCount = visibleAchievements.where((a) => a.isUnlocked).length;
+    final totalCount = visibleAchievements.length;
+    final visibleFamilies = families.where((f) => !f.isMasked).toList();
+    final completedFamilies = visibleFamilies
+        .where((f) => f.isCompleted)
         .length;
-    final totalCount = provider.achievements.length;
-    final completedFamilies = families.where((f) => f.isCompleted).length;
 
     final listItems = _buildListItems(families);
 
@@ -203,7 +207,7 @@ class _AchievementsPageState extends State<AchievementsPage> {
                   unlockedCount: unlockedCount,
                   totalCount: totalCount,
                   completedFamilies: completedFamilies,
-                  totalFamilies: families.length,
+                  totalFamilies: visibleFamilies.length,
                 ),
                 Expanded(
                   child: ScrollablePositionedList.builder(
@@ -342,15 +346,21 @@ class _FamilyCard extends StatelessWidget {
     final current = family.current;
     final next = family.next;
     final isUnlocked = current.isUnlocked;
+    final isMasked = family.isMasked;
     final languageCode = context.l10n.localeName;
     final catColor = categoryColor(context, family.category);
 
-    final title = (family.isTiered && isUnlocked)
+    final title = isMasked
+        ? context.l10n.achievementsHiddenMask
+        : (family.isTiered && isUnlocked)
         ? context.l10n.achievementsLevelTitle(
             family.highestUnlocked?.tier ?? 1,
             family.titleFor(languageCode),
           )
         : family.titleFor(languageCode);
+    final description = isMasked
+        ? context.l10n.achievementsHiddenMask
+        : current.descriptionFor(languageCode);
 
     return AnimatedContainer(
       duration: const Duration(seconds: 1),
@@ -373,6 +383,7 @@ class _FamilyCard extends StatelessWidget {
                 _AchievementBadge(
                   isUnlocked: isUnlocked,
                   isCompleted: family.isCompleted,
+                  isMasked: isMasked,
                   categoryColor: catColor,
                 ),
                 const SizedBox(width: 16),
@@ -392,7 +403,7 @@ class _FamilyCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (family.isTiered) ...[
+                          if (family.isTiered && !isMasked) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -417,15 +428,15 @@ class _FamilyCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        current.descriptionFor(languageCode),
-                        style: TextStyle(color: colors.text2),
-                      ),
-                      if (family.isTiered) ...[
+                      Text(description, style: TextStyle(color: colors.text2)),
+                      if (family.isTiered && !isMasked) ...[
                         const SizedBox(height: 8),
                         _TierDots(family: family, color: catColor),
                       ],
-                      if (next != null && next.progress > 0) ...[
+                      if (!isMasked &&
+                          next != null &&
+                          next.progress > 0 &&
+                          !next.isMasked) ...[
                         const SizedBox(height: 8),
                         _ProgressBar(achievement: next, color: catColor),
                         const SizedBox(height: 4),
@@ -494,7 +505,9 @@ class _FamilyCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                family.titleFor(context.l10n.localeName),
+                family.isMasked
+                    ? context.l10n.achievementsHiddenMask
+                    : family.titleFor(context.l10n.localeName),
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -528,6 +541,7 @@ class _TierTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final isUnlocked = achievement.isUnlocked;
+    final isMasked = achievement.isMasked;
     final languageCode = context.l10n.localeName;
     final title = achievement.titleFor(languageCode);
 
@@ -535,11 +549,14 @@ class _TierTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: _AchievementBadge(
         isUnlocked: isUnlocked,
+        isMasked: isMasked,
         categoryColor: categoryColor,
         size: 44,
       ),
       title: Text(
-        achievement.tier != null
+        isMasked
+            ? context.l10n.achievementsHiddenMask
+            : achievement.tier != null
             ? context.l10n.achievementsLevelTitle(achievement.tier!, title)
             : title,
         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -547,7 +564,11 @@ class _TierTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(achievement.descriptionFor(languageCode)),
+          Text(
+            isMasked
+                ? context.l10n.achievementsHiddenMask
+                : achievement.descriptionFor(languageCode),
+          ),
           const SizedBox(height: 4),
           if (isUnlocked && achievement.unlockedAt != null)
             Text(
@@ -560,7 +581,7 @@ class _TierTile extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             )
-          else if (isNextGoal) ...[
+          else if (isNextGoal && !isMasked) ...[
             _ProgressBar(achievement: achievement, color: categoryColor),
             const SizedBox(height: 4),
             if (achievement.progressLabel != null &&
@@ -582,12 +603,14 @@ class _TierTile extends StatelessWidget {
 class _AchievementBadge extends StatelessWidget {
   final bool isUnlocked;
   final bool isCompleted;
+  final bool isMasked;
   final double size;
   final Color? categoryColor;
 
   const _AchievementBadge({
     required this.isUnlocked,
     this.isCompleted = false,
+    this.isMasked = false,
     this.size = 64,
     this.categoryColor,
   });
@@ -606,7 +629,9 @@ class _AchievementBadge extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Icon(
-          isCompleted
+          isMasked
+              ? Icons.help_outline
+              : isCompleted
               ? Icons.emoji_events
               : isUnlocked
               ? Icons.stars

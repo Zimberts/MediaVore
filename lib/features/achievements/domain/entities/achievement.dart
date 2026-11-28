@@ -26,6 +26,9 @@ class Achievement extends Equatable {
   /// Category of the family (movies, tv, books, discovery, together, regularity).
   final String? category;
 
+  /// Whether this achievement is hidden (secret) until unlocked.
+  final bool isHidden;
+
   const Achievement({
     required this.id,
     required this.title,
@@ -41,7 +44,11 @@ class Achievement extends Equatable {
     this.tier,
     this.groupTitle,
     this.category,
+    this.isHidden = false,
   });
+
+  /// Whether this achievement's details and progress should be masked in UI.
+  bool get isMasked => isHidden && !isUnlocked;
 
   /// [title] in [languageCode], falling back to the English definition.
   String titleFor(String languageCode) =>
@@ -71,5 +78,6 @@ class Achievement extends Equatable {
     tier,
     groupTitle,
     category,
+    isHidden,
   ];
 }

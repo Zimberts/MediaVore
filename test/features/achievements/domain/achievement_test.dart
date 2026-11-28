@@ -30,5 +30,37 @@ void main() {
 
       expect(a1, equals(a2));
     });
+
+    test('should mask only when hidden and locked', () {
+      const visibleLocked = Achievement(
+        id: '1',
+        title: 'Title',
+        description: 'Desc',
+        iconPath: 'icon',
+      );
+      const hiddenLocked = Achievement(
+        id: '2',
+        title: 'Secret',
+        description: 'Secret desc',
+        iconPath: 'icon',
+        isHidden: true,
+      );
+      const hiddenUnlocked = Achievement(
+        id: '3',
+        title: 'Secret',
+        description: 'Secret desc',
+        iconPath: 'icon',
+        isHidden: true,
+        isUnlocked: true,
+      );
+
+      expect(visibleLocked.isHidden, isFalse);
+      expect(visibleLocked.isMasked, isFalse);
+      expect(hiddenLocked.isHidden, isTrue);
+      expect(hiddenLocked.isMasked, isTrue);
+      expect(hiddenUnlocked.isHidden, isTrue);
+      expect(hiddenUnlocked.isMasked, isFalse);
+      expect(hiddenLocked, isNot(equals(visibleLocked)));
+    });
   });
 }
