@@ -2860,4 +2860,64 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'Ce produit utilise l\'API TMDB mais n\'est ni approuvé ni certifié par TMDB.';
+
+  @override
+  String get onboardingSkip => 'Passer';
+
+  @override
+  String get onboardingStart => 'Commencer';
+
+  @override
+  String get onboardingNext => 'Suivant';
+
+  @override
+  String get onboardingDone => 'Terminer';
+
+  @override
+  String get onboardingWelcomeTitle => 'Bienvenue dans MediaVore';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Suivez les films et séries que vous regardez, organisez vos listes et recevez des alertes de sortie, sans compte. Toutes vos données restent sur votre appareil.';
+
+  @override
+  String get onboardingTourDiscoverTitle => 'Accueil & Découvrir';
+
+  @override
+  String get onboardingTourDiscoverBody =>
+      'Retrouvez quoi regarder ce soir et les prochaines sorties dans Accueil, ou recherchez et explorez les tendances dans Découvrir.';
+
+  @override
+  String get onboardingTourLibraryTitle => 'Bibliothèque & Ensemble';
+
+  @override
+  String get onboardingTourLibraryBody =>
+      'Organisez votre liste à voir, vos listes personnalisées et votre historique dans Bibliothèque, ou votez à plusieurs pour choisir le titre du soir.';
+
+  @override
+  String get onboardingTourMeTitle => 'Moi & vos données';
+
+  @override
+  String get onboardingTourMeBody =>
+      'Consultez vos statistiques et succès, sauvegardez vos données et gérez votre clé d\'API TMDB à tout moment dans Moi › Paramètres.';
+
+  @override
+  String get onboardingImportTitle => 'Vous avez une sauvegarde MediaVore ?';
+
+  @override
+  String get onboardingImportBody =>
+      'Si vous avez exporté vos listes, votre historique ou vos alertes depuis un autre appareil, vous pouvez les restaurer maintenant.';
+
+  @override
+  String get onboardingImportButton => 'Importer une sauvegarde';
+
+  @override
+  String get onboardingImportSkip => 'Non merci';
+
+  @override
+  String get settingsReviewOnboarding => 'Revoir l\'introduction';
+
+  @override
+  String get settingsReviewOnboardingSubtitle =>
+      'Revoir l\'écran de bienvenue et la visite guidée';
 }

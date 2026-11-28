@@ -19,6 +19,7 @@ class SettingsProvider with ChangeNotifier {
   static const String previousEpisodesKey = 'previousEpisodes';
   static const String watchProvidersCountryKey = 'watchProvidersCountry';
   static const String swipeModeEnabledKey = 'swipeModeEnabled';
+  static const String onboardingCompletedKey = 'onboardingCompleted';
 
   final SharedPreferences _prefs;
   final TmdbCredentialStore _credentials;
@@ -46,6 +47,7 @@ class SettingsProvider with ChangeNotifier {
   AppPalette _darkPalette = AppPalette.defaultDark;
   ThemeMode _themeMode = ThemeMode.system;
   String _tmdbApiKey = '';
+  bool _onboardingCompleted = false;
 
   DisplayMode get displayMode => _displayMode;
   double get gridSize => _gridSize;
@@ -59,6 +61,7 @@ class SettingsProvider with ChangeNotifier {
 
   ThemeMode get themeMode => _themeMode;
   String get tmdbApiKey => _tmdbApiKey;
+  bool get onboardingCompleted => _onboardingCompleted;
 
   /// Language picked in Settings, or `null` to follow the device.
   AppLanguage? get appLanguageOverride => _localeService?.override;
@@ -125,12 +128,28 @@ class SettingsProvider with ChangeNotifier {
 
     _tmdbApiKey = _credentials.credential;
 
+    final storedOnboarding = _prefs.getBool(onboardingCompletedKey);
+    // Existing users (upgrading from <= 1.4) already have a TMDB key:
+    // treat onboarding as completed so it is not shown on update.
+    _onboardingCompleted = storedOnboarding ?? _tmdbApiKey.isNotEmpty;
+
     notifyListeners();
   }
 
   Future<void> setTmdbApiKey(String apiKey) async {
+    if (_onboardingCompleted &&
+        _prefs.getBool(onboardingCompletedKey) == null) {
+      await _prefs.setBool(onboardingCompletedKey, true);
+    }
     await _credentials.save(apiKey);
     _tmdbApiKey = _credentials.credential;
+    notifyListeners();
+  }
+
+  /// Persists whether the first-launch onboarding has been completed or skipped.
+  Future<void> setOnboardingCompleted(bool completed) async {
+    _onboardingCompleted = completed;
+    await _prefs.setBool(onboardingCompletedKey, completed);
     notifyListeners();
   }
 

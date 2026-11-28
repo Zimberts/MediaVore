@@ -2840,4 +2840,64 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsAboutTmdb =>
       'This product uses the TMDB API but is not endorsed or certified by TMDB.';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingStart => 'Get started';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingDone => 'Done';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to MediaVore';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Track the movies and series you watch, organize your lists, and get release alerts — without an account. All your data stays on your device.';
+
+  @override
+  String get onboardingTourDiscoverTitle => 'Home & Discover';
+
+  @override
+  String get onboardingTourDiscoverBody =>
+      'See what to watch tonight and upcoming releases on Home, or search and explore trending titles in Discover.';
+
+  @override
+  String get onboardingTourLibraryTitle => 'Library & Together';
+
+  @override
+  String get onboardingTourLibraryBody =>
+      'Organize your watchlist, custom lists, and watch history in Library, or vote together to pick tonight\'s title.';
+
+  @override
+  String get onboardingTourMeTitle => 'Me & Your Data';
+
+  @override
+  String get onboardingTourMeBody =>
+      'View your stats and achievements, back up your data, and manage your TMDB API key anytime in Me › Settings.';
+
+  @override
+  String get onboardingImportTitle => 'Have a MediaVore backup?';
+
+  @override
+  String get onboardingImportBody =>
+      'If you exported your lists, watch history, or alerts from another device, you can restore them now.';
+
+  @override
+  String get onboardingImportButton => 'Import a backup';
+
+  @override
+  String get onboardingImportSkip => 'No thanks';
+
+  @override
+  String get settingsReviewOnboarding => 'Review introduction';
+
+  @override
+  String get settingsReviewOnboardingSubtitle =>
+      'Replay the welcome and app tour';
 }

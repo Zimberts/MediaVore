@@ -4339,6 +4339,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This product uses the TMDB API but is not endorsed or certified by TMDB.'**
   String get settingsAboutTmdb;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingStart;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get onboardingDone;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to MediaVore'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Track the movies and series you watch, organize your lists, and get release alerts — without an account. All your data stays on your device.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingTourDiscoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home & Discover'**
+  String get onboardingTourDiscoverTitle;
+
+  /// No description provided for @onboardingTourDiscoverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'See what to watch tonight and upcoming releases on Home, or search and explore trending titles in Discover.'**
+  String get onboardingTourDiscoverBody;
+
+  /// No description provided for @onboardingTourLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Library & Together'**
+  String get onboardingTourLibraryTitle;
+
+  /// No description provided for @onboardingTourLibraryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize your watchlist, custom lists, and watch history in Library, or vote together to pick tonight\'s title.'**
+  String get onboardingTourLibraryBody;
+
+  /// No description provided for @onboardingTourMeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Me & Your Data'**
+  String get onboardingTourMeTitle;
+
+  /// No description provided for @onboardingTourMeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'View your stats and achievements, back up your data, and manage your TMDB API key anytime in Me › Settings.'**
+  String get onboardingTourMeBody;
+
+  /// No description provided for @onboardingImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a MediaVore backup?'**
+  String get onboardingImportTitle;
+
+  /// No description provided for @onboardingImportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you exported your lists, watch history, or alerts from another device, you can restore them now.'**
+  String get onboardingImportBody;
+
+  /// No description provided for @onboardingImportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a backup'**
+  String get onboardingImportButton;
+
+  /// No description provided for @onboardingImportSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get onboardingImportSkip;
+
+  /// No description provided for @settingsReviewOnboarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Review introduction'**
+  String get settingsReviewOnboarding;
+
+  /// No description provided for @settingsReviewOnboardingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay the welcome and app tour'**
+  String get settingsReviewOnboardingSubtitle;
 }
 
 class _AppLocalizationsDelegate

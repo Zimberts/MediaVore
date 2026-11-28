@@ -473,4 +473,81 @@ void main() {
       },
     );
   });
+
+  group('SettingsProvider - Onboarding', () {
+    test(
+      'should default onboardingCompleted to false when no key is stored',
+      () {
+        expect(provider.onboardingCompleted, isFalse);
+      },
+    );
+
+    test(
+      'should treat onboardingCompleted as true when a TMDB key is already stored',
+      () {
+        final newProvider = SettingsProvider(
+          mockPrefs,
+          FakeTmdbCredentialStore('existing-key'),
+        );
+        expect(newProvider.onboardingCompleted, isTrue);
+      },
+    );
+
+    test('should load onboardingCompleted from SharedPreferences', () {
+      when(
+        () => mockPrefs.getBool(SettingsProvider.onboardingCompletedKey),
+      ).thenReturn(true);
+
+      final newProvider = SettingsProvider(
+        mockPrefs,
+        FakeTmdbCredentialStore(),
+      );
+      expect(newProvider.onboardingCompleted, isTrue);
+    });
+
+    test(
+      'should persist onboardingCompleted via setOnboardingCompleted',
+      () async {
+        when(
+          () =>
+              mockPrefs.setBool(SettingsProvider.onboardingCompletedKey, true),
+        ).thenAnswer((_) async => true);
+
+        var notified = false;
+        provider.addListener(() => notified = true);
+
+        await provider.setOnboardingCompleted(true);
+
+        expect(provider.onboardingCompleted, isTrue);
+        expect(notified, isTrue);
+        verify(
+          () =>
+              mockPrefs.setBool(SettingsProvider.onboardingCompletedKey, true),
+        ).called(1);
+      },
+    );
+
+    test(
+      'should persist onboardingCompleted when an existing user removes their key',
+      () async {
+        when(
+          () =>
+              mockPrefs.setBool(SettingsProvider.onboardingCompletedKey, true),
+        ).thenAnswer((_) async => true);
+
+        final p = SettingsProvider(
+          mockPrefs,
+          FakeTmdbCredentialStore('existing-key'),
+        );
+        expect(p.onboardingCompleted, isTrue);
+
+        await p.setTmdbApiKey('');
+
+        verify(
+          () =>
+              mockPrefs.setBool(SettingsProvider.onboardingCompletedKey, true),
+        ).called(1);
+      },
+    );
+  });
 }

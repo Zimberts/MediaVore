@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
 import 'package:mediavore/core/services/background_task_service.dart';
+import 'package:mediavore/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 
 import 'harness.dart';
@@ -35,11 +36,11 @@ void main() {
       }
     });
 
-    testApp('should open the credential screen when no key is stored', (
+    testApp('should open the onboarding screen when no key is stored', (
       tester,
       app,
     ) async {
-      expect(find.byType(TmdbCredentialPage), findsOneWidget);
+      expect(find.byType(OnboardingPage), findsOneWidget);
       expect(app.tmdb.requestCount, 0);
     }, seed: const AppSeed(tmdbCredential: null));
   });

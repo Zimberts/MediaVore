@@ -31,12 +31,22 @@ Future<bool> _openExternally(Uri uri) async {
 class TmdbCredentialPage extends StatefulWidget {
   final bool onboarding;
 
+  /// When `true`, renders without its own [Scaffold] and [AppBar] so it can be
+  /// embedded as a step inside [OnboardingPage].
+  final bool embedded;
+
+  /// Called when the user saves a credential (`true`) or skips (`false`).
+  /// When `null`, [Navigator.pop] is used instead.
+  final ValueChanged<bool>? onDone;
+
   /// Overridable for tests; defaults to `url_launcher`.
   final UrlOpener openUrl;
 
   const TmdbCredentialPage({
     super.key,
     this.onboarding = false,
+    this.embedded = false,
+    this.onDone,
     this.openUrl = _openExternally,
   });
 
@@ -122,10 +132,16 @@ class _TmdbCredentialPageState extends State<TmdbCredentialPage> {
     final navigator = Navigator.of(context);
     final l10n = context.l10n;
     await context.read<SettingsProvider>().setTmdbApiKey(credential);
-    if (verified) {
+    if (verified && !widget.embedded) {
       messenger.showSnackBar(SnackBar(content: Text(l10n.tmdbCredentialSaved)));
     }
-    if (mounted) navigator.pop(true);
+    if (!mounted) return;
+    final onDone = widget.onDone;
+    if (onDone != null) {
+      onDone(true);
+    } else {
+      navigator.pop(true);
+    }
   }
 
   /// Message shown under the field for [_checkError].
@@ -154,6 +170,121 @@ class _TmdbCredentialPageState extends State<TmdbCredentialPage> {
       (s) => s.tmdbApiKey.isNotEmpty,
     );
 
+    final body = SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          if (widget.embedded) ...[
+            Text(
+              l10n.tmdbOnboardingTitle,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Text(l10n.tmdbOnboardingWhy, style: theme.textTheme.bodyLarge),
+          const SizedBox(height: 24),
+          Text(l10n.tmdbOnboardingStepGetKey),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              key: const Key('tmdb_open_api_page'),
+              icon: const Icon(Icons.open_in_new),
+              label: Text(l10n.tmdbOnboardingOpenTmdb),
+              onPressed: _openTmdb,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(l10n.tmdbOnboardingStepPaste),
+          const SizedBox(height: 12),
+          TextField(
+            key: const Key('tmdb_credential_field'),
+            controller: _controller,
+            obscureText: _obscure,
+            autocorrect: false,
+            enableSuggestions: false,
+            enabled: !_verifying,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _verifyAndSave(),
+            decoration: InputDecoration(
+              hintText: l10n.tmdbCredentialHint,
+              border: const OutlineInputBorder(),
+              errorText: _errorText(l10n),
+              errorMaxLines: 3,
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    key: const Key('tmdb_credential_visibility'),
+                    tooltip: _obscure
+                        ? l10n.tmdbCredentialShow
+                        : l10n.tmdbCredentialHide,
+                    icon: Icon(
+                      _obscure ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                  ),
+                  IconButton(
+                    key: const Key('tmdb_credential_paste'),
+                    tooltip: l10n.tmdbCredentialPaste,
+                    icon: const Icon(Icons.content_paste),
+                    onPressed: _verifying ? null : _paste,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            key: const Key('tmdb_credential_verify'),
+            icon: _verifying
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check),
+            label: Text(
+              _verifying
+                  ? l10n.tmdbCredentialVerifying
+                  : l10n.tmdbCredentialVerifyAndSave,
+            ),
+            onPressed: hasText && !_verifying ? _verifyAndSave : null,
+          ),
+          if (_checkInconclusive && hasText)
+            TextButton(
+              key: const Key('tmdb_credential_save_anyway'),
+              onPressed: () => _save(_controller.text.trim(), verified: false),
+              child: Text(l10n.tmdbCredentialSaveAnyway),
+            ),
+          if (widget.onboarding)
+            TextButton(
+              key: const Key('tmdb_credential_skip'),
+              onPressed: _verifying
+                  ? null
+                  : () {
+                      final onDone = widget.onDone;
+                      if (onDone != null) {
+                        onDone(false);
+                      } else {
+                        Navigator.of(context).pop(false);
+                      }
+                    },
+              child: Text(l10n.tmdbCredentialSkip),
+            )
+          else if (hasStoredKey)
+            TextButton(
+              key: const Key('tmdb_credential_remove'),
+              onPressed: _verifying ? null : () => _save('', verified: false),
+              child: Text(l10n.tmdbCredentialRemove),
+            ),
+        ],
+      ),
+    );
+
+    if (widget.embedded) return body;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -162,103 +293,7 @@ class _TmdbCredentialPageState extends State<TmdbCredentialPage> {
               : l10n.settingsTmdbCredential,
         ),
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(l10n.tmdbOnboardingWhy, style: theme.textTheme.bodyLarge),
-            const SizedBox(height: 24),
-            Text(l10n.tmdbOnboardingStepGetKey),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                key: const Key('tmdb_open_api_page'),
-                icon: const Icon(Icons.open_in_new),
-                label: Text(l10n.tmdbOnboardingOpenTmdb),
-                onPressed: _openTmdb,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(l10n.tmdbOnboardingStepPaste),
-            const SizedBox(height: 12),
-            TextField(
-              key: const Key('tmdb_credential_field'),
-              controller: _controller,
-              obscureText: _obscure,
-              autocorrect: false,
-              enableSuggestions: false,
-              enabled: !_verifying,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _verifyAndSave(),
-              decoration: InputDecoration(
-                hintText: l10n.tmdbCredentialHint,
-                border: const OutlineInputBorder(),
-                errorText: _errorText(l10n),
-                errorMaxLines: 3,
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      key: const Key('tmdb_credential_visibility'),
-                      tooltip: _obscure
-                          ? l10n.tmdbCredentialShow
-                          : l10n.tmdbCredentialHide,
-                      icon: Icon(
-                        _obscure ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                    IconButton(
-                      key: const Key('tmdb_credential_paste'),
-                      tooltip: l10n.tmdbCredentialPaste,
-                      icon: const Icon(Icons.content_paste),
-                      onPressed: _verifying ? null : _paste,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              key: const Key('tmdb_credential_verify'),
-              icon: _verifying
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check),
-              label: Text(
-                _verifying
-                    ? l10n.tmdbCredentialVerifying
-                    : l10n.tmdbCredentialVerifyAndSave,
-              ),
-              onPressed: hasText && !_verifying ? _verifyAndSave : null,
-            ),
-            if (_checkInconclusive && hasText)
-              TextButton(
-                key: const Key('tmdb_credential_save_anyway'),
-                onPressed: () =>
-                    _save(_controller.text.trim(), verified: false),
-                child: Text(l10n.tmdbCredentialSaveAnyway),
-              ),
-            if (widget.onboarding)
-              TextButton(
-                key: const Key('tmdb_credential_skip'),
-                onPressed: _verifying
-                    ? null
-                    : () => Navigator.of(context).pop(false),
-                child: Text(l10n.tmdbCredentialSkip),
-              )
-            else if (hasStoredKey)
-              TextButton(
-                key: const Key('tmdb_credential_remove'),
-                onPressed: _verifying ? null : () => _save('', verified: false),
-                child: Text(l10n.tmdbCredentialRemove),
-              ),
-          ],
-        ),
-      ),
+      body: body,
     );
   }
 }

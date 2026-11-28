@@ -5,15 +5,14 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/utils/export_file_name.dart';
-import 'package:mediavore/core/utils/export_import_serializer.dart';
 import 'package:mediavore/features/achievements/presentation/providers/achievement_provider.dart';
 import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mediavore/features/settings/presentation/utils/data_import_flow.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -31,10 +30,10 @@ class DataCacheSettingsPage extends StatefulWidget {
   static const Key importKey = Key('data_import_all');
 
   /// "Replace" choice of the import preview.
-  static const Key importReplaceKey = Key('data_import_replace');
+  static const Key importReplaceKey = importReplaceButtonKey;
 
   /// Confirmation of the replacing import.
-  static const Key replaceConfirmKey = Key('data_import_replace_confirm');
+  static const Key replaceConfirmKey = importReplaceConfirmButtonKey;
 
   @override
   State<DataCacheSettingsPage> createState() => _DataCacheSettingsPageState();
@@ -422,167 +421,17 @@ class _DataCacheSettingsPageState extends State<DataCacheSettingsPage> {
   Future<void> _importAllDataWithPreview(
     BuildContext context,
     CacheAdminActions provider,
-  ) async {
-    final picked = await FilePicker.pickFile(
+  ) {
+    return importBackupWithPreview(
+      context,
+      provider,
       initialDirectory: Platform.isAndroid ? _defaultPath : null,
-    );
-
-    if (!context.mounted) return;
-
-    if (picked != null) {
-      // file_picker >= 12 may return a content:// URI (no local path) on
-      // Android: check the name and read through the PlatformFile.
-      final name = picked.name.toLowerCase();
-      if (!name.endsWith('.mdv') && !name.endsWith('.zip')) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.dataInvalidFile)));
-        return;
-      }
-
-      final List<int> bytes;
-      final ExportEnvelope envelope;
-      try {
-        setState(() => _isReadingBackup = true);
-        bytes = await picked.readAsBytes();
-        if (!context.mounted) return;
-        // Use serializer to normalize and validate on background isolate
-        envelope = await ExportEnvelope.fromZipBytesAsync(bytes);
-      } on ParsingException catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.dataImportFailedReason(e.message)),
-            ),
-          );
-        }
-        return;
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.dataImportFailed)),
-          );
-        }
-        return;
-      } finally {
+      onReadingChanged: (reading) {
         if (mounted) {
-          setState(() => _isReadingBackup = false);
+          setState(() => _isReadingBackup = reading);
         }
-      }
-
-      if (!context.mounted) return;
-
-      final seenCount = envelope.seen.length;
-      final likesCount = envelope.likes.length;
-      final notCount = envelope.notifications.length;
-      final listsCount = envelope.lists.length;
-      final warnings = envelope.warnings;
-      final warningsText = warnings.isEmpty
-          ? ''
-          : '\n${context.l10n.dataImportSkippedRows(warnings.length)}\n'
-                '${warnings.take(5).join('\n')}'
-                '${warnings.length > 5 ? '\n…' : ''}\n';
-
-      unawaited(
-        showDialog<void>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(context.l10n.dataImportPreviewTitle),
-            content: Text(
-              context.l10n.dataImportPreviewMessage(
-                seenCount,
-                likesCount,
-                notCount,
-                listsCount,
-                warningsText,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(context.l10n.commonCancel),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  await provider.importAllData(bytes);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(context.l10n.dataImportedAppended),
-                      ),
-                    );
-                  }
-                },
-                child: Text(context.l10n.dataAppend),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  await provider.importAllData(bytes, mode: ImportMode.merge);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.l10n.dataImportedMerged)),
-                    );
-                  }
-                },
-                child: Text(context.l10n.dataMerge),
-              ),
-              TextButton(
-                key: DataCacheSettingsPage.importReplaceKey,
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  final confirmed = await _confirmReplace(context);
-                  if (confirmed && context.mounted) {
-                    await provider.importAllData(
-                      bytes,
-                      mode: ImportMode.replace,
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(context.l10n.dataImportedReplaced),
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: Text(
-                  context.l10n.dataReplace,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<bool> _confirmReplace(BuildContext context) async {
-    final colors = context.appColors;
-    return await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(context.l10n.dataReplaceTitle),
-            content: Text(context.l10n.dataReplaceMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(context.l10n.commonCancel),
-              ),
-              TextButton(
-                key: DataCacheSettingsPage.replaceConfirmKey,
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(
-                  context.l10n.dataReplaceConfirm,
-                  style: TextStyle(color: colors.error),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+      },
+    );
   }
 
   void _confirmAction(

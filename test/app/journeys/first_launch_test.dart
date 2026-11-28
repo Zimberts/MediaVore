@@ -3,8 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mediavore/core/domain/entities/media_item.dart';
+import 'package:mediavore/core/domain/entities/seen_item.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/security/tmdb_credential_store.dart';
+import 'package:mediavore/core/utils/list_share_codec.dart';
+import 'package:mediavore/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
 import 'package:mediavore/features/search/presentation/pages/main_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
@@ -52,12 +56,11 @@ void main() {
   group('first launch journey', () {
     testApp('should save a TMDB key only once TMDB accepts it, keep it across '
         'a relaunch and invite again once removed', (tester, app) async {
-      // 1. First launch: the credential screen, then Discover's invitation.
-      expect(find.byType(TmdbCredentialPage), findsOneWidget);
-      expect(find.byKey(const Key('tmdb_credential_skip')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('tmdb_credential_skip')));
+      // 1. First launch: the onboarding screen, then Discover's invitation.
+      expect(find.byType(OnboardingPage), findsOneWidget);
+      await tester.tap(find.byKey(const Key('onboarding_skip')));
       await pumpUntilSettled(tester);
-      expect(find.byType(TmdbCredentialPage), findsNothing);
+      expect(find.byType(OnboardingPage), findsNothing);
 
       await goToTab(tester, AppTab.discover);
       expect(find.byKey(_connect), findsOneWidget);
@@ -125,19 +128,129 @@ void main() {
     }, seed: const AppSeed(tmdbCredential: null));
 
     testApp(
-      'should load Discover when a valid key is saved on the first-launch '
-      'screen',
+      'should load Discover when a valid key is saved during onboarding',
       (tester, app) async {
+        expect(find.byType(OnboardingPage), findsOneWidget);
+        await tester.tap(find.byKey(const Key('onboarding_start')));
+        await pumpUntilSettled(tester);
+
+        // Tour: 3 cards -> Next x 3 reaches TMDB step.
+        for (var i = 0; i < 3; i++) {
+          await tester.tap(find.byKey(const Key('onboarding_tour_next')));
+          await pumpUntilSettled(tester);
+        }
+
         expect(find.byType(TmdbCredentialPage), findsOneWidget);
         await _submit(tester, testTmdbCredential);
         expect(app.tmdb.countFor('authentication'), 1);
         expect(await _storedCredential(), testTmdbCredential);
-        expect(find.byType(TmdbCredentialPage), findsNothing);
+
+        // Optional import step: skip -> onboarding completes.
+        await tester.tap(find.byKey(const Key('onboarding_import_skip')));
+        await pumpUntilSettled(tester);
+        expect(find.byType(OnboardingPage), findsNothing);
 
         await goToTab(tester, AppTab.discover);
         _expectTrendingShown(tester);
       },
       seed: const AppSeed(tmdbCredential: null),
+    );
+
+    testApp(
+      'should not show onboarding again after skipping, even without a key',
+      (tester, app) async {
+        expect(find.byType(OnboardingPage), findsOneWidget);
+        await tester.tap(find.byKey(const Key('onboarding_skip')));
+        await pumpUntilSettled(tester);
+        expect(find.byType(OnboardingPage), findsNothing);
+
+        await restartTestApp(tester);
+        expect(find.byType(OnboardingPage), findsNothing);
+        await goToTab(tester, AppTab.discover);
+        expect(find.byKey(_connect), findsOneWidget);
+      },
+      seed: const AppSeed(tmdbCredential: null),
+    );
+
+    testApp(
+      'should skip onboarding for existing users with local data',
+      (tester, app) async {
+        expect(find.byType(OnboardingPage), findsNothing);
+      },
+      seed: AppSeed(
+        tmdbCredential: null,
+        seen: [
+          SeenItem(
+            tmdbId: 550,
+            type: MediaType.movie,
+            title: 'Fight Club',
+            seenDate: DateTime(2025),
+          ),
+        ],
+      ),
+    );
+
+    testApp('should defer an incoming deep link until onboarding finishes', (
+      tester,
+      app,
+    ) async {
+      expect(find.byType(OnboardingPage), findsOneWidget);
+
+      final encoded = ListShareCodec.encodeV2(const [
+        SharedMediaEntry(550, MediaType.movie),
+      ]);
+      final uri = Uri.parse('mediavore://share?v=2&name=Weekend&d=$encoded');
+      await app.openLink(tester, uri);
+
+      // Deep link sheet must not appear behind onboarding.
+      expect(find.text('Weekend'), findsNothing);
+      expect(find.byType(OnboardingPage), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('onboarding_skip')));
+      await pumpUntilSettled(tester);
+
+      expect(find.byType(OnboardingPage), findsNothing);
+      expect(find.text('Weekend'), findsOneWidget);
+    }, seed: const AppSeed(tmdbCredential: null));
+
+    testApp(
+      'should replay Welcome and Tour from Settings without touching the key',
+      (tester, app) async {
+        await goToTab(tester, AppTab.me);
+        final settingsTile = find.byKey(const Key('profile_settings'));
+        await tester.scrollUntilVisible(
+          settingsTile,
+          200,
+          scrollable: find
+              .descendant(
+                of: find.byType(ProfilePage),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
+        await tester.tap(settingsTile);
+        await pumpUntilSettled(tester);
+
+        final reviewTile = find.byKey(const Key('settings_review_onboarding'));
+        await tester.scrollUntilVisible(
+          reviewTile,
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.tap(reviewTile);
+        await pumpUntilSettled(tester);
+
+        expect(find.byType(OnboardingPage), findsOneWidget);
+        await tester.tap(find.byKey(const Key('onboarding_start')));
+        await pumpUntilSettled(tester);
+        for (var i = 0; i < 3; i++) {
+          await tester.tap(find.byKey(const Key('onboarding_tour_next')));
+          await pumpUntilSettled(tester);
+        }
+
+        expect(find.byType(OnboardingPage), findsNothing);
+        expect(await _storedCredential(), testTmdbCredential);
+      },
     );
   });
 }

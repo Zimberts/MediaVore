@@ -3,6 +3,9 @@ import 'dart:collection';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
+import 'package:isar_community/isar.dart';
+import 'package:mediavore/core/database/app_database.dart';
+import 'package:mediavore/core/di/injection.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
 import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/navigation/app_tab_bar.dart';
@@ -14,11 +17,12 @@ import 'package:mediavore/features/achievements/presentation/providers/achieveme
 import 'package:mediavore/features/home/presentation/pages/home_page.dart';
 import 'package:mediavore/features/library/presentation/pages/library_page.dart';
 import 'package:mediavore/features/media_details/presentation/pages/media_detail_page.dart';
+import 'package:mediavore/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mediavore/features/profile/presentation/pages/profile_page.dart';
+import 'package:mediavore/features/search/domain/repositories/media_repository.dart';
 import 'package:mediavore/features/search/presentation/pages/search_page.dart';
 import 'package:mediavore/features/search/presentation/providers/search_provider.dart';
 import 'package:mediavore/features/search/presentation/widgets/incoming_list_sheet.dart';
-import 'package:mediavore/features/settings/presentation/pages/tmdb_credential_page.dart';
 import 'package:mediavore/features/settings/presentation/providers/settings_provider.dart';
 import 'package:mediavore/features/together/presentation/pages/together_page.dart';
 import 'package:mediavore/features/together/presentation/providers/together_session_provider.dart';
@@ -47,6 +51,9 @@ class _MainPageState extends State<MainPage> {
   /// Completes when the banner on screen goes away; the queue waits on it.
   Completer<void>? _notificationDone;
 
+  bool _isOnboardingActive = false;
+  Uri? _pendingDeepLink;
+
   List<AppTab> get _tabs => widget.tabs ?? AppTab.visibleTabs;
 
   /// Provisional content of each tab; every epic then replaces its own.
@@ -74,10 +81,20 @@ class _MainPageState extends State<MainPage> {
         _queueAchievementNotification,
       );
 
-      // Check if TMDB API key is missing
+      // Check if first-launch onboarding should be shown.
       final settings = context.read<SettingsProvider>();
-      if (settings.tmdbApiKey.isEmpty) {
-        _showCredentialOnboarding();
+      if (!settings.onboardingCompleted) {
+        if (locator.isRegistered<Isar>()) {
+          if (hasExistingUserDataInIsar(locator<Isar>())) {
+            unawaited(settings.setOnboardingCompleted(true));
+          } else {
+            _isOnboardingActive = true;
+            unawaited(_showOnboarding());
+          }
+        } else {
+          _isOnboardingActive = true;
+          unawaited(_maybeShowOnboarding());
+        }
       }
     });
   }
@@ -165,6 +182,10 @@ class _MainPageState extends State<MainPage> {
   void _handleLink(Uri uri) {
     if (uri.path == '/share' ||
         (uri.scheme == 'mediavore' && uri.host == 'share')) {
+      if (_isOnboardingActive) {
+        _pendingDeepLink = uri;
+        return;
+      }
       final payload = ListShareCodec.decodeUri(uri);
       if (payload != null && payload.entries.isNotEmpty) {
         showIncomingListOptionsSheet(
@@ -209,22 +230,74 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  /// First-launch TMDB credential screen. Discover reloads by itself once a
-  /// key is saved (it listens to [SettingsProvider.tmdbApiKey]).
-  Future<void> _showCredentialOnboarding() async {
-    final saved = await Navigator.of(context).push<bool>(
+  /// First-launch onboarding flow (async fallback when Isar is not registered,
+  /// e.g. mocked widget tests). Skips automatically for existing users.
+  Future<void> _maybeShowOnboarding() async {
+    try {
+      final settings = context.read<SettingsProvider>();
+      final repo = context.read<SearchProvider>().repository;
+      if (await _hasExistingUserData(repo)) {
+        await settings.setOnboardingCompleted(true);
+        return;
+      }
+      if (!mounted) return;
+      await _pushOnboarding();
+    } finally {
+      _finishOnboardingWait();
+    }
+  }
+
+  /// Pushes [OnboardingPage] and shows the TMDB reminder if no key was saved.
+  Future<void> _showOnboarding() async {
+    try {
+      await _pushOnboarding();
+    } finally {
+      _finishOnboardingWait();
+    }
+  }
+
+  Future<void> _pushOnboarding() async {
+    await Navigator.of(context).push<void>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => const TmdbCredentialPage(onboarding: true),
+        builder: (_) => const OnboardingPage(),
       ),
     );
-    if (saved == true || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(context.l10n.tmdbCredentialLater),
-        duration: const Duration(seconds: 5),
-      ),
-    );
+    if (!mounted) return;
+
+    if (context.read<SettingsProvider>().tmdbApiKey.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.tmdbCredentialLater),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  void _finishOnboardingWait() {
+    _isOnboardingActive = false;
+    final pending = _pendingDeepLink;
+    _pendingDeepLink = null;
+    if (pending != null && mounted) {
+      _handleLink(pending);
+    }
+  }
+
+  Future<bool> _hasExistingUserData(MediaRepository repo) async {
+    final seen = await repo.getSeenItems();
+    if (seen.isNotEmpty) return true;
+    final lists = await repo.getAllListNames();
+    for (final name in lists) {
+      if (name != 'watchlist') return true;
+      final entries = await repo.getListEntries(name);
+      if (entries.isNotEmpty) return true;
+    }
+    final notified = await repo.getNotifiedItems();
+    if (notified.isNotEmpty) return true;
+    final liked = await repo.getLikedEntries();
+    if (liked.isNotEmpty) return true;
+    return false;
   }
 }
 
