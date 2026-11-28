@@ -4339,6 +4339,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This product uses the TMDB API but is not endorsed or certified by TMDB.'**
   String get settingsAboutTmdb;
+
+  /// No description provided for @listsMoveOrCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Move or copy to another list'**
+  String get listsMoveOrCopy;
+
+  /// No description provided for @listsMoveOrCopyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move or copy to…'**
+  String get listsMoveOrCopyTitle;
+
+  /// No description provided for @listsActionMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get listsActionMove;
+
+  /// No description provided for @listsActionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get listsActionCopy;
+
+  /// No description provided for @listsMovedNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item moved to {list}} other{{count} items moved to {list}}}'**
+  String listsMovedNotification(int count, String list);
+
+  /// No description provided for @listsCopiedNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item copied to {list}} other{{count} items copied to {list}}}'**
+  String listsCopiedNotification(int count, String list);
 }
 
 class _AppLocalizationsDelegate

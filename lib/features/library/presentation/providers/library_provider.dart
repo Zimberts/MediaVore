@@ -257,6 +257,130 @@ class LibraryProvider with ChangeNotifier implements ListPreviewSource {
     }
   }
 
+  /// Moves (or copies when [keepSource] is true) [items] from [fromList] to
+  /// [toList], preserving their order and skipping duplicates in [toList].
+  Future<void> moveItems(
+    List<MediaItem> items,
+    String fromList,
+    String toList, {
+    bool keepSource = false,
+  }) async {
+    if (items.isEmpty || fromList == toList) return;
+
+    final currentTo =
+        _listEntries[toList] ?? await repository.getListEntries(toList);
+    final currentFrom = keepSource
+        ? const <String>[]
+        : (_listEntries[fromList] ?? await repository.getListEntries(fromList));
+
+    final itemEntries = items
+        .map((item) => '${item.id}:${item.mediaType.name}')
+        .toList();
+    final itemEntrySet = itemEntries.toSet();
+    final addedItems = <MediaItem>[
+      for (var i = 0; i < items.length; i++)
+        if (!currentTo.contains(itemEntries[i])) items[i],
+    ];
+
+    final addedEntries = addedItems
+        .map((item) => '${item.id}:${item.mediaType.name}')
+        .toSet();
+    final removedWithIndices = <(int, String)>[
+      if (!keepSource)
+        for (var i = 0; i < currentFrom.length; i++)
+          if (itemEntrySet.contains(currentFrom[i])) (i, currentFrom[i]),
+    ];
+
+    _listEntries[toList] = [
+      ...currentTo,
+      ...itemEntries.where((e) => !currentTo.contains(e)),
+    ];
+    if (!keepSource) {
+      _listEntries[fromList] = currentFrom
+          .where((e) => !itemEntrySet.contains(e))
+          .toList();
+    }
+    if (toList == 'watchlist') {
+      for (final item in addedItems) {
+        final idStr = item.id.toString();
+        if (!_watchlistIds.contains(idStr)) {
+          _watchlistIds.add(idStr);
+        }
+      }
+    }
+    if (!keepSource && fromList == 'watchlist') {
+      for (final item in items) {
+        final idStr = item.id.toString();
+        final stillInWatchlist = _listEntries[fromList]!.any(
+          (e) => e.startsWith('$idStr:'),
+        );
+        if (!stillInWatchlist) {
+          _watchlistIds.remove(idStr);
+        }
+      }
+    }
+    notifyListeners();
+
+    try {
+      if (keepSource) {
+        await repository.addAllToList(items, toList);
+      } else {
+        await repository.moveItems(items, fromList, toList);
+      }
+      if (toList == 'watchlist') {
+        for (final item in addedItems) {
+          if (item.canBeNotified) {
+            unawaited(repository.toggleNotification(item, autoNotify: true));
+          }
+        }
+      }
+      _listPreviews[toList] = await repository.getListPreviews(toList);
+      if (!keepSource) {
+        _listPreviews[fromList] = await repository.getListPreviews(fromList);
+      }
+      notifyListeners();
+    } catch (e) {
+      _listEntries[toList] = (_listEntries[toList] ?? const <String>[])
+          .where((entry) => !addedEntries.contains(entry))
+          .toList();
+      if (!keepSource) {
+        final restoredFrom = List<String>.from(
+          _listEntries[fromList] ?? const <String>[],
+        );
+        for (final (index, entry) in removedWithIndices) {
+          if (!restoredFrom.contains(entry)) {
+            restoredFrom.insert(index.clamp(0, restoredFrom.length), entry);
+          }
+        }
+        _listEntries[fromList] = restoredFrom;
+      }
+      if (toList == 'watchlist') {
+        final toEntries = _listEntries[toList] ?? const <String>[];
+        for (final item in addedItems) {
+          final idStr = item.id.toString();
+          final stillInWatchlist = toEntries.any(
+            (e) => e.startsWith('$idStr:'),
+          );
+          if (!stillInWatchlist) {
+            _watchlistIds.remove(idStr);
+          }
+        }
+      }
+      if (!keepSource && fromList == 'watchlist') {
+        final fromEntries = _listEntries[fromList] ?? const <String>[];
+        for (final item in items) {
+          final entry = '${item.id}:${item.mediaType.name}';
+          final idStr = item.id.toString();
+          if (fromEntries.contains(entry) && !_watchlistIds.contains(idStr)) {
+            _watchlistIds.add(idStr);
+          }
+        }
+      }
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   Future<void> createList(String name) async {
     await repository.createList(name);
     await loadListNames();

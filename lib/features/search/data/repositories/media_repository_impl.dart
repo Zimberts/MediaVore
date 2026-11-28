@@ -320,6 +320,27 @@ class MediaRepositoryImpl implements MediaRepository {
     }
   }
 
+  @override
+  Future<void> moveItems(
+    List<MediaItem> items,
+    String fromList,
+    String toList,
+  ) async {
+    if (items.isEmpty || fromList == toList) return;
+    await _ensureInitialized();
+    for (final item in items) {
+      await cache.cacheItem(item);
+    }
+    await localDataSource.moveItems(
+      items: items,
+      fromList: fromList,
+      toList: toList,
+    );
+    for (final item in items) {
+      unawaited(_prefetchDetailsAndSeasons(item));
+    }
+  }
+
   Future<void> _prefetchDetailsAndSeasons(MediaItem item) async {
     try {
       final details = await _details.getMediaDetails(

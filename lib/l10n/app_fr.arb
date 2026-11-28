@@ -750,5 +750,11 @@
   "swiperResetConfirmTitle": "Réinitialiser les choix de swipe ?",
   "swiperResetConfirmMessage": "Les titres que vous aviez écartés pourront réapparaître dans le mode swipe. Les succès déjà obtenus sont conservés.",
   "swiperResetSuccessToast": "Choix de swipe réinitialisés",
-  "settingsAboutTmdb": "Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB."
+  "settingsAboutTmdb": "Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.",
+  "listsMoveOrCopy": "Déplacer ou copier vers une autre liste",
+  "listsMoveOrCopyTitle": "Déplacer ou copier vers…",
+  "listsActionMove": "Déplacer",
+  "listsActionCopy": "Copier",
+  "listsMovedNotification": "{count, plural, =1{1 élément déplacé vers {list}} other{{count} éléments déplacés vers {list}}}",
+  "listsCopiedNotification": "{count, plural, =1{1 élément copié vers {list}} other{{count} éléments copiés vers {list}}}"
 }
