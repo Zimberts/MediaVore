@@ -432,6 +432,7 @@
   "discoverBecauseYouLiked": "Parce que vous avez aimé {title}",
   "discoverBecauseYouWatched": "Parce que vous regardez {title}",
   "discoverConnectTmdb": "Connexion à TMDB",
+  "discoverScrollToTop": "Revenir en haut",
   "libraryTypeAll": "Tout",
   "libraryTypeChip": "{label} · {count}",
   "libraryListRowLabel": "{name}, {count, plural, =0{aucun élément} =1{1 élément} other{{count} éléments}}, {films, plural, =0{aucun film} =1{1 film} other{{films} films}}, {series, plural, =0{aucune série} =1{1 série} other{{series} séries}}",

@@ -1058,6 +1058,7 @@
     }
   },
   "discoverConnectTmdb": "Connect to TMDB",
+  "discoverScrollToTop": "Scroll to top",
   "libraryTypeAll": "All",
   "libraryTypeChip": "{label} · {count}",
   "@libraryTypeChip": {

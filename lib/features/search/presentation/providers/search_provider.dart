@@ -87,6 +87,8 @@ class SearchProvider
   String _currentQuery = '';
   bool _hasMore = true;
   AppTab _selectedTab = AppTab.initial;
+  final StreamController<AppTab> _tabReselectedController =
+      StreamController<AppTab>.broadcast();
   LibrarySection _librarySection = LibrarySection.lists;
 
   // Filter states
@@ -166,6 +168,7 @@ class SearchProvider
   List<QuickAddOmission> get quickAddOmissions => _quickAddOmissions;
   bool get isQuickAddOmissionsLoading => _isQuickAddOmissionsLoading;
   AppTab get selectedTab => _selectedTab;
+  Stream<AppTab> get onTabReselected => _tabReselectedController.stream;
   LibrarySection get librarySection => _librarySection;
 
   @override
@@ -206,6 +209,7 @@ class SearchProvider
     _notificationProvider.removeListener(notifyListeners);
     _cacheAdminProvider.removeListener(notifyListeners);
     localeService?.removeListener(_onLanguageChanged);
+    _tabReselectedController.close();
     if (_ownsLibraryProvider) _libraryProvider.dispose();
     if (_ownsNotificationProvider) _notificationProvider.dispose();
     if (_ownsCacheAdminProvider) _cacheAdminProvider.dispose();
@@ -254,6 +258,12 @@ class SearchProvider
       _selectedTab = tab;
       notifyListeners();
     }
+  }
+
+  /// Notifies listeners when the currently active [tab] is tapped again.
+  void reselectTab(AppTab tab) {
+    if (_selectedTab != tab) return;
+    _tabReselectedController.add(tab);
   }
 
   void setLibrarySection(LibrarySection section) {

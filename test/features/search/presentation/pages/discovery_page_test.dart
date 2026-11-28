@@ -5,6 +5,7 @@ import 'package:mediavore/core/domain/entities/media_item.dart';
 import 'package:mediavore/core/domain/entities/person_summary.dart';
 import 'package:mediavore/core/error/exceptions.dart';
 import 'package:mediavore/core/l10n/l10n.dart';
+import 'package:mediavore/core/navigation/app_tab.dart';
 import 'package:mediavore/core/theme/app_palette.dart';
 import 'package:mediavore/core/widgets/app_segmented.dart';
 import 'package:mediavore/core/widgets/media_poster_card.dart';
@@ -789,5 +790,175 @@ void main() {
     // Type filter should now be null, badge should show '1'
     expect(searchProvider.filters.type, isNull);
     expect(find.text('1'), findsOneWidget);
+  });
+
+  group('DiscoveryPage scroll to top', () {
+    List<MediaItem> manyItems(int page) =>
+        page == 1 ? [for (var i = 1; i <= 45; i++) _item(i, 'Movie $i')] : [];
+
+    ScrollController scrollControllerOf(WidgetTester tester) => tester
+        .widget<CustomScrollView>(find.byType(CustomScrollView))
+        .controller!;
+
+    double scrollToTopOpacity(WidgetTester tester) => tester
+        .widget<AnimatedOpacity>(
+          find.ancestor(
+            of: find.byKey(const Key('discovery_scroll_to_top')),
+            matching: find.byType(AnimatedOpacity),
+          ),
+        )
+        .opacity;
+
+    testWidgets('should hide the scroll-to-top button initially and when '
+        'scrolling down', (tester) async {
+      stubTrending(manyItems);
+      await pumpPage(tester);
+
+      expect(scrollToTopOpacity(tester), 0);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -1800));
+      await tester.pumpAndSettle();
+
+      expect(scrollControllerOf(tester).position.pixels, greaterThan(1700));
+      expect(scrollToTopOpacity(tester), 0);
+    });
+
+    testWidgets('should show the scroll-to-top button when scrolling up after '
+        'two viewports and scroll to top on tap', (tester) async {
+      stubTrending(manyItems);
+      await pumpPage(tester);
+
+      // Scroll down past 2 * 844 = 1688 px.
+      scrollControllerOf(tester).position.jumpTo(2200);
+      await tester.pump();
+      expect(scrollToTopOpacity(tester), 0);
+
+      // Scroll up: button appears.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 120));
+      await tester.pumpAndSettle();
+      expect(scrollToTopOpacity(tester), 1);
+      expect(find.byTooltip('Scroll to top'), findsOneWidget);
+
+      // Tap button: animates to top and disappears.
+      await tester.tap(find.byKey(const Key('discovery_scroll_to_top')));
+      await tester.pumpAndSettle();
+
+      expect(scrollControllerOf(tester).position.pixels, 0);
+      expect(scrollToTopOpacity(tester), 0);
+    });
+
+    testWidgets(
+      'should hide the scroll-to-top button when scrolling back down',
+      (tester) async {
+        stubTrending(manyItems);
+        await pumpPage(tester);
+
+        scrollControllerOf(tester).position.jumpTo(2200);
+        await tester.pump();
+
+        // Scroll up -> visible.
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, 120));
+        await tester.pumpAndSettle();
+        expect(scrollToTopOpacity(tester), 1);
+
+        // Scroll down -> hidden.
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -120));
+        await tester.pumpAndSettle();
+        expect(scrollToTopOpacity(tester), 0);
+      },
+    );
+
+    testWidgets('should scroll to top when the Discover tab is reselected '
+        'while scrolled down', (tester) async {
+      stubTrending(manyItems);
+      searchProvider.setSelectedTab(AppTab.discover);
+      await pumpPage(tester);
+
+      scrollControllerOf(tester).position.jumpTo(1500);
+      await tester.pump();
+      expect(scrollControllerOf(tester).position.pixels, 1500);
+
+      searchProvider.reselectTab(AppTab.discover);
+      await tester.pumpAndSettle();
+
+      expect(scrollControllerOf(tester).position.pixels, 0);
+    });
+
+    testWidgets('should focus the search field when the Discover tab is '
+        'reselected at the top', (tester) async {
+      stubTrending(manyItems);
+      searchProvider.setSelectedTab(AppTab.discover);
+      await pumpPage(tester);
+
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('discovery_search_field')),
+      );
+      expect(field.focusNode?.hasFocus, isFalse);
+
+      searchProvider.reselectTab(AppTab.discover);
+      await tester.pump();
+
+      expect(field.focusNode?.hasFocus, isTrue);
+    });
+
+    testWidgets('should scroll to top when tapping the status bar on iOS', (
+      tester,
+    ) async {
+      stubTrending(manyItems);
+
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SearchProvider>.value(value: searchProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(
+              value: settingsProvider,
+            ),
+            ChangeNotifierProvider<DiscoveryProvider>.value(
+              value: discoveryProvider,
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppPalette.paper.toThemeData(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(padding: const EdgeInsets.only(top: 44)),
+              child: child!,
+            ),
+            home: const DiscoveryPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      scrollControllerOf(tester).position.jumpTo(1500);
+      await tester.pump();
+      expect(scrollControllerOf(tester).position.pixels, 1500);
+
+      // Trigger iOS status bar tap.
+      tester.simulateStatusBarTap();
+      await tester.pumpAndSettle();
+
+      expect(scrollControllerOf(tester).position.pixels, 0);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('should not show the scroll-to-top button in Swipe mode', (
+      tester,
+    ) async {
+      stubTrending(manyItems);
+      await pumpPage(tester);
+
+      discoveryProvider.setMode(DiscoverMode.swipe);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('discovery_scroll_to_top')), findsNothing);
+    });
   });
 }

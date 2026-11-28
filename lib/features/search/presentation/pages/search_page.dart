@@ -10,7 +10,7 @@ class SearchPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => DiscoveryProvider(),
-      child: const Scaffold(body: DiscoveryPage()),
+      child: const DiscoveryPage(),
     );
   }
 }

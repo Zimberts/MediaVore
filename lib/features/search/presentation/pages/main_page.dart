@@ -195,6 +195,7 @@ class _MainPageState extends State<MainPage> {
     );
 
     return Scaffold(
+      primary: false,
       body: IndexedStack(
         index: tabs.indexOf(selected),
         children: [for (final tab in tabs) _pages[tab]!],
@@ -205,6 +206,7 @@ class _MainPageState extends State<MainPage> {
               tabs: tabs,
               selected: selected,
               onSelected: context.read<SearchProvider>().setSelectedTab,
+              onReselected: context.read<SearchProvider>().reselectTab,
             ),
     );
   }
